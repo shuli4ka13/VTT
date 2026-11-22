@@ -4,7 +4,7 @@ import { FormulaField } from '../../ui/formula-field.tsx';
 import type { BarOption } from '../../store/formula-bar.ts';
 import { outputRefs, inputBadges } from './slots.tsx';
 import type { SlotContext, SlotKind } from './slots.tsx';
-import { writeTableCall, fieldsOf, rowTables, walkColumns } from '@vtt/engine';
+import { writeTableCall, readableFields, rowTables, walkColumns } from '@vtt/engine';
 
 export function asText(value: unknown): string | null {
   if (value === null || value === undefined) return null;
@@ -71,7 +71,7 @@ export function optionsFor(ctx: SlotContext, allow: SlotKind[] | undefined): Slo
   }
   if (ok('tag')) {
     const sheets = [...(ctx.sheets ?? new Map<string, string>())];
-    for (const f of fieldsOf(ctx.system)) {
+    for (const f of readableFields(ctx.system)) {
       if (!sheets.length) { out.push({ group: 'Поля', label: f.label ?? f.tag, name: f.tag }); continue; }
       for (const [name, label] of sheets) out.push({ group: `Поля: ${label}`, label: f.label ?? f.tag, name: `${name}.${f.tag}` });
     }

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { System } from '@vtt/schema';
-import { fieldsOf, NO_BLOCK } from '@vtt/engine';
+import { readableFields, NO_BLOCK } from '@vtt/engine';
 import type { Field } from '@vtt/engine';
 import { byBlock } from '../screens/constructor/field-groups.ts';
 import { Combo, type ComboOption } from './combo.tsx';
@@ -36,7 +36,7 @@ export function FieldPick({ system, value, onChange, fields, extra = [], blank =
   label?: string;
 }) {
   const [opened, setOpened] = useState(false);
-  const all = fieldOptions(system, fields ?? fieldsOf(system));
+  const all = fieldOptions(system, fields ?? readableFields(system));
   const service = all.filter(option => option[2] === NO_BLOCK);
   const placed = all.filter(option => option[2] !== NO_BLOCK);
   const showService = opened || service.some(option => option[0] === value);

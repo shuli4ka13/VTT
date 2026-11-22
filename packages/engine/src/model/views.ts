@@ -1,7 +1,7 @@
 import type { ControlKind } from '@vtt/schema';
 import type { TableColumn } from './types.ts';
 
-export type ValueFamily = 'number' | 'boolean' | 'choice' | 'many' | 'dice' | 'text';
+export type ValueFamily = 'number' | 'boolean' | 'choice' | 'many' | 'dice' | 'text' | 'note';
 
 export const VIEW_KINDS: ControlKind[] = ['signed', 'big', 'stepper', 'slider', 'pips', 'charges', 'bar', 'toggle', 'ring', 'choice', 'chips', 'die'];
 
@@ -21,6 +21,7 @@ export const FITTING: Record<ValueFamily, ControlKind[]> = {
   many: ['chips'],
   dice: ['die'],
   text: ['die'],
+  note: [],
 };
 
 export const TAKES_BOUNDS: ControlKind[] = ['stepper', 'slider', 'pips', 'charges', 'bar'];
@@ -33,7 +34,7 @@ export const TAKES_STEP: ControlKind[] = ['stepper', 'slider'];
 export function familyOf(kind: string | undefined, many: boolean | undefined, computed: boolean): ValueFamily | null {
   if (!kind) return computed ? null : 'number';
   if (kind === 'choice') return many ? 'many' : 'choice';
-  if (kind === 'number' || kind === 'boolean' || kind === 'dice' || kind === 'text') return kind;
+  if (kind === 'number' || kind === 'boolean' || kind === 'dice' || kind === 'text' || kind === 'note') return kind;
   return null;
 }
 

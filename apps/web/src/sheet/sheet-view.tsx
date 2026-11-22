@@ -5,7 +5,7 @@ import { FieldCell } from './field-cell.tsx';
 import type { Reader } from '../engine/use-calc.ts';
 import { Tabs } from '../ui/layout.tsx';
 import type { Sheet, System, StoredValue, SheetList } from '@vtt/schema';
-import { fieldsOf, rowKeyOf, fieldOf, optionsOf, fieldsByBlock, blockShown, pagesOf, topPage, tabPages, pageOfBlock } from '@vtt/engine';
+import { fieldsOf, rowKeyOf, fieldOf, optionsOf, fieldsByBlock, blockShown, pagesOf, topPage, tabPages, pageOfBlock, isNoteField } from '@vtt/engine';
 import type { Field as FieldModel } from '@vtt/engine';
 import { SheetGrid } from './sheet-grid.tsx';
 import type { GridEdit } from './sheet-grid.tsx';
@@ -51,7 +51,7 @@ export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only
       />
     );
     return onPick ? (
-      <div key={field.tag} className={`sheet-pick${picked === field.tag ? ' sheet-pick--on' : ''}`} onClick={() => onPick(field.tag, field.group)}>
+      <div key={field.tag} className={`sheet-pick${picked === field.tag ? ' sheet-pick--on' : ''}${isNoteField(field) ? ' sheet-pick--wide' : ''}`} onClick={() => onPick(field.tag, field.group)}>
         {view}
       </div>
     ) : view;

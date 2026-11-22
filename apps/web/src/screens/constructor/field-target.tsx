@@ -3,7 +3,7 @@ import { BY_FORMULA } from './typed-pick.tsx';
 import type { System } from '@vtt/schema';
 import { Field, Select } from '../../ui/primitives.tsx';
 import { FieldPick } from '../../ui/field-pick.tsx';
-import { fieldsOf, cellSource, DESK_ID } from '@vtt/engine';
+import { fieldsOf, readableFields, cellSource, DESK_ID } from '@vtt/engine';
 import type { SlotContext } from './slots.tsx';
 
 const fieldTarget = (target: unknown): { sheet: string; tag: string } | null => {
@@ -46,7 +46,7 @@ export function TargetPick({ target, context, onChange, formula }: {
     ...fieldParams.map(p => [`:${p.key}`, `поле из входа «${p.label ?? p.key}»`] as const),
     ...(formula ? [[BY_FORMULA, 'формулой…'] as const] : []),
   ];
-  const fields = fieldsOf(system).filter(f => f.value.kind === 'stored' && (owner === DESK_ID ? f.lives === 'desk' : f.lives !== 'desk'));
+  const fields = readableFields(system).filter(f => f.value.kind === 'stored' && (owner === DESK_ID ? f.lives === 'desk' : f.lives !== 'desk'));
   const cells = rowNamesOf(context)
     .filter(row => (owner === DESK_ID ? system.tables?.[row.table]?.owner === 'desk' : system.tables?.[row.table]?.owner && system.tables?.[row.table]?.owner !== 'desk'))
     .flatMap(row => storedColumns(system, row.table).map(column => [`${row.name}.${column.key}`, `${row.label} · ${column.label ?? column.key}`] as const));

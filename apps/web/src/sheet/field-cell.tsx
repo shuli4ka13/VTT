@@ -1,10 +1,11 @@
+import { useState } from 'react';
 import type { ReactNode } from 'react';
-import { Field, Input, Button, NumInput, Select } from '../ui/primitives.tsx';
+import { Field, Input, Button, NumInput, Select, TextArea } from '../ui/primitives.tsx';
 import { show } from '../engine/use-calc.ts';
 import { VIEWS } from './views/index.tsx';
 import type { Reader } from '../engine/use-calc.ts';
 import type { Sheet, System, StoredValue, FieldOption } from '@vtt/schema';
-import { MOST_STEPS, optionsOf } from '@vtt/engine';
+import { MOST_STEPS, NOTE_LIMIT, isNoteField, optionsOf } from '@vtt/engine';
 import type { Field as FieldModel } from '@vtt/engine';
 
 export function FieldCell({ field, system, sheet, reader, onChange, onRoll, bare }: {
@@ -31,6 +32,10 @@ export function FieldCell({ field, system, sheet, reader, onChange, onRoll, bare
     ? (reader.storedOf ? reader.storedOf(field.tag) : sheet.values[field.tag] ?? (field.value.kind === 'stored' ? field.value.default : undefined))
     : computed!.ok ? computed!.value : undefined;
   const editable = stored && onChange ? onChange : null;
+
+  if (isNoteField(field)) {
+    return <Note label={label} value={typeof value === 'string' ? value : ''} {...(editable ? { onCommit: (next: string) => editable(field.tag, next) } : {})} />;
+  }
 
   const kind = field.control?.kind;
   const spec = kind ? VIEWS[kind] : null;
@@ -116,6 +121,33 @@ export function FieldCell({ field, system, sheet, reader, onChange, onRoll, bare
         {roll}
       </div>
     </Field>
+  );
+}
+
+function Note({ label, value, onCommit }: { label: ReactNode; value: string; onCommit?: (next: string) => void }) {
+  const [draft, setDraft] = useState<string | null>(null);
+  if (!onCommit) {
+    return (
+      <div className="field field--wide">
+        <span className="field__label">{label}</span>
+        <div className="note-text">{value || '—'}</div>
+      </div>
+    );
+  }
+  return (
+    <label className="field field--wide">
+      <span className="field__label">{label}</span>
+      <TextArea
+        rows={3}
+        max={NOTE_LIMIT}
+        value={draft ?? value}
+        onChange={setDraft}
+        onBlur={() => {
+          if (draft !== null && draft !== value) onCommit(draft);
+          setDraft(null);
+        }}
+      />
+    </label>
   );
 }
 

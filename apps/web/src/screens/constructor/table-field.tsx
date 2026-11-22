@@ -5,9 +5,9 @@ import { ViewGallery } from './view-gallery.tsx';
 import { VIEWS, columnFamily, viewNeeds, takesBounds, TAKES_STEP } from '../../sheet/views/index.tsx';
 import { BoundFormula } from './bound-field.tsx';
 import { rowNames } from './row-names.ts';
-import { Field, Input, Select, Chip, Button, NumInput, Segmented, Verdict } from '../../ui/primitives.tsx';
+import { Field, Input, Select, Chip, Button, NumInput, Segmented, Verdict, TextArea } from '../../ui/primitives.tsx';
 import { useState } from 'react';
-import { ROW, cellSource, onSheet, isSingle, fieldsOf, rowKeyOf, isFormulaCell } from '@vtt/engine';
+import { ROW, NOTE_LIMIT, cellSource, onSheet, isSingle, fieldsOf, rowKeyOf, isFormulaCell } from '@vtt/engine';
 import type { System, Column, Control, SheetPart } from '@vtt/schema';
 
 export function readyForSheet(draft: System, tableId: string): void {
@@ -57,6 +57,9 @@ export function ColumnSheetFields({ tableId, column, system }: { tableId: string
                     const row = (system.tables?.[column.from!]?.rows ?? []).find(r => String(r.value) === next);
                     if (!next || !row) delete draft.default; else draft.default = row.value as never;
                   })} />
+              ) : column.kind === 'note' ? (
+                <TextArea rows={3} max={NOTE_LIMIT} value={typeof column.default === 'string' ? column.default : ''} placeholder="текст, с которым лист заводят"
+                  onChange={text => edit(draft => { if (!text.trim()) delete draft.default; else draft.default = text; })} />
               ) : byFormula ? (
                 <BoundFormula value={column.default} system={system} placeholder="формула: посчитается один раз, когда лист заводят"
                   where={`${table.label || tableId} · ${column.label || column.key} · в новом листе`}
@@ -83,6 +86,7 @@ export function ColumnSheetFields({ tableId, column, system }: { tableId: string
           </Field>
         )}
       </div>
+      {column.kind === 'note' ? null : (
       <Field label="Бросок" hint="Как бросают — в «Правилах» → «Броски».">
         <div className="stack stack--tight">
           <Select
@@ -96,6 +100,7 @@ export function ColumnSheetFields({ tableId, column, system }: { tableId: string
           ) : null}
         </div>
       </Field>
+      )}
     </>
   );
 }
@@ -146,6 +151,7 @@ export function BlockViewField({ tableId, column, system, block, row, cell = row
   const title = row
     ? `Вид «${own?.label ?? row}» в блоке «${block}»`
     : single ? `Вид «${column.label || column.key}» в блоке «${block}»` : `Вид колонки «${column.label || column.key}» в блоке «${block}»`;
+  if (column.kind === 'note') return <span className="faint">Текст на листе — поле в несколько строк во всю ширину блока.</span>;
   return (
     <>
       <Field label={title}>

@@ -79,12 +79,13 @@ export function Input({ value, onChange, placeholder, mono, invalid, type = 'tex
   );
 }
 
-export function TextArea({ value, onChange, placeholder, invalid, rows = 2, onBlur }: {
+export function TextArea({ value, onChange, placeholder, invalid, rows = 2, max, onBlur }: {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
   invalid?: boolean;
   rows?: number;
+  max?: number;
   onBlur?: (e: FocusEvent<HTMLTextAreaElement>) => void;
 }) {
   const ref = useRef<HTMLTextAreaElement>(null);
@@ -101,6 +102,7 @@ export function TextArea({ value, onChange, placeholder, invalid, rows = 2, onBl
       rows={rows}
       value={value}
       placeholder={placeholder}
+      {...(max ? { maxLength: max } : {})}
       onChange={(e: ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)}
       onBlur={onBlur}
     />

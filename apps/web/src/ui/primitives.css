@@ -82,6 +82,9 @@
   color: var(--danger);
 }
 
+.field--wide, .sheet-pick--wide { grid-column: 1 / -1; }
+.note-text { white-space: pre-wrap; overflow-wrap: anywhere; font-size: var(--fs-3); line-height: 1.4; }
+
 .field--needed .input,
 .field--needed .select { border-color: var(--warn); }
 .field--needed .field__label { color: var(--warn); }

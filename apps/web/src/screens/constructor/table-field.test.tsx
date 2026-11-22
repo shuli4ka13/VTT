@@ -61,3 +61,40 @@ describe('«В новом листе»: число или формула', () =>
     expect(screen.getByRole('button', { name: 'формула' })).toBeTruthy();
   });
 });
+
+describe('поле вида «текст» в карточке поля', () => {
+  const noted = {
+    id: 'x', name: 'x', effects: {},
+    tables: { лист: { shape: 'single', columns: [
+      { key: 'хиты_макс', label: 'Максимум хитов', kind: 'number', default: 12 },
+      { key: 'заметки', label: 'Заметки', kind: 'note' },
+    ] } },
+  } as unknown as System;
+
+  beforeEach(() => {
+    useFormulaBar.getState().dismiss();
+    useWorld.setState(state => ({ ...state, system: noted, compendium: { records: [] } }));
+  });
+  afterEach(cleanup);
+
+  it('«В новом листе» — текст в несколько строк, без кнопки «формула» и без броска', () => {
+    render(<Live />);
+    const field = screen.getByText('В новом листе').closest('.field')!;
+    const area = field.querySelector('textarea')!;
+    fireEvent.change(area, { target: { value: 'Цели:\nУзы:' } });
+    expect(hits().default).toBe('Цели:\nУзы:');
+    expect(screen.queryByRole('button', { name: 'формула' })).toBeNull();
+    expect(screen.queryByText('Бросок')).toBeNull();
+  });
+
+  it('стёртый текст снимает значение', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: { ...noted, tables: { лист: { shape: 'single', columns: [noted.tables!['лист']!.columns![0]!, { key: 'заметки', label: 'Заметки', kind: 'note', default: 'Цели:' }] } } } as unknown as System,
+    }));
+    render(<Live />);
+    const area = screen.getByText('В новом листе').closest('.field')!.querySelector('textarea')!;
+    fireEvent.change(area, { target: { value: '  ' } });
+    expect(hits()).not.toHaveProperty('default');
+  });
+});

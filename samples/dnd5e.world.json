@@ -433,6 +433,11 @@
             "label": "Медные",
             "kind": "number",
             "min": 0
+          },
+          {
+            "key": "notes",
+            "label": "Заметки",
+            "kind": "note"
           }
         ]
       },
@@ -9268,6 +9273,17 @@
                 "kind": "choice"
               }
             }
+          }
+        ]
+      },
+      {
+        "name": "Заметки",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "notes"
+            ]
           }
         ]
       },

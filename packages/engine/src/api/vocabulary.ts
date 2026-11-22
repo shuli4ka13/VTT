@@ -32,7 +32,7 @@ export { rollGroupsOf, ruleLabelOf } from '../model/roll-groups.ts';
 export { claimWords } from '../model/roll-reach.ts';
 export { givesOf } from '../model/rolled.ts';
 export type { Graded } from '../model/rolled.ts';
-export { cellSource, fieldLinkOf, fieldOf, fieldsOf, forgetFields, hasField, holderOf, isFormulaCell, isSingle, ITEM_NAME, itemExpr, onSheet, ROW, rowKeyOf, rowPieces, rowSteps, singleTableOf, slugOf, withColumn } from '../model/sheet-columns.ts';
+export { cellSource, fieldLinkOf, fieldOf, fieldsOf, forgetFields, hasField, holderOf, isFormulaCell, isNoteField, isSingle, ITEM_NAME, itemExpr, NOTE_LIMIT, onSheet, readableFields, ROW, rowKeyOf, rowPieces, rowSteps, singleTableOf, slugOf, withColumn } from '../model/sheet-columns.ts';
 export type { RowPiece } from '../model/sheet-columns.ts';
 export { choiceTables, degreeWords, isRange, keyOf as tableKeyOf, numberTables, rowTables } from '../model/tables.ts';
 export { ARMOR_OPTIONS, armorOf, CRIT_OPTIONS, critOf, setArmor, setCrit, sheetInputOf } from '../model/toggles.ts';

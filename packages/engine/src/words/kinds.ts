@@ -7,6 +7,7 @@ export type KindPlace = 'field' | 'table' | 'prop' | 'param';
 export const KIND_LABEL: Record<Kind, string> = {
   number: 'число',
   text: 'слово',
+  note: 'текст',
   boolean: 'да / нет',
   dice: 'кость',
   choice: 'из таблицы',
@@ -19,10 +20,10 @@ export const KIND_LABEL: Record<Kind, string> = {
   roll: 'бросок',
 };
 
-const ORDER: Kind[] = ['number', 'text', 'boolean', 'dice', 'roll', 'choice', 'effect', 'record', 'field', 'table', 'column', 'sheet'];
+const ORDER: Kind[] = ['number', 'text', 'note', 'boolean', 'dice', 'roll', 'choice', 'effect', 'record', 'field', 'table', 'column', 'sheet'];
 
 const ALLOWED: Record<KindPlace, Kind[]> = {
-  field: ['number', 'text', 'boolean', 'choice'],
+  field: ['number', 'text', 'note', 'boolean', 'choice'],
   table: ['number', 'text', 'boolean', 'dice', 'choice', 'effect', 'field', 'table', 'column'],
   prop: ['number', 'text', 'boolean', 'dice', 'choice', 'effect', 'record'],
   param: ['number', 'text', 'boolean', 'dice', 'roll', 'choice', 'effect', 'record', 'field', 'sheet'],

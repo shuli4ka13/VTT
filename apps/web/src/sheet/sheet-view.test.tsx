@@ -35,6 +35,45 @@ const underTitles = (): Record<string, string> => {
 describe('лист за столом', () => {
   afterEach(() => { cleanup(); });
 
+  describe('поле «текст»', () => {
+    const noted = {
+      tables: { лист: { shape: 'single', columns: [
+        { key: 'имя', label: 'Имя', kind: 'text' },
+        { key: 'заметки', label: 'Заметки', kind: 'note' },
+      ] } },
+    } as unknown as System;
+    const written = { id: 'а', name: 'Арвен', values: { заметки: 'долг трактирщику\n3 золотых' } } as unknown as Sheet;
+
+    it('вписывается в несколько строк и уходит целиком, когда поле покинуто', () => {
+      const sent: [string, unknown][] = [];
+      render(<SheetView system={noted} sheet={written} reader={reader} onChange={(tag, value) => sent.push([tag, value])} />);
+      const area = screen.getByLabelText('Заметки') as HTMLTextAreaElement;
+      expect(area.tagName).toBe('TEXTAREA');
+      expect(area.value).toBe('долг трактирщику\n3 золотых');
+      fireEvent.change(area, { target: { value: 'долг отдан\nищу проводника' } });
+      expect(sent).toEqual([]);
+      fireEvent.blur(area);
+      expect(sent).toEqual([['заметки', 'долг отдан\nищу проводника']]);
+    });
+
+    it('без правки ничего не уходит', () => {
+      const sent: unknown[] = [];
+      render(<SheetView system={noted} sheet={written} reader={reader} onChange={(tag, value) => sent.push([tag, value])} />);
+      const area = screen.getByLabelText('Заметки');
+      fireEvent.focus(area);
+      fireEvent.blur(area);
+      expect(sent).toEqual([]);
+    });
+
+    it('тому, кто не правит, показывается текстом с переносами, во всю ширину блока', () => {
+      render(<SheetView system={noted} sheet={written} reader={reader} />);
+      expect(document.querySelector('textarea')).toBeNull();
+      const shown = document.querySelector('.note-text')!;
+      expect(shown.textContent).toBe('долг трактирщику\n3 золотых');
+      expect(shown.closest('.field--wide')).not.toBeNull();
+    });
+  });
+
   it('кнопка «бросить» есть только у поля с броском и зовёт его по тегу', () => {
     const rolled: string[] = [];
     render(<SheetView system={system} sheet={sheet} reader={reader} onChange={() => {}} onRoll={tag => rolled.push(tag)} />);

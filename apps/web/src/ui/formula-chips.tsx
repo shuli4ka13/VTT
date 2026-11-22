@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import type { System } from '@vtt/schema';
 import { matchTagQuery } from './tag-suggest.tsx';
 import { fieldPaths, sheetPathLabel } from './paths.ts';
-import { DESK_ID, fieldsOf, hasField, fieldLinkOf, ROW, tagWords, typeColumns, callAt, partAt, functionSpec, FUNCTION_SPECS, AND, OR, NOT, BOOLEANS } from '@vtt/engine';
+import { DESK_ID, fieldsOf, readableFields, hasField, fieldLinkOf, ROW, tagWords, typeColumns, callAt, partAt, functionSpec, FUNCTION_SPECS, AND, OR, NOT, BOOLEANS } from '@vtt/engine';
 import type { FunctionSpec } from '@vtt/engine';
 import { plainLabel, pickTail } from './formula-labels.ts';
 import { tablesOf, choiceTableOf, rowLabelOf, picksOf } from './formula-words.ts';
@@ -248,9 +248,9 @@ export type NameOption = { tag: string; label: string; group: string };
 export function namesOf(system: System, scope: { extraNames?: Map<string, string> | undefined; extraOptions?: { name?: string }[] | undefined; sheets?: SheetNames | undefined; table?: string | undefined }): NameOption[] {
   const { extraNames, extraOptions, sheets, table } = scope;
   const paths = fieldPaths(system);
-  const desk = fieldsOf(system).filter(f => f.lives === 'desk').map(f => ({ tag: `${DESK_ID}.${f.tag}`, label: f.label ?? f.tag, group: 'стол' }));
+  const desk = readableFields(system).filter(f => f.lives === 'desk').map(f => ({ tag: `${DESK_ID}.${f.tag}`, label: f.label ?? f.tag, group: 'стол' }));
   const sheet = [
-    ...fieldsOf(system).filter(f => f.lives !== 'desk').map(f => ({ tag: f.tag, label: f.label ?? f.tag, via: false })),
+    ...readableFields(system).filter(f => f.lives !== 'desk').map(f => ({ tag: f.tag, label: f.label ?? f.tag, via: false })),
     ...[...paths].map(([tag, label]) => ({ tag, label, via: true })),
   ];
   const offered = new Set((extraOptions ?? []).map(o => o.name).filter(Boolean));

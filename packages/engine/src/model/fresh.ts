@@ -9,7 +9,7 @@ export interface FreshOptions {
   shared?: readonly Sheet[] | null;
 }
 
-const ZERO: Record<string, unknown> = { number: 0, text: '', boolean: false, choice: '' };
+const ZERO: Record<string, unknown> = { number: 0, text: '', note: '', boolean: false, choice: '' };
 
 const empty = (value: unknown): boolean => isBlank(value) || (Array.isArray(value) && !value.length);
 

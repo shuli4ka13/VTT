@@ -16,6 +16,7 @@ import type { DieConstant } from './types.ts';
 import { isBlank } from './blank.ts';
 import { STEP_WORDS, slotShown, type SlotGate } from '../words/steps.ts';
 import { ROLL_CALL, CALL_WORDS } from '../words/calls.ts';
+import { KIND_LABEL } from '../words/kinds.ts';
 import { modifierLists } from './integrity.ts';
 import { calledOf, chainsOfEffect, isPipeline } from '../engine/effects.ts';
 import { basedOn, paramsOf, flattenSystem } from './inherit.ts';
@@ -33,7 +34,7 @@ import {
   type Where, type Reference, type RefKind, type Declared, type Listener,
   LISTEN, contractsOf, HOLDER, DESK_NAME, holderNameOf, tiedToHolder,
 } from './references.ts';
-import { fieldsOf, fieldOf, fieldProblems, onSheet, isSingle, holderOf, rowKeyOf, hasField, rollEntryOf, ROW, isFormulaCell, misfit } from './sheet-columns.ts';
+import { fieldsOf, fieldOf, fieldProblems, onSheet, isSingle, holderOf, rowKeyOf, hasField, rollEntryOf, ROW, isFormulaCell, misfit, isNoteField } from './sheet-columns.ts';
 import { newPass, startOf } from '../engine/calc.ts';
 import { CycleError } from '../engine/errors.ts';
 import { hasDesk } from '../events/desk.ts';
@@ -449,6 +450,35 @@ function sampleProblems(system: System): Problem[] {
     }
     const wrong = misfit(field, value);
     if (wrong) out.push({ where: { tab: 'sheet', field: field.cell ? undefined : tag }, level: 'warn', text: `образец листа: ${wrong}` });
+  }
+  return out;
+}
+
+function noteProblems(system: System, refs: readonly Reference[]): Problem[] {
+  const out: Problem[] = [];
+  for (const [id, table] of Object.entries(system.tables ?? {})) {
+    const field = isSingle(table) && onSheet(table);
+    for (const column of table.columns ?? []) {
+      if (column.kind !== 'note') continue;
+      const where = fieldWhere(system, id, column.key);
+      const name = `«${column.label || column.key}»`;
+      if (!field) out.push({ where, level: 'error', text: `${name}: ${KIND_LABEL.note} в несколько строк бывает только у поля листа, группы или стола — здесь выберите «${KIND_LABEL.text}»` });
+      if (column.expr !== undefined) out.push({ where, level: 'error', text: `${name}: ${KIND_LABEL.note} вписывают руками — по формуле он не считается` });
+      else if (isFormulaCell(column.default)) out.push({ where, level: 'error', text: `${name}: у поля вида «${KIND_LABEL.note}» в новом листе — только сам ${KIND_LABEL.note}, без формулы` });
+    }
+  }
+  for (const [id, effect] of Object.entries(system.effects)) {
+    for (const column of [...(effect.params ?? []), ...(effect.returns ?? [])]) {
+      if (column.kind !== 'note') continue;
+      out.push({ where: { tab: 'effects', effect: id, part: 'params', key: column.key }, level: 'error', text: `«${column.label || column.key}»: ${KIND_LABEL.note} в несколько строк бывает только у поля листа — здесь выберите «${KIND_LABEL.text}»` });
+    }
+  }
+  for (const ref of refs) {
+    if (ref.kind !== 'field') continue;
+    const field = fieldOf(system, ref.key);
+    if (!field || !isNoteField(field)) continue;
+    const text = `«${field.label}» — ${KIND_LABEL.note}: формулы и шаги его не читают и не меняют`;
+    if (!out.some(p => sameWhere(p.where, ref.from) && p.text === text)) out.push({ where: ref.from, level: 'error', text });
   }
   return out;
 }
@@ -1577,12 +1607,12 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   }
 
   const chainOf = (where: Where): Step[] | undefined => stepsAt(system, where);
-  const refs = referencesOf(system, compendium).filter(ref => {
-    if (ref.scope === 'condition') return false;
+  const named = referencesOf(system, compendium).filter(ref => {
     if (ref.kind !== 'field' || ref.from.step === undefined) return true;
     const steps = chainOf(ref.from);
     return !(steps && earlierIds(steps, ref.from.step).has(ref.key));
   });
+  const refs = named.filter(ref => ref.scope !== 'condition');
   out.push(...refProblems(refs, declared, ref => {
     const steps = chainOf(ref.from);
     return Boolean(steps && ref.from.step !== undefined && earlierIds(steps, ref.from.step).has(ref.key));
@@ -1614,7 +1644,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   out.push(...rowNameProblems(system));
   out.push(...labelTwinProblems(system));
   out.push(...tableFieldProblems(system));
-  out.push(...startProblems(system), ...sampleProblems(system));
+  out.push(...startProblems(system), ...sampleProblems(system), ...noteProblems(system, named));
   for (const found of [...variantProblems(system), ...cellScopeProblems(system)]) {
     if (!out.some(p => sameWhere(p.where, found.where) && p.text === found.text)) out.push({ where: found.where, level: 'error', text: found.text });
   }

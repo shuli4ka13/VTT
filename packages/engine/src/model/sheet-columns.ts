@@ -121,9 +121,11 @@ function deep(system: System, table: Table, row: TableRow, value: unknown): unkn
   return value;
 }
 
-const STORED = ['number', 'text', 'boolean', 'choice'];
+const STORED = ['number', 'text', 'note', 'boolean', 'choice'];
 
-const TYPE_WORDS: Record<string, string> = { number: 'число', text: 'текст', boolean: 'да или нет', choice: 'вариант' };
+const TYPE_WORDS: Record<string, string> = { number: 'число', text: 'слово', note: 'текст', boolean: 'да или нет', choice: 'вариант' };
+
+export const NOTE_LIMIT = 5000;
 
 export const valueWord = (value: unknown): string =>
   (typeof value === 'boolean' ? (value ? 'да' : 'нет')
@@ -139,9 +141,10 @@ export function misfit(field: Pick<Field, 'label' | 'value'>, value: unknown): s
   const items = Array.isArray(value) ? value : [value];
   const ok = items.every(item => (type === 'number' ? typeof item === 'number'
     : type === 'boolean' ? typeof item === 'boolean'
-      : type === 'text' ? typeof item === 'string'
+      : type === 'text' || type === 'note' ? typeof item === 'string'
         : typeof item !== 'object'));
-  return ok ? null : `«${field.label}» хранит ${TYPE_WORDS[type] ?? type}, а пришло ${JSON.stringify(value)}`;
+  if (!ok) return `«${field.label}» хранит ${TYPE_WORDS[type] ?? type}, а пришло ${JSON.stringify(value)}`;
+  return type === 'note' && String(value).length > NOTE_LIMIT ? `«${field.label}» — не длиннее ${NOTE_LIMIT} знаков` : null;
 }
 
 export function manyText(system: System, column: TableColumn, next: string): string {
@@ -153,7 +156,7 @@ export function manyText(system: System, column: TableColumn, next: string): str
     + `Проверьте, есть ли нужное значение в списке: если(есть(«${list}», значение), …, 0) — и берите «${wanted}» у этого значения`;
 }
 
-const ZERO: Record<string, unknown> = { number: 0, text: '', boolean: false, choice: '' };
+const ZERO: Record<string, unknown> = { number: 0, text: '', note: '', boolean: false, choice: '' };
 
 export const ROW = 'строка';
 
@@ -338,7 +341,7 @@ export const defaultLabel = (column: TableColumn, first: boolean): string =>
 
 const valueOf = (column: TableColumn, start: unknown, bounds: Pick<TableColumn, 'min' | 'max'> = column): FieldValue => {
   const kind = column.kind ?? 'number';
-  const type = (STORED.includes(kind) ? kind : 'text') as 'number' | 'text' | 'boolean' | 'choice';
+  const type = (STORED.includes(kind) ? kind : 'text') as 'number' | 'text' | 'note' | 'boolean' | 'choice';
   const many = type === 'choice' && column.many === true;
   const formula = isFormulaCell(start) ? start.expr.trim() : '';
   const fixed = isFormulaCell(start) ? undefined : start;
@@ -569,6 +572,10 @@ export const forgetFields = (system: System): void => { if (system.tables) built
 export const fieldsOf = (system: System): Field[] => builtOf(system).fields;
 
 export const fieldOf = (system: System, tag: string): Field | undefined => builtOf(system).byTag.get(tag);
+
+export const isNoteField = (field: Pick<Field, 'value'>): boolean => field.value.kind === 'stored' && field.value.type === 'note';
+
+export const readableFields = (system: System): Field[] => fieldsOf(system).filter(field => !isNoteField(field));
 
 export const hasField = (system: System, tag: string): boolean => builtOf(system).byTag.has(tag);
 
