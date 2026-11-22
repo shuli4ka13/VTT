@@ -1,9 +1,10 @@
-import { expectAction } from '@vtt/engine/events/trial';
+import { expectAction, costRefusal } from '@vtt/engine/events/trial';
 import { mayAnswer, mayAllowItems } from '../../engine/rights.ts';
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRoom } from '../../store/room.ts';
 import { tableSocket } from '../../api/socket.ts';
 import { ActionForm } from './action-form.tsx';
+import type { ActionRequest } from './action-form.tsx';
 import { Columns, Tabs } from '../../ui/layout.tsx';
 import { Card, CardHead, Button, Empty, Verdict, Chip, Fold, DangerButton, Input, Select } from '../../ui/primitives.tsx';
 import { Lobby } from './lobby.tsx';
@@ -40,6 +41,8 @@ function RoomTable({ room }: { room: RoomState }) {
   const [to, setTo] = useState<string[]>([]);
   const [pinned, setPinned] = useState('');
   const [tab, setTab] = useState<'table' | 'log'>('table');
+  const [acted, setActed] = useState(false);
+  const elsewhere = (message: string | null) => { setActed(false); setError(message); };
 
   const sender = room.sheets.find(s => s.id === from) ?? null;
   const targets = room.sheets.filter(s => to.includes(s.id));
@@ -84,10 +87,10 @@ function RoomTable({ room }: { room: RoomState }) {
         main={{
           body: (
             <>
-              {error ? <Verdict tone="bad">{error}</Verdict> : null}
+              {error && !(acted && sender) ? <Verdict tone="bad">{error}</Verdict> : null}
 
-              <CombatBar room={room} onError={setError} />
-              {room.pending ? <div id={QUESTION_ID}><Prompt room={room} onError={setError} /></div> : null}
+              <CombatBar room={room} onError={elsewhere} />
+              {room.pending ? <div id={QUESTION_ID}><Prompt room={room} onError={elsewhere} /></div> : null}
 
               <Card>
                 <CardHead
@@ -144,7 +147,8 @@ function RoomTable({ room }: { room: RoomState }) {
                 sender={sender}
                 targets={targets}
                 places={room.places}
-                onError={setError}
+                refused={acted ? error : null}
+                onError={message => { setActed(true); setError(message); }}
                 onClear={() => { setFrom(null); setTo([]); setMoving(false); }}
                 onSelf={() => { if (sender) setTo(ids => (ids.includes(sender.id) ? ids : [...ids, sender.id])); }}
               /> : null}
@@ -380,6 +384,14 @@ function claimsOf(actorId: string, targets: Sheet[], mine: string[], theirs: str
   return Object.keys(claims).length ? { claims } : {};
 }
 
+const actionsOf = (room: RoomState, sender: Sheet): { id: string; label: string }[] => {
+  try { return availableActions(sender, { system: room.system, compendium: room.compendium }); } catch { return []; }
+};
+
+const unpaidWhy = (room: RoomState, fromId: string, toIds: string[], actionId: string, inputs?: ActionRequest['inputs']): string | null => costRefusal(
+  { system: room.system as System, compendium: room.compendium, clock: room.clock ?? null }, room.sheets,
+  { actionId, fromId, toIds, ...(inputs ? { inputs } : {}) });
+
 function ClaimRow({ label, words, picked, onToggle }: {
   label: string;
   words: [string, string][];
@@ -398,17 +410,30 @@ function ClaimRow({ label, words, picked, onToggle }: {
   );
 }
 
-function Actions({ room, sender, targets, places, onError, onClear, onSelf }: {
+function Actions({ room, sender, targets, places, refused, onError, onClear, onSelf }: {
   room: RoomState;
   places?: RoomState['places'];
   sender: Sheet | null;
   targets: Sheet[];
+  refused: string | null;
   onClear: () => void;
   onSelf: () => void;
   onError: (message: string | null) => void;
 }) {
   const [mine, setMine] = useState<string[]>([]);
   const [theirs, setTheirs] = useState<string[]>([]);
+  const said = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (refused) said.current?.scrollIntoView?.({ block: 'nearest' }); }, [refused]);
+  const aimed = JSON.stringify(targets.map(sheet => sheet.id));
+  const unpaid = useMemo(() => {
+    const out = new Map<string, string>();
+    if (!sender) return out;
+    for (const action of actionsOf(room, sender)) {
+      const why = unpaidWhy(room, sender.id, JSON.parse(aimed) as string[], action.id);
+      if (why) out.set(action.id, why);
+    }
+    return out;
+  }, [room, sender, aimed]);
   const myId = useSession(s => s.userId);
   const leading = room.members.some(m => m.userId === myId && m.role === 'gm');
   const secret = useRoom(s => s.secret) && leading;
@@ -428,6 +453,49 @@ function Actions({ room, sender, targets, places, onError, onClear, onSelf }: {
   } catch (err) {
     onError((err as Error).message);
   }
+
+  const ready = available.filter(action => !unpaid.has(action.id));
+  const reasons = [...new Set(available.flatMap(action => unpaid.get(action.id) ?? []))];
+  const form = (action: { id: string; label: string }) => (
+    <ActionForm
+      key={action.id}
+      system={room.system as System}
+      compendium={room.compendium}
+      actor={sender}
+      targets={targets}
+      places={places}
+      actionId={action.id}
+      label={action.label}
+      disabled={Boolean(room.pending)}
+      blocked={unpaid.get(action.id) ?? null}
+      refuse={request => unpaidWhy(room, sender.id, targets.map(sheet => sheet.id), request.actionId, request.inputs)}
+      expect={request => {
+        if (!sender) return null;
+        const chosen = targets.map(sheet => sheet.id);
+        const found = expectAction(
+          { system: room.system as never, compendium: room.compendium as never, clock: room.clock ?? null },
+          room.sheets as never,
+          {
+            actionId: request.actionId, fromId: sender.id, toIds: chosen,
+            ...(request.inputs ? { inputs: request.inputs } : {}),
+            ...claimsOf(sender.id, targets, mine, theirs),
+          });
+        return found.trouble ? `не выйдет: ${found.trouble}` : found.lines.join('\n');
+      }}
+      onAct={request => {
+        onError(null);
+        tableSocket.act({
+          roomId: room.id, actionId: request.actionId,
+          fromId: sender.id, toIds: targets.map(sheet => sheet.id),
+          ...(request.inputs ? { inputs: request.inputs } : {}),
+          ...claimsOf(sender.id, targets, mine, theirs),
+          ...(secret ? { hidden: true } : {}),
+        });
+        setMine([]);
+        setTheirs([]);
+      }}
+    />
+  );
 
   return (
     <Card>
@@ -460,51 +528,21 @@ function Actions({ room, sender, targets, places, onError, onClear, onSelf }: {
           <span className="faint">{secret ? 'броски и действия видите только вы, игрокам — «Ведущий бросает втайне»' : 'броски видят все'}</span>
         </div>
       ) : null}
+      {refused ? <div ref={said}><Verdict tone="bad">{refused}</Verdict></div> : null}
       {available.length === 0
         ? <span className="faint">
             У этого листа нет применимых действий — наденьте предмет или выучите приём на листе персонажа.
           </span>
         : (
-          <div className="inline inline--tight actions">
-            {available.map(action => (
-              <ActionForm
-                key={action.id}
-                system={room.system as System}
-                compendium={room.compendium}
-                actor={sender}
-                targets={targets}
-                places={places}
-                actionId={action.id}
-                label={action.label}
-                disabled={Boolean(room.pending)}
-                expect={request => {
-                  if (!sender) return null;
-                  const chosen = targets.map(sheet => sheet.id);
-                  const found = expectAction(
-                    { system: room.system as never, compendium: room.compendium as never, clock: room.clock ?? null },
-                    room.sheets as never,
-                    {
-                      actionId: request.actionId, fromId: sender.id, toIds: chosen,
-                      ...(request.inputs ? { inputs: request.inputs } : {}),
-                      ...claimsOf(sender.id, targets, mine, theirs),
-                    });
-                  return found.trouble ? `не выйдет: ${found.trouble}` : found.lines.join('\n');
-                }}
-                onAct={request => {
-                  onError(null);
-                  tableSocket.act({
-                    roomId: room.id, actionId: request.actionId,
-                    fromId: sender.id, toIds: targets.map(sheet => sheet.id),
-                    ...(request.inputs ? { inputs: request.inputs } : {}),
-                    ...claimsOf(sender.id, targets, mine, theirs),
-                    ...(secret ? { hidden: true } : {}),
-                  });
-                  setMine([]);
-                  setTheirs([]);
-                }}
-              />
+          <>
+            {ready.length ? <div className="inline inline--tight actions">{ready.map(form)}</div> : null}
+            {reasons.map(reason => (
+              <div key={reason} className="actions-off">
+                <span className="faint">{reason}</span>
+                <div className="inline inline--tight actions">{available.filter(action => unpaid.get(action.id) === reason).map(form)}</div>
+              </div>
             ))}
-          </div>
+          </>
         )}
     </Card>
   );

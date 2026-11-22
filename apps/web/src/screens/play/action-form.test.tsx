@@ -158,3 +158,35 @@ describe('вход, заполняемый дистанцией по полю', 
     expect(screen.queryByText(/по полю/)).toBeNull();
   });
 });
+
+describe('форма действия: плата', () => {
+  afterEach(() => { cleanup(); });
+
+  it('закрытая кнопка: нечем платить — неактивна, причина в подсказке', () => {
+    const sent: unknown[] = [];
+    render(<ActionForm system={system} compendium={compendium} actionId="меч:0" label="Удар" blocked="действие на этом ходу уже потрачено" onAct={r => sent.push(r)} />);
+    const button = screen.getByRole('button', { name: 'Удар' }) as HTMLButtonElement;
+    expect(button.disabled).toBe(true);
+    expect(button.title).toBe('действие на этом ходу уже потрачено');
+    fireEvent.click(button);
+    expect(sent).toEqual([]);
+  });
+
+  it('открытая форма: с введённым ответом плату не внести — причина видна, отправить нельзя; другой ответ — можно', () => {
+    const sent: unknown[] = [];
+    const asked: unknown[] = [];
+    render(<ActionForm system={system} compendium={compendium} actionId="ствол:0" label="Выстрел" onAct={r => sent.push(r)}
+      refuse={request => { asked.push(request); return request.inputs?.дистанция === 40 ? 'на этой дистанции оружие не бьёт' : null; }} />);
+    fireEvent.click(screen.getByText('Выстрел…'));
+    expect(asked).toEqual([]);
+    const number = document.querySelector('input[type=number]') as HTMLInputElement;
+    fireEvent.change(number, { target: { value: '40' } });
+    pickCombo(document.querySelector<HTMLElement>('[role="combobox"]')!, 'голова');
+    const send = screen.getByRole('button', { name: 'Выстрел' }) as HTMLButtonElement;
+    expect(screen.getByText('на этой дистанции оружие не бьёт')).toBeTruthy();
+    expect(send.disabled).toBe(true);
+    fireEvent.change(number, { target: { value: '10' } });
+    expect(screen.queryByText('на этой дистанции оружие не бьёт')).toBeNull();
+    expect((screen.getByRole('button', { name: 'Выстрел' }) as HTMLButtonElement).disabled).toBe(false);
+  });
+});

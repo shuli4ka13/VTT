@@ -8,7 +8,7 @@ import { refusalWords } from '../events/refusal.ts';
 import { propsOf, keyOf } from '../model/owned.ts';
 import { entryByKey } from '../model/item-ref.ts';
 import type { Inputs } from '../model/asks.ts';
-import { EngineError } from '../engine/errors.ts';
+import { EngineError, ActRefused } from '../engine/errors.ts';
 import { render, renderLines } from './render.ts';
 import { External, Pause, emptyJournal } from './external.ts';
 import { Path } from './path.ts';
@@ -88,7 +88,15 @@ const isKind = (system: System, of: unknown, kind: string): boolean => {
   return false;
 };
 
-export function runAct(run: Run, intent: ActIntent, root: Path): void {
+export function payOnly(world: ActWorld, intent: ActIntent): void {
+  const { system, compendium, clock } = world;
+  const journal: Journal = { ...emptyJournal(), ...world.journal, ids: world.journal.ids ?? {} };
+  const ext = new External(journal, { die: world.die, ...(world.newId ? { newId: world.newId } : {}) }, 'preview');
+  const run = new Run({ system, compendium, clock, sheets: world.sheets }, ext);
+  runAct(run, intent, Path.op('act'), 'cost');
+}
+
+export function runAct(run: Run, intent: ActIntent, root: Path, upTo?: 'cost'): void {
   const { system, compendium } = run.world;
   const { state } = run;
   const targets = [...new Set(intent.toIds)];
@@ -162,10 +170,11 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
     const ran = run.exec(costFrame, effect.cost, sink, run.argValues(costFrame));
     const report = reportOf('cost', action.effect, actor, action.label, sink, ran.stopped, false);
     const why = refusalWords(report, system);
-    if (why) throw new EngineError(`«${action.label}» не состоялось: ${why}`);
+    if (why) throw new ActRefused(action.label, why);
     if (sink.changes.length || sink.effects.length || sink.removed.length) state.write({ fromId: actor, toId: actor, report });
     state.write(...sink.after);
   }
+  if (upTo === 'cost') return;
 
   if (effect.bond && bond && !many) {
     const released = releaseHolder(system, [...state.sheets], bond.sheet, bond.effect);
@@ -208,7 +217,7 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
     const ran = run.exec(preFrame, pre.filter((_, index) => !plan.guards.has(index) && !plan.hidden.has(index)), sink, seeded);
     if (ran.stopped) {
       const why = refusalWords(reportOf('effect', action.effect, actor, action.label, sink, ran.stopped, false), system);
-      throw new EngineError(`«${action.label}» не состоялось: ${why ?? 'цепочка оборвана'}`);
+      throw new ActRefused(action.label, why ?? 'цепочка оборвана');
     }
     if (sink.trace.some(one => !idleTrace(one, system)) || sink.changes.length || sink.effects.length || sink.removed.length) {
       state.write({ fromId: actor, toId: actor, report: reportOf('effect', action.effect, actor, action.label, sink, null, false) });

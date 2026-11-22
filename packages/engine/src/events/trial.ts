@@ -1,10 +1,10 @@
 import type { Inputs } from '../model/asks.ts';
 import { deskOf, hasDesk, blankDesk } from './desk.ts';
-import { act } from '../core/act.ts';
+import { act, payOnly } from '../core/act.ts';
 import { emptyJournal } from '../core/external.ts';
 import type { Report } from '../core/log.ts';
 import { isPipeline } from '../engine/effects.ts';
-import { EngineError } from '../engine/errors.ts';
+import { EngineError, ActRefused } from '../engine/errors.ts';
 import { registry } from '../engine/steps/index.ts';
 import { listOf } from '../model/lists.ts';
 import { fieldsOf } from '../model/sheet-columns.ts';
@@ -132,5 +132,18 @@ export function expectAction(
     return { lines: out.log, trouble: null };
   } catch (err) {
     return { lines: [], trouble: (err as Error).message };
+  }
+}
+
+export function costRefusal(
+  world: { system: System; compendium: Compendium; clock: Clock | null },
+  sheets: Sheet[],
+  intent: { actionId: string; fromId: string; toIds: string[]; inputs?: Inputs },
+): string | null {
+  try {
+    payOnly({ ...world, sheets, die: dieOf('avg'), journal: emptyJournal() }, intent);
+    return null;
+  } catch (err) {
+    return err instanceof ActRefused ? err.why : null;
   }
 }

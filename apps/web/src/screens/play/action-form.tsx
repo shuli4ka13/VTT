@@ -13,7 +13,7 @@ export interface ActionRequest {
 
 type Answer = string | Record<string, string>;
 
-export function ActionForm({ system, compendium, actor, targets = [], actionId, label, disabled, onAct, expect, places }: {
+export function ActionForm({ system, compendium, actor, targets = [], actionId, label, disabled, blocked, refuse, onAct, expect, places }: {
   system: System;
   compendium: Compendium;
   actor?: Sheet;
@@ -21,6 +21,8 @@ export function ActionForm({ system, compendium, actor, targets = [], actionId, 
   actionId: string;
   label: string;
   disabled?: boolean;
+  blocked?: string | null;
+  refuse?: (request: ActionRequest) => string | null;
   onAct: (request: ActionRequest) => void;
   expect?: (request: ActionRequest) => string | null;
   places?: Places;
@@ -103,20 +105,23 @@ export function ActionForm({ system, compendium, actor, targets = [], actionId, 
   };
 
   if (!asked.length) {
-    return <Button variant="primary" disabled={disabled} onClick={send} onMouseEnter={guess} title={tip ?? undefined}>{label}</Button>;
+    return <Button variant="primary" disabled={disabled || Boolean(blocked)} onClick={send} onMouseEnter={guess} title={blocked ?? tip ?? undefined}>{label}</Button>;
   }
 
   if (!open) {
     return (
       <Button
-        variant="primary" disabled={disabled}
-        title={`спросит перед броском: ${asked.map(p => p.label ?? p.key).join(', ')}`}
+        variant="primary" disabled={disabled || Boolean(blocked)}
+        title={blocked ?? `спросит перед броском: ${asked.map(p => p.label ?? p.key).join(', ')}`}
         onClick={() => setOpen(true)}
       >
         {label}…
       </Button>
     );
   }
+
+  const given = collect();
+  const unpaid = refuse && !problemOf(given) ? refuse({ actionId, inputs: normalizeInputs(asked, given) }) : null;
 
   return (
     <div className="stack stack--tight action-form">
@@ -150,7 +155,8 @@ export function ActionForm({ system, compendium, actor, targets = [], actionId, 
         ));
       })}
       {trouble ? <Verdict tone="bad">{trouble}</Verdict> : null}
-      <Button variant="primary" disabled={disabled} onClick={send} onMouseEnter={guess} title={tip ?? undefined}>{label}</Button>
+      {unpaid ? <Verdict tone="bad">{unpaid}</Verdict> : null}
+      <Button variant="primary" disabled={disabled || Boolean(unpaid)} onClick={send} onMouseEnter={guess} title={unpaid ?? tip ?? undefined}>{label}</Button>
     </div>
   );
 }

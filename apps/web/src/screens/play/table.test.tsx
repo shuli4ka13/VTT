@@ -455,3 +455,84 @@ describe('стол: правки броска у действия', () => {
     expect(sent.at(-1)).toMatchObject({ actionId: 'меч:0', fromId: 'а', toIds: ['б'], claims: { а: ['зрение'], б: ['зрение'] } });
   });
 });
+
+describe('стол: отказ действия виден у действия', () => {
+  const sent: unknown[] = [];
+  const original = tableSocket.act.bind(tableSocket);
+  const refusal = '«Меч» не состоялось: действие на этом ходу уже потрачено';
+  const paid = (points: number): RoomState => ({
+    ...room(null),
+    system: {
+      id: 'x', name: 'x',
+      tables: {
+        лист: { shape: 'single', owner: 'sheet', columns: [{ key: 'очки', label: 'Очки действия', kind: 'number' }] },
+        меч: { shape: 'book', use: 'action', label: 'Меч', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] },
+      },
+      effects: {
+        удар: {
+          label: 'Удар', activation: 'manual', params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }],
+          cost: [
+            { type: 'branch', if: { expr: '@действующий.очки < 1' } },
+            { type: 'stop', note: { expr: '"действие на этом ходу уже потрачено"' } },
+            { type: 'end' },
+          ],
+          steps: [],
+        },
+      },
+    },
+    compendium: { records: [{ id: 'меч', table: 'меч', label: 'Меч', cells: {} }] },
+    sheets: [
+      { id: 'а', systemId: 'x', name: 'Арвен', values: { очки: points }, has: [{ of: 'меч' }], effects: [] },
+      { id: 'б', systemId: 'x', name: 'Мирра', values: {}, has: [], effects: [] },
+    ],
+  } as unknown as RoomState);
+  const token = (name: string) => screen.getAllByText(name)[0]!.closest('button')!;
+  const actionsCard = () => screen.getByText('Арвен действует').closest('.card') as HTMLElement;
+  beforeEach(() => {
+    sent.length = 0;
+    tableSocket.act = (intent: unknown) => { sent.push(intent); };
+    useSession.setState(state => ({ ...state, userId: 'u' }));
+  });
+  afterEach(() => { cleanup(); tableSocket.act = original; useSession.setState(state => ({ ...state, userId: '' })); });
+
+  it('действие, которое нечем оплатить, неактивно, и рядом сказано почему', () => {
+    useRoom.setState(state => ({ ...state, room: paid(0), log: [], error: null }));
+    renderOpen(<TableScreen />);
+    fireEvent.click(token('Арвен'));
+    const button = screen.getByRole('button', { name: 'Меч' }) as HTMLButtonElement;
+    expect(button.disabled).toBe(true);
+    expect(button.closest('.actions-off')!.textContent).toContain('действие на этом ходу уже потрачено');
+    expect(screen.getAllByText('действие на этом ходу уже потрачено')).toHaveLength(1);
+    fireEvent.click(button);
+    expect(sent).toEqual([]);
+  });
+
+  it('оплатить есть чем — действие активно и без пояснений', () => {
+    useRoom.setState(state => ({ ...state, room: paid(1), log: [], error: null }));
+    renderOpen(<TableScreen />);
+    fireEvent.click(token('Арвен'));
+    const button = screen.getByRole('button', { name: 'Меч' }) as HTMLButtonElement;
+    expect(button.disabled).toBe(false);
+    expect(button.closest('.actions-off')).toBeNull();
+  });
+
+  it('отказ сервера после нажатия показан в карточке действий, один раз', () => {
+    useRoom.setState(state => ({ ...state, room: paid(1), log: [], error: null }));
+    renderOpen(<TableScreen />);
+    fireEvent.click(token('Арвен'));
+    fireEvent.click(screen.getByRole('button', { name: 'Меч' }));
+    expect(sent).toHaveLength(1);
+    act(() => { useRoom.setState(state => ({ ...state, error: refusal })); });
+    expect(screen.getAllByText(refusal)).toHaveLength(1);
+    expect(actionsCard().textContent).toContain(refusal);
+  });
+
+  it('ошибка не от действия остаётся наверху, а не у действий', () => {
+    useRoom.setState(state => ({ ...state, room: paid(1), log: [], error: null }));
+    renderOpen(<TableScreen />);
+    fireEvent.click(token('Арвен'));
+    act(() => { useRoom.setState(state => ({ ...state, error: 'бой не идёт — вступать некуда' })); });
+    expect(screen.getAllByText('бой не идёт — вступать некуда')).toHaveLength(1);
+    expect(actionsCard().textContent).not.toContain('бой не идёт');
+  });
+});

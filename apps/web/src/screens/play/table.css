@@ -68,6 +68,7 @@
   font-weight: 600;
 }
 .actions .btn--primary:hover:not(:disabled) { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.actions-off { display: flex; flex-direction: column; gap: var(--s-1); }
 
 .log { display: flex; flex-direction: column; }
 .log-line {

@@ -31,4 +31,13 @@ export class CycleError extends EngineError {
 
 export class TableError extends EngineError {}
 
+export class ActRefused extends EngineError {
+  readonly why: string;
+
+  constructor(label: string, why: string) {
+    super(`«${label}» не состоялось: ${why}`);
+    this.why = why;
+  }
+}
+
 export const isRuleError = (err: unknown): boolean => err instanceof EngineError || err instanceof FormulaError;
