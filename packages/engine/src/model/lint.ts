@@ -5,7 +5,7 @@ import { loopOf, loopParam } from '../engine/steps/each.ts';
 import { chosenEffect, choicesOfInput, emittedChoices } from './payments.ts';
 import { SEEN_LABEL, ROLLED, ROLLED_LABEL, ANY_ACTION, PHASES } from '../events/bus.ts';
 import { HEARD_WORDS } from '../events/lifecycle.ts';
-import type { System, Compendium, Effect, Step, Stage, Guard, Param, Table, Modifier } from './types.ts';
+import type { System, Compendium, Effect, Step, Stage, Guard, Param, Table, Modifier, Sheet } from './types.ts';
 import { registry, loopsAt, splitsTargets } from '../engine/steps/index.ts';
 import { numbersOf, kindOfRule, placesOf, fitsPlace, fitKinds, countUnread, rollsCounting, placesMatching, wordFits, hasRollFilter } from './die-kinds.ts';
 import { ROLL_KIND_WORDS, NUMBER_MISFIT, EDIT_MISFIT, EDIT_SIDES_MISFIT, COUNT_UNREAD, rollNumberWord, WORD_MISFITS_ROLLS, WORD_OUTSIDE_ROLLS, TWO_RULES, TAG_UNREACHED } from '../words/dice-kinds.ts';
@@ -33,7 +33,11 @@ import {
   type Where, type Reference, type RefKind, type Declared, type Listener,
   LISTEN, contractsOf, HOLDER, DESK_NAME, holderNameOf, tiedToHolder,
 } from './references.ts';
-import { fieldsOf, fieldOf, fieldProblems, onSheet, isSingle, holderOf, rowKeyOf, hasField, rollEntryOf, ROW } from './sheet-columns.ts';
+import { fieldsOf, fieldOf, fieldProblems, onSheet, isSingle, holderOf, rowKeyOf, hasField, rollEntryOf, ROW, isFormulaCell, misfit } from './sheet-columns.ts';
+import { newPass, startOf } from '../engine/calc.ts';
+import { CycleError } from '../engine/errors.ts';
+import { hasDesk } from '../events/desk.ts';
+import { DESK_ID } from '../engine/owners.ts';
 import { rolledColumn, thrownDie, fieldGives } from './rolled.ts';
 import { isRange, rowByKey } from './tables.ts';
 import { walkSheet } from './paths.ts';
@@ -390,6 +394,64 @@ function emittedBy(steps: Step[] | undefined, choices: (name: string) => string[
 }
 
 const inputsOf = (system: System, id: string) => (name: string): string[] => choicesOfInput(system, id, name);
+
+const fieldWhere = (system: System, tableId: string, column: string): Where => {
+  const table = system.tables?.[tableId];
+  if (isBook(table)) return { tab: 'records', kind: tableId, part: 'props', key: column };
+  return isSingle(table) && holderOf(table) === 'sheet' ? { tab: 'sheet', field: column } : { tab: 'rules', section: 'tables', key: tableId };
+};
+
+function startProblems(system: System): Problem[] {
+  const out: Problem[] = [];
+  for (const [id, table] of Object.entries(system.tables ?? {})) {
+    if (onSheet(table)) continue;
+    for (const column of table.columns ?? []) {
+      const own = isFormulaCell(column.default) || (table.rows ?? []).some(row => isFormulaCell(row.view?.[column.key]?.default));
+      if (own) out.push({ where: fieldWhere(system, id, column.key), level: 'error', text: `«${column.label || column.key}»: значение при создании формулой бывает только у поля листа, группы или стола — здесь впишите само значение` });
+    }
+  }
+  for (const [id, effect] of Object.entries(system.effects)) {
+    for (const column of [...(effect.params ?? []), ...(effect.returns ?? [])]) {
+      if (!isFormulaCell(column.default)) continue;
+      out.push({ where: { tab: 'effects', effect: id, part: 'params', key: column.key }, level: 'error', text: `вход «${column.label || column.key}»: значение по умолчанию — только само значение; формулу впишите там, где вход заполняют` });
+    }
+  }
+  const started = fieldsOf(system).filter(field => field.value.kind === 'stored' && field.value.start);
+  if (!started.length) return out;
+  const blank = (id: string): Sheet => ({ id, systemId: system.id ?? '', name: id, values: {}, has: [], effects: [] } as Sheet);
+  const desk = hasDesk(system) ? blank(DESK_ID) : null;
+  const passes = {
+    sheet: newPass(system, blank('новый'), { shared: desk ? [desk] : null, fresh: true }),
+    desk: newPass(system, desk ?? blank(DESK_ID), { only: 'desk', fresh: true }),
+  };
+  const told = new Set<string>();
+  for (const field of started) {
+    try { startOf(field, field.lives === 'desk' ? passes.desk : passes.sheet); } catch (err) {
+      if (!(err instanceof CycleError)) continue;
+      const ring = err.path.slice(err.path.indexOf(err.path[err.path.length - 1]!));
+      const key = [...new Set(ring)].sort().join('|');
+      if (told.has(key)) continue;
+      told.add(key);
+      const names = ring.map(tag => `«${fieldOf(system, tag)?.label ?? tag}»`).join(' → ');
+      out.push({ where: fieldWhere(system, field.home, field.cell?.column ?? field.tag), level: 'error', text: `значения при создании считаются друг из друга по кругу: ${names} — у одного из полей впишите число` });
+    }
+  }
+  return out;
+}
+
+function sampleProblems(system: System): Problem[] {
+  const out: Problem[] = [];
+  for (const [tag, value] of Object.entries(system.sample ?? {})) {
+    const field = fieldOf(system, tag);
+    if (!field || field.value.kind !== 'stored') {
+      out.push({ where: { tab: 'sheet' }, level: 'warn', text: `у образца листа осталось значение «${tag}» — такого поля для ввода больше нет, значение ни на что не влияет` });
+      continue;
+    }
+    const wrong = misfit(field, value);
+    if (wrong) out.push({ where: { tab: 'sheet', field: field.cell ? undefined : tag }, level: 'warn', text: `образец листа: ${wrong}` });
+  }
+  return out;
+}
 
 function tableFieldProblems(system: System): Problem[] {
   return fieldProblems(system).map(problem => ({
@@ -1552,6 +1614,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   out.push(...rowNameProblems(system));
   out.push(...labelTwinProblems(system));
   out.push(...tableFieldProblems(system));
+  out.push(...startProblems(system), ...sampleProblems(system));
   for (const found of [...variantProblems(system), ...cellScopeProblems(system)]) {
     if (!out.some(p => sameWhere(p.where, found.where) && p.text === found.text)) out.push({ where: found.where, level: 'error', text: found.text });
   }

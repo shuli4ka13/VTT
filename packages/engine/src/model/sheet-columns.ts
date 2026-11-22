@@ -4,7 +4,7 @@ import type { System, Table, TableRow, TableColumn, CellView, Field, FieldValue,
 import type { SheetPart, Control, SystemRoll, RollField } from '@vtt/schema';
 import { isTagWord } from '../engine/roll-tags.ts';
 import { linkOf, rowByKey, staticCell } from './tables.ts';
-import { isBlank } from './blank.ts';
+import { isBlank, fixedDefault } from './blank.ts';
 
 export type { CellMark };
 
@@ -175,7 +175,7 @@ function rowPath(system: System, tableId: string, row: TableRow, path: string[])
     if (rest.length) throw new EngineError(`${where}: «${column.label || head}» — формула, дальше идти некуда`);
     return `(${withRow(system, tableId, row, source.expr)})`;
   }
-  const cell = source.kind === 'value' ? source.value : column.default;
+  const cell = source.kind === 'value' ? source.value : fixedDefault(column);
   const link = linkOf(column);
   if (column.many && rest.length) throw new EngineError(`${where}: ${manyText(system, column, rest[0]!)}`);
   if (link && rest.length) {
@@ -340,11 +340,14 @@ const valueOf = (column: TableColumn, start: unknown, bounds: Pick<TableColumn, 
   const kind = column.kind ?? 'number';
   const type = (STORED.includes(kind) ? kind : 'text') as 'number' | 'text' | 'boolean' | 'choice';
   const many = type === 'choice' && column.many === true;
+  const formula = isFormulaCell(start) ? start.expr.trim() : '';
+  const fixed = isFormulaCell(start) ? undefined : start;
   return {
     kind: 'stored', type,
     ...(column.from && type === 'choice' ? { from: column.from } : {}),
     ...(many ? { many: true as const } : {}),
-    default: (many ? (Array.isArray(start) ? start : []) : start ?? ZERO[type]) as number | string | boolean,
+    default: (many ? (Array.isArray(fixed) ? fixed : []) : fixed ?? ZERO[type]) as number | string | boolean,
+    ...(formula ? { start: formula } : {}),
     ...boundsOf(bounds),
   };
 };

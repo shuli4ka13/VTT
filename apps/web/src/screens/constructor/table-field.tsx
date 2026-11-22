@@ -6,7 +6,8 @@ import { VIEWS, columnFamily, viewNeeds, takesBounds, TAKES_STEP } from '../../s
 import { BoundFormula } from './bound-field.tsx';
 import { rowNames } from './row-names.ts';
 import { Field, Input, Select, Chip, Button, NumInput, Segmented, Verdict } from '../../ui/primitives.tsx';
-import { ROW, cellSource, onSheet, isSingle, fieldsOf, rowKeyOf } from '@vtt/engine';
+import { useState } from 'react';
+import { ROW, cellSource, onSheet, isSingle, fieldsOf, rowKeyOf, isFormulaCell } from '@vtt/engine';
 import type { System, Column, Control, SheetPart } from '@vtt/schema';
 
 export function readyForSheet(draft: System, tableId: string): void {
@@ -34,29 +35,46 @@ export function ColumnSheetFields({ tableId, column, system }: { tableId: string
   const edit = (change: (draft: Column) => void) => editColumn(tableId, column.key, change);
   const editSystem = useWorld(s => s.editSystem);
   const rolled = rollOfColumn(system, tableId, column.key);
+  const [asFormula, setAsFormula] = useState(false);
+  const numeric = column.kind === 'number' || column.kind === undefined;
+  const byFormula = numeric && (asFormula || isFormulaCell(column.default));
 
   return (
     <>
       <div className="inline inline--tight"><Chip>{stored ? 'вводит игрок' : 'считается'}</Chip></div>
       <div className="row">
         {stored && !column.many ? (
-          <Field label="В новом листе">
-            {column.kind === 'boolean' ? (
-              <Select<string> label="в новом листе" value={column.default === undefined ? '' : column.default ? 'да' : 'нет'}
-                options={[['', '— не задано'], ['да', 'да'], ['нет', 'нет']]}
-                onChange={next => edit(draft => { if (!next) delete draft.default; else draft.default = next === 'да'; })} />
-            ) : column.kind === 'choice' && column.from && system.tables?.[column.from] ? (
-              <Select<string> label="в новом листе" value={column.default === undefined ? '' : String(column.default)}
-                options={[['', '— не задано'], ...(system.tables[column.from]!.rows ?? []).map(row => [String(row.value), row.label ?? String(row.value)] as const)]}
-                onChange={next => edit(draft => {
-                  const row = (system.tables?.[column.from!]?.rows ?? []).find(r => String(r.value) === next);
-                  if (!next || !row) delete draft.default; else draft.default = row.value as never;
-                })} />
-            ) : (
-              <Input value={column.default === undefined ? '' : String(column.default)}
-                onChange={text => edit(draft => { if (!text.trim()) delete draft.default; else draft.default = column.kind === 'number' ? parseStart(text) : text; })} />
-            )}
-          </Field>
+          <div className="start-field">
+            <Field label="В новом листе">
+              {column.kind === 'boolean' ? (
+                <Select<string> label="в новом листе" value={column.default === undefined ? '' : column.default ? 'да' : 'нет'}
+                  options={[['', '— не задано'], ['да', 'да'], ['нет', 'нет']]}
+                  onChange={next => edit(draft => { if (!next) delete draft.default; else draft.default = next === 'да'; })} />
+              ) : column.kind === 'choice' && column.from && system.tables?.[column.from] ? (
+                <Select<string> label="в новом листе" value={column.default === undefined ? '' : String(column.default)}
+                  options={[['', '— не задано'], ...(system.tables[column.from]!.rows ?? []).map(row => [String(row.value), row.label ?? String(row.value)] as const)]}
+                  onChange={next => edit(draft => {
+                    const row = (system.tables?.[column.from!]?.rows ?? []).find(r => String(r.value) === next);
+                    if (!next || !row) delete draft.default; else draft.default = row.value as never;
+                  })} />
+              ) : byFormula ? (
+                <BoundFormula value={column.default} system={system} placeholder="формула: посчитается один раз, когда лист заводят"
+                  where={`${table.label || tableId} · ${column.label || column.key} · в новом листе`}
+                  {...(single ? {} : { table: tableId, names: rowNames(system, tableId) })}
+                  onChange={next => edit(draft => { if (next === null) delete draft.default; else draft.default = next; })} />
+              ) : (
+                <Input value={column.default === undefined ? '' : String(column.default)}
+                  onChange={text => edit(draft => { if (!text.trim()) delete draft.default; else draft.default = column.kind === 'number' ? parseStart(text) : text; })} />
+              )}
+            </Field>
+            {numeric && byFormula ? (
+              <Button size="sm" variant="ghost" title="вписать само число"
+                onClick={() => { setAsFormula(false); if (isFormulaCell(column.default)) edit(draft => { delete draft.default; }); }}>число</Button>
+            ) : numeric ? (
+              <Button size="sm" variant="ghost" title="посчитать, когда лист заводят: например, хиты равны максимуму"
+                onClick={() => setAsFormula(true)}>формула</Button>
+            ) : null}
+          </div>
         ) : null}
         {single ? null : (
           <Field label="Подпись">

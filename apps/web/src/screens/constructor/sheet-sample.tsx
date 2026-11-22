@@ -7,13 +7,10 @@ import { SheetView } from '../../sheet/sheet-view.tsx';
 import { Card, Chip, Field, Select, Button, Fold } from '../../ui/primitives.tsx';
 import { recordDetails } from '../../sheet/record-view.tsx';
 import { ThingsList, ThingLine } from '../../sheet/things-list.tsx';
-import { sheetKinds, shownOn, recordKinds, recordKindOf, availableActions, pageOfBlock, placeBlock, setWidth, setHeight, SHEET_LISTS, dice, fieldsOf, fieldOf, rowKeyOf, listOf, optionsOf } from '@vtt/engine';
+import { sheetKinds, shownOn, recordKinds, recordKindOf, availableActions, pageOfBlock, placeBlock, setWidth, setHeight, SHEET_LISTS, dice, fieldsOf, fieldOf, listOf, optionsOf, freshSheet, hasDesk, blankDesk } from '@vtt/engine';
 import { OPEN_PAGE } from './page-panel.tsx';
 import type { SheetList } from '@vtt/schema';
-import type { Sheet, StoredValue, System, CompendiumRecord, Column } from '@vtt/schema';
-import { setRowView } from './row-view.ts';
-
-const ZERO: Record<string, unknown> = { number: 0, text: '', boolean: false, choice: '' };
+import type { Sheet, StoredValue, System, Compendium, CompendiumRecord, Column } from '@vtt/schema';
 
 const DICE = [[1, 4], [1, 6], [1, 8], [1, 10], [1, 12], [2, 6]].map(([count, sides]) => dice(count, sides!));
 
@@ -50,22 +47,20 @@ export function sampleValues(system: System): Record<string, StoredValue> {
   return out;
 }
 
-export function setSample(draft: System, tag: string, value: StoredValue): void {
+const noValue = (value: unknown): boolean => value === null || value === undefined || value === '' || (Array.isArray(value) && !value.length);
+
+export function setSample(draft: System, tag: string, value: StoredValue, base?: unknown): void {
   const field = fieldOf(draft, tag);
-  const table = field ? draft.tables?.[field.home] : undefined;
-  if (!field || !table || field.value.kind !== 'stored' || value === null) return;
-  const blank = value === '' || (Array.isArray(value) && !value.length);
-  if (field.cell) {
-    const mark = field.cell;
-    const row = (table.rows ?? []).find(r => rowKeyOf(r) === mark.row);
-    if (!row) return;
-    const own = (table.columns ?? []).find(c => c.key === mark.column);
-    setRowView(row, mark.column, 'default', blank ? undefined : value, own?.default ?? ZERO[own?.kind ?? 'number']);
-    return;
-  }
-  const column = (table.columns ?? []).find(c => c.key === tag);
-  if (!column) return;
-  if (blank || value === ZERO[column.kind ?? 'number']) delete column.default; else column.default = value;
+  if (!field || field.value.kind !== 'stored') return;
+  const sample = { ...(draft.sample ?? {}) };
+  if (noValue(value) || JSON.stringify(value) === JSON.stringify(base)) delete sample[tag]; else sample[tag] = value;
+  if (Object.keys(sample).length) draft.sample = sample; else delete draft.sample;
+}
+
+export function sampleBase(system: System, of: string, book: Compendium): Record<string, StoredValue> {
+  const fresh = freshSheet(system, { id: 'образец', name: 'Образец листа', ...(of ? { of } : {}) },
+    { compendium: book, shared: hasDesk(system) ? [blankDesk(system)] : null });
+  return { ...sampleValues(system), ...fresh.values };
 }
 
 export function SheetSample({ system, picked, onPick, onPickBlock, onPickRow }: {
@@ -87,10 +82,11 @@ export function SheetSample({ system, picked, onPick, onPickBlock, onPickRow }: 
     .map((item, at) => ({ id: `образец-${at + 1}`, table: item.table, label: item.label || `${system.tables![item.table]!.label || item.table} ${at + 1}`, cells: item.cells })), [bag, system.tables]);
   const change = (at: number, next: (item: (typeof bag)[number]) => (typeof bag)[number]) => setBag(bag.map((item, other) => (other === at ? next(item) : item)));
   const book = useMemo(() => ({ ...compendium, records: [...(compendium.records ?? []), ...samples] }), [compendium, samples]);
+  const base = useMemo(() => sampleBase(system, of, book), [system, of, book]);
   const sample = useMemo<Sheet>(() => ({
     id: 'образец', systemId: system.id ?? '', name: kind?.label ?? 'Образец листа',
-    ...(of ? { of } : {}), values: sampleValues(system), has: samples.map(record => ({ of: record.id })), effects: [],
-  }), [system, of, kind?.label, samples]);
+    ...(of ? { of } : {}), values: { ...base, ...(system.sample ?? {}) }, has: samples.map(record => ({ of: record.id })), effects: [],
+  }), [system, of, kind?.label, samples, base]);
   const reader = useReader(system, sample, book);
   const everyField = fieldsOf(system);
   const placed = everyField.filter(f => f.placements?.length);
@@ -170,7 +166,7 @@ export function SheetSample({ system, picked, onPick, onPickBlock, onPickRow }: 
         onChange={(tag, value) => {
           const now = reader.valueOf(tag);
           if (now.ok && now.value === value) return;
-          editSystem(draft => setSample(draft, tag, value));
+          editSystem(draft => setSample(draft, tag, value, base[tag]));
         }}
       />
       <span className="faint">образец: значения подставлены для примера</span>

@@ -8,6 +8,7 @@ import { VALUE_COLUMN, isRange } from '../model/tables.ts';
 import { addressOf, cellSource, hasField, isLive, withRow } from '../model/sheet-columns.ts';
 import type { System, Table } from '../model/types.ts';
 import type { Pass } from './calc.ts';
+import { fixedDefault } from '../model/blank.ts';
 
 export const CELL_PREFIX = 'cell:';
 
@@ -51,7 +52,7 @@ export function readCell(
   if (isLive(table, spec, row)) return pass.resolve(addressOf(tableId, row, column));
   const source = cellSource(spec, row);
   if (source.kind === 'value') return source.value;
-  if (source.kind === 'input') return spec.default;
+  if (source.kind === 'input') return fixedDefault(spec);
 
   const tag = cellTagOf(tableId, rowKeyOf(table, input), column);
   const formula = compile(withRow(system, tableId, row, source.expr));

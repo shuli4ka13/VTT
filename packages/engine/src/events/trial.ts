@@ -9,6 +9,7 @@ import { registry } from '../engine/steps/index.ts';
 import { listOf } from '../model/lists.ts';
 import { fieldsOf } from '../model/sheet-columns.ts';
 import { isUnder } from '../model/owned.ts';
+import { freshSheet } from '../model/fresh.ts';
 import type { System, Compendium, Sheet, Die, Effect } from '../model/types.ts';
 import type { Clock } from '../engine/clock.ts';
 
@@ -61,7 +62,7 @@ function firstChoice(effect: Effect, key: string): string | null {
 }
 
 export function mannequin(system: System, id: string, name: string): Sheet {
-  return { id, systemId: system.id ?? 'system', name, values: {}, has: [], effects: [] };
+  return { ...freshSheet(system, { id, name }), systemId: system.id ?? 'system' };
 }
 
 export interface TrialArgs {

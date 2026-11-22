@@ -24,6 +24,7 @@ export interface Pass {
   round?: () => number | null;
   only?: Scope;
   compendium?: Compendium;
+  fresh?: true;
 }
 
 export interface PassOptions {
@@ -34,6 +35,7 @@ export interface PassOptions {
   combat?: () => boolean;
   round?: () => number | null;
   peer?: (id: string) => Pass | null;
+  fresh?: boolean;
 }
 
 export const livesOn = (field: Pick<Field, 'lives'> | null | undefined): 'sheet' | 'desk' | 'group' => field?.lives ?? 'sheet';
@@ -69,6 +71,7 @@ export function newPass(system: System, sheet: Sheet, options: PassOptions = {})
     ...(options.only ? { only: options.only } : {}),
     ...(options.compendium ? { compendium: options.compendium } : {}),
     ...(options.round ? { round: options.round } : {}),
+    ...(options.fresh ? { fresh: true as const } : {}),
   };
 
   const deskSheet = options.shared?.find(s => s.id === DESK_ID);
@@ -156,7 +159,7 @@ function computeBase(field: Field, pass: Pass): unknown {
 
   switch (source.kind) {
     case 'stored':
-      return readStored(pass.sheet, field);
+      return readStored(pass, field);
 
     case 'formula':
       return compile(source.expr).evaluate(resolve, toolsOf(pass.system, pass, field.tag));
@@ -167,8 +170,14 @@ function computeBase(field: Field, pass: Pass): unknown {
   }
 }
 
-function readStored(sheet: Sheet, field: Field): unknown {
-  const values = sheet.values || {};
+function readStored(pass: Pass, field: Field): unknown {
+  const values = pass.sheet.values || {};
   if (Object.prototype.hasOwnProperty.call(values, field.tag)) return values[field.tag];
-  return field.value.kind === 'stored' ? field.value.default : undefined;
+  if (field.value.kind !== 'stored') return undefined;
+  return pass.fresh && field.value.start ? startOf(field, pass) : field.value.default;
+}
+
+export function startOf(field: Field, pass: Pass): unknown {
+  if (field.value.kind !== 'stored' || !field.value.start) return undefined;
+  return compile(field.value.start).evaluate(tag => pass.resolve(tag), toolsOf(pass.system, pass, field.tag));
 }

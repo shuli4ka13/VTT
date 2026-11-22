@@ -2,6 +2,7 @@ import { DESK_ID, isDesk } from '../engine/owners.ts';
 import { livesOn } from '../engine/calc.ts';
 import type { Sheet, System } from '../model/types.ts';
 import { fieldsOf } from '../model/sheet-columns.ts';
+import { freshSheet } from '../model/fresh.ts';
 
 export { isDesk };
 
@@ -10,7 +11,7 @@ export const deskOf = (sheets: readonly Sheet[]): Sheet | null => sheets.find(is
 export const hasDesk = (system: System): boolean => fieldsOf(system).some(field => livesOn(field) === 'desk');
 
 export const blankDesk = (system: System): Sheet =>
-  ({ id: DESK_ID, systemId: system.id, name: 'Стол', values: {}, has: [], effects: [] } as Sheet);
+  ({ ...freshSheet(system, { id: DESK_ID, name: 'Стол' }), systemId: system.id } as Sheet);
 
 export const deskFor = (system: System, sheets: readonly Sheet[]): Sheet | null =>
   deskOf(sheets) ?? (hasDesk(system) ? blankDesk(system) : null);

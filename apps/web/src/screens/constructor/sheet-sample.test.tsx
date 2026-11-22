@@ -82,3 +82,75 @@ describe('образец листа: служебные поля и выбор �
     expect(document.body.textContent).toContain('служебные поля');
   });
 });
+
+describe('образец листа: свои значения, в настоящие листы не попадают', () => {
+  afterEach(cleanup);
+  const start = {
+    id: 'x', name: 'x', effects: {},
+    tables: {
+      лист: { shape: 'single', columns: [
+        { key: 'сила', label: 'Сила', kind: 'number', default: 10 },
+        { key: 'запас_макс', label: 'Предел', expr: { expr: '@сила * 2' } },
+        { key: 'запас', label: 'Запас', kind: 'number', default: { expr: '@запас_макс' } },
+      ] },
+    },
+    blocks: [{ name: 'Основа', parts: [{ table: 'лист' }] }],
+  } as unknown as System;
+  const fieldOf = (label: string) => screen.getByText(label).closest('.field')!.querySelector('input') as HTMLInputElement;
+  function Live() {
+    const current = useWorld(state => state.system);
+    return <SheetSample system={current} />;
+  }
+  const open = () => {
+    useWorld.setState(state => ({ ...state, system: start, compendium: { records: [] }, activePage: null, activeBlock: null }));
+    render(<Live />);
+  };
+
+  it('образец показывает то, с чем заводится новый лист: число и формулу при создании', () => {
+    open();
+    expect(fieldOf('Сила').value).toBe('10');
+    expect(fieldOf('Запас').value).toBe('20');
+  });
+
+  it('ввод в образец пишет значения образца и не трогает «в новом листе» колонки', () => {
+    open();
+    fireEvent.change(fieldOf('Сила'), { target: { value: '15' } });
+    const system = useWorld.getState().system;
+    expect(system.sample).toEqual({ сила: 15 });
+    expect(system.tables!['лист']!.columns![0]!.default).toBe(10);
+    expect(fieldOf('Сила').value).toBe('15');
+  });
+
+  it('значение, равное тому, с чем лист и так заводится, своё снимает', () => {
+    open();
+    fireEvent.change(fieldOf('Сила'), { target: { value: '15' } });
+    fireEvent.change(fieldOf('Сила'), { target: { value: '10' } });
+    expect(useWorld.getState().system).not.toHaveProperty('sample');
+  });
+});
+
+describe('значения образца идут за полем', () => {
+  it('переименованное поле и таблица уносят значение образца с собой, удалённое поле — снимает', async () => {
+    const { renameColumn, moveTable } = await import('./rules/tables-section.tsx');
+    const world = {
+      id: 'x', name: 'x', effects: {},
+      tables: {
+        лист: { shape: 'single', columns: [{ key: 'field', label: 'Новое поле', kind: 'number' }, { key: 'запас', label: 'Запас', kind: 'number' }] },
+        навыки: { label: 'Навыки', owner: 'sheet', key: 'word', columns: [{ key: 'ранг', label: 'Ранг', kind: 'number' }], rows: [{ value: 'атлетика' }] },
+      },
+      sample: { field: 5, запас: 2, 'навыки.атлетика.ранг': 3 },
+    } as unknown as System;
+    useWorld.setState(state => ({ ...state, system: world }));
+    const edit = useWorld.getState().editSystem;
+    edit(draft => renameColumn(draft, 'лист', 'field', 'Сила', 'сила'));
+    expect(useWorld.getState().system.sample).toEqual({ сила: 5, запас: 2, 'навыки.атлетика.ранг': 3 });
+    edit(draft => renameColumn(draft, 'навыки', 'ранг', 'Уровень', 'уровень'));
+    expect(useWorld.getState().system.sample).toEqual({ сила: 5, запас: 2, 'навыки.атлетика.уровень': 3 });
+    edit(draft => moveTable(draft, 'навыки', 'умения'));
+    expect(useWorld.getState().system.sample).toEqual({ сила: 5, запас: 2, 'умения.атлетика.уровень': 3 });
+    edit(draft => { draft.tables!['лист']!.columns = draft.tables!['лист']!.columns!.filter(column => column.key !== 'запас'); });
+    expect(useWorld.getState().system.sample).toEqual({ сила: 5, 'умения.атлетика.уровень': 3 });
+    edit(draft => { delete draft.tables!['умения']; draft.tables!['лист']!.columns![0]!.expr = { expr: '1' }; });
+    expect(useWorld.getState().system).not.toHaveProperty('sample');
+  });
+});

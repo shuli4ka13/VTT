@@ -13,6 +13,7 @@ import { newBreaches } from '../engine/limits.ts';
 import { fieldOf, misfit, same } from '../model/sheet-columns.ts';
 import { itemCell, parseItemTag, withItemValue, withoutItemValue } from '../model/item-ref.ts';
 import { isBlank } from '../model/blank.ts';
+import { freshSheet } from '../model/fresh.ts';
 import { DESK_ID, isDesk } from '../engine/owners.ts';
 import { External, Pause, emptyJournal } from './external.ts';
 import { Path } from './path.ts';
@@ -405,9 +406,8 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
 
   sheet(run, { name, of }, root) {
     if (of && !sheetKindOf(run.system, { of } as Sheet)) throw new EngineError(`в системе нет типа листа «${of}»`);
-    const sheet = {
-      id: run.ext.id(root.phase('id')), systemId: run.system.id ?? '', ...(of ? { of } : {}), name, values: {}, has: [], effects: [],
-    } as Sheet;
+    const sheet = freshSheet(run.system, { id: run.ext.id(root.phase('id')), name, ...(of ? { of } : {}) },
+      { compendium: run.world.compendium, shared: run.views.shared(run.state.sheets) });
     run.state.put(sheet);
     run.state.write({ text: `Лист «${name}» заведён` });
     return false;

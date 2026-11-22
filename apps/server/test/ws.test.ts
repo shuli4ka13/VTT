@@ -165,7 +165,7 @@ describe('партия строит себя сама', () => {
     expect(delta.delta.sheets).toHaveLength(1);
     const sheet = delta.delta.sheets[0];
     expect(sheet.name).toBe('Арвен Собственноручная');
-    expect(sheet.values).toEqual({});
+    expect(sheet.values).toMatchObject({ str: 10, dex: 10, level: 1, hp_max: 1, hp_current: 1 });
     expect(delta.delta.log[0].text).toContain('заведён');
 
     const equipped = waitFor(socket, 'room:delta');

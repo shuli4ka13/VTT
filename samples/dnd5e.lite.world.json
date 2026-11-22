@@ -255,7 +255,9 @@
             "key": "hp_current",
             "label": "Хиты",
             "kind": "number",
-            "default": 8,
+            "default": {
+              "expr": "@hp_max"
+            },
             "min": 0,
             "max": {
               "expr": "@hp_max"

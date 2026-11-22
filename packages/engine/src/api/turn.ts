@@ -20,4 +20,5 @@ export { costRefusal, DICE_MODES, expectAction, mannequin, trial } from '../even
 export type { DiceMode } from '../events/trial.ts';
 export { ASKABLE, askKindOf, asksOf, checkInputs, choicesOf, isPerTarget, normalizeInputs, YES_NO } from '../model/asks.ts';
 export type { AskedParam, Inputs } from '../model/asks.ts';
+export { freshSheet, freshValues } from '../model/fresh.ts';
 export { itemCells } from '../model/item-ref.ts';

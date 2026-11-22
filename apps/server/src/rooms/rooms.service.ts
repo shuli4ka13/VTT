@@ -11,7 +11,7 @@ import type {
   RoomState, RoomSummary, RoomDelta, JournalEntry, ActIntent, TurnIntent, AnswerIntent, CancelIntent, ClockState, PendingState,
   Sheet, System, Compendium, StoredValue, LogEntry, Place, Places,
 } from '@vtt/schema';
-import { flattenSystem, perform, authorize, emptyJournal, deskOf, hasDesk, DESK_ID, idleClock, EngineError, ASK_ONE_WORDS, ASK_DESK_TITLE } from '@vtt/engine';
+import { flattenSystem, perform, authorize, emptyJournal, deskOf, hasDesk, blankDesk, DESK_ID, idleClock, EngineError, ASK_ONE_WORDS, ASK_DESK_TITLE } from '@vtt/engine';
 import type { Op, Performed, Want, Journal, Question } from '@vtt/engine';
 
 export type Role = 'gm' | 'player';
@@ -86,7 +86,7 @@ export class RoomsService {
       id, title, worldId, system: JSON.stringify(world.system), compendium: JSON.stringify(world.compendium), createdAt,
     });
     const withDesk = hasDesk(world.system) && !deskOf(world.sheets)
-      ? [...world.sheets, { id: DESK_ID, systemId: world.system.id, name: 'Стол', values: {}, has: [], effects: [] } as Sheet]
+      ? [...world.sheets, blankDesk(flattenSystem(world.system))]
       : world.sheets;
     for (const sheet of withDesk) await this.db.insert(roomSheets).values({ roomId: id, sheetId: sheet.id, data: JSON.stringify(sheet) });
     await this.db.insert(members).values({ roomId: id, userId, role: 'gm', sheetId: null });

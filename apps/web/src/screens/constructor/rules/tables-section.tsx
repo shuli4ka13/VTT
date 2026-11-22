@@ -1,7 +1,7 @@
 import { ColumnSheetFields } from '../table-field.tsx';
 import type { CellValue } from '@vtt/schema';
 import { rowNames } from '../row-names.ts';
-import { renameLayoutColumn, renameLayoutTable, kindsFor, kindWord, isFormulaCell, onSheet, isSingle, holderOf, fieldsOf, withColumn, forgetFields, rowPieces, listUsers, isRange, tableKeyOf as keyOf, choiceTables, rowTables, numberTables, rowUsers, renameRow, renameRowInBook } from '@vtt/engine';
+import { renameLayoutColumn, renameLayoutTable, retagSample, kindsFor, kindWord, isFormulaCell, onSheet, isSingle, holderOf, fieldsOf, withColumn, forgetFields, rowPieces, listUsers, isRange, tableKeyOf as keyOf, choiceTables, rowTables, numberTables, rowUsers, renameRow, renameRowInBook } from '@vtt/engine';
 import type { RowPiece, TableColumn, Holder } from '@vtt/engine';
 export { rowNames } from '../row-names.ts';
 import { Card, CardHead, Input, NumInput, Button, DangerButton, Fold, Select, Verdict, Empty, Field, Chip, TextArea } from '../../../ui/primitives.tsx';
@@ -91,6 +91,7 @@ export function moveTable(draft: System, from: string, to: string): void {
   if (from === to || !draft.tables?.[from]) return;
   draft.tables = Object.fromEntries(Object.entries(draft.tables).map(([key, table]) => [key === from ? to : key, table]));
   renameLayoutTable(draft, from, to);
+  retagSample(draft, tag => (tag.startsWith(`${from}.`) ? `${to}.${tag.slice(from.length + 1)}` : tag));
   forgetFields(draft);
 }
 
@@ -340,7 +341,15 @@ export function renameColumn(draft: System, tableId: string, key: string, label:
   const column = draft.tables?.[tableId]?.columns?.find(c => c.key === key);
   if (!column) return;
   column.label = label;
-  if (fresh !== key) renameLayoutColumn(draft, tableId, key, fresh);
+  if (fresh !== key) {
+    renameLayoutColumn(draft, tableId, key, fresh);
+    const single = isSingle(draft.tables?.[tableId]);
+    retagSample(draft, tag => {
+      if (single) return tag === key ? fresh : tag;
+      const [table, row, own, ...rest] = tag.split('.');
+      return table === tableId && row && own === key && !rest.length ? `${table}.${row}.${fresh}` : tag;
+    });
+  }
   column.key = fresh;
 }
 
@@ -575,7 +584,6 @@ function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
   }))) : [];
   const generalOf = (column: TableColumn, part: RowViewKey): unknown => (part === 'default' ? column.default ?? 0 : column[part]);
   const setOwnCell = (i: number, column: TableColumn, part: RowViewKey, value: unknown) => {
-    if (part === 'default' && value !== null && typeof value === 'object') return;
     edit(draft => {
       const row = draft.rows?.[i];
       if (row) setRowView(row, column.key, part, value, generalOf(column, part));

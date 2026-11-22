@@ -98,7 +98,7 @@ export const cellValue = z.union([tableValue, formula, z.array(tableValue), z.nu
 export const cellView = z.object({
   label: z.string().optional(),
   roll: z.lazy(() => rollSpec.partial()).optional(),
-  default: startValue.optional(),
+  default: z.union([startValue, formula]).optional(),
   min: bound.optional(),
   max: bound.optional(),
 }).strict();
@@ -122,7 +122,7 @@ export const stage = z.object({
 export const columnValue = z.object({
   ...typed,
   expr: formula.optional(),
-  default: startValue.optional(),
+  default: z.union([startValue, formula]).optional(),
   min: bound.optional(),
   max: bound.optional(),
 });
@@ -406,6 +406,7 @@ export const system = z.object({
   groups: z.record(z.string(), groupSpec).optional(),
   blocks: z.array(sheetBlock).optional(),
   pages: z.array(sheetPage).optional(),
+  sample: z.record(z.string(), z.lazy(() => storedValue)).optional(),
   effects: z.record(z.string(), effect),
 
   grants: z.array(z.string()).optional(),

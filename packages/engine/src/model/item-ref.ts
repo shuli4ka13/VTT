@@ -2,7 +2,7 @@ import { EngineError } from '../engine/errors.ts';
 import { entryOf, findRecord, kindOfRecord, keyOf, propsOf } from './owned.ts';
 import { isFormulaCell, itemExpr, storedValueOf, withRecord, ITEM_NAME } from './sheet-columns.ts';
 import { flattenSystem, typeColumn, typeColumns } from './inherit.ts';
-import { isBlank } from './blank.ts';
+import { isBlank, fixedDefault } from './blank.ts';
 import { kindWord } from '../words/kinds.ts';
 import type { Compendium, Field, Owned, Sheet, System, TableColumn } from './types.ts';
 
@@ -96,7 +96,7 @@ function cellOf(system: System, compendium: Compendium | null | undefined, sheet
   if (!TABLE_KINDS.has(kind)) return `«${label}» у вещи «${name}» — ${kindWord(kind)}: это правило записи, за столом его не вписывают`;
   const own = record.cells?.[column];
   if (spec.expr !== undefined || isFormulaCell(own)) return `«${label}» у вещи «${name}» считается по правилу — вписать значение нельзя`;
-  const book = isBlank(own) ? spec.default ?? null : own;
+  const book = isBlank(own) ? fixedDefault(spec) ?? null : own;
   const cells = propsOf(record, system, entry) ?? {};
   const flat = flattenSystem(system, true);
   const bound = (raw: TableColumn['min']): TableColumn['min'] =>

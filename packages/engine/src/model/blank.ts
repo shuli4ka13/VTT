@@ -7,5 +7,9 @@ export const isBlank = (value: unknown): boolean => {
   return false;
 };
 
+const isFormula = (value: unknown): boolean => Boolean(value && typeof value === 'object' && !Array.isArray(value) && 'expr' in value);
+
+export const fixedDefault = (column: { default?: unknown } | undefined): unknown => (isFormula(column?.default) ? undefined : column?.default);
+
 export const orDefault = (value: unknown, column: { default?: unknown } | undefined): unknown =>
-  (isBlank(value) ? column?.default ?? null : value);
+  (isBlank(value) ? fixedDefault(column) ?? null : value);

@@ -1,5 +1,5 @@
 import { emittedChoices } from './payments.ts';
-import { renameLayoutRow } from './layout.ts';
+import { renameLayoutRow, retagSample } from './layout.ts';
 import { rowsOf } from './tables.ts';
 import { recordsOf, recordKinds, kindsOf, kindOfRecord } from './owned.ts';
 import { typeColumns } from './inherit.ts';
@@ -8,7 +8,7 @@ import type { Node } from '../formula/index.ts';
 import { tagTablesOf, choiceTableOf } from './lists.ts';
 import type { System, Compendium } from './types.ts';
 import type { Where } from './references.ts';
-import { fieldsOf, forgetFields } from './sheet-columns.ts';
+import { fieldsOf, forgetFields, slugOf } from './sheet-columns.ts';
 
 type Loose = Record<string, unknown>;
 
@@ -343,6 +343,8 @@ export function renameRow(system: System, table: string, from: unknown, to: unkn
       }
     }
   }
+  const head = `${table}.${slugOf(from)}.`;
+  retagSample(system, tag => (tag.startsWith(head) ? `${table}.${slugOf(to)}.${tag.slice(head.length)}` : tag));
   forgetFields(system);
 }
 

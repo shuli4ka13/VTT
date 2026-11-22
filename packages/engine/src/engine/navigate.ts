@@ -8,6 +8,7 @@ import type { Pass } from './calc.ts';
 import { fieldOf, hasField } from '../model/sheet-columns.ts';
 import { recordKinds } from '../model/owned.ts';
 import { walkColumns } from '../model/paths.ts';
+import { fixedDefault } from '../model/blank.ts';
 
 type Loose = Record<string, unknown>;
 
@@ -58,7 +59,7 @@ function emptyEnd(system: System, tableId: string, path: string[]): unknown {
   for (let i = 0; i < path.length; i++) {
     const column = columnBy(tableOf(system, current)?.columns, path[i]);
     if (!column) return null;
-    if (i === path.length - 1) return column.default ?? null;
+    if (i === path.length - 1) return fixedDefault(column) ?? null;
     const link = linkOf(column);
     if (!link) return null;
     current = link;
