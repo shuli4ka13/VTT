@@ -302,6 +302,7 @@ function DeskPanel({ room, desk }: { room: RoomState; desk: Sheet }) {
           <FieldCell
             key={field.tag} field={field} system={system} sheet={desk} reader={reader}
             onChange={gm ? (tag, value) => tableSocket.setValue(room.id, desk.id, tag, value) : undefined}
+            onShift={gm ? (tag, by) => tableSocket.shiftValue(room.id, desk.id, tag, by) : undefined}
           />
         ))}
       </div>

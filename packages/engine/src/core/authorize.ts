@@ -97,7 +97,7 @@ export function authorize(room: Room, userId: string, want: Want): string | null
     return null;
   }
   if (want.hidden && me.role !== 'gm') return 'втайне бросает только ведущий';
-  if (want.op.op === 'set') {
+  if (want.op.op === 'set' || want.op.op === 'shift') {
     return parseItemTag(want.op.tag) ? mayItem(room, me, want.op.sheetId) : mayField(room, me, want.op.sheetId, want.op.tag);
   }
   if (want.op.op === 'turn' && me.role !== 'gm') {

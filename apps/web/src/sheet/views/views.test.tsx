@@ -228,3 +228,85 @@ describe('виды полей листа', () => {
     expect(out).toEqual([['бонус', 5]]);
   });
 });
+
+describe('быстрый ввод: прибавить и отнять', () => {
+  afterEach(() => { cleanup(); });
+
+  const both = () => {
+    const set: [string, unknown][] = [];
+    const shifted: [string, number][] = [];
+    render(<SheetView system={system} sheet={sheet} reader={reader}
+      onChange={(tag, value) => { set.push([tag, value]); }} onShift={(tag, by) => { shifted.push([tag, by]); }} />);
+    return { set, shifted };
+  };
+  const numberOf = (label: string) => screen.getByRole('group', { name: label }).querySelector('input')!;
+  const button = (label: string, title: string) => [...screen.getByRole('group', { name: label }).querySelectorAll('button')].find(one => one.title === title)!;
+
+  it('«Минус и плюс»: число со знаком — сдвиг от текущего, без знака — само значение', () => {
+    const { set, shifted } = both();
+    fireEvent.change(numberOf('Броня'), { target: { value: '+2' } });
+    fireEvent.blur(numberOf('Броня'));
+    fireEvent.change(numberOf('Броня'), { target: { value: '−7' } });
+    fireEvent.blur(numberOf('Броня'));
+    fireEvent.change(numberOf('Броня'), { target: { value: '4' } });
+    fireEvent.blur(numberOf('Броня'));
+    expect(shifted).toEqual([['броня', 2], ['броня', -7]]);
+    expect(set).toEqual([['броня', 4]]);
+  });
+
+  it('кнопки шага прибавляют и отнимают на сервере, а не пишут готовое число', () => {
+    const { set, shifted } = both();
+    fireEvent.click(button('Броня', 'минус'));
+    fireEvent.click(button('Шум', 'плюс'));
+    expect(shifted).toEqual([['броня', -1], ['шум', 5]]);
+    expect(set).toEqual([]);
+  });
+
+  it('вписано число и нажата кнопка — отнимается столько, сколько вписано', () => {
+    const { set, shifted } = both();
+    fireEvent.change(numberOf('Броня'), { target: { value: '3' } });
+    fireEvent.click(button('Броня', 'минус'));
+    fireEvent.blur(numberOf('Броня'));
+    expect(shifted).toEqual([['броня', -3]]);
+    expect(set).toEqual([]);
+  });
+
+  it('«Полоса»: кнопка «−» открывает ввод со знаком, число и Enter — урон одним действием', () => {
+    const { set, shifted } = both();
+    const input = numberOf('Хиты') as HTMLInputElement;
+    fireEvent.click(button('Хиты', 'отнять: впишите сколько'));
+    expect(input.value).toBe('−');
+    fireEvent.change(input, { target: { value: '−7' } });
+    fireEvent.blur(input);
+    fireEvent.click(button('Хиты', 'прибавить: впишите сколько'));
+    expect(input.value).toBe('+');
+    fireEvent.blur(input);
+    expect(shifted).toEqual([['хиты', -7]]);
+    expect(set).toEqual([]);
+  });
+
+  it('поле открыли и закрыли, ничего не вписав, — ничего не уходит', () => {
+    const { set, shifted } = both();
+    const input = numberOf('Хиты');
+    fireEvent.focus(input);
+    fireEvent.blur(input);
+    expect([...set, ...shifted]).toEqual([]);
+  });
+
+  it('без сервера (образец листа) сдвиг считается на месте и прижимается к границам', () => {
+    const out = edits();
+    fireEvent.change(numberOf('Хиты'), { target: { value: '−30' } });
+    fireEvent.blur(numberOf('Хиты'));
+    fireEvent.change(numberOf('Броня'), { target: { value: '+9' } });
+    fireEvent.blur(numberOf('Броня'));
+    expect(out).toEqual([['хиты', 0], ['броня', 5]]);
+  });
+
+  it('подписи кнопок «Полосы» берутся из настроек вида', () => {
+    const Bar = VIEWS.bar.draw;
+    render(<Bar value={7} label="Хиты" max={20} control={{ minus: 'Урон', plus: 'Лечение' }} onChange={() => {}} />);
+    expect(screen.getByRole('button', { name: 'Урон' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Лечение' })).toBeTruthy();
+  });
+});
+

@@ -66,6 +66,10 @@ export class TableSocket {
     this.send('sheet:set', { roomId, sheetId, tag, value });
   }
 
+  shiftValue(roomId: string, sheetId: string, tag: string, by: number): void {
+    this.send('sheet:shift', { roomId, sheetId, tag, by });
+  }
+
   claimSheet(roomId: string, sheetId: string | null): void {
     this.send('sheet:claim', { roomId, sheetId });
   }

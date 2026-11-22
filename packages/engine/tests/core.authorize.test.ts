@@ -52,6 +52,21 @@ describe('права: стол и листы', () => {
   });
 });
 
+describe('права: прибавить и отнять', () => {
+  const shift = (sheetId: string, tag = 'хп') => ({ kind: 'world' as const, op: { op: 'shift' as const, sheetId, tag, by: -7 } });
+
+  it('свой лист — можно, чужой и стол — нельзя, ведущему — любой', () => {
+    expect(authorize(room, 'игрок-а', shift('арвен'))).toBeNull();
+    expect(authorize(room, 'игрок-а', shift('мирра'))).toMatch(/чужой лист/);
+    expect(authorize(room, 'игрок-а', shift('стол'))).toMatch(/стол правит ведущий/);
+    expect(authorize(room, 'ведущий', shift('мирра'))).toBeNull();
+  });
+
+  it('значение вещи — по тому же разрешению, что «вписать»', () => {
+    expect(authorize(room, 'игрок-а', shift('арвен', 'вещь:фонарь.заряд'))).toMatch(/значения вещей меняет ведущий/);
+  });
+});
+
 describe('права: значения вещи', () => {
   const tag = 'вещь:фонарь.провода';
   const write = (sheetId: string) => ({ kind: 'world' as const, op: { op: 'set' as const, sheetId, tag, value: true } });

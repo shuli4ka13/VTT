@@ -171,6 +171,8 @@ export function BlockViewField({ tableId, column, system, block, row, cell = row
               kind: next,
               ...(TAKES_STEP.includes(next) && keep.step !== undefined ? { step: keep.step } : {}),
               ...(next === 'bar' && keep.worse ? { worse: keep.worse } : {}),
+              ...(next === 'bar' && keep.minus ? { minus: keep.minus } : {}),
+              ...(next === 'bar' && keep.plus ? { plus: keep.plus } : {}),
               ...(next === 'toggle' && keep.yes ? { yes: keep.yes } : {}),
               ...(next === 'toggle' && keep.no ? { no: keep.no } : {}),
             };
@@ -207,6 +209,16 @@ export function BlockViewField({ tableId, column, system, block, row, cell = row
                 options={[{ key: 'low', label: 'мало' }, { key: 'high', label: 'много' }]}
                 onChange={next => setControl({ worse: next === 'high' ? 'high' : undefined })} />
             </Field>
+          ) : null}
+          {kind === 'bar' && stored ? (
+            <div className="row">
+              <Field label="Кнопка «отнять»">
+                <Input value={control?.minus ?? ''} placeholder="−" onChange={text => setControl({ minus: text.trim() || undefined })} />
+              </Field>
+              <Field label="Кнопка «прибавить»">
+                <Input value={control?.plus ?? ''} placeholder="+" onChange={text => setControl({ plus: text.trim() || undefined })} />
+              </Field>
+            </div>
           ) : null}
           {kind === 'toggle' || ((kind === 'ring' || kind === 'choice') && column.kind === 'boolean') ? (
             <div className="row">

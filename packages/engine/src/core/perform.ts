@@ -26,13 +26,14 @@ import type { Journal, Mode, Question } from './external.ts';
 import type { Entry } from './log.ts';
 import type { Clock } from '../engine/clock.ts';
 import type { TurnOp } from '../events/moments.ts';
-import type { System, Sheet, Compendium, Die, StoredValue, WornEffect, Owned } from '../model/types.ts';
+import type { System, Sheet, Compendium, Die, StoredValue, WornEffect, Owned, Field } from '../model/types.ts';
 import { CALL_WORDS } from '../words/calls.ts';
 
 export type Op =
   | { op: 'act'; intent: ActIntent }
   | { op: 'roll'; sheetId: string; tag: string; claims?: string[]; second?: string; versus?: number }
   | { op: 'set'; sheetId: string; tag: string; value: StoredValue }
+  | { op: 'shift'; sheetId: string; tag: string; by: number }
   | { op: 'belonging'; sheetId: string; list: 'has' | 'effects'; id: string; on: boolean; off?: boolean; inst?: string; add?: boolean; in?: string | null }
   | { op: 'kind'; sheetId: string; of: string | null }
   | { op: 'group'; sheetId: string; group: string | null }
@@ -98,6 +99,20 @@ function bound(run: Run, sheetId: string, raw: unknown, what: string): number | 
   const value = typeof raw === 'number' ? raw : compile(String(raw)).evaluate(run.view(sheetId).resolve);
   if (typeof value !== 'number') throw new EngineError(`${what} — не число`);
   return value;
+}
+
+function storedField(run: Run, sheetId: string, tag: string): { field: Field; stored: Extract<Field['value'], { kind: 'stored' }>; holder: Sheet } {
+  const field = fieldOf(run.system, tag);
+  if (!field) throw new EngineError(`система не объявляет поля «${tag}»`);
+  if (field.value.kind !== 'stored') throw new EngineError(`поле «${field.label}» считает движок по правилу — вписать в него значение нельзя`);
+  return { field, stored: field.value, holder: sheetOf(run, run.views.holderOf(run.state.sheets, sheetOf(run, sheetId).id, tag)) };
+}
+
+function putValue(run: Run, holder: Sheet, tag: string, value: StoredValue): boolean {
+  const next: Sheet = { ...holder, values: { ...holder.values, [tag]: value } };
+  withinLimits(run, holder, next);
+  run.state.put(next);
+  return true;
 }
 
 function setItem(run: Run, sheet: Sheet, key: string, column: string, value: StoredValue): boolean {
@@ -202,22 +217,27 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
   set(run, { sheetId, tag, value }) {
     const item = parseItemTag(tag);
     if (item) return setItem(run, sheetOf(run, sheetId), item.key, item.column, value);
-    const field = fieldOf(run.system, tag);
-    if (!field) throw new EngineError(`система не объявляет поля «${tag}»`);
-    if (field.value.kind !== 'stored') throw new EngineError(`поле «${field.label}» считает движок по правилу — вписать в него значение нельзя`);
-    const holder = sheetOf(run, run.views.holderOf(run.state.sheets, sheetOf(run, sheetId).id, tag));
+    const { field, stored, holder } = storedField(run, sheetId, tag);
     const wrong = misfit(field, value);
     if (wrong) throw new EngineError(wrong);
     if (typeof value === 'number') {
-      const low = bound(run, holder.id, field.value.min, 'нижняя граница поля');
-      const high = bound(run, holder.id, field.value.max, 'верхняя граница поля');
+      const low = bound(run, holder.id, stored.min, 'нижняя граница поля');
+      const high = bound(run, holder.id, stored.max, 'верхняя граница поля');
       if (low !== null && value < low) throw new EngineError(`«${field.label}» не меньше ${low}`);
       if (high !== null && value > high) throw new EngineError(`«${field.label}» не больше ${high}`);
     }
-    const next: Sheet = { ...holder, values: { ...holder.values, [tag]: value } };
-    withinLimits(run, holder, next);
-    run.state.put(next);
-    return true;
+    return putValue(run, holder, tag, value);
+  },
+
+  shift(run, { sheetId, tag, by }) {
+    if (parseItemTag(tag)) throw new EngineError('значению вещи прибавить и отнять нельзя — впишите его целиком');
+    const { field, stored, holder } = storedField(run, sheetId, tag);
+    const was = holder.values?.[tag] ?? stored.default;
+    if (stored.type !== 'number' || typeof was !== 'number' || !Number.isFinite(by)) throw new EngineError(`«${field.label}» — не число: прибавить и отнять нечего`);
+    const low = bound(run, holder.id, stored.min, 'нижняя граница поля');
+    const high = bound(run, holder.id, stored.max, 'верхняя граница поля');
+    const value = Math.min(high ?? Infinity, Math.max(low ?? -Infinity, was + by));
+    return value === was ? false : putValue(run, holder, tag, value);
   },
 
   belonging(run, { sheetId, list, id, on, off, inst, add, in: host }, root) {

@@ -10,7 +10,7 @@ import type { Field as FieldModel } from '@vtt/engine';
 import { SheetGrid } from './sheet-grid.tsx';
 import type { GridEdit } from './sheet-grid.tsx';
 
-export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only, fields, onPick, picked, onPickBlock, onPickRow, pages, lists, edit }: {
+export function SheetView({ system, sheet, reader, onChange, onShift, onRoll, badge, only, fields, onPick, picked, onPickBlock, onPickRow, pages, lists, edit }: {
   edit?: GridEdit;
   pages?: { at: string | null; onAt: (name: string) => void; all?: boolean };
   lists?: Partial<Record<SheetList, ReactNode>>;
@@ -21,6 +21,7 @@ export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only
   sheet: Sheet;
   reader: Reader;
   onChange?: (tag: string, value: StoredValue) => void;
+  onShift?: (tag: string, by: number) => void;
   onRoll?: (tag: string) => void;
   badge?: string;
   only?: string[];
@@ -46,6 +47,7 @@ export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only
         sheet={sheet}
         reader={reader}
         onChange={onChange}
+        onShift={onShift}
         onRoll={onRoll}
         bare={bare}
       />

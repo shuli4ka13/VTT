@@ -155,6 +155,10 @@ export class RoomsService {
     return this.world(roomId, userId, 'set', { sheetId, tag, value }, { op: 'set', sheetId, tag, value }, false);
   }
 
+  shiftValue(userId: string, roomId: string, sheetId: string, tag: string, by: number): Promise<RoomDelta> {
+    return this.world(roomId, userId, 'shift', { sheetId, tag, by }, { op: 'shift', sheetId, tag, by }, false);
+  }
+
   rollField(userId: string, roomId: string, sheetId: string, tag: string, hidden = false, claims: string[] = [], second?: string, versus?: number): Promise<RoomDelta> {
     const claimed = {
       ...(claims.length ? { claims } : {}),

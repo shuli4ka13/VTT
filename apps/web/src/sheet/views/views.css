@@ -72,6 +72,7 @@ span.v-signed { background: var(--surface-2); border-color: transparent; }
   cursor: pointer;
   transition: background 120ms ease, color 120ms ease;
 }
+.v-stepper__btn.v-stepper__btn--named { width: auto; padding: 0 var(--s-3); font-size: var(--fs-3); font-weight: 600; white-space: nowrap; }
 .v-stepper__btn:hover:not(:disabled) { background: var(--surface-3); color: var(--text); }
 .v-stepper__btn:disabled { color: var(--text-faint); cursor: default; }
 .v-stepper__num {

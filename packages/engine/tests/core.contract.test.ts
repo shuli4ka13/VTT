@@ -167,6 +167,35 @@ describe('операции над листом', () => {
     expect(value(out, 'а', 'золото')).toBeUndefined();
   });
 
+  it('прибавить и отнять: считается от значения листа и прижимается к границам поля', () => {
+    const system = world({ удар: button([]) });
+    const shift = (hp: number, by: number) => perform({ system, compendium: book, clock: null, sheets: [sheet('а', { хп: hp })], die: queue() }, { op: 'shift', sheetId: 'а', tag: 'хп', by });
+    expect(value(shift(20, -7), 'а', 'хп')).toBe(13);
+    expect(value(shift(3, -7), 'а', 'хп')).toBe(0);
+    expect(value(shift(27, 5), 'а', 'хп')).toBe(30);
+    expect(value(shift(30, 5), 'а', 'хп')).toBe(30);
+  });
+
+  it('прибавить и отнять: пустое поле считается от значения «в новом листе», поле группы ложится держателю', () => {
+    const system = world({ удар: button([]) });
+    const blank = { id: 'а', systemId: 'контракт', name: 'а', values: {}, has: [], effects: [], group: 'банда' } as unknown as Sheet;
+    const sheets = [blank, sheet('банда')];
+    expect(value(perform({ system, compendium: book, clock: null, sheets, die: queue() }, { op: 'shift', sheetId: 'а', tag: 'хп', by: -4 }), 'а', 'хп')).toBe(16);
+    const paid = perform({ system, compendium: book, clock: null, sheets, die: queue() }, { op: 'shift', sheetId: 'а', tag: 'золото', by: 12 });
+    expect(value(paid, 'банда', 'золото')).toBe(12);
+    expect(value(paid, 'а', 'золото')).toBeUndefined();
+  });
+
+  it('прибавить и отнять: посчитанное поле, не число и значение вещи — отказ словами', () => {
+    const system = world({ удар: button([]) }, {});
+    (system.tables!.лист!.columns as unknown[]).push({ key: 'имя', label: 'Имя', kind: 'text' }, { key: 'вдвое', label: 'Вдвое', expr: { expr: '@хп * 2' } });
+    const go = (tag: string) => () => perform({ system, compendium: book, clock: null, sheets: [sheet('а')], die: queue() }, { op: 'shift', sheetId: 'а', tag, by: 1 });
+    expect(go('вдвое')).toThrow(/считает движок/);
+    expect(go('имя')).toThrow(/не число/);
+    expect(go('нет_такого')).toThrow(/не объявляет/);
+    expect(go('вещь:приём.вес')).toThrow(/значению вещи/);
+  });
+
   it('группа: сам себе, вложенно и стол — отказ словами', () => {
     const system = world({ удар: button([]) });
     const sheets = [sheet('а'), sheet('б', {}, [], { group: 'а' } as never), sheet('стол')];

@@ -31,6 +31,8 @@ export const control = z.object({
   worse: z.enum(['low', 'high']).optional(),
   yes: z.string().min(1).optional(),
   no: z.string().min(1).optional(),
+  minus: z.string().min(1).optional(),
+  plus: z.string().min(1).optional(),
 }).strict();
 
 export const rollDegree = z.object({ label: z.string().min(1), if: formula }).strict();

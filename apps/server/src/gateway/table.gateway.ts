@@ -139,6 +139,24 @@ export class TableGateway {
     }
   }
 
+  @SubscribeMessage('sheet:shift')
+  async shiftValue(@MessageBody() raw: unknown, @ConnectedSocket() socket: WebSocket) {
+    const guest = this.guestOf(socket);
+    if (!guest) return this.fail(socket, 'сначала войдите в комнату');
+
+    const parsed = api.clientMessage.safeParse({ type: 'sheet:shift', ...(raw as object) });
+    if (!parsed.success || parsed.data.type !== 'sheet:shift') {
+      return this.fail(socket, 'правка значения не проходит схему');
+    }
+
+    const { roomId, sheetId, tag, by } = parsed.data;
+    try {
+      await this.roomsService.shiftValue(guest.userId, roomId, sheetId, tag, by);
+    } catch (err) {
+      this.fail(socket, (err as Error).message);
+    }
+  }
+
   @SubscribeMessage('sheet:create')
   async createSheet(@MessageBody() raw: unknown, @ConnectedSocket() socket: WebSocket) {
     const guest = this.guestOf(socket);

@@ -220,3 +220,55 @@ describe('бросок с листа', () => {
     socket.close();
   });
 });
+
+describe('быстрый урон и лечение', () => {
+  it('сдвиг считает сервер от своего значения и прижимает к границам поля; чужой лист игрок не сдвигает', async () => {
+    const gm = await post('/auth/login', { name: 'Ведущий сдвига' });
+    const owner = await post('/auth/login', { name: 'Хозяйка Мирры' });
+    const guest = await post('/auth/login', { name: 'Гость сдвига' });
+    const published = await publish('Мир сдвига', gm.token,
+      sheets.filter((s: { systemId: string }) => s.systemId === dnd.id));
+    const room = await post('/rooms', { worldId: published.id, title: 'Стол сдвига' }, gm.token);
+
+    const enter = async (token: string) => {
+      const socket = await open();
+      const joined = waitFor(socket, 'room:state');
+      say(socket, 'room:join', { roomId: room.id, token });
+      return { socket, state: (await joined).state };
+    };
+    const lead = await enter(gm.token);
+    const hers = await enter(owner.token);
+    const other = await enter(guest.token);
+    const mirra = lead.state.sheets.find((sheet: { id: string }) => sheet.id === 'mirra');
+    expect(mirra.values).toMatchObject({ hp_max: 21, hp_current: 21 });
+
+    const hp = async (by: number): Promise<number> => {
+      const delivered = waitFor(lead.socket, 'room:delta');
+      say(lead.socket, 'sheet:shift', { roomId: room.id, sheetId: 'mirra', tag: 'hp_current', by });
+      return (await delivered).delta.sheets[0].values.hp_current;
+    };
+    expect(await hp(-7)).toBe(14);
+    expect(await hp(-100)).toBe(0);
+    expect(await hp(5)).toBe(5);
+    expect(await hp(1000)).toBe(21);
+
+    const claimed = waitFor(lead.socket, 'room:members');
+    say(hers.socket, 'sheet:claim', { roomId: room.id, sheetId: 'mirra' });
+    await claimed;
+
+    const refused = waitFor(other.socket, 'error');
+    say(other.socket, 'sheet:shift', { roomId: room.id, sheetId: 'mirra', tag: 'hp_current', by: -5 });
+    expect((await refused).message).toContain('чужой лист');
+
+    const own = waitFor(lead.socket, 'room:delta');
+    say(hers.socket, 'sheet:shift', { roomId: room.id, sheetId: 'mirra', tag: 'hp_current', by: -5 });
+    expect((await own).delta.sheets[0].values.hp_current).toBe(16);
+
+    const broken = waitFor(lead.socket, 'error');
+    say(lead.socket, 'sheet:shift', { roomId: room.id, sheetId: 'mirra', tag: 'hp_current', by: 'много' });
+    expect((await broken).message).toContain('не проходит схему');
+
+    for (const one of [lead, hers, other]) one.socket.close();
+  });
+});
+

@@ -8,6 +8,7 @@ export interface ViewProps {
   options?: FieldOption[];
   control?: Omit<Control, 'kind'>;
   onChange?: (value: StoredValue) => void;
+  onShift?: (by: number) => void;
 }
 
 export const MOST_DOTS = 20;

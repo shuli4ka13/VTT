@@ -177,6 +177,7 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
         {...(own ? { lists: pieces.bare } : {})}
         badge={isDesk ? 'стол' : kind?.label ?? 'лист'}
         onChange={editable ? (tag, value) => tableSocket.setValue(room.id, sheet.id, tag, value) : undefined}
+        onShift={editable ? (tag, by) => tableSocket.shiftValue(room.id, sheet.id, tag, by) : undefined}
         onRoll={tag => {
           const rolled = fieldsOf(system).find(field => field.tag === tag);
           const pair = rolled?.roll?.pair === true && second !== '' ? second : undefined;

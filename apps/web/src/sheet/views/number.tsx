@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
 import { MOST_DOTS, clamp, numberOf, signed, shareOf, toneOf, roundTo } from './kit.ts';
 import type { ViewProps } from './kit.ts';
@@ -43,19 +43,81 @@ export function Big(props: ViewProps) {
   return <NumberDraft {...props} show={String} className="v-big" />;
 }
 
-export function Stepper({ value, label, min, max, control, onChange }: ViewProps) {
+const MINUS = '−';
+
+const amountOf = (text: string): { by: number } | { to: number } | null => {
+  const clean = text.replace(/\s+/g, '').replace(MINUS, '-').replace(',', '.');
+  if (!/^[+-]?\d+(\.\d+)?$/.test(clean)) return null;
+  return /^[+-]/.test(clean) ? { by: Number(clean) } : { to: Number(clean) };
+};
+
+const keepFocus = (event: { preventDefault: () => void }) => event.preventDefault();
+
+function Quick({ value, label, min, max, control, onChange, onShift, asks }: ViewProps & { asks?: boolean }) {
   const now = numberOf(value);
   const step = control?.step ?? 1;
-  const from = now ?? min ?? 0;
+  const [draft, setDraft] = useState<string | null>(null);
+  const input = useRef<HTMLInputElement>(null);
+  const prefilled = useRef(false);
+  const shift = (by: number) => {
+    if (!onChange || !by) return;
+    if (now === null) onChange(clamp((min ?? 0) + by, min, max));
+    else if (onShift) onShift(by);
+    else onChange(clamp(now + by, min, max));
+  };
+  const commit = (text: string) => {
+    const amount = amountOf(text);
+    setDraft(null);
+    if (!amount) return;
+    if ('by' in amount) shift(amount.by);
+    else if (amount.to !== now) onChange?.(clamp(amount.to, min, max));
+  };
+  const press = (sign: 1 | -1) => {
+    const typed = draft === null ? null : amountOf(draft);
+    if (typed) {
+      setDraft(null);
+      shift(sign * Math.abs('by' in typed ? typed.by : typed.to));
+    } else if (asks) {
+      prefilled.current = true;
+      setDraft(sign < 0 ? MINUS : '+');
+      input.current?.focus();
+    } else if (now === null) onChange?.(clamp(min ?? 0, min, max));
+    else shift(sign * step);
+  };
+  const low = !onChange || (draft === null && min !== undefined && now !== null && now <= min);
+  const high = !onChange || (draft === null && max !== undefined && now !== null && now >= max);
+  const shown = now === null ? '' : String(now);
   return (
     <div className="v-stepper" role="group" aria-label={label}>
-      <button type="button" className="v-stepper__btn" title="минус" disabled={!onChange || (min !== undefined && now !== null && now <= min)}
-        onClick={() => onChange?.(clamp(now === null ? from : from - step, min, max))}>−</button>
-      <NumberDraft value={now} label={label} min={min} max={max} onChange={onChange} show={String} className="v-stepper__num" />
-      <button type="button" className="v-stepper__btn" title="плюс" disabled={!onChange || (max !== undefined && now !== null && now >= max)}
-        onClick={() => onChange?.(clamp(now === null ? from : from + step, min, max))}>+</button>
+      <button type="button" className={`v-stepper__btn${asks && control?.minus ? ' v-stepper__btn--named' : ''}`} disabled={low}
+        title={asks ? 'отнять: впишите сколько' : 'минус'}
+        onPointerDown={keepFocus} onMouseDown={keepFocus} onClick={() => press(-1)}>{(asks && control?.minus) || MINUS}</button>
+      {onChange ? (
+        <input
+          ref={input}
+          className="v-stepper__num"
+          aria-label={label}
+          inputMode="numeric"
+          placeholder="—"
+          value={draft ?? shown}
+          onFocus={event => { if (prefilled.current) prefilled.current = false; else event.currentTarget.select(); }}
+          onChange={event => setDraft(event.target.value)}
+          onBlur={() => { if (draft !== null) commit(draft); }}
+          onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => {
+            if (event.key === 'Enter') event.currentTarget.blur();
+            if (event.key === 'Escape') setDraft(null);
+          }}
+        />
+      ) : <span className="v-stepper__num" aria-label={label}>{shown || '—'}</span>}
+      <button type="button" className={`v-stepper__btn${asks && control?.plus ? ' v-stepper__btn--named' : ''}`} disabled={high}
+        title={asks ? 'прибавить: впишите сколько' : 'плюс'}
+        onPointerDown={keepFocus} onMouseDown={keepFocus} onClick={() => press(1)}>{(asks && control?.plus) || '+'}</button>
     </div>
   );
+}
+
+export function Stepper(props: ViewProps) {
+  return <Quick {...props} />;
 }
 
 export function Slider({ value, label, min, max, control, onChange }: ViewProps) {
@@ -144,7 +206,7 @@ export function Charges(props: ViewProps) {
   );
 }
 
-export function Bar({ value, label, min = 0, max, control, onChange }: ViewProps) {
+export function Bar({ value, label, min = 0, max, control, onChange, onShift }: ViewProps) {
   if (typeof max !== 'number') return <Missing label={label} needs="верх" />;
   const now = numberOf(value);
   const share = now === null ? 0 : shareOf(now, min, max);
@@ -154,7 +216,7 @@ export function Bar({ value, label, min = 0, max, control, onChange }: ViewProps
         <div className="v-bar__fill" style={{ width: `${share * 100}%` }} />
         <span className="v-bar__text">{now ?? '—'} / {max}</span>
       </div>
-      {onChange ? <Stepper value={now} label={label} min={min} max={max} control={control} onChange={onChange} /> : null}
+      {onChange ? <Quick value={now} label={label} min={min} max={max} control={control} onChange={onChange} onShift={onShift} asks /> : null}
     </div>
   );
 }

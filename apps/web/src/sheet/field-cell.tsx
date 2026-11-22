@@ -8,13 +8,14 @@ import type { Sheet, System, StoredValue, FieldOption } from '@vtt/schema';
 import { MOST_STEPS, NOTE_LIMIT, isNoteField, optionsOf } from '@vtt/engine';
 import type { Field as FieldModel } from '@vtt/engine';
 
-export function FieldCell({ field, system, sheet, reader, onChange, onRoll, bare }: {
+export function FieldCell({ field, system, sheet, reader, onChange, onShift, onRoll, bare }: {
   field: FieldModel;
   bare?: boolean;
   system: System;
   sheet: Sheet;
   reader: Reader;
   onChange?: (tag: string, value: StoredValue) => void;
+  onShift?: (tag: string, by: number) => void;
   onRoll?: (tag: string) => void;
 }) {
   const label: ReactNode = bare ? <span className="sr-only">{field.label}</span> : field.hint ? <span title={field.hint}>{field.label}</span> : field.label;
@@ -58,6 +59,7 @@ export function FieldCell({ field, system, sheet, reader, onChange, onRoll, bare
             options={steps}
             control={settings}
             {...(write ? { onChange: write } : {})}
+            {...(write && onShift ? { onShift: (by: number) => onShift(field.tag, by) } : {})}
           />
           {roll}
         </div>
