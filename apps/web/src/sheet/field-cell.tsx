@@ -70,7 +70,7 @@ export function FieldCell({ field, system, sheet, reader, onChange, onShift, onR
   }
 
   if (!editable) {
-    const shown = stored ? show({ ok: true, value }, options, field.dice) : show(computed!, options, field.dice);
+    const shown = stored ? show({ ok: true, value }, options, field.dice) : show(computed!, options, true);
     return <Shown label={label} text={shown.text} title={shown.title} bad={shown.bad} roll={roll} />;
   }
 

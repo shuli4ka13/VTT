@@ -13,13 +13,14 @@ const system = {
     { key: 'урон', label: 'Кость урона', kind: 'dice', default: '1d8' },
     { key: 'хитов', label: 'Кость хитов', kind: 'dice', expr: { expr: '"1d12"' } },
     { key: 'прозвище', label: 'Прозвище', kind: 'text', default: 'd20' },
+    { key: 'запас', label: 'Кость запаса', expr: { expr: '"1d8"' } },
   ] } },
 } as unknown as System;
 
 const sheet = { id: 'а', name: 'Арвен', values: {} } as unknown as Sheet;
 
 const reader = (stored: Record<string, unknown> = {}): Reader => ({
-  valueOf: tag => ({ ok: true, value: tag === 'хитов' ? '1d12' : stored[tag] ?? null }),
+  valueOf: tag => ({ ok: true, value: tag === 'хитов' ? '1d12' : tag === 'запас' ? '1d8' : stored[tag] ?? null }),
   rollOf: () => null,
   storedOf: tag => stored[tag],
 });
@@ -34,6 +35,11 @@ describe('поле-кость на листе: в данных d, на экра�
     useLocale.setState({ lang: 'en' });
     render(<FieldCell field={fieldOf(system, 'хитов')!} system={system} sheet={sheet} reader={reader()} />);
     expect(screen.getByText('1d12')).toBeTruthy();
+  });
+
+  it('кость, посчитанная формулой колонки без вида, тоже показана буквой экрана', () => {
+    render(<FieldCell field={fieldOf(system, 'запас')!} system={system} sheet={sheet} reader={reader()} />);
+    expect(screen.getByText('1к8')).toBeTruthy();
   });
 
   it('вписанное «2к6» уходит в данные как 2d6, а показано снова через «к»', () => {
