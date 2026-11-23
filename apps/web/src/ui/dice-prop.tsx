@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { Input } from './primitives.tsx';
 import { useT } from '../i18n/index.ts';
+import { DIE_LETTERS } from './formula-lang.ts';
+
+const DICE_TYPED = new RegExp(`^(\\d+)?\\s*[${DIE_LETTERS}]\\s*(\\d+)$`, 'iu');
 
 export function DiceProp({ value, onChange }: {
   value: string;
   onChange: (next: string) => void;
 }) {
   const t = useT('ui');
-  const m = /^(\d+)?\s*[d\u0434\u043a]\s*(\d+)$/iu.exec(value.trim());
+  const m = DICE_TYPED.exec(value.trim());
   const stored = { count: m ? (m[1] ?? '1') : '', sides: m ? m[2]! : '' };
 
   const [draft, setDraft] = useState<{ count: string; sides: string } | null>(null);

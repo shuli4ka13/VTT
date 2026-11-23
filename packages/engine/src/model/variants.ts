@@ -1,5 +1,5 @@
 import { NAMES } from '../words/names.ts';
-import { compile } from '../formula/index.ts';
+import { compile, OR } from '../formula/index.ts';
 import type { Node } from '../formula/index.ts';
 import { namesAt } from './names-at.ts';
 import { CALL_TAGS } from './references.ts';
@@ -74,7 +74,7 @@ function comparisons(node: Node, out: { tag: string; word: string }[] = []): { t
 function results(node: Node, out: string[] = []): string[] {
   if (node.kind === 'Text' && !node.dice) out.push(node.value);
   else if (node.kind === 'Conditional') { results(node.then, out); results(node.otherwise, out); }
-  else if (node.kind === 'Binary' && node.op === tr`или`) { results(node.left, out); results(node.right, out); }
+  else if (node.kind === 'Binary' && node.op === OR) { results(node.left, out); results(node.right, out); }
   return out;
 }
 

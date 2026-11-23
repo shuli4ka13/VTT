@@ -25,7 +25,7 @@ describe('откуда это: щелчок по фишке объясняет �
   });
 
   it('колонка выбранной строки у листа цели', () => {
-    const told = explain('цель.save_by.save', 'cantrip_save');
+    const told = explain('cel.save_by.save', 'cantrip_save');
     expect(told.kind).toBe('колонка по выбору');
     expect(told.title).toBe('Характеристики → Спасбросок');
     expect(told.go?.pick).toEqual({ activeTab: 'dictionaries', activeTableId: 'abilities' });
@@ -33,8 +33,8 @@ describe('откуда это: щелчок по фишке объясняет �
 
   it('метка броска и кость системы', () => {
     expect(explain('ataka')).toMatchObject({ kind: 'метка броска', facts: expect.arrayContaining([['Успех', 'попадание']]) });
-    expect(explain('цель.lead_die')).toMatchObject({
-      kind: 'кость системы', facts: expect.arrayContaining([['кто бросает', '«цель»']]),
+    expect(explain('cel.lead_die', 'cantrip_save')).toMatchObject({
+      kind: 'кость системы', facts: expect.arrayContaining([['кто бросает', '«Цель»']]),
     });
   });
 
@@ -43,9 +43,9 @@ describe('откуда это: щелчок по фишке объясняет �
   });
 
   it('висящий эффект — число «сколько раз висит»', () => {
-    const told = explain('цель.paralyzed');
+    const told = explain('cel.paralyzed', 'cantrip_save');
     expect(told.kind).toBe('висит на листе');
-    expect(told.facts).toContainEqual(['чьё', 'лист «цель»']);
+    expect(told.facts).toContainEqual(['чьё', 'лист «Цель»']);
     expect(told.go?.pick).toEqual({ activeTab: 'effects', activeEffectId: 'paralyzed' });
   });
 });

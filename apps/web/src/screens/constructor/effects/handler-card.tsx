@@ -2,7 +2,7 @@ import { groupSteps } from '../cards.ts';
 import { useState } from 'react';
 import { Card, CardHead, Field, Select, DangerButton, Button } from '../../../ui/primitives.tsx';
 import { formulaWords } from '../../../ui/formula-words.ts';
-import { MOMENTS as TIMES, MOMENT_PREFIX, FIELD_PREFIX, GAINED_PREFIX, LOST_PREFIX, PHASES, SEEN, SEEN_LABEL, ROLLED, ROLLED_LABEL, ANY_ACTION, callHappening, happeningOf, fieldsOf, TARGETS_SEED, HOLDER, compile, printFormula, andParts, namesAt, splitsTargets } from '@vtt/engine';
+import { MOMENTS as TIMES, MOMENT_PREFIX, FIELD_PREFIX, GAINED_PREFIX, LOST_PREFIX, PHASES, SEEN, seenLabel, ROLLED, rolledLabel, ANY_ACTION, callHappening, happeningOf, fieldsOf, TARGETS_SEED, HOLDER, compile, printFormula, andParts, namesAt, splitsTargets } from '@vtt/engine';
 import type { Phase, MomentKey, Node } from '@vtt/engine';
 import { sheetsAt, placeNamesAt, placeTablesAt } from './names.ts';
 import { ConditionField } from '../condition-field.tsx';
@@ -18,8 +18,8 @@ type Kind = 'call' | 'seen' | 'rolled' | 'moment' | 'field' | 'gained' | 'lost';
 
 const kinds = (): readonly (readonly [Kind, string])[] => [
   ['call', tt('effects:handler.kind.call')],
-  ['seen', SEEN_LABEL],
-  ['rolled', ROLLED_LABEL],
+  ['seen', seenLabel()],
+  ['rolled', rolledLabel()],
   ['moment', tt('effects:handler.kind.moment')],
   ['field', tt('effects:handler.kind.field')],
   ['gained', tt('effects:handler.kind.gained')],
@@ -152,8 +152,8 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove, startO
     handler.anyTags?.length ? t('handler.filter.any', { list: quoted(handler.anyTags) }) : '',
     handler.notTags?.length ? t('handler.filter.not', { list: quoted(handler.notTags) }) : '',
   ].filter(Boolean).join(', ');
-  const happened = kind === 'seen' ? `${SEEN_LABEL}${filter ? `, ${filter}` : ''}`
-    : kind === 'rolled' ? `${ROLLED_LABEL}${filter ? `, ${filter}` : ''}`
+  const happened = kind === 'seen' ? `${seenLabel()}${filter ? `, ${filter}` : ''}`
+    : kind === 'rolled' ? `${rolledLabel()}${filter ? `, ${filter}` : ''}`
     : kind === 'call' ? `${PHASES[phase].label} ${subjectWord}`
       : kind === 'moment' ? subjectWord
         : kind === 'field' ? t('handler.fieldTrue', { name: subjectWord })

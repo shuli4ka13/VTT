@@ -9,6 +9,7 @@ import { isTagWord } from '../engine/roll-tags.ts';
 import { linkOf, rowByKey, staticCell } from './tables.ts';
 import { isBlank, fixedDefault } from './blank.ts';
 import { tr, live } from '../words/tongue.ts';
+import { inSystemTongue } from './localize.ts';
 
 export type { CellMark };
 
@@ -488,23 +489,21 @@ export function tableFields(system: System, tableId: string): Field[] {
 
 export interface FieldProblem { table: string; message: string }
 
-interface Built { fields: Field[]; byTag: Map<string, Field>; problems: FieldProblem[]; rolls?: System['rolls'] }
+interface Built { fields: Field[]; byTag: Map<string, Field>; broken: string[]; rolls?: System['rolls'] }
 
-const EMPTY: Built = { fields: [], byTag: new Map(), problems: [] };
+const EMPTY: Built = { fields: [], byTag: new Map(), broken: [] };
 
 const built = new WeakMap<object, Built>();
 
 export function buildFields(system: System): Built {
   const fields: Field[] = [];
-  const problems: FieldProblem[] = [];
+  const broken: string[] = [];
   for (const id of Object.keys(system.tables ?? {})) {
-    try { fields.push(...tableFields(system, id)); } catch (err) {
-      problems.push({ table: id, message: (err as Error).message });
-    }
+    try { fields.push(...tableFields(system, id)); } catch { broken.push(id); }
   }
   const byTag = new Map<string, Field>();
   for (const field of fields) if (!byTag.has(field.tag)) byTag.set(field.tag, field);
-  return { fields, byTag, problems, ...(system.rolls ? { rolls: system.rolls } : {}) };
+  return { fields, byTag, broken, ...(system.rolls ? { rolls: system.rolls } : {}) };
 }
 
 function builtOf(system: System): Built {
@@ -576,7 +575,7 @@ function placeFields(system: System, base: Built): Built {
   });
   const byTag = new Map<string, Field>();
   for (const field of fields) if (!byTag.has(field.tag)) byTag.set(field.tag, field);
-  return { fields, byTag, problems: base.problems };
+  return { fields, byTag, broken: base.broken };
 }
 
 export const forgetFields = (system: System): void => { if (system.tables) built.delete(system.tables); };
@@ -591,7 +590,9 @@ export const readableFields = (system: System): Field[] => fieldsOf(system).filt
 
 export const hasField = (system: System, tag: string): boolean => builtOf(system).byTag.has(tag);
 
-export const fieldProblems = (system: System): FieldProblem[] => builtOf(system).problems;
+export const fieldProblems = (system: System): FieldProblem[] => builtOf(system).broken.flatMap(table => {
+  try { tableFields(system, table); return []; } catch (err) { return [{ table, message: (err as Error).message }]; }
+});
 
 export const singleTables = (system: System): [string, Table][] =>
   Object.entries(system.tables ?? {}).filter(([, table]) => isSingle(table));
@@ -643,7 +644,7 @@ function freeTableId(system: System, base: string): string {
 export function withColumn(system: System, column: TableColumn, holder: Holder = 'sheet'): System {
   const id = singleTableOf(system, holder) ?? freeTableId(system, SINGLE_NAMES[holder].id);
   const table: Table = system.tables?.[id]
-    ?? { label: SINGLE_NAMES[holder].label, shape: 'single', ...(holder === 'sheet' ? {} : { owner: holder }), columns: [] };
+    ?? { label: inSystemTongue(system, () => SINGLE_NAMES[holder].label), shape: 'single', ...(holder === 'sheet' ? {} : { owner: holder }), columns: [] };
   return { ...system, tables: { ...system.tables, [id]: { ...table, columns: [...table.columns ?? [], column] } } };
 }
 

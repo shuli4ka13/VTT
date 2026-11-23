@@ -166,8 +166,7 @@
     "open": "Открыть"
   },
   "cards": {
-    "condition": "условие",
-    "formula": "{{slot}} (формула)"
+    "condition": "условие"
   },
   "row": {
     "this": "эта строка",

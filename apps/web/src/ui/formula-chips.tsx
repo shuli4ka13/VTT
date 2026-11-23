@@ -3,10 +3,10 @@ import type { ReactNode } from 'react';
 import type { System } from '@vtt/schema';
 import { matchTagQuery } from './tag-suggest.tsx';
 import { fieldPaths, sheetPathLabel } from './paths.ts';
-import { DESK_ID, NAME_LABELS, fieldsOf, readableFields, hasField, fieldLinkOf, ROW, tagWords, typeColumns, callAt, partAt, FUNCTION_SPECS } from '@vtt/engine';
+import { DESK_ID, NAME_LABELS, fieldsOf, readableFields, hasField, fieldLinkOf, ROW, tagWords, typeColumns, callAt, partAt, FUNCTION_SPECS, NEUTRAL_WORDS } from '@vtt/engine';
 import type { FunctionSpec } from '@vtt/engine';
 import { plainLabel, pickTail, literalSaid, pathSaid } from './formula-labels.ts';
-import { formulaWords, useFormulaWords, shownFormula, storedFormula, functionIdOf, localName, localSpec } from './formula-lang.ts';
+import { formulaWords, useFormulaWords, shownFormula, storedFormula, functionIdOf, localName, localSpec, everyFunction } from './formula-lang.ts';
 import { tablesOf, choiceTableOf, rowLabelOf, picksOf } from './formula-words.ts';
 import { resolveNames, plain, NO_NAME } from './formula-resolve.ts';
 import { t, useT } from '../i18n/index.ts';
@@ -56,7 +56,7 @@ function typedPath(text: string, caret: number): { base: string; at: number; nee
 
 export function lookupNames(system: System, value: string): Map<string, string> {
   const out = new Map<string, string>();
-  const call = /(?:\u0442\u0430\u0431\u043b\u0438\u0446\u0430|table|\u0441\u0442\u0440\u043e\u043a\u0438|rows)\(\s*"([^"]+)"/gu;
+  const call = new RegExp(`(?:${everyFunction('table', 'rows')})\\(\\s*"([^"]+)"`, 'gu');
   for (const found of value.matchAll(call)) {
     const table = system.tables?.[found[1]!];
     if (!table) continue;
@@ -135,7 +135,7 @@ const opsOf = (): Op[] => {
     { label: words.and, hint: t('ui:chips.op.and'), open: ` ${words.and} `, word: true },
     { label: words.or, hint: t('ui:chips.op.or'), open: ` ${words.or} `, word: true },
     { label: words.not, hint: t('ui:chips.op.not'), open: `${words.not} `, word: true },
-    { ...fn('has', ', "")'), label: /^\u0435\u0441\u0442\u044c$/u.test(words.functions.has) ? t('ui:chips.inList') : words.functions.has },
+    { ...fn('has', ', "")'), label: words.functions.has === NEUTRAL_WORDS.functions.has ? words.functions.has : t('ui:chips.inList') },
   ];
 };
 
@@ -188,7 +188,7 @@ export function lookupLits(system: System, value: string): Map<number, string> {
 
 const CHOICE_LITS = [
   /@([\p{L}\p{N}_.]+)\s*(?:==|!=)\s*(")/gu,
-  /(?:\u0435\u0441\u0442\u044c|has)\(\s*@([\p{L}\p{N}_.]+)\s*,\s*(")/gu,
+  new RegExp(`(?:${everyFunction('has')})\\(\\s*@([\\p{L}\\p{N}_.]+)\\s*,\\s*(")`, 'gu'),
 ];
 
 export function choiceLits(system: System, value: string, tables?: ReadonlyMap<string, string>): Map<number, string> {

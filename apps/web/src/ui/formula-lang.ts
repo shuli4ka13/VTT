@@ -1,8 +1,17 @@
-import { translateFormula, diceText, wordsOf, functionSpec, NEUTRAL_WORDS, IF } from '@vtt/engine';
+import { translateFormula, diceText, wordsOf, functionSpec, NEUTRAL_WORDS, FORMULA_WORDS, IF } from '@vtt/engine';
 import type { FormulaWords, FunctionSpec } from '@vtt/engine';
 import { useLocale } from '../store/locale.ts';
 
 export const formulaWords = (): FormulaWords => wordsOf(useLocale.getState().lang);
+
+const escaped = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+export const everyFunction = (...ids: (keyof FormulaWords['functions'])[]): string =>
+  [...new Set(Object.values(FORMULA_WORDS).flatMap(words => ids.map(id => words.functions[id])))].map(escaped).join('|');
+
+export const DIE_LETTERS: string = [...new Set(Object.values(FORMULA_WORDS).flatMap(words => [...words.dieLetters]))].join('');
+
+export const spokenDie = (): string[] => Object.values(FORMULA_WORDS).map(words => words.die).filter(letter => letter !== NEUTRAL_WORDS.die);
 
 export const useFormulaWords = (): FormulaWords => wordsOf(useLocale(state => state.lang));
 

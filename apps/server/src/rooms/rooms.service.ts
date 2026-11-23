@@ -12,7 +12,7 @@ import type {
   RoomState, RoomSummary, RoomDelta, JournalEntry, ActIntent, TurnIntent, AnswerIntent, CancelIntent, ClockState, PendingState,
   Sheet, System, Compendium, StoredValue, LogEntry, Place, Places,
 } from '@vtt/schema';
-import { flattenSystem, perform, authorize, emptyJournal, deskOf, hasDesk, blankDesk, DESK_ID, idleClock, EngineError, ASK_ONE_WORDS, ASK_DESK_TITLE, knows, findField } from '@vtt/engine';
+import { flattenSystem, perform, authorize, emptyJournal, deskOf, hasDesk, blankDesk, DESK_ID, idleClock, EngineError, askOneWords, askDeskTitle, knows, findField } from '@vtt/engine';
 import type { Op, Performed, Want, Journal, Question } from '@vtt/engine';
 
 export type Role = 'gm' | 'player';
@@ -234,7 +234,7 @@ export class RoomsService {
       const offered = new Set(record.question.offers.map(o => o.id));
       const stray = intent.chosen.find(id => !offered.has(id));
       if (stray) throw new BadRequestException(`реакция «${stray}» сейчас не предлагается; можно: ${[...offered].join(', ') || '(ничего)'}`);
-      if (record.question.one && intent.chosen.length !== 1) throw new BadRequestException(`${ASK_ONE_WORDS}: ${record.question.offers.map(o => o.label).join(' / ')}`);
+      if (record.question.one && intent.chosen.length !== 1) throw new BadRequestException(`${askOneWords()}: ${record.question.offers.map(o => o.label).join(' / ')}`);
       const { question, id: _id, ...rest } = record;
       const journal: Journal = { ...record.journal, answers: { ...record.journal.answers, [question.key]: intent.chosen } };
       return this.play(room, { ...rest, journal }, userId, 'answer', intent, true);
@@ -421,7 +421,7 @@ export class RoomsService {
       sheetId: question.sheetId,
       stage: question.window,
       question: question.window === 'step'
-        ? `${question.sheetId === DESK_ID ? ASK_DESK_TITLE : name}: ${question.label}`
+        ? `${question.sheetId === DESK_ID ? askDeskTitle() : name}: ${question.label}`
         : question.window === 'moment'
         ? `${name}: ${question.label} — воспользоваться?`
         : question.window === 'seen'

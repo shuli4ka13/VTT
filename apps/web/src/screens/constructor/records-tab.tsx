@@ -8,7 +8,7 @@ import {
   Card, CardHead, Field, Input, Select, Button, Empty, Verdict, Chip, DangerButton, LabelInput, Fold,
 } from '../../ui/primitives.tsx';
 import type { System, SheetKind, Table } from '@vtt/schema';
-import { argsWithProps, propKeysOf, recordKinds, sheetKinds, recordsOf, DESK_ID, kindWord, blockOf, labelBlock, GEAR_BLOCK, GEAR_BLOCK_LABEL, blockLabel } from '@vtt/engine';
+import { argsWithProps, propKeysOf, recordKinds, sheetKinds, recordsOf, DESK_ID, kindWord, blockOf, labelBlock, GEAR_BLOCK, gearBlockLabel, blockLabel } from '@vtt/engine';
 import type { RecordKind, AnyKind } from '@vtt/engine';
 import { TableColumnCard } from './rules/tables-section.tsx';
 import { useState } from 'react';
@@ -114,7 +114,7 @@ export function RecordsTab() {
   const add = () => {
     focusNew(t('common:name.kind'));
     const made = newRecordKind(system);
-    editSystem(draft => { (draft.tables ??= {})[made.key] = made.value; if (blockLabel(draft, GEAR_BLOCK) === GEAR_BLOCK) labelBlock(draft, GEAR_BLOCK, GEAR_BLOCK_LABEL); });
+    editSystem(draft => { (draft.tables ??= {})[made.key] = made.value; if (blockLabel(draft, GEAR_BLOCK) === GEAR_BLOCK) labelBlock(draft, GEAR_BLOCK, gearBlockLabel()); });
     pick({ activeRecordKind: made.key });
   };
 

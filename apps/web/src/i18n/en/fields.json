@@ -164,8 +164,7 @@
     "warnings_other": "{{count}} warnings"
   },
   "cards": {
-    "condition": "condition",
-    "formula": "{{slot}} (formula)"
+    "condition": "condition"
   },
   "row": {
     "this": "this row",

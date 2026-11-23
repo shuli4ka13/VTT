@@ -1,4 +1,4 @@
-import { compile, AND, OR, NOT, FUNCTION_SPECS, DICE_BY_STEP } from '@vtt/engine';
+import { compile, AND, OR, NOT, FUNCTION_SPECS, diceByStep } from '@vtt/engine';
 import type { Node } from '@vtt/engine';
 import { t } from '../../i18n/author.ts';
 
@@ -23,7 +23,7 @@ function shapeOf(node: Node, named: (tag: string) => Shape): Shape {
     case 'Ref': return named(node.tag);
     case 'Pick': return 'any';
     case 'Unary': {
-      if (isDice(node.operand)) throw new Clash(DICE_BY_STEP);
+      if (isDice(node.operand)) throw new Clash(diceByStep());
       const inner = shapeOf(node.operand, named);
       if (node.op === NOT) return 'bool';
       if (node.op === '-' && inner === 'text') throw new Clash(t('fields:shape.minusWord'));
@@ -36,7 +36,7 @@ function shapeOf(node: Node, named: (tag: string) => Shape): Shape {
       if (node.op === AND) return left === 'bool' && right === 'bool' ? 'bool' : 'any';
       if (node.op === OR) return left === right ? left : 'any';
       if (!MATH.has(node.op)) return 'any';
-      if (isDice(node.left) || isDice(node.right)) throw new Clash(DICE_BY_STEP);
+      if (isDice(node.left) || isDice(node.right)) throw new Clash(diceByStep());
       if (left === 'text' || right === 'text') throw new Clash(t('fields:shape.wordMath'));
       return 'number';
     }

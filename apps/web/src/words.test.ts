@@ -72,7 +72,7 @@ describe('одно слово на одно понятие', () => {
     expect(dice(1, 20)).toBe('1d20');
     expect(dice(null, 6)).toBe('1d6');
     expect(diceSaid(1, 20)).toBe('1к20');
-    expect(diceExample).toBe('1к20');
+    expect(diceExample()).toBe('1к20');
     expect(asDice('2d6')).toBe('2к6');
     expect(toDice('2к6')).toBe('2d6');
     expect(toDice('д8')).toBe('1d8');

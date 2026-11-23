@@ -232,7 +232,7 @@ describe('удаление шага чистит ссылки на него', ()
     expect(removal.cleared).toEqual([
       { step: 1, slot: 'value' },
       { step: 2, slot: 'bonus' },
-      { step: 3, slot: 'versus (формула)' },
+      { step: 3, slot: 'versus', formula: true },
     ]);
     expect(list[2]).toHaveProperty('value');
   });

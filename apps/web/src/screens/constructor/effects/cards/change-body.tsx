@@ -1,4 +1,4 @@
-import { operandText, throwsDice, DICE_BY_STEP, amountParamOf } from '@vtt/engine';
+import { operandText, throwsDice, diceByStep, amountParamOf } from '@vtt/engine';
 import { tagSaid } from '../../tag-said.ts';
 import { SheetPick } from '../../sheet-pick.tsx';
 import { sheetChoices, callable } from '../../slots.tsx';
@@ -25,6 +25,7 @@ import { ConditionField } from '../../condition-field.tsx';
 import { TargetPick } from '../../field-target.tsx';
 import { TypedPick } from '../../typed-pick.tsx';
 import { useT, dataT } from '../../../../i18n/author.ts';
+import { DIE_LETTERS } from '../../../../ui/formula-lang.ts';
 
 function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onCreateFromRecord }: {
   amount?: Step;
@@ -98,7 +99,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
     ),
   } : undefined;
 
-  const DICE = /(?<![\p{L}\p{N}_@.])(\d+)?\s*[dдк]\s*(\d+)/iu;
+  const DICE = new RegExp(`(?<![\\p{L}\\p{N}_@.])(\\d+)?\\s*[${DIE_LETTERS}]\\s*(\\d+)`, 'iu');
 
   const mentions = (text: string, id: string) =>
     new RegExp(`[@#]${id}(?![\\p{L}\\p{N}_])`, 'u').test(text);
@@ -143,7 +144,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
       return;
     }
 
-    if (throwsDice(text)) { setTrouble(DICE_BY_STEP); return; }
+    if (throwsDice(text)) { setTrouble(diceByStep()); return; }
 
     const bare = text.replace(/"[^"]*"|'[^']*'/g, m => ' '.repeat(m.length));
     const rolled = bare.match(DICE);

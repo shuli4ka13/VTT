@@ -4,7 +4,7 @@ import type { StepData, StepContext, StepModule } from './index.ts';
 const marker = (type: 'branch' | 'orElse' | 'end', flow: 'open' | 'alt' | 'close', icon: string): StepModule => {
   const words: StepWords = STEP_WORDS[type];
   return {
-    type, label: words.label, hint: words.hint, slots: words.slots, outputs: words.outputs,
+    type, slots: words.slots, outputs: words.outputs,
     flow, icon, mayBreak: false,
     finish: () => ({ value: null, trace: {}, break: null }),
   };
@@ -17,7 +17,7 @@ export const end = marker('end', 'close', '⑂');
 const stopWords: StepWords = STEP_WORDS.stop;
 
 export const stop: StepModule = {
-  type: 'stop', label: stopWords.label, hint: stopWords.hint, slots: stopWords.slots, outputs: stopWords.outputs,
+  type: 'stop', slots: stopWords.slots, outputs: stopWords.outputs,
   icon: '■', mayBreak: true,
   reasonWord: (reason: string) => stopWords.reasons[reason] ?? null,
   finish(step: StepData, ctx: StepContext) {

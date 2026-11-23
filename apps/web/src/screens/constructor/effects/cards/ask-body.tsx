@@ -5,7 +5,7 @@ import { TypedPick } from '../../typed-pick.tsx';
 import { sheetChoices } from '../../slots.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
-import { NAME_LABELS, ASK_WHOM } from '@vtt/engine';
+import { NAME_LABELS, askWhom } from '@vtt/engine';
 import { useT } from '../../../../i18n/author.ts';
 
 
@@ -23,10 +23,10 @@ export function AskBody({ step, context, edit, system }: { step: Record<string, 
           <Input value={text('question')} placeholder={t('ask.question.placeholder')} onChange={set('question')} />
         </Field>
         <Field label={t('ask.whom.label')} hint={t('ask.whom.hint')}>
-          <TypedPick want={{ kind: 'sheet' }} value={step.to} context={context} blank={ASK_WHOM} label={t('ask.whom.label')}
+          <TypedPick want={{ kind: 'sheet' }} value={step.to} context={context} blank={askWhom()} label={t('ask.whom.label')}
             onChange={next => edit(0, draft => { if (next) loose(draft).to = next; else delete loose(draft).to; })}>
             <SheetPick
-              value={step.to} sheets={sheetChoices(context).singles} system={system} empty={ASK_WHOM} where={t('ask.whom.where')}
+              value={step.to} sheets={sheetChoices(context).singles} system={system} empty={askWhom()} where={t('ask.whom.where')}
               onChange={next => edit(0, draft => { if (next) loose(draft).to = next; else delete loose(draft).to; })}
             />
           </TypedPick>

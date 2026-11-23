@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { STEP_WORDS, kindWord, choiceTables, resultsOf } from '@vtt/engine';
+import { STEP_WORDS, kindWord, choiceTables, resultsOf, withoutYesNo } from '@vtt/engine';
 import type { StepWords } from '@vtt/engine';
 import { freeId, useWorld } from '../../../store/world.ts';
 import { followKey } from '../keys.ts';
@@ -31,7 +31,7 @@ function sourcesOf(system: System, effect: Effect): Source[] {
     const callee = step.type === 'emit' && typeof called === 'string' ? system.effects?.[called] : undefined;
     const title = callee?.label ?? words?.label ?? step.type;
     for (const column of callee?.returns ?? []) out.push({ expr: `@${step.id}.${column.key}`, label: `${title} — ${column.label ?? column.key}`, kind: String(column.kind ?? 'number') });
-    for (const output of resultsOf(system, effect.params ?? [], step).filter(one => one.kind !== 'roll')) out.push({ expr: `@${step.id}${output.path}`, label: `${title} — ${output.label.replace(/^да или нет: /, '')}`, kind: String(output.kind ?? 'number') });
+    for (const output of resultsOf(system, effect.params ?? [], step).filter(one => one.kind !== 'roll')) out.push({ expr: `@${step.id}${output.path}`, label: `${title} — ${withoutYesNo(output.label)}`, kind: String(output.kind ?? 'number') });
   }
   return out;
 }

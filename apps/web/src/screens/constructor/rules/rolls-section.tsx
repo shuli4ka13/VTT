@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Card, CardHead, Button, DangerButton, Input, Select, Empty } from '../../../ui/primitives.tsx';
 import { MultiCombo } from '../../../ui/combo.tsx';
-import { blockLabel, NAMES, NAME_LABELS, NO_BLOCK, resultsOf, fieldsOf, onSheet, isSingle, STEP_WORDS, ROLL_NUMBER_WORDS, rollNumberWord, numbersOf, shapeOf } from '@vtt/engine';
+import { blockLabel, NAMES, NAME_LABELS, NO_BLOCK, resultsOf, fieldsOf, onSheet, isSingle, STEP_WORDS, ROLL_NUMBER_WORDS, rollNumberWord, numbersOf, shapeOf, withoutYesNo } from '@vtt/engine';
 import type { DieConstant } from '@vtt/engine';
 import { TagsField } from '../tags-field.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
@@ -93,7 +93,7 @@ function RollFlow({ roll }: { roll: SystemRoll }) {
   const graded = roll.number === 'under' || roll.number === 'over' || fieldGate;
   const gate = fieldGate && roll.number !== 'under' && roll.number !== 'over' ? t('flow.gate') : '';
   const common = (STEP_WORDS.roll.outputs as readonly { label: string; kind?: string; onlyWith?: string }[]).filter(one => !one.onlyWith && one.kind !== 'roll')
-    .map(one => [one.label.replace(/^да или нет: /, ''), kinds[one.kind ?? 'number'] ?? '', t('flow.any')] as const);
+    .map(one => [withoutYesNo(one.label), kinds[one.kind ?? 'number'] ?? '', t('flow.any')] as const);
   const own: (readonly [string, string, string])[] = [
     ...(graded || roll.success ? [[t('flow.passed'), kinds.boolean!, roll.success ? t('flow.successRule') : roll.number === 'under' ? t('flow.underSaid') : t('flow.overSaid', { gate })] as const] : []),
     ...(graded || roll.margin ? [[t('flow.margin'), kinds.number!, roll.margin ? t('flow.marginRule') : roll.number === 'under' ? t('flow.marginUnder') : t('flow.marginOver', { gate })] as const] : []),

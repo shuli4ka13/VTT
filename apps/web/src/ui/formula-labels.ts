@@ -1,7 +1,8 @@
 import type { System } from '@vtt/schema';
 import { sheetPathLabel } from './paths.ts';
 import { fieldOf, fieldLinkOf, ROW, typeColumn, nameLabel, saidName, listOf } from '@vtt/engine';
-import { shownFormula } from './formula-lang.ts';
+import { shownFormula, everyFunction } from './formula-lang.ts';
+import { t } from '../i18n/index.ts';
 
 const known = (system: System, tag: string, names?: ReadonlyMap<string, string>): boolean =>
   Boolean(fieldOf(system, tag)) || sheetPathLabel(system, tag) !== null || Boolean(names?.has(tag));
@@ -13,10 +14,25 @@ const onSheet = (system: System, tag: string, names?: ReadonlyMap<string, string
   return known(system, rest, names) || system.effects?.[rest] ? { head: tag.slice(0, dot), rest } : null;
 };
 
-const ROLL_PATHS: Record<string, string> = {
-  dice: 'кости', rolls: 'выпавшие', natural: 'на кости', total: 'сколько вышло всего', success: 'успех', margin: 'запас',
-  atMax: 'кости на максимуме', atMin: 'кости на минимуме', degree: 'ступень', parts: 'части', versus: 'порог', tags: 'метки броска',
+const rollPath = (segment: string): string | undefined => {
+  switch (segment) {
+    case 'dice': return t('ui:labels.roll.dice');
+    case 'rolls': return t('ui:labels.roll.rolls');
+    case 'natural': return t('ui:labels.roll.natural');
+    case 'total': return t('ui:labels.roll.total');
+    case 'success': return t('ui:labels.roll.success');
+    case 'margin': return t('ui:labels.roll.margin');
+    case 'atMax': return t('ui:labels.roll.atMax');
+    case 'atMin': return t('ui:labels.roll.atMin');
+    case 'degree': return t('ui:labels.roll.degree');
+    case 'parts': return t('ui:labels.roll.parts');
+    case 'versus': return t('ui:labels.roll.versus');
+    case 'tags': return t('ui:labels.roll.tags');
+    default: return undefined;
+  }
 };
+
+const TABLE_CALL = new RegExp(`(?:${everyFunction('table')})\\(\\s*(["'])([^"']*)\\1\\s*,([^,()]*(?:\\([^()]*\\)[^,()]*)*)(?:,\\s*(["'])([^"']*)\\4)?\\s*\\)`, 'gu');
 
 const SAID = new WeakMap<System, Map<string, string>>();
 
@@ -71,7 +87,7 @@ function saidIndex(system: System): Map<string, string> {
 
 function segmentSaid(system: System, names: ReadonlyMap<string, string> | undefined, segment: string): string | undefined {
   const named = names?.get(segment);
-  return (named !== segment ? named : undefined) ?? nameLabel(segment) ?? ROLL_PATHS[segment] ?? saidIndex(system).get(segment);
+  return (named !== segment ? named : undefined) ?? nameLabel(segment) ?? rollPath(segment) ?? saidIndex(system).get(segment);
 }
 
 function byAddress(system: System, segments: readonly string[]): (string | undefined)[] {
@@ -127,8 +143,8 @@ export function literalSaid(system: System, value: string): string | undefined {
 }
 
 export function defaultSaid(system: System, param: { kind?: unknown; from?: unknown }, value: unknown): string {
-  if (value === true) return 'да';
-  if (value === false) return 'нет';
+  if (value === true) return t('ui:labels.yes');
+  if (value === false) return t('ui:labels.no');
   if (typeof value !== 'string') return String(value);
   if (String(param.kind) === 'effect') return system.effects?.[value]?.label || value;
   const row = typeof param.from === 'string' ? listOf(system, param.from)?.find(one => one.value === value)?.label : undefined;
@@ -143,16 +159,20 @@ function labels(
   source: string,
   names?: ReadonlyMap<string, string>,
 ): string {
-  const lookups = source.replace(/(?:таблица|table)\(\s*(["'])([^"']*)\1\s*,([^,()]*(?:\([^()]*\)[^,()]*)*)(?:,\s*(["'])([^"']*)\4)?\s*\)/gu,
+  const lookups = source.replace(TABLE_CALL,
     (whole, _q, table: string, arg: string, _q2, column?: string) => {
       const found = system.tables?.[table];
       if (!found) return whole;
       const col = column ? typeColumn(system, table, column) : undefined;
-      return `«${found.label || table}»${col ? ` → ${col.label || col.key}` : ''} по ${arg.trim()}`;
+      return col
+        ? t('ui:labels.tableColumn', { table: found.label || table, column: col.label || col.key, arg: arg.trim() })
+        : t('ui:labels.table', { table: found.label || table, arg: arg.trim() });
     });
   const picks = lookups.replace(/[@#]([\p{L}\p{N}_]+(?:\.[\p{L}\p{N}_]+)*)\.\[([^[\]]*)\]((?:\.[\p{L}\p{N}_]+)*)/gu,
     (_, tag: string, by: string, rest: string) =>
-      `${labelOfTag(system, tag, names)} · колонка по [${labels(system, by, names)}]${rest ? ` · ${pickTail(system, tag, rest.slice(1))}` : ''}`);
+      rest
+        ? t('ui:labels.pickTail', { tag: labelOfTag(system, tag, names), by: labels(system, by, names), tail: pickTail(system, tag, rest.slice(1)) })
+        : t('ui:labels.pick', { tag: labelOfTag(system, tag, names), by: labels(system, by, names) }));
   return picks
     .replace(/[@#]([\p{L}\p{N}_.]+)/gu, (_, name: string) => labelOfTag(system, name, names))
     .replace(/"([A-Za-z][A-Za-z0-9_]*)"/gu, (whole, value: string) => { const said = literalSaid(system, value); return said ? `«${said}»` : whole; });

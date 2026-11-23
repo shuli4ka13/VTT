@@ -1,1 +1,162 @@
-{}
+{
+  "lookup": {
+    "ask": {
+      "actor": "the player will be asked",
+      "gm": "the game master will be asked",
+      "table": "asked at the table"
+    },
+    "arg": {
+      "prop": "record property «{{name}}»",
+      "table": "table «{{table}}» → {{column}}",
+      "value": "value"
+    },
+    "caller": {
+      "record": "record type «{{kind}}»: {{text}}",
+      "recordBinding": "record type «{{kind}}» · «{{binding}}»: {{text}}",
+      "none": "passes nothing",
+      "effect": "effect «{{name}}» calls: {{text}}"
+    },
+    "fact": {
+      "row": "row",
+      "example": "example",
+      "type": "type",
+      "table": "table",
+      "ifMissing": "if not passed",
+      "whose": "whose",
+      "computed": "computed",
+      "how": "how it is got",
+      "number": "number",
+      "dice": "dice",
+      "whoRolls": "who rolls",
+      "systemRoll": "system roll"
+    },
+    "row": {
+      "same": "the same as the cell's: each row of «{{table}}» has its own",
+      "link": "column of table «{{table}}» — a link: leads to a row of another table",
+      "column": "column of table «{{table}}»",
+      "example": "for «{{row}}»: {{via}} · {{column}}",
+      "kind": "cell of this row",
+      "title": "this row",
+      "from": "the column formula is one for all rows of table «{{table}}»; for each row «row» is the row itself"
+    },
+    "go": {
+      "openTable": "open the table",
+      "openTableNamed": "open table «{{name}}»",
+      "open": "open «{{name}}»",
+      "sheet": "open on the «Sheet» tab",
+      "rules": "open «Rules»"
+    },
+    "owner": {
+      "sheet": "sheet «{{name}}»"
+    },
+    "kind": {
+      "call": "came into the call",
+      "stepResult": "step result",
+      "pickedColumn": "column by choice",
+      "input": "effect input",
+      "deskColumn": "table column",
+      "groupColumn": "group column",
+      "sheetColumn": "sheet column",
+      "fieldColumn": "column by field",
+      "hanging": "hanging on the sheet",
+      "systemDie": "system die",
+      "rollTag": "roll tag",
+      "recordProp": "record property",
+      "notFound": "not found"
+    },
+    "from": {
+      "call": "the number this effect was called with; «after the target's edits» — already with resistances",
+      "stepResult": "computed earlier in this effect's chain",
+      "stored": "entered on the sheet or changed by effects",
+      "computed": "computed by itself from other fields",
+      "table": "table «{{name}}»",
+      "hanging": "put on by «hang» steps in effects and by worn items; removed by steps, duration and link",
+      "die": "the «Dice» section on the «Rules» tab",
+      "roll": "roll name from «Rolls» — every roll of this kind carries it as a tag",
+      "tag": "a table row — a roll with this tag is found by the «on a roll with tag» edits",
+      "records": "filled in by compendium records of type «{{kind}}»: {{n}}",
+      "notFound": "there is no such name in the sheet, the inputs or the tables"
+    },
+    "pickedRow": {
+      "input": "the one that came in input «{{name}}»",
+      "field": "the one chosen in field «{{name}}»"
+    },
+    "computedBy": {
+      "owner": "{{owner}} — by the column formula",
+      "anon": "by the sheet where it is read — by the column formula"
+    },
+    "ifMissing": {
+      "empty": "empty",
+      "fails": "the effect will not work"
+    },
+    "shown": {
+      "ask": "at the table: {{ask}}",
+      "askHint": "at the table: {{ask}} — «{{hint}}»",
+      "desk": "on the table sheet",
+      "group": "on the group sheet if the sheet is in a group; otherwise on its own",
+      "block": "on the sheet, block «{{group}}»",
+      "noBlock": "no block",
+      "hanging": "on the sheet among hanging effects"
+    },
+    "how": {
+      "formula": "formula {{expr}}",
+      "table": "by table «{{name}}»",
+      "stored": "stored, default {{value}}"
+    },
+    "hung": {
+      "count": "how many times it hangs: 0 — not, 1 — hangs, more — applied several times"
+    },
+    "prop": {
+      "title": "{{prop}} · {{kind}}"
+    }
+  },
+  "problems": {
+    "leaf": {
+      "on": "what happened",
+      "effect": "effect",
+      "target": "which field we change",
+      "value": "how much",
+      "edit": "roll edit",
+      "expr": "formula",
+      "tag": "field",
+      "label": "name",
+      "default": "default",
+      "die": "die",
+      "constant": "die",
+      "event": "common effect",
+      "dice": "dice",
+      "bonus": "bonus",
+      "versus": "against what",
+      "roll": "roll",
+      "type": "type",
+      "kind": "kind",
+      "args": "what we send",
+      "props": "properties",
+      "ops": "operations",
+      "ranges": "table rows"
+    },
+    "msg": {
+      "required": "not filled in",
+      "empty": "empty",
+      "invalid": "wrong value",
+      "extra": "extra key"
+    },
+    "path": {
+      "effect": "effect {{name}}",
+      "sheetType": "sheet type {{name}}",
+      "die": "die {{name}}",
+      "rollEdit": "roll edit {{name}}",
+      "recordType": "record type {{name}}",
+      "table": "table {{name}}",
+      "field": "field «{{name}}»",
+      "property": "property «{{name}}»",
+      "column": "column «{{name}}»",
+      "button": "button {{n}}",
+      "modifier": "modifier {{n}}",
+      "input": "input {{n}}",
+      "when": "«when» №{{n}}",
+      "number": "№{{n}}",
+      "said": "{{path}}: {{said}}"
+    }
+  }
+}

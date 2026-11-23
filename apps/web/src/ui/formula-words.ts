@@ -2,29 +2,43 @@ import type { System } from '@vtt/schema';
 import { compile, AND, OR, NOT, ROW, STEP_WORDS, listOf, fieldOf, fieldLinkOf } from '@vtt/engine';
 import type { Node } from '@vtt/engine';
 import { formulaAsLabels, pickTail, literalSaid } from './formula-labels.ts';
-import { localName } from './formula-lang.ts';
+import { localName, DIE_LETTERS } from './formula-lang.ts';
+import { t } from '../i18n/index.ts';
 
 const COMPARE: Record<string, string> = { '==': '=', '!=': '≠', '>=': '≥', '<=': '≤', '>': '>', '<': '<' };
 const ARITH: Record<string, string> = { '+': '+', '-': '−', '*': '×', '/': '÷' };
 
-const ROLL_FIELDS: Record<string, string> = {
-  'dice.rolls': 'выпавшие кости', natural: 'на кости', total: 'сколько вышло всего', success: 'успех', margin: 'запас',
-  atMax: 'кости на максимуме', atMin: 'кости на минимуме', degree: 'ступень', parts: 'части', versus: 'порог',
-  tags: 'метки броска',
+const rollField = (rest: string): string | undefined => {
+  switch (rest) {
+    case 'dice.rolls': return t('ui:words.roll.rolls');
+    case 'natural': return t('ui:words.roll.natural');
+    case 'total': return t('ui:words.roll.total');
+    case 'success': return t('ui:words.roll.success');
+    case 'margin': return t('ui:words.roll.margin');
+    case 'atMax': return t('ui:words.roll.atMax');
+    case 'atMin': return t('ui:words.roll.atMin');
+    case 'degree': return t('ui:words.roll.degree');
+    case 'parts': return t('ui:words.roll.parts');
+    case 'versus': return t('ui:words.roll.versus');
+    case 'tags': return t('ui:words.roll.tags');
+    default: return undefined;
+  }
 };
 
 const SEEN_ROLL = 'roll';
 
-const diceWords = (value: string): string => value.replace(/^1(?=к)/u, '');
+const ONE_DIE = new RegExp(`^1(?=[${DIE_LETTERS}])`, 'u');
+
+const diceWords = (value: string): string => value.replace(ONE_DIE, '');
 
 const pathWords = (ref: (text: string) => string, tag: string): string => {
   const dot = tag.indexOf('.');
   if (dot < 0) return `«${ref(`@${tag}`)}»`;
   const head = tag.slice(0, dot);
   const rest = tag.slice(dot + 1);
-  const known = ROLL_FIELDS[rest] ?? (rest.startsWith('parts.') ? `часть «${rest.slice(6)}»` : undefined)
+  const known = rollField(rest) ?? (rest.startsWith('parts.') ? t('ui:words.part', { name: rest.slice(6) }) : undefined)
     ?? (head === SEEN_ROLL ? STEP_WORDS.roll.outputs.find(output => output.path === `.${rest}`)?.label : undefined);
-  if (known) return `«${head === SEEN_ROLL ? 'Бросок' : ref(`@${head}`)}»: ${known}`;
+  if (known) return t('ui:words.rollField', { head: head === SEEN_ROLL ? t('ui:words.rollHead') : ref(`@${head}`), what: known });
   return `«${ref(`@${tag}`)}»`;
 };
 
@@ -64,21 +78,23 @@ export function formulaWords(system: System, source: string, names?: ReadonlyMap
     switch (node.kind) {
       case 'Number': return String(node.value);
       case 'Text': return node.dice ? diceWords(node.value) : `«${literalSaid(system, node.value) ?? node.value}»`;
-      case 'Bool': return node.value ? 'да' : 'нет';
+      case 'Bool': return node.value ? t('ui:words.yes') : t('ui:words.no');
       case 'Ref': return node.tag.startsWith(`${ROW}.`) ? `«${ref(`@${node.tag}`)}»` : pathWords(ref, node.tag);
-      case 'Pick': return `«${ref(`@${node.tag}`)}» по ${words(node.key, true)}${node.rest ? ` · ${pickTail(system, node.tag, node.rest)}` : ''}`;
+      case 'Pick': return node.rest
+        ? t('ui:words.pickTail', { ref: ref(`@${node.tag}`), key: words(node.key, true), tail: pickTail(system, node.tag, node.rest) })
+        : t('ui:words.pick', { ref: ref(`@${node.tag}`), key: words(node.key, true) });
       case 'Unary': {
         if (node.op === NOT) {
           const inner = node.operand;
-          if (inner.kind === 'Call' && inner.name === 'empty') return `задано ${inner.args[0] ? words(inner.args[0], true) : '…'}`;
-          return `не ${words(inner)}`;
+          if (inner.kind === 'Call' && inner.name === 'empty') return t('ui:words.set', { x: inner.args[0] ? words(inner.args[0], true) : '…' });
+          return t('ui:words.not', { x: words(inner) });
         }
         return node.op === '-' ? `−${words(node.operand)}` : `${node.op}${words(node.operand)}`;
       }
       case 'Binary': {
         if (node.op === AND || node.op === OR) {
           const side = (child: Node) => words(child, child.kind === 'Binary' && child.op === node.op);
-          const text = `${side(node.left)} ${node.op === AND ? 'и' : 'или'} ${side(node.right)}`;
+          const text = t(node.op === AND ? 'ui:words.and' : 'ui:words.or', { left: side(node.left), right: side(node.right) });
           return top ? text : `(${text})`;
         }
         const op = COMPARE[node.op] ?? ARITH[node.op] ?? node.op;
@@ -87,7 +103,7 @@ export function formulaWords(system: System, source: string, names?: ReadonlyMap
         return top || COMPARE[node.op] ? text : `(${text})`;
       }
       case 'Conditional': {
-        const text = `${words(node.then, true)}, если ${words(node.test, true)}, иначе ${words(node.otherwise, true)}`;
+        const text = t('ui:words.cond', { then: words(node.then, true), test: words(node.test, true), otherwise: words(node.otherwise, true) });
         return top ? text : `(${text})`;
       }
       case 'Call': return call(node.name, node.args);
@@ -103,14 +119,15 @@ export function formulaWords(system: System, source: string, names?: ReadonlyMap
 
   const call = (name: string, args: Node[]): string => {
     const all = (join: string) => args.map(arg => words(arg, true)).join(join);
+    const allAnd = (): string => (args.length ? args.map(arg => words(arg, true)).reduce((left, right) => t('ui:words.and', { left, right })) : '');
     const arg = (at: number): string => (args[at] ? words(args[at]!, true) : '…');
     switch (name) {
-      case 'empty': return `не задано ${arg(0)}`;
-      case 'min': return `меньшее из ${all(' и ')}`;
-      case 'max': return `большее из ${all(' и ')}`;
-      case 'count': return args.length > 1 ? `сколько ${arg(1)} среди ${arg(0)}` : `сколько ${arg(0)}`;
-      case 'has': return `${arg(0)} содержит ${args[0] && args[1] ? choiceWord(args[0], args[1]) ?? arg(1) : arg(1)}`;
-      case 'first': return `первый из ${arg(0)}`;
+      case 'empty': return t('ui:words.empty', { x: arg(0) });
+      case 'min': return t('ui:words.min', { list: allAnd() });
+      case 'max': return t('ui:words.max', { list: allAnd() });
+      case 'count': return args.length > 1 ? t('ui:words.countAmong', { what: arg(1), among: arg(0) }) : t('ui:words.count', { what: arg(0) });
+      case 'has': return t('ui:words.has', { a: arg(0), b: args[0] && args[1] ? choiceWord(args[0], args[1]) ?? arg(1) : arg(1) });
+      case 'first': return t('ui:words.first', { x: arg(0) });
       default: return `${localName(name)} ${all(', ')}`;
     }
   };

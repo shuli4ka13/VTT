@@ -2,7 +2,8 @@ import { EN } from './en/index.ts';
 
 export type Tongue = 'ru' | 'en';
 
-export const tongueOf = (lang: string | null | undefined): Tongue => (lang === undefined || lang === null || lang === 'ru' ? 'ru' : 'en');
+export const tongueOf = (lang: string | null | undefined): Tongue =>
+  (lang === undefined || lang === null || lang.toLowerCase().split(/[-_]/)[0] === 'ru' ? 'ru' : 'en');
 
 let current: Tongue = 'ru';
 

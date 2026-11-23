@@ -9,7 +9,7 @@ import { tr } from '../../words/tongue.ts';
 
 export const type = 'table';
 const words: StepWords = STEP_WORDS.table;
-export const { label, hint, slots, outputs } = words;
+export const { slots, outputs } = words;
 
 export const mayBreak = false;
 

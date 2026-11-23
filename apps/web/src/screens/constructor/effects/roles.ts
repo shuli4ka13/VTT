@@ -1,11 +1,16 @@
 import type { System, Effect, Compendium } from '@vtt/schema';
+import { t } from '../../../i18n/author.ts';
 import { launchOf, calledOf, chainsOfEffect, emittedChoices, recordKinds, withLibrary, COST_BLOCK } from '@vtt/engine';
 
 export type Role = 'button' | 'auto' | 'passive' | 'pay' | 'step' | 'unbound';
 
 export const ROLE_GROUPS: Record<Role, string> = {
-  step: 'Вызываются', pay: 'Плата', button: 'Кнопкой', auto: 'Срабатывают сами', passive: 'Висят и правят',
-  unbound: 'Не подключены',
+  get step() { return t('readback:group.step'); },
+  get pay() { return t('readback:group.pay'); },
+  get button() { return t('readback:group.button'); },
+  get auto() { return t('readback:group.auto'); },
+  get passive() { return t('readback:group.passive'); },
+  get unbound() { return t('readback:group.unbound'); },
 };
 
 const ROLE_ORDER: Role[] = ['step', 'pay', 'button', 'auto', 'passive', 'unbound'];
@@ -17,20 +22,25 @@ export function grouped<E>(system: System, list: readonly [string, E][]): [strin
 }
 
 export const ROLE_WORDS: Record<Role, string> = {
-  button: 'кнопкой', auto: 'срабатывает сам', passive: 'висит и правит', pay: 'плата', step: 'вызывается',
-  unbound: 'не подключён',
+  get button() { return t('readback:word.button'); },
+  get auto() { return t('readback:word.auto'); },
+  get passive() { return t('readback:word.passive'); },
+  get pay() { return t('readback:word.pay'); },
+  get step() { return t('readback:word.step'); },
+  get unbound() { return t('readback:word.unbound'); },
 };
 
-export const UNBOUND_HINT = 'Никто не нажимает и не вызывает. Подключить: кнопка у типа вещей, выдача листу или вызов из другого эффекта';
+export const unboundHint = (): string => t('readback:unbound.hint');
+
 
 export function roleWordsOf(effect: Effect | undefined, role: Role): string {
   if (role !== 'passive' && role !== 'auto') return ROLE_WORDS[role];
   const edits = Boolean(effect?.modifiers?.length);
   const listens = Boolean(effect?.on?.length);
-  if (edits && listens) return 'висит · правит и срабатывает сам';
-  if (edits) return 'висит · правит';
-  if (listens) return 'висит · срабатывает сам';
-  return 'висит';
+  if (edits && listens) return t('readback:word.hangingBoth');
+  if (edits) return t('readback:word.hangingEdits');
+  if (listens) return t('readback:word.hangingListens');
+  return t('readback:word.hanging');
 }
 
 type Loose = Record<string, unknown>;

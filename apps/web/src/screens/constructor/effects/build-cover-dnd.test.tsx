@@ -394,7 +394,7 @@ describe('общие эффекты D&D собираются руками: ци�
 
   const rows = (root: ParentNode, table: string, name: string) => {
     const strip = () => root.querySelector<HTMLElement>('.steps__split')!;
-    within(strip()).select(strip().querySelector<HTMLElement>('[role="combobox"]')!, `строки:${table}`);
+    within(strip()).select(strip().querySelector<HTMLElement>('[role="combobox"]')!, `rows:${table}`);
     within(strip()).type(strip().querySelector<HTMLElement>('input:not([role="combobox"])')!, name);
   };
 

@@ -12,7 +12,7 @@ import { tr } from '../../words/tongue.ts';
 
 export const type = 'roll';
 const words: StepWords = STEP_WORDS.roll;
-export const { label, hint, slots, outputs } = words;
+export const { slots, outputs } = words;
 
 export const mayBreak = false;
 

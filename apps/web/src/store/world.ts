@@ -1,4 +1,4 @@
-import { tidyLayout, withLibrary, forgetFields, keyFrom, latinOf, MAIN_LANG } from '@vtt/engine';
+import { tidyLayout, withLibrary, forgetFields, keyFrom, latinOf, MAIN_LANG, inSystemTongue } from '@vtt/engine';
 import { useMemo } from 'react';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
@@ -119,7 +119,7 @@ export const useWorld = create<WorldState>()(persist(set => ({
 
   editSystem: edit => set(state => {
     const draft = structuredClone(state.system);
-    edit(draft);
+    inSystemTongue(draft, () => edit(draft));
     tidyLayout(draft);
     return { system: fresh(draft) };
   }),
@@ -130,7 +130,7 @@ export const useWorld = create<WorldState>()(persist(set => ({
       const current = state.system.effects[id];
       if (!current) return {};
       const draft = structuredClone(current);
-      edit(draft);
+      inSystemTongue(state.system, () => edit(draft));
       return { system: { ...state.system, effects: { ...state.system.effects, [id]: draft } } };
     });
   },
@@ -140,7 +140,7 @@ export const useWorld = create<WorldState>()(persist(set => ({
     const at = (home?.columns ?? []).findIndex(c => c.key === key);
     if (!home || at < 0) return {};
     const draft = structuredClone(home.columns![at]!);
-    edit(draft);
+    inSystemTongue(state.system, () => edit(draft));
     const columns = [...home.columns!];
     columns[at] = draft;
     return { system: { ...state.system, tables: { ...state.system.tables, [table]: { ...home, columns } } } };
@@ -149,7 +149,7 @@ export const useWorld = create<WorldState>()(persist(set => ({
   editRules: edit => set(state => {
     const { effects, ...rest } = state.system;
     const draft = { ...structuredClone(rest), effects } as System;
-    edit(draft);
+    inSystemTongue(draft, () => edit(draft));
     if (draft.effects !== effects) {
       throw new Error('editRules edits dictionaries and tables; effects are edited by editEffect');
     }
@@ -158,13 +158,13 @@ export const useWorld = create<WorldState>()(persist(set => ({
 
   editCompendium: edit => set(state => {
     const draft = structuredClone(state.compendium);
-    edit(draft);
+    inSystemTongue(state.system, () => edit(draft));
     return { compendium: draft };
   }),
 
   editSheets: edit => set(state => {
     const draft = structuredClone(state.sheets);
-    edit(draft);
+    inSystemTongue(state.system, () => edit(draft));
     return { sheets: draft };
   }),
 

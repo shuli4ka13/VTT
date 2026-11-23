@@ -11,7 +11,7 @@ import { tr } from '../../words/tongue.ts';
 
 export const type = 'apply';
 const words: StepWords = STEP_WORDS.apply;
-export const { label, hint, slots, outputs } = words;
+export const { slots, outputs } = words;
 
 const DIRECTIONS: Record<string, (from: number, x: number) => number> = {
   add: (from, x) => from + x,

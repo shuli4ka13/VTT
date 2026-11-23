@@ -66,7 +66,7 @@ export function useReader(system: System, sheet: Sheet | null, compendium: Compe
       },
       measure: expr => {
         const resolve = (name: string) => pass.resolve(name.startsWith(`${HOLDER}.`) ? name.slice(HOLDER.length + 1) : name);
-        try { return { ok: true, value: compile(expr).evaluate(resolve, toolsOf(system, pass, 'формула')) }; }
+        try { return { ok: true, value: compile(expr).evaluate(resolve, toolsOf(system, pass, t('app:formula'))) }; }
         catch (err) { return { ok: false, error: (err as Error).message }; }
       },
     };

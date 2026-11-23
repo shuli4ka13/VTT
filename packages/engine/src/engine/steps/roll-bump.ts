@@ -5,7 +5,7 @@ import { tr } from '../../words/tongue.ts';
 
 export const type = 'roll-bump';
 const words: StepWords = STEP_WORDS['roll-bump'];
-export const { label, hint, slots, outputs } = words;
+export const { slots, outputs } = words;
 export const seen = true;
 export const mayBreak = false;
 export const icon = '⇡';

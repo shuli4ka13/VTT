@@ -1,1 +1,229 @@
-{}
+{
+  "reading": {
+    "successFrom": "successes from {{n}}",
+    "count": "success count",
+    "best": "best",
+    "worst": "worst"
+  },
+  "who": {
+    "unknown": "⟨who?⟩",
+    "rollerHolder": "the holder rolls",
+    "againstHolder": "rolled against the holder",
+    "anyone": "anyone rolls",
+    "allSheets": "on all sheets",
+    "holderSheet": "«{{name}}» — holder"
+  },
+  "ref": {
+    "input": "input «{{name}}»",
+    "onSheet": "«{{field}}» ({{sheet}})",
+    "withSheet": "{{name}} ({{sheet}})",
+    "result": "result «{{head}}»"
+  },
+  "hole": {
+    "checkWhat": "what do we check?",
+    "versus": "against what?",
+    "rollField": "which field?",
+    "rollSecond": "which second field?",
+    "rollWhat": "what is rolled?",
+    "diceCount": "how many dice?",
+    "times": "how many times?",
+    "howMany": "how many?",
+    "bonus": "bonus?",
+    "whichDice": "which dice?",
+    "becomes": "what does it become?",
+    "whichState": "which state?",
+    "whichTag": "which tag?",
+    "whichField": "which field?",
+    "whichEffect": "which effect do we call?",
+    "editDoes": "what does it do to the roll?",
+    "dieParts": "what is the roll made of?"
+  },
+  "expr": {
+    "missing": "{{name}} — not found"
+  },
+  "sign": {
+    "atLeast": "at least",
+    "over": "more than",
+    "notOver": "at most",
+    "under": "less than",
+    "equals": "equals"
+  },
+  "roll": {
+    "field": "roll of field {{field}}",
+    "fieldSecond": "roll of field {{field}} and {{second}}",
+    "fieldShift": "roll of field {{field}} with a modifier {{shift}}",
+    "fieldSecondShift": "roll of field {{field}} and {{second}} with a modifier {{shift}}",
+    "throws": "{{who}} rolls",
+    "noOwner": "dice belong to no one:",
+    "times": "× {{n}} times",
+    "keepBest": "keep the best {{n}}",
+    "keepWorst": "keep the worst {{n}}"
+  },
+  "status": {
+    "unknown": "«{{id}}» — not in the system",
+    "removeByTag": "{{who}} loses all effects with the tag",
+    "remove": "{{who}} loses the state",
+    "put": "{{who}} gets the state",
+    "stays": "Stays when the anchor is removed."
+  },
+  "change": {
+    "set": "becomes",
+    "add": "grows by",
+    "subtract": "decreases by"
+  },
+  "ask": {
+    "line": "ask {{to}}: {{question}} — {{yes}} / {{no}}",
+    "noQuestion": "⟨question?⟩"
+  },
+  "send": {
+    "fromInput": "Calls whatever is passed into input «{{input}}».",
+    "fromInputDefault": "Calls whatever is passed into input «{{input}}» (default «{{name}}»).",
+    "nothing": "nothing is passed.",
+    "calls": "Calls"
+  },
+  "number": {
+    "throws": "{{who}} rolls:",
+    "counted": "A number is counted:"
+  },
+  "op": {
+    "addDieOne": "add a die",
+    "addDie_one": "add {{count}} die",
+    "addDie_other": "add {{count}} dice",
+    "wild": "one die is wild: 5–6 give three successes, 1 cancels the fives",
+    "keepBestOne": "keep the best one",
+    "keepBest": "keep the best {{n}}",
+    "keepWorstOne": "keep the worst one",
+    "keepWorst": "keep the worst {{n}}",
+    "dieStepUp_one": "take a die {{count}} step higher",
+    "dieStepUp_other": "take a die {{count}} steps higher",
+    "dieStepDown_one": "take a die {{count}} step lower",
+    "dieStepDown_other": "take a die {{count}} steps lower",
+    "easier": "make the threshold {{n}} easier",
+    "harder": "make the threshold {{n}} harder",
+    "degreeUp": "shift the margin of success {{n}} up",
+    "degreeDown": "shift the margin of success {{n}} down",
+    "explodeMinOnce": "on a one, roll once more and subtract",
+    "explodeMinWhile": "on a one, roll again and keep rolling while ones come up, and subtract",
+    "explodeMaxOnce": "on the maximum, roll once more and add",
+    "explodeMaxWhile": "on the maximum, roll again and keep rolling while the maximum comes up, and add",
+    "rerollOnes": "reroll ones, the new result is binding",
+    "rerollUpTo": "reroll dice up to {{n}}, the new result is binding",
+    "flipHigh": "flip the digits if that is higher",
+    "flipLow": "flip the digits if that is lower",
+    "floorDie": "count a die as at least {{n}}",
+    "minus": "subtract {{said}}",
+    "plus": "add {{said}}"
+  },
+  "note": {
+    "wild": "wild die",
+    "best": "best",
+    "bestN": "best {{n}}",
+    "worst": "worst",
+    "worstN": "worst {{n}}",
+    "floor": "at least {{n}}",
+    "rerollOnes": "reroll ones",
+    "rerollUpTo": "reroll up to {{n}}",
+    "explodeApart": "separate explosion on the maximum",
+    "explodeMin": "explosion on a one",
+    "explodeMax": "explosion on the maximum",
+    "flipHigh": "flip to the higher",
+    "flipLow": "flip to the lower",
+    "easier": "threshold {{n}} easier",
+    "harder": "threshold {{n}} harder",
+    "degreeUp": "margin of success {{n}} higher",
+    "degreeDown": "margin of success {{n}} lower"
+  },
+  "edit": {
+    "cancels": "Cancels: {{list}}."
+  },
+  "die": {
+    "best": "take the best",
+    "worst": "take the worst",
+    "count": "count how many came up at {{n}} or higher",
+    "sum": "add them up",
+    "driven": "Roll {{die}} — the roll sets how many dice — and {{end}}.",
+    "byCount": "{{die}} by the number «{{count}}»",
+    "throw": "Roll {{dice}}.",
+    "throwAnd": "Roll {{dice}} and {{tail}}."
+  },
+  "said": {
+    "best": "the best is taken",
+    "worst": "the worst is taken",
+    "count": "those that came up at {{n}} or higher are counted",
+    "sum": "added up",
+    "line": "{{dice}} — {{tail}}"
+  },
+  "seen": {
+    "lowest": "the lowest die",
+    "upTo": "dice up to {{n}}",
+    "keepBest": ", keep the best",
+    "keepWorst": ", keep the worst",
+    "bump": "die +{{n}}"
+  },
+  "mod": {
+    "floor": "at least {{value}}",
+    "cap": "at most {{value}}",
+    "stage": ", stage «{{name}}»",
+    "if": "if {{cond}}",
+    "condition": " — if {{cond}}",
+    "whichField": "which field?",
+    "whichEdit": "which roll edit?",
+    "whichCall": "which call?",
+    "tag": "tag {{value}}",
+    "everyRow": "{{table}} → {{column}} — for every row",
+    "byProp": "{{table}} → {{column}} by «{{by}}»",
+    "fromInput": "field from «{{name}}»",
+    "rowEach": "each of «{{table}}»",
+    "where": "where «{{column}}» is «{{row}}»",
+    "withTags": " with tags {{tags}}",
+    "withAny": " with any of the tags {{tags}}",
+    "except": " except {{tags}}",
+    "filterTags": "by tags {{tags}}",
+    "filterExcept": "except {{tags}}"
+  },
+  "launch": {
+    "hanging": "Hanging",
+    "hangingHint": "Stays on the sheet until it expires: edits numbers, reacts to what happened, or both"
+  },
+  "card": {
+    "check": "Check",
+    "change": "Change",
+    "roll": "Roll",
+    "number": "Number",
+    "table": "Take from table",
+    "stop": "Stop",
+    "rollTagged": "Roll «{{tags}}»"
+  },
+  "step": {
+    "call": "Call",
+    "callFrom": "Call what is passed into",
+    "put": "Apply",
+    "take": "Remove",
+    "set": "Change",
+    "roll": "Roll",
+    "number": "Number"
+  },
+  "group": {
+    "step": "Called",
+    "pay": "Cost",
+    "button": "By button",
+    "auto": "Automatic",
+    "passive": "Hanging and editing",
+    "unbound": "Not connected"
+  },
+  "word": {
+    "button": "by button",
+    "auto": "automatic",
+    "passive": "hangs and edits",
+    "pay": "cost",
+    "step": "called",
+    "unbound": "not connected",
+    "hangingBoth": "hanging · edits and acts automatically",
+    "hangingEdits": "hanging · edits",
+    "hangingListens": "hanging · acts automatically",
+    "hanging": "hanging"
+  },
+  "unbound": {
+    "hint": "Nobody presses or calls it. Connect it: a button on an item type, a grant to a sheet, or a call from another effect"
+  }
+}

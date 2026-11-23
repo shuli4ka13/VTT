@@ -1,5 +1,4 @@
 [
-  "engine/use-calc.ts",
   "guide/lessons/combat.ts",
   "guide/lessons/first-system.ts",
   "guide/lessons/items.ts",
@@ -10,21 +9,6 @@
   "guide/lessons/tags.ts",
   "guide/lessons/templates.ts",
   "screens/constructor/effect-pick.tsx",
-  "screens/constructor/effects/cards/change-body.tsx",
-  "screens/constructor/effects/cards/group-card.tsx",
-  "screens/constructor/effects/chain.tsx",
-  "screens/constructor/effects/returns-editor.tsx",
-  "screens/constructor/effects/roles.ts",
-  "screens/constructor/effects/words.ts",
   "screens/constructor/lookup-panel.tsx",
-  "screens/constructor/lookup.ts",
-  "screens/constructor/modifier-words.ts",
-  "screens/constructor/problems.ts",
-  "screens/constructor/readback.ts",
-  "screens/constructor/rules/rolls-section.tsx",
-  "screens/constructor/slots.tsx",
-  "screens/constructor/tags-field.tsx",
-  "screens/play/clock-words.ts",
-  "ui/formula-labels.ts",
-  "ui/formula-words.ts"
+  "screens/constructor/tags-field.tsx"
 ]

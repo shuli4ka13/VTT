@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { LITE_WORLDS, SAMPLE_SYSTEMS } from '../src/model/systems.ts';
+import { LITE_WORLDS, SAMPLE_SYSTEMS, SAMPLE_WORLDS } from '../src/model/systems.ts';
 import { flattenSystem } from '../src/model/inherit.ts';
 import { availableActions } from '../src/events/actions.ts';
 import { asksOf, choicesOf, askKindOf, isPerTarget } from '../src/model/asks.ts';
@@ -10,7 +10,10 @@ import { lintSystem } from '../src/model/lint.ts';
 import { installMethod, ADVANTAGE_METHODS } from '../src/model/advantage-methods.ts';
 import { setCrit } from '../src/model/toggles.ts';
 import { blankDesk } from '../src/events/desk.ts';
-import { setTongue } from '../src/words/tongue.ts';
+import { setTongue, tongueOf } from '../src/words/tongue.ts';
+import { registry } from '../src/engine/steps/index.ts';
+import { STEP_WORDS } from '../src/words/steps.ts';
+import { withColumn } from '../src/model/sheet-columns.ts';
 import { englishWorld, latinData, SPOKEN } from './tongue.latin.ts';
 import type { Journal } from '../src/core/external.ts';
 import type { Sheet, System, Compendium } from '../src/model/types.ts';
@@ -121,5 +124,72 @@ describe('заготовки движка пишут в систему на её
     expect(added).toBeGreaterThan(0);
     expect(JSON.stringify(after).match(/[Ѐ-ӿ][^"]{0,40}/gu)?.slice(0, 10) ?? []).toEqual([]);
     expect(blankDesk(before).name).toBe('Desk');
+  });
+});
+
+describe('находки ревью второго языка: что не должно зависеть от языка и что должно за ним идти', () => {
+  it('подпись шага из реестра читается на текущем языке, а не замерзает при загрузке', () => {
+    for (const [type, mod] of registry) {
+      const words = (STEP_WORDS as Record<string, { label: string; hint: string } | undefined>)[type];
+      if (!words) continue;
+      setTongue('ru');
+      expect(mod.label, type).toBe(words.label);
+      const russian = mod.label;
+      setTongue('en');
+      expect(mod.label, type).toBe(words.label);
+      expect(SPOKEN.test(String(mod.label)), type).toBe(false);
+      expect(mod.label, type).not.toBe(russian);
+    }
+  });
+
+  it('ошибка сломанной таблицы говорится на языке запроса, даже если поля уже собраны на другом', () => {
+    const broken = {
+      id: 's', name: 's', effects: {},
+      tables: {
+        abilities: {
+          label: 'Abilities', owner: 'sheet',
+          columns: [
+            { key: 'score', label: 'Score', kind: 'number', default: 10 },
+            { key: 'mod', label: 'Modifier', kind: 'number', expr: { expr: '@row.score' }, title: '{nope}: {label}' },
+          ],
+          rows: [{ value: 'strength', label: 'Strength' }],
+        },
+      },
+    } as unknown as System;
+    const first = lintSystem(broken).filter(problem => problem.where.section === 'tables');
+    expect(first.length).toBeGreaterThan(0);
+    expect(first.some(problem => SPOKEN.test(problem.text))).toBe(true);
+    const asked = lintSystem(broken, undefined, 'en').filter(problem => problem.where.section === 'tables');
+    expect(asked.length).toBe(first.length);
+    expect(asked.filter(problem => SPOKEN.test(problem.text)).map(problem => problem.text)).toEqual([]);
+    expect(lintSystem(broken).filter(problem => problem.where.section === 'tables')).toEqual(first);
+  });
+
+  it('таблица листа, заведённая движком, называется на основном языке системы', () => {
+    const column = { key: 'hp', label: 'HP', kind: 'number' } as never;
+    const empty = { id: 's', name: 's', effects: {}, tables: {} } as unknown as System;
+    setTongue('en');
+    expect(Object.values(withColumn(empty, column).tables ?? {})[0]!.label).toBe('Лист');
+    setTongue('ru');
+    expect(Object.values(withColumn({ ...empty, langs: ['en'] } as System, column).tables ?? {})[0]!.label).toBe('Sheet');
+  });
+
+  it('полные образцы: «Проблемы» на английском — те же места и уровни', () => {
+    for (const sample of SAMPLE_WORLDS) {
+      const russian = flattenSystem(sample.system);
+      const english = englishWorld(sample);
+      const plain = lintSystem(russian, sample.compendium);
+      const other = lintSystem(flattenSystem(english.system), english.compendium, 'en');
+      expect(other.map(problem => [problem.level, JSON.stringify(problem.where)]), russian.name).toEqual(plain.map(problem => [problem.level, JSON.stringify(latinData(problem.where))]));
+      expect(other.filter(problem => SPOKEN.test(problem.text)).map(problem => problem.text).slice(0, 10), russian.name).toEqual([]);
+    }
+  }, 300000);
+
+  it('код языка с регионом — тот же язык', () => {
+    setTongue('ru-RU');
+    expect(lintSystem({ id: 's', name: 's', effects: {}, tables: {}, langs: ['ru'] } as unknown as System)).toEqual([]);
+    expect(tongueOf('ru-RU')).toBe('ru');
+    expect(tongueOf('RU')).toBe('ru');
+    expect(tongueOf('en-GB')).toBe('en');
   });
 });

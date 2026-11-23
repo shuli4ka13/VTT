@@ -96,6 +96,10 @@ const isKind = (system: System, of: unknown, kind: string): boolean => {
 };
 
 export function payOnly(world: ActWorld, intent: ActIntent): void {
+  inSystemTongue(world.system, () => payOnlyIn(world, intent));
+}
+
+function payOnlyIn(world: ActWorld, intent: ActIntent): void {
   const { system, compendium, clock } = world;
   const journal: Journal = { ...emptyJournal(), ...world.journal, ids: world.journal.ids ?? {} };
   const ext = new External(journal, { die: world.die, ...(world.newId ? { newId: world.newId } : {}) }, 'preview');

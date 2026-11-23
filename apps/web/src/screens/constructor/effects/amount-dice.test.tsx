@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { DICE_BY_STEP } from '@vtt/engine';
+import { diceByStep } from '@vtt/engine';
 import { cleanup, act, fireEvent } from '@testing-library/react';
 import { renderOpen } from '../../../testing/render-open.tsx';
 import { within, stepCard } from '../../../testing/cards.ts';
@@ -67,6 +67,6 @@ describe('кость в «Сколько» у «Изменения»', () => {
     const { steps, apply } = amountOf();
     expect(steps.some(step => step.type === 'roll')).toBe(false);
     expect((apply.value as { expr: string }).expr).toBe('1');
-    expect(document.body.textContent).toContain(DICE_BY_STEP);
+    expect(document.body.textContent).toContain(diceByStep());
   });
 });

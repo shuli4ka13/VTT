@@ -2,7 +2,7 @@ import { slugOf, freeId } from '../../store/world.ts';
 import { t } from '../../i18n/author.ts';
 import { usageIndex, inUse } from './usage.ts';
 import type { System, Compendium } from '@vtt/schema';
-import { splitsTargets, NAMES, NAME_LABELS, nameLabel, stepSaid } from '@vtt/engine';
+import { splitsTargets, NAMES, everyLabel, nameLabel, stepSaid } from '@vtt/engine';
 import { plain } from '../../ui/formula-resolve.ts';
 
 const escape = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -79,7 +79,9 @@ export function followKey({ used, key, base, before, after, taken }: {
 
 export const keyOf = (text: string): string => slugOf(text);
 
-export const RESERVED_NAMES: readonly string[] = [NAMES.row, NAMES.holder, NAMES.desk, NAME_LABELS.row, NAME_LABELS.holder, NAME_LABELS.desk];
+const RESERVED: readonly string[] = [NAMES.row, NAMES.holder, NAMES.desk];
+
+export const reservedName = (text: string): boolean => RESERVED.some(name => name === text || everyLabel(name).includes(text));
 
 export interface NameKeys { key: 'id' | 'as'; label: 'label' | 'asLabel' }
 
@@ -102,7 +104,7 @@ export function stepNameTrouble(typed: string, step: Named, others: readonly Nam
   if (!next) return t('constructor:name.empty');
   const had = typeof step.id === 'string' && step.id !== '';
   if (had && text === stepSaid(step)) return null;
-  if (RESERVED_NAMES.includes(next) || RESERVED_NAMES.includes(text)) return t('constructor:name.reserved', { name: nameLabel(next) ?? text });
+  if (reservedName(next) || reservedName(text)) return t('constructor:name.reserved', { name: nameLabel(next) ?? text });
   if (others.some(other => plain(stepSaid(other)) === plain(text))) return t('constructor:name.taken', { name: text });
   return null;
 }

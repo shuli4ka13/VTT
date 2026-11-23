@@ -20,6 +20,8 @@ import type { Thrown } from '../../core/roll.ts';
 import type { Faced } from '../../core/against.ts';
 import type { Check, FieldThrow } from '../check.ts';
 import { tr } from '../../words/tongue.ts';
+import { STEP_WORDS } from '../../words/steps.ts';
+import type { StepWords } from '../../words/steps.ts';
 
 export type StepData = Step & Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -126,8 +128,15 @@ export function registerStepType(mod: StepModule): StepModule {
         tr`тип шага «${mod && mod.type ? mod.type : '?'}» не годится в реестр: не хватает «${part}»`);
     }
   }
-  registry.set(mod.type, mod);
-  return mod;
+  const words = (STEP_WORDS as Record<string, StepWords | undefined>)[mod.type];
+  const entry: StepModule = words
+    ? Object.defineProperties({ ...mod }, {
+      label: { get: () => words.label, enumerable: true },
+      hint: { get: () => words.hint, enumerable: true },
+    })
+    : mod;
+  registry.set(mod.type, entry);
+  return entry;
 }
 
 for (const mod of [roll, check, apply, status, emit, table, each, ask, rollAdd, rollReroll, rollPlus, rollBump]) {

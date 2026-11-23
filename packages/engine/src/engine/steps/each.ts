@@ -4,7 +4,7 @@ import { tr } from '../../words/tongue.ts';
 
 export const type = 'each';
 const words: StepWords = STEP_WORDS.each;
-export const { label, hint, slots, outputs } = words;
+export const { slots, outputs } = words;
 
 type LoopStep = { of?: unknown; rows?: unknown; as?: unknown };
 

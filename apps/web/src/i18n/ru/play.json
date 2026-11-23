@@ -235,5 +235,38 @@
       "byList": "вещи меняют: {{names}}",
       "gm": "ведущий"
     }
+  },
+  "clock": {
+    "day": "День {{day}}, {{time}}",
+    "span": {
+      "days_one": "{{count}} день",
+      "days_few": "{{count}} дня",
+      "days_many": "{{count}} дней",
+      "daysHours_one": "{{count}} день {{hours}} ч",
+      "daysHours_few": "{{count}} дня {{hours}} ч",
+      "daysHours_many": "{{count}} дней {{hours}} ч",
+      "hours": "{{hours}} ч",
+      "hoursMinutes": "{{hours}} ч {{minutes}} мин",
+      "minutes": "{{minutes}} мин",
+      "seconds": "{{seconds}} с"
+    },
+    "left": {
+      "turns_one": "ещё {{count}} ход",
+      "turns_few": "ещё {{count}} хода",
+      "turns_many": "ещё {{count}} ходов",
+      "uses_one": "ещё {{count}} применение",
+      "uses_few": "ещё {{count}} применения",
+      "uses_many": "ещё {{count}} применений",
+      "until": "до раунда {{round}}",
+      "span": "ещё {{span}}",
+      "expires": "истекает",
+      "combat": "до конца боя",
+      "scene": "до конца сцены"
+    },
+    "unit": {
+      "minutes": "минут",
+      "hours": "часов",
+      "days": "дней"
+    }
   }
 }

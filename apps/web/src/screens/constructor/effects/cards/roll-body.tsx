@@ -13,7 +13,7 @@ import type { Extra } from './extras.tsx';
 import { RollTags } from './roll-line.tsx';
 import { useStepName } from './step-name.tsx';
 import { dieSaid } from '../../readback.ts';
-import { resultsOf, stepSaid } from '@vtt/engine';
+import { resultsOf, stepSaid, withoutYesNo } from '@vtt/engine';
 import { ResultChips } from './result-chips.tsx';
 import { rollSaid } from '../../rules/rolls.ts';
 import { t as tg, useT } from '../../../../i18n/author.ts';
@@ -196,7 +196,7 @@ export function RollBody({ step, context, edit, takenNames }: {
       <div className="roll-extras"><Extras items={extras} /></div>
       {current ? (
         <ResultChips name={stepSaid(read)} system={context.system} nameSlot={<span className="result-row__name" title={t('result.nameTitle')}>{stepSaid(read)}</span>}
-          outputs={resultsOf(context.system, context.effect.params ?? [], step as never).map(one => ({ key: one.path.slice(1) || 'whole', label: one.label.replace(/^\u0434\u0430 \u0438\u043b\u0438 \u043d\u0435\u0442: /u, ''), kind: one.kind }))} />
+          outputs={resultsOf(context.system, context.effect.params ?? [], step as never).map(one => ({ key: one.path.slice(1) || 'whole', label: withoutYesNo(one.label), kind: one.kind }))} />
       ) : null}
       <RollTags label={fielded ? t('tags.more') : t('tags.label')} roll={read} system={context.system} {...(context.names ? { names: context.names } : {})} onRoll={change => set(change)} />
     </>

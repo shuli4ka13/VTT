@@ -1,4 +1,4 @@
-import { roleOf, roleWordsOf, UNBOUND_HINT } from './roles.ts';
+import { roleOf, roleWordsOf, unboundHint } from './roles.ts';
 import { useState } from 'react';
 import { paramsOf, rolesOf, launchOf, activationFor, DURATIONS, REAPPLY } from '@vtt/engine';
 import type { NamePlace as Place } from '@vtt/engine';
@@ -80,7 +80,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
           <span className="effect-head__name">
             <LabelInput value={effect.label ?? ''} placeholder={t('common:name.effect')} onCommit={label => relabel(label)} />
           </span>
-          <span className={`effect-head__kind effect-head__kind--${launch.kind}`} title={role === 'unbound' ? UNBOUND_HINT : launchHint(launch.kind)}>{roleWordsOf(effect, role)}</span>
+          <span className={`effect-head__kind effect-head__kind--${launch.kind}`} title={role === 'unbound' ? unboundHint() : launchHint(launch.kind)}>{roleWordsOf(effect, role)}</span>
           <span className="spacer" />
           <Button size="sm" variant="ghost" title={t('editor.propsTitle')} ariaLabel={more ? t('common:fold.collapse', { name: t('editor.props') }) : t('common:fold.expand', { name: t('editor.props') })} onClick={() => setMore(!more)}>{more ? t('editor.propsCollapse') : t('editor.props')}</Button>
           <DangerButton size="sm" onConfirm={() => {

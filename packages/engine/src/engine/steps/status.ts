@@ -6,7 +6,7 @@ import { tr, live } from '../../words/tongue.ts';
 
 export const type = 'status';
 const words: StepWords = STEP_WORDS.status;
-export const { label, hint, slots, outputs } = words;
+export const { slots, outputs } = words;
 
 export const MODES = live({
   apply: { label: 'Наложить' },

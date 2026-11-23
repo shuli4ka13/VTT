@@ -50,11 +50,13 @@ const timesOf = (step: Step): { expr?: unknown } | undefined => (step as { times
 
 const repeated = (step: Step): boolean => typeof timesOf(step)?.expr === 'string' && (step as { die?: unknown }).die !== undefined;
 
+const CRIT_KEY = 'krit';
+
 const critOfCall = (system: System | undefined, step: Step): string | null => {
   const called = (step as { effect?: unknown }).effect;
   if (step.type !== 'emit' || !step.id || typeof called !== 'string') return null;
   const returns = system?.effects?.[called]?.returns ?? [];
-  if (returns.some(column => column.key === tr`крит`)) return tr`if(@${String(step.id)}.крит, 2, 1)`;
+  if (returns.some(column => column.key === CRIT_KEY)) return `if(@${String(step.id)}.${CRIT_KEY}, 2, 1)`;
   for (const column of returns) {
     if (column.kind !== 'choice' || !column.from || column.many) continue;
     const factor = (system?.tables?.[column.from]?.columns ?? []).find(one => (one.kind ?? 'number') === 'number');

@@ -9,14 +9,19 @@ import { shownText } from './no-keys.tsx';
 import { useLocale } from '../store/locale.ts';
 
 const RUSSIAN = /[А-Яа-яЁё]/u;
-const LETTER = /[А-Яа-яЁё]/gu;
+const WORD = /[А-Яа-яЁё]+/gu;
 
 const latinLetter = (letter: string): string => {
   const out = latinOf(letter);
   return letter === letter.toLowerCase() ? out : out.charAt(0).toUpperCase() + out.slice(1);
 };
 
-const latinText = (text: string): string => text.replace(LETTER, latinLetter);
+const latinWord = (word: string): string => {
+  const letters = [...word].map(latinLetter);
+  return `${letters[0]}${latinOf(word[0]!)}${letters.slice(1).join('')}`;
+};
+
+const latinText = (text: string): string => text.replace(WORD, latinWord);
 
 function latinData<T>(node: T): T {
   if (typeof node === 'string') return latinText(node) as T;

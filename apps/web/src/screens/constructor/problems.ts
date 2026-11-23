@@ -5,6 +5,7 @@ import type { System } from '@vtt/schema';
 import { useWorld, useBook } from '../../store/world.ts';
 import type { WorldState } from '../../store/world.ts';
 import { STEP } from '../../words.ts';
+import { t } from '../../i18n/author.ts';
 
 export type { Problem };
 
@@ -36,18 +37,15 @@ export function pickFor(where: Where, system?: System): Pick {
   return { activeRecordId: where.record ?? null, activeStepIndex: null };
 }
 
-const LEAF: Record<string, string> = {
-  on: 'что случилось', effect: 'эффект', target: 'какое поле меняем', value: 'сколько', edit: 'правка броска',
-  expr: 'формула', tag: 'поле', label: 'название', default: 'по умолчанию', die: 'кость', constant: 'кость',
-  event: 'общий эффект', dice: 'кости', bonus: 'прибавка', versus: 'против чего', roll: 'бросок', type: 'тип',
-  kind: 'вид', args: 'что отправляем', props: 'свойства', ops: 'операции', ranges: 'строки таблицы',
-};
+const LEAF_KEYS = new Set(['on', 'effect', 'target', 'value', 'edit', 'expr', 'tag', 'label', 'default', 'die', 'constant', 'event', 'dice', 'bonus', 'versus', 'roll', 'type', 'kind', 'args', 'props', 'ops', 'ranges']);
 
-const MESSAGES: [RegExp, string][] = [
-  [/required|undefined/i, 'не заполнено'],
-  [/too small|at least|>=1 character|empty/i, 'пусто'],
-  [/invalid input|expected .* received|invalid literal|invalid enum|invalid discriminator|invalid_union|invalid option/i, 'не то значение'],
-  [/unrecognized key/i, 'лишний ключ'],
+const leafWord = (key: string): string => (LEAF_KEYS.has(key) ? t(`phrases:problems.leaf.${key}`) : key);
+
+const messages = (): [RegExp, string][] => [
+  [/required|undefined/i, t('phrases:problems.msg.required')],
+  [/too small|at least|>=1 character|empty/i, t('phrases:problems.msg.empty')],
+  [/invalid input|expected .* received|invalid literal|invalid enum|invalid discriminator|invalid_union|invalid option/i, t('phrases:problems.msg.invalid')],
+  [/unrecognized key/i, t('phrases:problems.msg.extra')],
 ];
 
 const labelOf = (list: Record<string, { label?: string }> | undefined, id: string): string =>
@@ -64,27 +62,27 @@ export function pathWords(issue: string, system: System): string {
     const next = path[i + 1];
     const index = next !== undefined && /^\d+$/.test(next) ? Number(next) : null;
     const named = next !== undefined && index === null ? next : null;
-    if (key === 'effects' && named) { words.push(`эффект ${labelOf(system.effects, named)}`); i++; continue; }
-    if (key === 'sheets' && named) { words.push(`тип листа ${labelOf(system.sheets, named)}`); i++; continue; }
-    if (key === 'constants' && named) { words.push(`кость ${labelOf(system.constants, named)}`); i++; continue; }
-    if (key === 'roll_edits' && named) { words.push(`правка броска ${labelOf(system.roll_edits, named)}`); i++; continue; }
+    if (key === 'effects' && named) { words.push(t('phrases:problems.path.effect', { name: labelOf(system.effects, named) })); i++; continue; }
+    if (key === 'sheets' && named) { words.push(t('phrases:problems.path.sheetType', { name: labelOf(system.sheets, named) })); i++; continue; }
+    if (key === 'constants' && named) { words.push(t('phrases:problems.path.die', { name: labelOf(system.constants, named) })); i++; continue; }
+    if (key === 'roll_edits' && named) { words.push(t('phrases:problems.path.rollEdit', { name: labelOf(system.roll_edits, named) })); i++; continue; }
     if (key === 'tables' && named) {
       const table = system.tables?.[named];
       const at = path[i + 2] === 'columns' && /^\d+$/.test(path[i + 3] ?? '') ? Number(path[i + 3]) : null;
       const column = at === null ? undefined : table?.columns?.[at];
-      if (!isSingle(table)) words.push(`${isBook(table) ? 'тип записи' : 'таблица'} ${labelOf(system.tables, named)}`);
+      if (!isSingle(table)) words.push(t(isBook(table) ? 'phrases:problems.path.recordType' : 'phrases:problems.path.table', { name: labelOf(system.tables, named) }));
       i++;
-      if (at !== null) { words.push(`${isSingle(table) ? 'поле' : isBook(table) ? 'свойство' : 'колонка'} «${column?.label || column?.key || at + 1}»`); i += 2; }
+      if (at !== null) { words.push(t(isSingle(table) ? 'phrases:problems.path.field' : isBook(table) ? 'phrases:problems.path.property' : 'phrases:problems.path.column', { name: column?.label || column?.key || at + 1 })); i += 2; }
       continue;
     }
     if ((key === 'steps' || key === 'receive') && index !== null) { words.push(`${STEP.one} ${index + 1}`); i++; continue; }
-    if (key === 'bindings' && index !== null) { words.push(`кнопка ${index + 1}`); i++; continue; }
-    if (key === 'modifiers' && index !== null) { words.push(`модификатор ${index + 1}`); i++; continue; }
-    if (key === 'params' && index !== null) { words.push(`вход ${index + 1}`); i++; continue; }
-    if (key === 'on' && index !== null) { words.push(`«когда» №${index + 1}`); i++; continue; }
-    if (/^\d+$/.test(key)) { words.push(`№${Number(key) + 1}`); continue; }
-    words.push(LEAF[key] ?? key);
+    if (key === 'bindings' && index !== null) { words.push(t('phrases:problems.path.button', { n: index + 1 })); i++; continue; }
+    if (key === 'modifiers' && index !== null) { words.push(t('phrases:problems.path.modifier', { n: index + 1 })); i++; continue; }
+    if (key === 'params' && index !== null) { words.push(t('phrases:problems.path.input', { n: index + 1 })); i++; continue; }
+    if (key === 'on' && index !== null) { words.push(t('phrases:problems.path.when', { n: index + 1 })); i++; continue; }
+    if (/^\d+$/.test(key)) { words.push(t('phrases:problems.path.number', { n: Number(key) + 1 })); continue; }
+    words.push(leafWord(key));
   }
-  const said = MESSAGES.find(([rx]) => rx.test(message))?.[1] ?? message;
-  return `${words.join(' · ')}: ${said}`;
+  const said = messages().find(([rx]) => rx.test(message))?.[1] ?? message;
+  return t('phrases:problems.path.said', { path: words.join(' · '), said });
 }

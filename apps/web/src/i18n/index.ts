@@ -1,6 +1,7 @@
 import i18next from 'i18next';
 import { initReactI18next, useTranslation, Trans } from 'react-i18next';
 import type { TFunction } from 'i18next';
+import { setTongue } from '@vtt/engine';
 import { useLocale } from '../store/locale.ts';
 import ruCommon from './ru/common.json';
 import ruApp from './ru/app.json';
@@ -42,7 +43,10 @@ void instance.use(initReactI18next).init({
   },
 });
 
+setTongue(useLocale.getState().lang);
+
 useLocale.subscribe(state => {
+  setTongue(state.lang);
   if (instance.language !== state.lang) void instance.changeLanguage(state.lang);
 });
 

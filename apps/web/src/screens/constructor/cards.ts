@@ -194,7 +194,7 @@ export function unwrapBlock(steps: Step[], open: number): Step[] {
   return [...steps.slice(0, open), ...steps.slice(open + 1, first), ...steps.slice(end + 1)];
 }
 
-export interface Removal { steps: Step[]; cleared: { step: number; slot: string }[] }
+export interface Removal { steps: Step[]; cleared: { step: number; slot: string; formula?: true }[] }
 
 export function removeSteps(steps: Step[], indices: number[]): Removal {
   const gone = new Set(indices);
@@ -215,7 +215,7 @@ export function removeSteps(steps: Step[], indices: number[]): Removal {
           delete node[key];
           cleared.push({ step: at, slot: key === 'if' ? t('fields:cards.condition') : slot });
         } else {
-          cleared.push({ step: at, slot: t('fields:cards.formula', { slot }) });
+          cleared.push({ step: at, slot, formula: true });
         }
         continue;
       }

@@ -9,7 +9,7 @@ import { tr } from '../../words/tongue.ts';
 
 export const type = 'emit';
 const words: StepWords = STEP_WORDS.emit;
-export const { label, hint, slots, outputs } = words;
+export const { slots, outputs } = words;
 
 
 export function reasonWord(reason: string): string | null {

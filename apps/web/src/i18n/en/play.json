@@ -235,5 +235,34 @@
       "byList": "items edited by: {{names}}",
       "gm": "game master"
     }
+  },
+  "clock": {
+    "day": "Day {{day}}, {{time}}",
+    "span": {
+      "days_one": "{{count}} day",
+      "days_other": "{{count}} days",
+      "daysHours_one": "{{count}} day {{hours}} h",
+      "daysHours_other": "{{count}} days {{hours}} h",
+      "hours": "{{hours}} h",
+      "hoursMinutes": "{{hours}} h {{minutes}} min",
+      "minutes": "{{minutes}} min",
+      "seconds": "{{seconds}} s"
+    },
+    "left": {
+      "turns_one": "{{count}} more turn",
+      "turns_other": "{{count}} more turns",
+      "uses_one": "{{count}} more use",
+      "uses_other": "{{count}} more uses",
+      "until": "until round {{round}}",
+      "span": "{{span}} more",
+      "expires": "expires",
+      "combat": "until the end of combat",
+      "scene": "until the end of the scene"
+    },
+    "unit": {
+      "minutes": "minutes",
+      "hours": "hours",
+      "days": "days"
+    }
   }
 }

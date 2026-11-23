@@ -1,4 +1,4 @@
-import { compile, printFormula, operandText, NOT, degreeWords as tableWords, listOf, choiceTableOf, fieldOf, activationOf, loopOf, loopParam, loopsAt, splitsTargets, armsOf, sees, endOf, outcomeWords, namesAt, blockLabel, stepSaid, labelBlock, COST_BLOCK, COST_BLOCK_LABEL } from '@vtt/engine';
+import { compile, printFormula, operandText, NOT, degreeWords as tableWords, listOf, choiceTableOf, fieldOf, activationOf, loopOf, loopParam, loopsAt, splitsTargets, armsOf, sees, endOf, outcomeWords, namesAt, blockLabel, stepSaid, labelBlock, COST_BLOCK, costBlockLabel } from '@vtt/engine';
 import type { NamePlace as Place } from '@vtt/engine';
 import { withRole } from './roles.ts';
 import type { ReactNode } from 'react';
@@ -333,9 +333,9 @@ export function Chain({ id, placeAt, effect, system, edit, title: titleProp, emp
             draft.steps = removal.steps;
           });
           const kept = groupSteps(removal.steps);
-          const where = (c: { step: number; slot: string }) => `${cardTitle(kept, c.step, system, effect) ?? STEP.one} · ${c.slot.replace(/ \(формула\)$/, '')}`;
-          const cleared = removal.cleared.filter(c => !c.slot.endsWith('(формула)'));
-          const left = removal.cleared.filter(c => c.slot.endsWith('(формула)'));
+          const where = (c: { step: number; slot: string }) => `${cardTitle(kept, c.step, system, effect) ?? STEP.one} · ${c.slot}`;
+          const cleared = removal.cleared.filter(c => !c.formula);
+          const left = removal.cleared.filter(c => c.formula);
           const gone = titleOf(group.kind, group.step, system, effect);
           setRemoved({
             before,
@@ -643,7 +643,7 @@ export function PayDivider({ system, except, onAdd }: { system: System; except?:
   );
 }
 
-const NEW_COST = ':новая';
+const NEW_COST = ':new';
 
 export function CostPick({ system, except, onPick }: { system: System; except?: string; onPick: (id: string) => void }) {
   const t = useT('effects');
@@ -663,7 +663,7 @@ export function CostPick({ system, except, onPick }: { system: System; except?: 
           if (!pick) return;
           if (pick !== NEW_COST) { onPick(pick); return; }
           const made = newCost(system);
-          editSystem(draft => { draft.effects[made.key] = made.value; if (blockLabel(draft, COST_BLOCK) === COST_BLOCK) labelBlock(draft, COST_BLOCK, COST_BLOCK_LABEL); });
+          editSystem(draft => { draft.effects[made.key] = made.value; if (blockLabel(draft, COST_BLOCK) === COST_BLOCK) labelBlock(draft, COST_BLOCK, costBlockLabel()); });
           onPick(made.key);
         }}
       />

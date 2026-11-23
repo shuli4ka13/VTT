@@ -1,7 +1,7 @@
 import { rolesOf } from './effects/roles.ts';
 import type { SheetNames } from '../../ui/formula-chips.tsx';
 import type { System, Effect, SlotRef, Param } from '@vtt/schema';
-import { givesOf, stepModule, loopsAt, calledOf, amountParamOf, hasField, stepSaid, NAMES } from '@vtt/engine';
+import { givesOf, stepModule, loopsAt, calledOf, amountParamOf, hasField, stepSaid, NAMES, withoutYesNo } from '@vtt/engine';
 import type { Graded, RecordKind, NameAt } from '@vtt/engine';
 import { columnPaths } from '../../ui/formula.tsx';
 import { STEP } from '../../words.ts';
@@ -58,7 +58,7 @@ export function outputRefs(earlier: EarlierStep[], nameOf: (step: EarlierStep) =
 
 export interface OutcomeRef { ref: string; label: string; kind?: string; no?: string }
 
-const outcomeWord = (output: StepOutput): string => output.label.replace(/^да или нет: /, '');
+const outcomeWord = (output: StepOutput): string => withoutYesNo(output.label);
 
 export function outcomeRefs(earlier: EarlierStep[]): OutcomeRef[] {
   const rows = earlier

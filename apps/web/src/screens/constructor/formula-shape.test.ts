@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { DICE_BY_STEP } from '@vtt/engine';
+import { diceByStep } from '@vtt/engine';
 import { shapeProblem, type Shape } from './formula-shape.ts';
 
 const named = (shapes: Record<string, Shape>) => (tag: string): Shape => shapes[tag] ?? 'any';
@@ -22,7 +22,7 @@ describe('вид формулы у входа', () => {
     expect(shapeProblem('if(@x > 1, 2, 3)', 'number', named({}))).toBeNull();
   });
   it('кость в арифметике — подсказка про шаг «Бросок»', () => {
-    expect(shapeProblem('d4 + 1', 'number', named({}))).toBe(DICE_BY_STEP);
-    expect(shapeProblem('-d4', 'number', named({}))).toBe(DICE_BY_STEP);
+    expect(shapeProblem('d4 + 1', 'number', named({}))).toBe(diceByStep());
+    expect(shapeProblem('-d4', 'number', named({}))).toBe(diceByStep());
   });
 });

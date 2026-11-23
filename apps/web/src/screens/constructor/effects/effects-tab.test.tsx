@@ -6,7 +6,7 @@ import { within as within2, stepCard, pickCombo, comboOptions } from '../../../t
 import { EffectsTab } from './effects-tab.tsx';
 import { useWorld, emptySystem } from '../../../store/world.ts';
 import { CREATE_KINDS } from './words.ts';
-import { UNBOUND_HINT } from './roles.ts';
+import { unboundHint } from './roles.ts';
 import { fieldsOf, hasField } from '@vtt/engine';
 import { SAMPLE_WORLDS } from '@vtt/engine/samples';
 import type { Effect } from '@vtt/schema';
@@ -641,11 +641,11 @@ describe('плашка вида у названия эффекта', () => {
 
   it('у «не подключён» есть подсказка, у подключённого — нет', () => {
     open({ strike: { label: 'Удар', activation: 'manual', params: [], steps: [] } as Effect }, 'strike');
-    expect(document.querySelector('.effect-head__kind')!.getAttribute('title')).toBe(UNBOUND_HINT);
+    expect(document.querySelector('.effect-head__kind')!.getAttribute('title')).toBe(unboundHint());
     cleanup();
     const effect = { label: 'Щит', activation: 'passive', modifiers: [{ target: '@хиты', op: 'add', value: { expr: '1' } }] } as unknown as Effect;
     open({ shield: effect }, 'shield');
-    expect(document.querySelector('.effect-head__kind')!.getAttribute('title')).not.toBe(UNBOUND_HINT);
+    expect(document.querySelector('.effect-head__kind')!.getAttribute('title')).not.toBe(unboundHint());
   });
 });
 

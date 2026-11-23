@@ -6,7 +6,7 @@ import { tr } from '../../words/tongue.ts';
 
 export const type = 'ask';
 const words: StepWords = STEP_WORDS.ask;
-export const { label, hint, slots, outputs } = words;
+export const { slots, outputs } = words;
 
 export const mayBreak = false;
 

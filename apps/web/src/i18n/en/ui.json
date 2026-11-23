@@ -106,5 +106,61 @@
     "dotHint": "type a dot after the name — a list opens",
     "more": ". {{n}} more",
     "formula": "formula"
+  },
+  "words": {
+    "roll": {
+      "rolls": "dice rolled",
+      "natural": "on the die",
+      "total": "total",
+      "success": "success",
+      "margin": "margin",
+      "atMax": "dice at maximum",
+      "atMin": "dice at minimum",
+      "degree": "degree",
+      "parts": "parts",
+      "versus": "threshold",
+      "tags": "roll tags"
+    },
+    "part": "part «{{name}}»",
+    "rollHead": "Roll",
+    "rollField": "«{{head}}»: {{what}}",
+    "pick": "«{{ref}}» by {{key}}",
+    "pickTail": "«{{ref}}» by {{key}} · {{tail}}",
+    "yes": "yes",
+    "no": "no",
+    "not": "not {{x}}",
+    "set": "{{x}} is set",
+    "and": "{{left}} and {{right}}",
+    "or": "{{left}} or {{right}}",
+    "cond": "{{then}}, if {{test}}, otherwise {{otherwise}}",
+    "empty": "{{x}} is not set",
+    "min": "the lesser of {{list}}",
+    "max": "the greater of {{list}}",
+    "countAmong": "how many {{what}} among {{among}}",
+    "count": "how many {{what}}",
+    "has": "{{a}} contains {{b}}",
+    "first": "first of {{x}}"
+  },
+  "labels": {
+    "roll": {
+      "dice": "dice",
+      "rolls": "rolled",
+      "natural": "on the die",
+      "total": "total",
+      "success": "success",
+      "margin": "margin",
+      "atMax": "dice at maximum",
+      "atMin": "dice at minimum",
+      "degree": "degree",
+      "parts": "parts",
+      "versus": "threshold",
+      "tags": "roll tags"
+    },
+    "table": "«{{table}}» by {{arg}}",
+    "tableColumn": "«{{table}}» → {{column}} by {{arg}}",
+    "pick": "{{tag}} · column by [{{by}}]",
+    "pickTail": "{{tag}} · column by [{{by}}] · {{tail}}",
+    "yes": "yes",
+    "no": "no"
   }
 }

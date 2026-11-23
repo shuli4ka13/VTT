@@ -208,7 +208,7 @@ function summaryOf(group: CardGroup, system: System, effect: Effect, names: Map<
   return segments.map(part => ('text' in part ? part.text : part.hole)).join(' ').replace(/\s+([.,])/g, '$1');
 }
 
-const TABLE_ROWS = 'строки:';
+const TABLE_ROWS = 'rows:';
 
 function SplitStrip({ step, position, system, effect, earlier, edit, actions }: {
   step: { of?: unknown; rows?: unknown; as?: unknown; asLabel?: unknown };

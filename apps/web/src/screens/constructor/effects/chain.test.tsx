@@ -45,7 +45,7 @@ describe('стоимость эффекта — одним выбором', () =
 
   it('«+ новая плата» заводит эффект в блоке «Плата» и сразу его зовёт', () => {
     const effect = lane();
-    pickCombo(screen.getByPlaceholderText('+ плата'), ':новая');
+    pickCombo(screen.getByPlaceholderText('+ плата'), ':new');
     const made = Object.entries(useWorld.getState().system.effects).find(([id]) => id.startsWith('stoimost'))!;
     expect(made[1]).toMatchObject({ group: 'plata' });
     expect(blockLabel(useWorld.getState().system, 'plata')).toBe('Плата');
