@@ -13,8 +13,8 @@ const system = {
     лист: { shape: 'single', columns: [{ key: 'монеты', label: 'Монеты', kind: 'number' }] },
     оружие: { label: 'Оружие', shape: 'book', use: 'item', columns: [{ key: 'урон', label: 'Урон', kind: 'number' }] },
   },
-  pages: [{ name: 'Сумка' }],
-  blocks: [{ name: 'Деньги', page: 'Сумка', parts: [{ table: 'лист' }] }, { name: 'Вещи', page: 'Сумка', list: 'things', parts: [] }],
+  pages: [{ key: 'Сумка' }],
+  blocks: [{ key: 'Деньги', page: 'Сумка', parts: [{ table: 'лист' }] }, { key: 'Вещи', page: 'Сумка', list: 'things', parts: [] }],
 } as unknown as System;
 
 describe('образец листа: сумка из типов вещей и умений', () => {
@@ -66,8 +66,8 @@ describe('образец листа: служебные поля и выбор �
       ] },
       кошель: { shape: 'single', columns: [{ key: 'монеты', label: 'Монеты', kind: 'number' }] },
     },
-    pages: [{ name: 'Сумка' }],
-    blocks: [{ name: 'Деньги', page: 'Сумка', parts: [{ table: 'кошель' }] }],
+    pages: [{ key: 'Сумка' }],
+    blocks: [{ key: 'Деньги', page: 'Сумка', parts: [{ table: 'кошель' }] }],
   } as unknown as System;
 
   it('выбор без умолчания получает первый вариант', () => {
@@ -94,7 +94,7 @@ describe('образец листа: свои значения, в настоя�
         { key: 'запас', label: 'Запас', kind: 'number', default: { expr: '@запас_макс' } },
       ] },
     },
-    blocks: [{ name: 'Основа', parts: [{ table: 'лист' }] }],
+    blocks: [{ key: 'Основа', parts: [{ table: 'лист' }] }],
   } as unknown as System;
   const fieldOf = (label: string) => screen.getByText(label).closest('.field')!.querySelector('input') as HTMLInputElement;
   function Live() {

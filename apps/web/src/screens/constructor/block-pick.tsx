@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Select, Input, Button } from '../../ui/primitives.tsx';
-import { blockNames, NO_BLOCK, fieldsOf, kindsOf } from '@vtt/engine';
+import { useWorld, freeId } from '../../store/world.ts';
+import { blockNames, blockLabel, labelBlock, NO_BLOCK, fieldsOf, kindsOf } from '@vtt/engine';
 import { groupChain } from './groups.ts';
 import type { System } from '@vtt/schema';
 
@@ -16,7 +17,7 @@ function usedBy(system: System, of: BlockOf): Set<string> {
 }
 
 export const fieldBlocks = (system: System): string[] =>
-  [...usedBy(system, 'fields')].sort((a, b) => a.localeCompare(b, 'ru'));
+  [...usedBy(system, 'fields')].sort((a, b) => blockLabel(system, a).localeCompare(blockLabel(system, b), 'ru'));
 
 export function BlockPick({ system, value, onChange, of }: {
   system: System;
@@ -31,12 +32,18 @@ export function BlockPick({ system, value, onChange, of }: {
   const others = new Set((['fields', 'effects', 'records'] as const).filter(o => o !== of).flatMap(o => [...usedBy(system, o)]));
   const names = blockNames(system)
     .filter(name => name !== NO_BLOCK && (name === value || mine.has(name) || !others.has(name)))
-    .sort((a, b) => a.localeCompare(b, 'ru'));
+    .sort((a, b) => blockLabel(system, a).localeCompare(blockLabel(system, b), 'ru'));
 
   const add = () => {
     const clean = draft.trim();
     if (!clean) return;
-    onChange(clean);
+    const known = blockNames(system).find(other => blockLabel(system, other) === clean);
+    if (known) onChange(known);
+    else {
+      const key = freeId(blockNames(system), clean);
+      useWorld.getState().editSystem(world => labelBlock(world, key, clean));
+      onChange(key);
+    }
     setDraft('');
     setAdding(false);
   };
@@ -61,7 +68,7 @@ export function BlockPick({ system, value, onChange, of }: {
       <Select
         value={value ?? ''}
         options={[['', `— ${NO_BLOCK.toLowerCase()} —`],
-          ...names.map(name => [name, `${'· '.repeat(depthOf(system, name))}${name}`] as const)] as never}
+          ...names.map(name => [name, `${'· '.repeat(depthOf(system, name))}${blockLabel(system, name)}`] as const)] as never}
         onChange={next => onChange(next || undefined)}
       />
       <Button size="sm" variant="ghost" onClick={() => setAdding(true)}>+ новый</Button>

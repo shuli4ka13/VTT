@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Card, CardHead, Button, DangerButton, Input, Select, Empty } from '../../../ui/primitives.tsx';
 import { MultiCombo } from '../../../ui/combo.tsx';
-import { NAMES, NAME_LABELS, NO_BLOCK, resultsOf, fieldsOf, onSheet, isSingle, STEP_WORDS, ROLL_NUMBER_WORDS, rollNumberWord, numbersOf, shapeOf } from '@vtt/engine';
+import { blockLabel, NAMES, NAME_LABELS, NO_BLOCK, resultsOf, fieldsOf, onSheet, isSingle, STEP_WORDS, ROLL_NUMBER_WORDS, rollNumberWord, numbersOf, shapeOf } from '@vtt/engine';
 import type { DieConstant } from '@vtt/engine';
 import { TagsField } from '../tags-field.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
@@ -165,7 +165,7 @@ function RollRow({ id, roll, system, editSystem }: { id: string; roll: SystemRol
               value={roll.fields.map(one => `${one.table}\u0000${one.column}`)}
               options={columns
                 .filter(([key]) => !taken.has(key) || roll.fields.some(one => `${one.table}\u0000${one.column}` === key))
-                .map(([key, label, group]) => ({ value: key, label, ...(group && group !== NO_BLOCK ? { group } : { group: 'служебные поля, которых нет на листе', hidden: !service && !roll.fields.some(one => `${one.table}\u0000${one.column}` === key) }) }))}
+                .map(([key, label, group]) => ({ value: key, label, ...(group && group !== NO_BLOCK ? { group: blockLabel(system, group) } : { group: 'служебные поля, которых нет на листе', hidden: !service && !roll.fields.some(one => `${one.table}\u0000${one.column}` === key) }) }))}
               more={hidden && !service ? { label: `служебные поля, которых нет на листе (${hidden})…`, run: () => setService(true) } : undefined}
               onChange={next => edit(draft => {
                 draft.fields = next.map(key => {

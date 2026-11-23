@@ -27,7 +27,8 @@ import { calledOf, chainsOfEffect, isPipeline } from '../engine/effects.ts';
 import { basedOn, paramsOf, flattenSystem } from './inherit.ts';
 import { danglingRows } from './integrity.ts';
 import { recordsOf, argsWithProps, propKeysOf, recordKinds, kindsOf, kindOf, isBook } from './owned.ts';
-import { sheetBlockNames } from './blocks.ts';
+import { blockLabel, sheetBlockNames } from './blocks.ts';
+import { pageLabel } from './pages.ts';
 import { columnFamily, viewsFor, viewNeeds, VIEW_LABELS } from './views.ts';
 import { bindingsOf } from '../events/actions.ts';
 import { kindOfRecord } from './owned.ts';
@@ -679,9 +680,9 @@ function viewProblems(system: System): Problem[] {
         const [first, second] = key.split('.');
         const columnKey = second ?? first!;
         const column = (table?.columns ?? []).find(c => c.key === columnKey);
-        if (!column) { out.push({ where, level: 'warn', text: `блок «${block.name}»: вид задан колонке «${columnKey}», а её нет` }); continue; }
+        if (!column) { out.push({ where, level: 'warn', text: `блок «${blockLabel(system, block.key)}»: вид задан колонке «${columnKey}», а её нет` }); continue; }
         const row = second ? (table?.rows ?? []).find(r => rowKeyOf(r) === first) : undefined;
-        const who = `блок «${block.name}», «${column.label || column.key}»${row ? ` у строки «${row.label ?? String(row.value)}»` : ''}`;
+        const who = `блок «${blockLabel(system, block.key)}», «${column.label || column.key}»${row ? ` у строки «${row.label ?? String(row.value)}»` : ''}`;
         const family = columnFamily(column);
         const computed = column.expr !== undefined;
         if (family && !viewsFor(family, computed).includes(view.kind) && !(computed && !column.kind)) {
@@ -1273,7 +1274,7 @@ function sheetKindProblems(system: System): Problem[] {
   for (const [key, kind] of Object.entries(system.sheets ?? {})) {
     for (const block of kind.blocks ?? []) {
       if (!known.has(block)) {
-        out.push({ where: { tab: 'records', kind: key }, level: 'warn', text: `тип листа «${kind.label || key}» показывает блок «${block}», которого на листе нет` });
+        out.push({ where: { tab: 'records', kind: key }, level: 'warn', text: `тип листа «${kind.label || key}» показывает блок «${blockLabel(system, block)}», которого на листе нет` });
       }
     }
   }
@@ -1285,16 +1286,16 @@ function layoutProblems(system: System): Problem[] {
   const where = { tab: 'sheet' as const };
   const seen = new Set<string>();
   for (const block of system.blocks ?? []) {
-    if (seen.has(block.name)) out.push({ where, level: 'error', text: `блок листа «${block.name}» назван дважды` });
-    seen.add(block.name);
+    if (seen.has(block.key)) out.push({ where, level: 'error', text: `блок листа «${blockLabel(system, block.key)}» назван дважды` });
+    seen.add(block.key);
     for (const part of block.parts) {
       const table = system.tables?.[part.table];
-      if (!table) { out.push({ where, level: 'error', text: `блок «${block.name}» берёт таблицу «${part.table}», а её нет` }); continue; }
+      if (!table) { out.push({ where, level: 'error', text: `блок «${blockLabel(system, block.key)}» берёт таблицу «${part.table}», а её нет` }); continue; }
       const keys = new Set((table.columns ?? []).map(c => c.key));
-      for (const column of part.columns ?? []) if (!keys.has(column)) out.push({ where, level: 'error', text: `блок «${block.name}»: в таблице «${table.label || part.table}» нет колонки «${column}»` });
-      if (part.by && !keys.has(part.by)) out.push({ where, level: 'error', text: `блок «${block.name}» группирует по колонке «${part.by}», а её нет` });
+      for (const column of part.columns ?? []) if (!keys.has(column)) out.push({ where, level: 'error', text: `блок «${blockLabel(system, block.key)}»: в таблице «${table.label || part.table}» нет колонки «${column}»` });
+      if (part.by && !keys.has(part.by)) out.push({ where, level: 'error', text: `блок «${blockLabel(system, block.key)}» группирует по колонке «${part.by}», а её нет` });
       const rows = new Set((table.rows ?? []).map(r => rowKeyOf(r)));
-      for (const row of part.rows ?? []) if (!rows.has(row)) out.push({ where, level: 'warn', text: `блок «${block.name}»: в таблице «${table.label || part.table}» нет строки «${row}»` });
+      for (const row of part.rows ?? []) if (!rows.has(row)) out.push({ where, level: 'warn', text: `блок «${blockLabel(system, block.key)}»: в таблице «${table.label || part.table}» нет строки «${row}»` });
     }
   }
   return [...out, ...pageProblems(system)];
@@ -1306,21 +1307,21 @@ function pageProblems(system: System): Problem[] {
   const pages = system.pages ?? [];
   const names = new Set<string>();
   for (const page of pages) {
-    if (names.has(page.name)) out.push({ where, level: 'error', text: `страница листа «${page.name}» названа дважды` });
-    names.add(page.name);
+    if (names.has(page.key)) out.push({ where, level: 'error', text: `страница листа «${pageLabel(system, page.key)}» названа дважды` });
+    names.add(page.key);
   }
   if (pages.filter(page => page.top).length > 1) out.push({ where, level: 'error', text: 'шапка листа одна, а страниц-шапок несколько' });
   const lists = new Map<string, string>();
   for (const block of system.blocks ?? []) {
     if (!block.list) continue;
     const was = lists.get(block.list);
-    if (was) out.push({ where, level: 'error', text: `список «${SHEET_LISTS[block.list]}» стоит и в блоке «${was}», и в «${block.name}»` });
-    else lists.set(block.list, block.name);
+    if (was) out.push({ where, level: 'error', text: `список «${SHEET_LISTS[block.list]}» стоит и в блоке «${blockLabel(system, was)}», и в «${blockLabel(system, block.key)}»` });
+    else lists.set(block.list, block.key);
   }
   for (const block of system.blocks ?? []) {
-    if (block.page && !names.has(block.page)) out.push({ where, level: 'error', text: `блок «${block.name}» стоит на странице «${block.page}», а её нет` });
-    for (const kind of block.kinds ?? []) if (!system.tables?.[kind]) out.push({ where, level: 'warn', text: `блок «${block.name}» показывает в снаряжении тип «${kind}», а его нет` });
-    if (block.under && block.width) out.push({ where, level: 'warn', text: `блок «${block.name}» стоит под предыдущим — ширину задаёт верхний блок, своя не действует` });
+    if (block.page && !names.has(block.page)) out.push({ where, level: 'error', text: `блок «${blockLabel(system, block.key)}» стоит на странице «${pageLabel(system, block.page)}», а её нет` });
+    for (const kind of block.kinds ?? []) if (!system.tables?.[kind]) out.push({ where, level: 'warn', text: `блок «${blockLabel(system, block.key)}» показывает в снаряжении тип «${kind}», а его нет` });
+    if (block.under && block.width) out.push({ where, level: 'warn', text: `блок «${blockLabel(system, block.key)}» стоит под предыдущим — ширину задаёт верхний блок, своя не действует` });
   }
   return out;
 }

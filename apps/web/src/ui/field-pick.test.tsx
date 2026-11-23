@@ -12,7 +12,7 @@ const column = (key: string, label: string | undefined, group?: string) => ({
 
 const blocksOf = (table: string, cols: ReturnType<typeof column>[]) => {
   const names = [...new Set(cols.map(c => c.group).filter((g): g is string => Boolean(g)))];
-  return names.map(name => ({ name, parts: [{ table, columns: cols.filter(c => c.group === name).map(c => c.key) }] }));
+  return names.map(name => ({ key: name, parts: [{ table, columns: cols.filter(c => c.group === name).map(c => c.key) }] }));
 };
 
 const strip = (cols: ReturnType<typeof column>[]) => cols.map(({ group: _g, ...rest }) => rest);
@@ -94,7 +94,7 @@ describe('ввод в списке', () => {
 describe('одинаковые названия', () => {
   it('в одном блоке различаются таблицей-домом', () => {
     const system = {
-      blocks: [{ name: 'Бой', parts: [{ table: 'а', columns: ['x1'] }, { table: 'б', columns: ['x2'] }] }],
+      blocks: [{ key: 'Бой', parts: [{ table: 'а', columns: ['x1'] }, { table: 'б', columns: ['x2'] }] }],
       tables: {
         а: { shape: 'single', label: 'Лист', columns: [{ key: 'x1', label: 'Сила', kind: 'number', default: 0 }] },
         б: { shape: 'single', label: 'Спутник', columns: [{ key: 'x2', label: 'Сила', kind: 'number', default: 0 }] },

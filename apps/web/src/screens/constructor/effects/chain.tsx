@@ -1,4 +1,4 @@
-import { compile, printFormula, operandText, NOT, degreeWords as tableWords, listOf, choiceTableOf, fieldOf, activationOf, loopOf, loopParam, loopsAt, splitsTargets, armsOf, sees, endOf, outcomeWords, namesAt } from '@vtt/engine';
+import { compile, printFormula, operandText, NOT, degreeWords as tableWords, listOf, choiceTableOf, fieldOf, activationOf, loopOf, loopParam, loopsAt, splitsTargets, armsOf, sees, endOf, outcomeWords, namesAt, blockLabel } from '@vtt/engine';
 import type { NamePlace as Place } from '@vtt/engine';
 import { withRole } from './roles.ts';
 import type { ReactNode } from 'react';
@@ -290,7 +290,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
         onFold={() => toggleFold(foldKey(group))}
         problemAction={donorFix ? (
           <Button size="sm" onClick={() => copyDonorBlock(donorFix.donor, donorFix.group)}>
-            {`взять блок «${donorFix.group}» из «${donorFix.donor.name}»`}
+            {`взять блок «${blockLabel(donorFix.donor, donorFix.group)}» из «${donorFix.donor.name}»`}
           </Button>
         ) : undefined}
         onAddParam={addParam}

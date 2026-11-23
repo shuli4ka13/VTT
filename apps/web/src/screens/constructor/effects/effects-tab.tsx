@@ -2,7 +2,7 @@ import { rolesOf, roleWordsOf, type Role } from './roles.ts';
 import { useOpened } from '../../../store/opened.ts';
 import { useWorld } from '../../../store/world.ts';
 import { blockTree, BlockBranches } from '../block-tree.tsx';
-import { blockOf } from '@vtt/engine';
+import { blockOf, labelBlock } from '@vtt/engine';
 import type { LaunchKind } from '@vtt/engine';
 import { newEffect } from '../factory.ts';
 import { createEffect } from './factory.ts';
@@ -14,7 +14,7 @@ import { PreviewPanel } from './preview-panel.tsx';
 import { CREATE_KINDS } from './words.ts';
 import { EffectEditor } from './effect-editor.tsx';
 import type { Effect } from '@vtt/schema';
-import { freeGroupName } from '../groups.ts';
+import { newGroup } from '../groups.ts';
 import { focusNew } from '../../../ui/focus-new.ts';
 
 export function EffectsTab() {
@@ -28,10 +28,13 @@ export function EffectsTab() {
   const compendium = useWorld(s => s.compendium);
   const roles = rolesOf(system, compendium);
 
-  const addTo = (block: string) => {
+  const addTo = (block: string, title?: string) => {
     focusNew('как зовётся эффект');
     const made = newEffect(system, 'manual');
-    editSystem(draft => { draft.effects[made.key] = { ...made.value, group: block }; });
+    editSystem(draft => {
+      draft.effects[made.key] = { ...made.value, group: block };
+      if (title) labelBlock(draft, block, title);
+    });
     useOpened.getState().setOpen([`effect-props|${made.key}`], true);
     pick({ activeEffectId: made.key });
   };
@@ -46,7 +49,7 @@ export function EffectsTab() {
     <Columns
       left={{
         head: 'Библиотека эффектов',
-        tools: <Button size="sm" onClick={() => addTo(freeGroupName(system, 'Новый блок'))}>+ блок</Button>,
+        tools: <Button size="sm" onClick={() => { const fresh = newGroup(system); addTo(fresh.key, fresh.title); }}>+ блок</Button>,
         body: (
           <>
             {tree.length === 0

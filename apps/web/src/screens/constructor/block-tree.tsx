@@ -3,11 +3,12 @@ import { ListGroup } from '../../ui/layout.tsx';
 import { Button } from '../../ui/primitives.tsx';
 import { useOpened } from '../../store/opened.ts';
 import { groupChain } from './groups.ts';
-import { NO_BLOCK, blockNames } from '@vtt/engine';
+import { NO_BLOCK, blockNames, blockLabel } from '@vtt/engine';
 import type { System } from '@vtt/schema';
 
 export interface BlockNode<T> {
   name: string;
+  label: string;
   items: T[];
   children: BlockNode<T>[];
 }
@@ -29,7 +30,7 @@ export function blockTree<T>(system: System, items: T[], blockOfItem: (item: T) 
   for (const name of blockNames(system)) remember(name);
 
   const nodes = new Map<string, BlockNode<T>>();
-  for (const name of order) nodes.set(name, { name, items: inside.get(name)!, children: [] });
+  for (const name of order) nodes.set(name, { name, label: blockLabel(system, name), items: inside.get(name)!, children: [] });
 
   const roots: BlockNode<T>[] = [];
   for (const name of order) {
@@ -107,7 +108,7 @@ export function BlockBranches<T>({ list, nodes, depth = 0, onPickBlock, activeBl
               <span className="list__group-head">
                 <button
                   type="button" className="list__fold" aria-expanded={open}
-                  aria-label={open ? `свернуть «${node.name}»` : `развернуть «${node.name}»`}
+                  aria-label={open ? `свернуть «${node.label}»` : `развернуть «${node.label}»`}
                   onClick={() => toggle(key)}
                 >{open ? '▾' : '▸'}</button>
                 {onPickBlock ? (
@@ -116,8 +117,8 @@ export function BlockBranches<T>({ list, nodes, depth = 0, onPickBlock, activeBl
                     className={`list__group-pick${node.name === activeBlock ? ' list__group-pick--active' : ''}`}
                     title="настройки блока"
                     onClick={() => onPickBlock(node.name)}
-                  >{node.name}</button>
-                ) : <button type="button" className="list__group-pick" onClick={() => toggle(key)}>{node.name}</button>}
+                  >{node.label}</button>
+                ) : <button type="button" className="list__group-pick" onClick={() => toggle(key)}>{node.label}</button>}
                 {open ? null : <span className="list__group-count">{count(node)}</span>}
               </span>
             </ListGroup>
@@ -134,7 +135,7 @@ export function BlockBranches<T>({ list, nodes, depth = 0, onPickBlock, activeBl
 
                 {addTo ? (
                   <Button size="sm" variant="ghost" wide onClick={() => addTo(node.name)}>
-                    + в «{node.name}»
+                    + в «{node.label}»
                   </Button>
                 ) : null}
 

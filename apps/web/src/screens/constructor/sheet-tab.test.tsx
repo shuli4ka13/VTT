@@ -66,7 +66,7 @@ describe('блоки листа: папки эффектов на «Листе»
       system: {
         ...state.system,
         groups: { Механика: {}, Черты: { parent: 'Механика' } },
-        blocks: [{ name: 'Здоровье', parts: [{ table: 'лист' }] }, { name: 'Новый блок', parts: [] }],
+        blocks: [{ key: 'Здоровье', parts: [{ table: 'лист' }] }, { key: 'Новый блок', parts: [] }],
         tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number' }] } },
         effects: { крепкий: { label: 'Крепкий', group: 'Черты', activation: 'passive' } },
       },

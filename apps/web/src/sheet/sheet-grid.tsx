@@ -117,7 +117,7 @@ export function SheetGrid({ system, page, names, render, edit }: {
         return (
           <div key={cell.head} className="sheet-cell" style={{ '--w': width } as CSSProperties}>
             {cell.names.map(name => {
-              const own = blocks.find(block => block.name === name)?.height;
+              const own = blocks.find(block => block.key === name)?.height;
               const height = lifting?.name === name ? lifting.height : own;
               return (
               <div key={name}

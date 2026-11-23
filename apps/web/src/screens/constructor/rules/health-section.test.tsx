@@ -16,7 +16,7 @@ const base = (): System => ({
       { key: 'имя', label: 'Имя', kind: 'text' },
     ] },
   },
-  blocks: [{ name: 'Основа', parts: [{ table: 'лист' }] }],
+  blocks: [{ key: 'Основа', parts: [{ table: 'лист' }] }],
 } as unknown as System);
 
 function Live() {

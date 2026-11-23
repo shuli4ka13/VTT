@@ -1,6 +1,6 @@
 import { emptySystem } from '../../store/world.ts';
 import type { Lesson, View } from '../types.ts';
-import { fieldsOf } from '@vtt/engine';
+import { fieldsOf, blockLabel } from '@vtt/engine';
 import { visible } from '../anchor.ts';
 import { fieldBy, inBlock, columnOf, effectBy, stepsOf, reads, is, subtracts, adds, armOf, numberOf, errorsOf, exprOf, isArm, same, FORMULA_DONE, barOpen, barText } from '../find.ts';
 
@@ -8,7 +8,7 @@ const hp = (view: View) => fieldBy(view.system, 'Хиты');
 const ac = (view: View) => fieldBy(view.system, 'Класс брони');
 const strike = (view: View) => effectBy(view.system, 'Удар');
 
-const inFight = (view: View) => fieldsOf(view.system).filter(field => !field.cell && inBlock(field, 'Бой'));
+const inFight = (view: View) => fieldsOf(view.system).filter(field => !field.cell && inBlock(view.system, field, 'Бой'));
 
 const targetsOf = (view: View) => (strike(view)?.[1].params ?? []).find(param => param.kind === 'sheet' && param.many && same(param.label, 'Цели') && param.item?.key === 'цель');
 const checkAt = (view: View): number => stepsOf(strike(view)?.[1]).findIndex(step => step.type === 'check');
@@ -81,7 +81,7 @@ export const firstSystem: Lesson = {
         { at: { input: 'как зовётся блок' }, say: 'Впишите имя «Бой» и нажмите Enter.' },
       ],
       via: { text: 'блоки и типы листов' },
-      done: view => (view.system.blocks ?? []).some(block => block.name.trim() === 'Бой'),
+      done: view => (view.system.blocks ?? []).some(block => blockLabel(view.system, block.key).trim() === 'Бой'),
       result: () => 'Блок «Бой» на листе.',
     },
     {
@@ -94,7 +94,7 @@ export const firstSystem: Lesson = {
         { at: { input: 'как зовётся поле' }, say: 'Впишите название «Хиты» и нажмите Enter.' },
       ],
       via: [{ text: 'Бой', in: 'Листы' }, { text: 'блоки и типы листов' }],
-      done: view => inBlock(hp(view), 'Бой'),
+      done: view => inBlock(view.system, hp(view), 'Бой'),
       result: () => '«Хиты» стоят в блоке «Бой».',
     },
     {
@@ -133,7 +133,7 @@ export const firstSystem: Lesson = {
         { at: [{ text: 'В новом листе' }, { text: 'ещё', in: 'Лист' }, { text: 'Класс брони', in: 'Листы' }], say: 'Откройте «ещё» и в «В новом листе» впишите 12.', hint: 'Поле «Класс брони» закрылось? Щёлкните «Класс брони» в блоке «Бой».' },
       ],
       via: [{ text: 'Бой', in: 'Листы' }, { text: 'блоки и типы листов' }],
-      done: view => inBlock(ac(view), 'Бой') && numberOf(columnOf(view.system, ac(view))?.default) === 12,
+      done: view => inBlock(view.system, ac(view), 'Бой') && numberOf(columnOf(view.system, ac(view))?.default) === 12,
       result: () => 'Класс брони: в новом листе 12.',
     },
     {

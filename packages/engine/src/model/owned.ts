@@ -124,7 +124,7 @@ export function blockLine(system: System, block: string | undefined): string[] {
   while (at && !out.includes(at)) {
     out.push(at);
     const name: string = at;
-    at = (system.blocks ?? []).find(block => block.name === name)?.parent ?? system.groups?.[name]?.parent;
+    at = (system.blocks ?? []).find(block => block.key === name)?.parent ?? system.groups?.[name]?.parent;
   }
   return out;
 }

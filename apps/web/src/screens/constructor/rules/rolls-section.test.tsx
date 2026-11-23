@@ -106,8 +106,8 @@ describe('«Правила → Броски»: какое поле бросаю�
       навыки: { label: 'Навыки', owner: 'sheet', columns: [{ key: 'набор', label: 'Набор', kind: 'number' }], rows: [{ value: 'бег', label: 'Бег' }] },
     },
     blocks: [
-      { name: 'Характеристики', parts: [{ table: 'лист', columns: ['сила'] }] },
-      { name: 'Наборы кубиков', parts: [{ table: 'лист', columns: ['память'] }, { table: 'навыки' }] },
+      { key: 'Характеристики', parts: [{ table: 'лист', columns: ['сила'] }] },
+      { key: 'Наборы кубиков', parts: [{ table: 'лист', columns: ['память'] }, { table: 'навыки' }] },
     ],
     rolls: { r: { die: 'd', fields: [] } },
   }) as unknown as System;

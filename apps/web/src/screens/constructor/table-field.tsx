@@ -141,14 +141,14 @@ export function BlockViewField({ tableId, column, system, block, row, cell = row
   const own = row ? (table.rows ?? []).find(r => rowKeyOf(r) === row) : undefined;
   const stored = single ? column.expr === undefined : own ? cellSource(column, own).kind === 'input' : (table.rows ?? []).some(r => cellSource(column, r).kind === 'input');
   const edit = (change: (draft: Column) => void) => editColumn(tableId, column.key, change);
-  const part = (system.blocks ?? []).find(b => b.name === block)?.parts.find(p => holds(p, tableId, column.key, cell));
+  const part = (system.blocks ?? []).find(b => b.key === block)?.parts.find(p => holds(p, tableId, column.key, cell));
   const key = row ? `${row}.${column.key}` : column.key;
   const control = part?.views?.[key];
   const base = part?.views?.[column.key];
   const kind = control?.kind;
   const lacking = kind ? viewNeeds(kind, column) : [];
   const editView = (change: (views: Record<string, Control>) => void) => editSystem(draft => {
-    const target = (draft.blocks ?? []).find(b => b.name === block)?.parts.find(p => holds(p, tableId, column.key, cell));
+    const target = (draft.blocks ?? []).find(b => b.key === block)?.parts.find(p => holds(p, tableId, column.key, cell));
     if (!target) return;
     const views = { ...target.views };
     change(views);

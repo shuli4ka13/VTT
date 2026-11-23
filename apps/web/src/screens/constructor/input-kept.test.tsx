@@ -181,7 +181,7 @@ describe('ввод не пропадает: редактор живёт у су�
     press('+ блок', 'Листы');
     type('Бой');
     press('+ поле', 'Листы');
-    expect((system().blocks ?? []).map(one => one.name)).toEqual(['Бой']);
+    expect((system().blocks ?? []).map(one => one.label)).toEqual(['Бой']);
     expect(labels()).toEqual(['Новое поле']);
     expectTyping('как зовётся поле');
     type('Хиты');
@@ -194,7 +194,7 @@ describe('ввод не пропадает: редактор живёт у су�
     press('+ блок', 'Листы');
     type('Бой');
     click(focused().closest('.card')!.querySelector<HTMLElement>('.card__head button')!);
-    expect((system().blocks ?? []).map(one => one.name)).toEqual(['Бой']);
+    expect((system().blocks ?? []).map(one => one.label)).toEqual(['Бой']);
     expect(inputs('как зовётся блок'), 'панель блока закрыта своей кнопкой').toHaveLength(0);
 
     openFold('Бой');

@@ -1,5 +1,6 @@
 import type { System } from '@vtt/schema';
-import { fieldsOf, NO_BLOCK } from '@vtt/engine';
+import { fieldsOf, NO_BLOCK, blockNames, blockLabel } from '@vtt/engine';
+import { freeId } from '../../store/world.ts';
 import type { Field } from '@vtt/engine';
 
 export interface GroupNode {
@@ -56,30 +57,9 @@ export function subtreeNames(system: System, name: string): string[] {
   return [...all].filter(candidate => groupChain(system, candidate).includes(name));
 }
 
-export function renameGroup(draft: System, from: string, to: string): void {
-  const clean = to.trim();
-  if (!clean || clean === from) return;
-  if (draft.groups) {
-    const spec = draft.groups[from];
-    if (spec) {
-      delete draft.groups[from];
-      draft.groups[clean] = spec;
-    }
-    for (const other of Object.values(draft.groups)) {
-      if (other.parent === from) other.parent = clean;
-    }
-  }
-  for (const kind of Object.values(draft.sheets ?? {})) {
-    if (kind.blocks) kind.blocks = kind.blocks.map(block => (block === from ? clean : block));
-  }
-}
-
-export function freeGroupName(system: System, base: string): string {
-  const taken = new Set([...Object.keys(system.groups ?? {}),
-    ...fieldsOf(system).map(f => f.group ?? NO_BLOCK)]);
-  if (!taken.has(base)) return base;
-  for (let n = 2; ; n++) {
-    const candidate = `${base} ${n}`;
-    if (!taken.has(candidate)) return candidate;
-  }
+export function newGroup(system: System, base = 'Новый блок'): { key: string; title: string } {
+  const shown = new Set(blockNames(system).map(other => blockLabel(system, other)));
+  let title = base;
+  for (let n = 2; shown.has(title); n++) title = `${base} ${n}`;
+  return { key: freeId(blockNames(system), title), title };
 }

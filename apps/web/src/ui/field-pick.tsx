@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { System } from '@vtt/schema';
-import { readableFields, NO_BLOCK } from '@vtt/engine';
+import { readableFields, NO_BLOCK, blockLabel } from '@vtt/engine';
 import type { Field } from '@vtt/engine';
 import { byBlock } from '../screens/constructor/field-groups.ts';
 import { Combo, type ComboOption } from './combo.tsx';
@@ -45,8 +45,8 @@ export function FieldPick({ system, value, onChange, fields, extra = [], blank =
 
   const options: ComboOption[] = [
     ...(value ? [item(['', blank])] : []),
-    ...placed.map(option => item(option, option[2])),
-    ...service.map(option => ({ ...item(option, option[2]), ...(showService ? {} : { hidden: true }) })),
+    ...placed.map(option => item(option, blockLabel(system, option[2]))),
+    ...service.map(option => ({ ...item(option, blockLabel(system, option[2])), ...(showService ? {} : { hidden: true }) })),
     ...extra.map(option => item(option)),
   ];
 

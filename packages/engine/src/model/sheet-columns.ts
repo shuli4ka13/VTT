@@ -568,7 +568,7 @@ function placeFields(system: System, base: Built): Built {
       if (at < 0) continue;
       const part = block.parts[at]!;
       const control = viewIn(part, field);
-      placements.push({ group: block.name, ...sectionOf(system, part, field), ...(control ? { control } : {}), order: orderIn(system, at, part, field) });
+      placements.push({ group: block.key, ...sectionOf(system, part, field), ...(control ? { control } : {}), order: orderIn(system, at, part, field) });
     }
     if (!placements.length) return field;
     return { ...field, ...placements[0], placements };

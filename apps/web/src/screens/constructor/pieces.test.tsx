@@ -61,7 +61,7 @@ describe('вид поля на листе выбирается в констру
       system: {
         ...emptySystem(),
         tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 10 }] } },
-        blocks: [{ name: 'Здоровье', parts: [{ table: 'лист' }] }],
+        blocks: [{ key: 'Здоровье', parts: [{ table: 'лист' }] }],
       },
       activeFieldTag: 'хиты',
       activeGroupName: null,
@@ -113,7 +113,7 @@ describe('вид поля на листе выбирается в констру
       system: {
         ...emptySystem(),
         tables: { лист: { shape: 'single', columns: [{ key: 'мод', label: 'Мод', expr: { expr: '1' } }] } },
-        blocks: [{ name: 'Здоровье', parts: [{ table: 'лист' }] }],
+        blocks: [{ key: 'Здоровье', parts: [{ table: 'лист' }] }],
       },
       activeFieldTag: 'мод',
     }));
@@ -130,7 +130,7 @@ describe('вид поля на листе выбирается в констру
         ...emptySystem(),
         tables: { навыки: { owner: 'sheet', key: 'word', columns: [{ key: 'ранг', label: 'Ранг', kind: 'number' }],
           rows: [{ value: 'атлетика', label: 'Атлетика' }, { value: 'скрытность', label: 'Скрытность' }] } },
-        blocks: [{ name: 'Навыки', parts: [{ table: 'навыки', views: { ранг: { kind: 'stepper', step: 2 } } }] }],
+        blocks: [{ key: 'Навыки', parts: [{ table: 'навыки', views: { ранг: { kind: 'stepper', step: 2 } } }] }],
       } as never,
       activeFieldTag: 'навыки.атлетика.ранг',
     }));
@@ -149,7 +149,7 @@ describe('вид поля на листе выбирается в констру
         ...emptySystem(),
         tables: { навыки: { owner: 'sheet', key: 'word', columns: [{ key: 'ранг', label: 'Ранг', kind: 'number' }],
           rows: [{ value: 'атлетика', label: 'Атлетика' }, { value: 'скрытность', label: 'Скрытность' }] } },
-        blocks: [{ name: 'Навыки', parts: [{ table: 'навыки', rows: ['атлетика'] }, { table: 'навыки', rows: ['скрытность'] }] }],
+        blocks: [{ key: 'Навыки', parts: [{ table: 'навыки', rows: ['атлетика'] }, { table: 'навыки', rows: ['скрытность'] }] }],
       } as never,
       activeFieldTag: 'навыки.скрытность.ранг',
       activeIn: 'Навыки',

@@ -19,7 +19,7 @@ import { TABS } from '../words.ts';
 import { GuideLayer, PAUSE_MS, useView, movesOf, moveAt, pointOf } from './guide-card.tsx';
 import { LESSONS, lessonOf } from './lessons/index.ts';
 import { findAnchor, firstOf, openedDialog } from './anchor.ts';
-import { compile, bringIn, lintSystem, flattenSystem } from '@vtt/engine';
+import { compile, bringIn, lintSystem, flattenSystem, labelBlock } from '@vtt/engine';
 import { FORBIDDEN_STEMS } from '../words.ts';
 import { errorsOf } from './find.ts';
 import { bring } from '../store/fresh.ts';
@@ -133,11 +133,11 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
   'first-system': {
     block: [
       () => press(findAnchor({ text: 'блоки и типы листов' })!),
-      () => { edit(d => { (d.blocks ??= []).push({ name: 'Новый блок', parts: [] }); }); pick({ activeBlock: 'Новый блок' }); },
-      () => { edit(d => { d.blocks!.find(one => one.name === 'Новый блок')!.name = 'Бой'; }); pick({ activeBlock: 'Бой' }); },
+      () => { edit(d => { (d.blocks ??= []).push({ key: 'новый_блок', label: 'Новый блок', parts: [] }); }); pick({ activeBlock: 'новый_блок' }); },
+      () => { edit(d => { labelBlock(d, 'новый_блок', 'Бой'); }); pick({ activeBlock: 'новый_блок' }); },
     ],
     hp: [
-      () => { edit(d => addColumn(d, { key: 'хиты', label: 'Новое поле', kind: 'number' }, 'sheet', 'Бой')); pick({ activeFieldTag: 'хиты', activeBlock: null }); },
+      () => { edit(d => addColumn(d, { key: 'хиты', label: 'Новое поле', kind: 'number' }, 'sheet', 'новый_блок')); pick({ activeFieldTag: 'хиты', activeBlock: null }); },
       () => act(() => { useWorld.getState().editColumn('лист', 'хиты', c => { c.label = 'Хиты'; }); }),
     ],
     'hp-start': () => act(() => { useWorld.getState().editColumn('лист', 'хиты', c => { c.default = 10; }); }),
@@ -146,7 +146,7 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
       () => act(() => { useWorld.getState().editColumn('лист', 'хиты', c => { c.min = 0; }); }),
     ],
     ac: [
-      () => { edit(d => addColumn(d, { key: 'класс_брони', label: 'Новое поле', kind: 'number' }, 'sheet', 'Бой')); pick({ activeFieldTag: 'класс_брони', activeBlock: null }); },
+      () => { edit(d => addColumn(d, { key: 'класс_брони', label: 'Новое поле', kind: 'number' }, 'sheet', 'новый_блок')); pick({ activeFieldTag: 'класс_брони', activeBlock: null }); },
       () => act(() => { useWorld.getState().editColumn('лист', 'класс_брони', c => { c.label = 'Класс брони'; }); }),
       () => { act(() => { useWorld.getState().editColumn('лист', 'класс_брони', c => { c.default = 12; }); }); pick({ activeFieldTag: null, activeBlock: null }); },
     ],
@@ -202,14 +202,14 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
   tables: {
     block: [
       () => press(findAnchor({ text: 'блоки и типы листов' })!),
-      () => { edit(d => { d.blocks!.push({ name: 'Новый блок', parts: [] }); }); pick({ activeBlock: 'Новый блок' }); },
-      () => { edit(d => { d.blocks!.find(one => one.name === 'Новый блок')!.name = 'Характеристики'; }); pick({ activeBlock: 'Характеристики' }); },
+      () => { edit(d => { d.blocks!.push({ key: 'новый_блок_2', label: 'Новый блок', parts: [] }); }); pick({ activeBlock: 'новый_блок_2' }); },
+      () => { edit(d => { labelBlock(d, 'новый_блок_2', 'Характеристики'); }); pick({ activeBlock: 'новый_блок_2' }); },
     ],
     table: [
       () => {
         edit(d => {
           d.tables!.таблица = { label: '', key: 'word', owner: 'sheet', rows: [{ value: '' }], columns: [{ key: 'value', label: 'Значение', kind: 'number' }] } as never;
-          d.blocks!.find(one => one.name === 'Характеристики')!.parts.push({ table: 'таблица' });
+          d.blocks!.find(one => one.key === 'новый_блок_2')!.parts.push({ table: 'таблица' });
         });
         pick({ activeSheetTable: 'таблица', activeBlock: null });
       },
@@ -243,12 +243,12 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
     problems: openProblems,
     skills: [
       () => press(findAnchor({ text: 'блоки и типы листов' })!),
-      () => { edit(d => { d.blocks!.push({ name: 'Новый блок', parts: [] }); }); pick({ activeBlock: 'Новый блок', activeFieldTag: null, activeSheetTable: null }); },
-      () => { edit(d => { d.blocks!.find(one => one.name === 'Новый блок')!.name = 'Навыки'; }); pick({ activeBlock: 'Навыки' }); },
+      () => { edit(d => { d.blocks!.push({ key: 'новый_блок_3', label: 'Новый блок', parts: [] }); }); pick({ activeBlock: 'новый_блок_3', activeFieldTag: null, activeSheetTable: null }); },
+      () => { edit(d => { labelBlock(d, 'новый_блок_3', 'Навыки'); }); pick({ activeBlock: 'новый_блок_3' }); },
       () => {
         edit(d => {
           d.tables!.таблица_2 = { label: '', key: 'word', owner: 'sheet', rows: [{ value: '' }], columns: [{ key: 'value', label: 'Значение', kind: 'number' }] } as never;
-          d.blocks!.find(one => one.name === 'Навыки')!.parts.push({ table: 'таблица_2' });
+          d.blocks!.find(one => one.key === 'новый_блок_3')!.parts.push({ table: 'таблица_2' });
         });
         pick({ activeSheetTable: 'таблица_2', activeBlock: null });
       },
@@ -507,7 +507,7 @@ const setExpr = (table: string, key: string, text: string): Wrong => d => { col(
 
 const BAD: Record<string, Record<string, Wrong[]>> = {
   'first-system': {
-    block: [d => { d.blocks![0]!.name = 'Битва'; }],
+    block: [d => { labelBlock(d, d.blocks![0]!.key, 'Битва'); }],
     hp: [d => { col(d, 'лист', 'хиты').label = 'Здоровье'; }],
     'hp-start': [d => { col(d, 'лист', 'хиты').default = 5; }, d => { delete col(d, 'лист', 'хиты').default; }],
     'hp-min': [d => { col(d, 'лист', 'хиты').min = 1; }, d => { delete col(d, 'лист', 'хиты').min; }],
@@ -541,7 +541,7 @@ const BAD: Record<string, Record<string, Wrong[]>> = {
     ],
   },
   tables: {
-    block: [d => { d.blocks!.find(one => one.name === 'Характеристики')!.name = 'Статы'; }],
+    block: [d => { labelBlock(d, 'новый_блок_2', 'Статы'); }],
     table: [d => { d.tables!.таблица!.label = 'Статы'; }],
     rows: [d => { d.tables!.таблица!.rows = [{ value: 'сила' }, { value: 'ум' }]; }],
     modifier: [
@@ -1015,7 +1015,7 @@ describe('уроки конструктора', () => {
     vi.useFakeTimers();
     mount();
     await start('first-system');
-    edit(d => { d.blocks = [{ name: 'Бой', parts: [] }]; addColumn(d, { key: 'хиты', label: 'Хиты', kind: 'number' }, 'sheet', 'Бой'); });
+    edit(d => { d.blocks = [{ key: 'Бой', parts: [] }]; addColumn(d, { key: 'хиты', label: 'Хиты', kind: 'number' }, 'sheet', 'Бой'); });
     act(() => { useGuide.getState().go(1); });
     await act(async () => { vi.advanceTimersByTime(PAUSE_MS * 3); });
     expect(useGuide.getState().step).toBe(1);
@@ -1037,13 +1037,13 @@ describe('уроки конструктора', () => {
   it('«Назад» возвращает систему к началу прежнего шага', async () => {
     mount();
     await start('first-system');
-    edit(d => { d.blocks = [{ name: 'Бой', parts: [] }]; });
+    edit(d => { d.blocks = [{ key: 'Бой', parts: [] }]; });
     act(() => { useGuide.getState().go(1); });
     edit(d => { addColumn(d, { key: 'хиты', label: 'Хиты', kind: 'number' }, 'sheet', 'Бой'); });
     act(() => { useGuide.getState().go(2); });
     act(() => { fireEvent.click(within(card()).button('Назад')); });
     expect(useGuide.getState().step).toBe(1);
-    expect(useWorld.getState().system.blocks?.map(block => block.name)).toEqual(['Бой']);
+    expect(useWorld.getState().system.blocks?.map(block => block.key)).toEqual(['Бой']);
     expect(Object.keys(useWorld.getState().system.tables?.лист?.columns ?? []).length).toBe(0);
     act(() => { fireEvent.click(within(card()).button('Назад')); });
     expect(useWorld.getState().system.blocks ?? []).toEqual([]);
@@ -1086,7 +1086,7 @@ describe('окошко урока', () => {
   const at = () => useGuide.getState().step;
   const stepIndex = (lessonId: string, id: string) => lessonOf(lessonId)!.steps.findIndex(one => one.id === id);
   const gone = async (ms: number) => { await act(async () => { vi.advanceTimersByTime(ms); }); };
-  const makeBlock = () => edit(d => { d.blocks = [{ name: 'Бой', parts: [] }]; });
+  const makeBlock = () => edit(d => { d.blocks = [{ key: 'Бой', parts: [] }]; });
   const back = () => act(() => { fireEvent.click(within(card()).button('Назад')); });
 
   it('«Назад» после автоперехода: окошко остаётся на шаге, даже если решение сделано заново', async () => {
@@ -1139,7 +1139,7 @@ describe('окошко урока', () => {
     await start('first-system');
     act(() => { useGuide.getState().go(stepIndex('first-system', 'hp')); });
     expect(cardText()).toContain('Кнопки «+ поле» не видно?');
-    edit(d => { d.blocks = [{ name: 'Бой', parts: [] }]; addColumn(d, { key: 'хиты', label: 'Новое поле', kind: 'number' }, 'sheet', 'Бой'); });
+    edit(d => { d.blocks = [{ key: 'Бой', parts: [] }]; addColumn(d, { key: 'хиты', label: 'Новое поле', kind: 'number' }, 'sheet', 'Бой'); });
     expect(cardText()).not.toContain('Кнопки «+ поле» не видно?');
   });
 

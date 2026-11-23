@@ -10,7 +10,7 @@ group('блок — одно понятие на поля, эффекты и т�
   test('имена блоков собираются со всех трёх сторон', () => {
     const names = blockNames(sys({
       tables: { лист: { shape: 'single', columns: [{ key: 'сила', label: 'Сила', kind: 'number', default: 10 }] } , меч: { shape: 'book', use: 'item', label: 'Меч', block: 'Снаряжение' } },
-      blocks: [{ name: 'Характеристики', parts: [{ table: 'лист', columns: ['сила'] }] }],
+      blocks: [{ key: 'Характеристики', parts: [{ table: 'лист', columns: ['сила'] }] }],
       effects: { удар: { label: 'Удар', group: 'Атака' } },
       
     }));

@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { useWorld } from '../../store/world.ts';
+import { useWorld, freeId } from '../../store/world.ts';
 import { useDragList } from '../../ui/drag-list.ts';
 import { PickOrder } from '../../ui/pick-order.tsx';
 import { Card, CardHead, Field, Select, Button, DangerButton, LabelInput, Verdict } from '../../ui/primitives.tsx';
 import { readyForSheet } from './table-field.tsx';
-import { followInstance } from './instance.ts';
-import { onSheet, rowKeyOf, fieldsOf, isSingle, recordKinds, pagesOf, cellHead, setWidth, setHeight, GRID, SHEET_LIST_KEYS, SHEET_LISTS, widthWords, splitWords, perRowWords, isRange } from '@vtt/engine';
+import { blockNames, blockLabel, labelBlock, pageLabel, onSheet, rowKeyOf, fieldsOf, isSingle, recordKinds, pagesOf, cellHead, setWidth, setHeight, GRID, SHEET_LIST_KEYS, SHEET_LISTS, widthWords, splitWords, perRowWords, isRange } from '@vtt/engine';
 import type { System, SheetBlock, SheetPart, SheetList } from '@vtt/schema';
 
 export const SHEET_TABLE = 'лист';
@@ -17,27 +16,15 @@ export const partTables = (system: System): [string, string][] =>
 
 export const sheetBlockList = (system: System): SheetBlock[] => system.blocks ?? [];
 
-export function freeBlockName(system: System, base: string): string {
-  const taken = new Set([...Object.keys(system.groups ?? {}), ...sheetBlockList(system).map(b => b.name)]);
-  if (!taken.has(base)) return base;
-  for (let n = 2; ; n++) if (!taken.has(`${base} ${n}`)) return `${base} ${n}`;
-}
+export const freeBlockKey = (system: System, title: string): string => freeId(blockNames(system), title);
 
-export function renameBlock(draft: System, from: string, to: string): void {
-  const clean = to.trim();
-  if (!clean || clean === from || (draft.blocks ?? []).some(block => block.name === clean)) return;
-  for (const block of draft.blocks ?? []) {
-    if (block.name === from) block.name = clean;
-    if (block.parent === from) block.parent = clean;
-  }
-  for (const kind of Object.values(draft.sheets ?? {})) {
-    if (kind.blocks) kind.blocks = kind.blocks.map(name => (name === from ? clean : name));
-  }
+export function titleTaken(system: System, key: string, title: string): boolean {
+  return blockNames(system).some(other => other !== key && blockLabel(system, other) === title);
 }
 
 export function removeBlock(draft: System, name: string): void {
-  const own = (draft.blocks ?? []).find(b => b.name === name);
-  draft.blocks = (draft.blocks ?? []).filter(b => b.name !== name);
+  const own = (draft.blocks ?? []).find(b => b.key === name);
+  draft.blocks = (draft.blocks ?? []).filter(b => b.key !== name);
   for (const block of draft.blocks) if (block.parent === name) { if (own?.parent) block.parent = own.parent; else delete block.parent; }
   for (const kind of Object.values(draft.sheets ?? {})) {
     if (kind.blocks) kind.blocks = kind.blocks.filter(b => b !== name);
@@ -47,10 +34,10 @@ export function removeBlock(draft: System, name: string): void {
 
 export function moveBlockTo(draft: System, name: string, target: string, after: boolean): void {
   const blocks = draft.blocks ?? [];
-  const moving = blocks.find(b => b.name === name);
-  const anchor = blocks.find(b => b.name === target);
+  const moving = blocks.find(b => b.key === name);
+  const anchor = blocks.find(b => b.key === target);
   if (!moving || !anchor || name === target) return;
-  for (let at: string | undefined = anchor.parent; at; at = blocks.find(b => b.name === at)?.parent) if (at === name) return;
+  for (let at: string | undefined = anchor.parent; at; at = blocks.find(b => b.key === at)?.parent) if (at === name) return;
   blocks.splice(blocks.indexOf(moving), 1);
   if (anchor.parent) moving.parent = anchor.parent; else delete moving.parent;
   blocks.splice(blocks.indexOf(anchor) + (after ? 1 : 0), 0, moving);
@@ -65,7 +52,7 @@ export function moveColumnTo(part: SheetPart, all: string[], key: string, target
 }
 
 export function addColumnToBlock(draft: System, name: string, table: string, key: string): void {
-  const block = (draft.blocks ?? []).find(b => b.name === name);
+  const block = (draft.blocks ?? []).find(b => b.key === name);
   if (!block) return;
   const part = block.parts.find(p => p.table === table);
   if (!part) block.parts.push({ table, columns: [key] });
@@ -85,7 +72,7 @@ function groupsOf(system: System, table: string, keys: string[], self: string, c
   for (const key of keys.filter(k => shown.has(k))) {
     if (chosen.includes(key)) continue;
     const homes = homesOf(system, table, key).filter(home => home !== self);
-    put(homes.length ? `уже в «${homes[0]}»` : 'ни в одном блоке', key);
+    put(homes.length ? `уже в «${blockLabel(system, homes[0]!)}»` : 'ни в одном блоке', key);
   }
   const order = (title: string) => (title === 'в этом блоке' ? 0 : title === 'ни в одном блоке' ? 1 : 2);
   return [...out].sort((a, b) => order(a[0]) - order(b[0]));
@@ -135,11 +122,11 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
   const editSystem = useWorld(s => s.editSystem);
   const pick = useWorld(s => s.pick);
   const [asking, setAsking] = useState<{ table: string; index?: number } | null>(null);
-  const block = sheetBlockList(system).find(b => b.name === name);
+  const block = sheetBlockList(system).find(b => b.key === name);
   if (!block) return null;
   const tables = partTables(system);
   const edit = (change: (target: SheetBlock) => void) => editSystem(draft => {
-    const target = (draft.blocks ?? []).find(b => b.name === name);
+    const target = (draft.blocks ?? []).find(b => b.key === name);
     if (target) change(target);
   });
   const editPart = (index: number, change: (part: SheetPart) => void) => edit(target => {
@@ -157,38 +144,37 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
     else setAsking({ table, ...(index === undefined ? {} : { index }) });
   };
   const askedLabel = asking ? system.tables?.[asking.table]?.label || asking.table : '';
-  const descendants = (of: string): string[] => sheetBlockList(system).filter(b => b.parent === of).flatMap(b => [b.name, ...descendants(b.name)]);
+  const descendants = (of: string): string[] => sheetBlockList(system).filter(b => b.parent === of).flatMap(b => [b.key, ...descendants(b.key)]);
   const barred = new Set([name, ...descendants(name)]);
-  const parents = sheetBlockList(system).map(b => b.name).filter(other => !barred.has(other));
+  const parents = sheetBlockList(system).map(b => b.key).filter(other => !barred.has(other));
 
   const pages = pagesOf(system);
+  const firstTab = pages.find(page => !page.top);
   const head = cellHead(system, name);
 
   return (
     <Card>
       <CardHead
-        title={<LabelInput value={block.name} placeholder="как зовётся блок"
+        title={<LabelInput value={blockLabel(system, name)} placeholder="как зовётся блок"
           onCommit={next => {
             const clean = next.trim();
-            if (!clean || clean === name || (system.blocks ?? []).some(other => other.name === clean)) return;
-            editSystem(draft => renameBlock(draft, name, clean));
-            followInstance('блок', name, clean);
-            pick({ activeBlock: clean });
+            if (!clean || clean === blockLabel(system, name) || titleTaken(system, name, clean)) return;
+            editSystem(draft => labelBlock(draft, name, clean));
           }} />}
         actions={<Button size="sm" variant="ghost" onClick={() => pick({ activeBlock: null })}>×</Button>} />
       <Field label="Внутри блока">
         <Select<string> label="внутри блока" value={block.parent ?? ''}
-          options={[['', 'на верхнем уровне'], ...parents.map(p => [p, p] as const)]}
+          options={[['', 'на верхнем уровне'], ...parents.map(p => [p, blockLabel(system, p)] as const)]}
           onChange={next => edit(target => { if (next) target.parent = next; else delete target.parent; })} />
       </Field>
       {pages.length ? (
         <Field label="Страница">
           <Select<string> label="страница блока" value={block.page ?? ''}
-            options={[['', block.parent ? `как у «${block.parent}»` : `${pages.find(page => !page.top)?.name ?? 'первая'} — первая закладка`], ...pages.map(page => [page.name, page.top ? `${page.name} · над закладками` : page.name] as const)]}
+            options={[['', block.parent ? `как у «${blockLabel(system, block.parent)}»` : `${firstTab ? pageLabel(system, firstTab.key) : 'первая'} — первая закладка`], ...pages.map(page => [page.key, page.top ? `${pageLabel(system, page.key)} · над закладками` : pageLabel(system, page.key)] as const)]}
             onChange={next => edit(target => { if (next) target.page = next; else delete target.page; })} />
         </Field>
       ) : null}
-      <Field label="Ширина" hint={block.under ? `общая с блоком «${head?.name}», над которым он стоит` : 'можно и потянуть за правый край блока на образце'}>
+      <Field label="Ширина" hint={block.under ? `общая с блоком «${head ? blockLabel(system, head.key) : ''}», над которым он стоит` : 'можно и потянуть за правый край блока на образце'}>
         <Select<string> label="ширина блока" value={String(head?.width ?? GRID)}
           options={Array.from({ length: GRID }, (_, at) => [String(at + 1), widthWords(at + 1)] as const).reverse()}
           onChange={next => editSystem(draft => setWidth(draft, name, Number(next)))} />
@@ -212,7 +198,7 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
           options={[['', 'нет'], ...SHEET_LIST_KEYS.map(list => [list, SHEET_LISTS[list]] as const)]}
           onChange={next => editSystem(draft => {
             for (const other of draft.blocks ?? []) {
-              if (other.name === name) { if (next) other.list = next as SheetList; else delete other.list; }
+              if (other.key === name) { if (next) other.list = next as SheetList; else delete other.list; }
               else if (next && other.list === next) delete other.list;
             }
           })} />

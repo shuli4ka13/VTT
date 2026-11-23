@@ -14,7 +14,7 @@ const system = (): System => ({
       columns: [{ key: 'черта', label: 'Характеристика', kind: 'choice', from: 'черты' }, { key: 'ранг', label: 'Ранг', kind: 'number' }],
       rows: [{ value: 'атлетика', label: 'Атлетика', cells: { черта: 'сила' } }] },
   },
-  blocks: [{ name: 'Навыки', parts: [{ table: 'навыки', columns: ['ранг'] }] }],
+  blocks: [{ key: 'Навыки', parts: [{ table: 'навыки', columns: ['ранг'] }] }],
 } as unknown as System);
 
 describe('образец листа: заголовок блока и название строки открывают свои редакторы', () => {

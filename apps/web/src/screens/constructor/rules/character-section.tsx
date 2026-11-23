@@ -1,5 +1,6 @@
 import { SheetKindEditor } from '../records-tab.tsx';
-import { NO_BLOCK, sheetKinds, hasDesk, DESK_ID, fieldsOf, withColumn, singleTableOf, isSingle } from '@vtt/engine';
+import { newGroup } from '../groups.ts';
+import { NO_BLOCK, blockLabel, labelBlock, sheetKinds, hasDesk, DESK_ID, fieldsOf, withColumn, singleTableOf, isSingle } from '@vtt/engine';
 import type { Field as FieldModel, Holder } from '@vtt/engine';
 import type { ReactNode } from 'react';
 import { TableColumnCard } from './tables-section.tsx';
@@ -9,7 +10,7 @@ import { GrantsEditor } from '../grants-editor.tsx';
 import { createEffect } from '../effects/factory.ts';
 import { newColumn, newTable } from '../factory.ts';
 import { readyForSheet } from '../table-field.tsx';
-import { freeBlockName, addColumnToBlock, moveBlockTo, SHEET_TABLE } from '../block-panel.tsx';
+import { addColumnToBlock, moveBlockTo, SHEET_TABLE } from '../block-panel.tsx';
 import { useDragList } from '../../../ui/drag-list.ts';
 import type { UsageIndex } from '../usage.ts';
 import type { System, Column, SheetBlock, SheetPart } from '@vtt/schema';
@@ -27,12 +28,12 @@ export function addColumn(draft: System, column: Column, holder: Holder = 'sheet
 interface BlockNode { block: SheetBlock; children: BlockNode[] }
 
 function treeOf(blocks: SheetBlock[]): BlockNode[] {
-  const names = new Set(blocks.map(b => b.name));
+  const names = new Set(blocks.map(b => b.key));
   const make = (block: SheetBlock, seen: string[]): BlockNode => ({
     block,
-    children: blocks.filter(b => b.parent === block.name && !seen.includes(b.name)).map(b => make(b, [...seen, b.name])),
+    children: blocks.filter(b => b.parent === block.key && !seen.includes(b.key)).map(b => make(b, [...seen, b.key])),
   });
-  return blocks.filter(b => !b.parent || !names.has(b.parent) || b.parent === b.name).map(b => make(b, [b.name]));
+  return blocks.filter(b => !b.parent || !names.has(b.parent) || b.parent === b.key).map(b => make(b, [b.key]));
 }
 
 type Picked = { table: string; column: string } | null;
@@ -54,7 +55,7 @@ export function CharacterSection({ system, editSystem, docked }: {
   const kinds = sheetKinds(system);
   const kind = of ? system.sheets?.[of] : undefined;
   const blocks = system.blocks ?? [];
-  const names = blocks.map(b => b.name);
+  const names = blocks.map(b => b.key);
   const tree = treeOf(blocks);
   const active = fieldsOf(system).filter(isCharacterColumn).find(f => f.tag === picked) ?? null;
 
@@ -79,16 +80,19 @@ export function CharacterSection({ system, editSystem, docked }: {
     editSystem(draft => {
       (draft.tables ??= {})[made.key] = made.value;
       readyForSheet(draft, made.key);
-      (draft.blocks ?? []).find(b => b.name === block)?.parts.push({ table: made.key });
+      (draft.blocks ?? []).find(b => b.key === block)?.parts.push({ table: made.key });
     });
     pick({ activeSheetTable: made.key, activeFieldTag: null, activeColumn: null, activeBlock: null, activeRow: null });
   };
   const showTable = (table: string) => pick({ activeSheetTable: table, activeFieldTag: null, activeColumn: null, activeBlock: null, activeRow: null });
   const addBlock = (parent?: string) => {
     focusNew('как зовётся блок');
-    const name = freeBlockName(system, 'Новый блок');
-    editSystem(draft => { (draft.blocks ??= []).push({ name, ...(parent ? { parent } : {}), parts: [] }); });
-    pick({ activeBlock: name, activeFieldTag: null, activeColumn: null, activeRow: null });
+    const { key, title: shown } = newGroup(system);
+    editSystem(draft => {
+      (draft.blocks ??= []).push({ key, ...(parent ? { parent } : {}), parts: [] });
+      labelBlock(draft, key, shown);
+    });
+    pick({ activeBlock: key, activeFieldTag: null, activeColumn: null, activeRow: null });
   };
   const addType = () => {
     focusNew('как зовётся тип листа');
@@ -107,7 +111,7 @@ export function CharacterSection({ system, editSystem, docked }: {
   const openColumn = open ? openTable?.columns?.find(c => c.key === open.column) : undefined;
 
   const dropPart = (blockName: string, index: number, table: string) => editSystem(draft => {
-    const target = (draft.blocks ?? []).find(b => b.name === blockName);
+    const target = (draft.blocks ?? []).find(b => b.key === blockName);
     if (target?.parts[index]?.table === table) target.parts.splice(index, 1);
   });
 
@@ -143,39 +147,39 @@ export function CharacterSection({ system, editSystem, docked }: {
   };
 
   const drag = useDragList((from, to, after) => editSystem(draft => moveBlockTo(draft, from, to, after)));
-  const fieldCount = (block: SheetBlock): number => fieldsOf(system).filter(f => (f.placements ?? []).some(place => place.group === block.name)).length;
+  const fieldCount = (block: SheetBlock): number => fieldsOf(system).filter(f => (f.placements ?? []).some(place => place.group === block.key)).length;
   const sourceOf = (block: SheetBlock): string => block.parts
     .filter(part => system.tables?.[part.table]?.shape !== 'single')
     .map(part => `${system.tables?.[part.table]?.label || part.table}${part.by ? ` · по «${system.tables?.[part.table]?.columns?.find(c => c.key === part.by)?.label ?? part.by}»` : ''}`)
     .join(', ');
   const from = (block: SheetBlock): string => {
     if (!block.parts.length) return 'пока пусто';
-    const same = block.parts.length === 1 && !block.parts[0]!.by && (system.tables?.[block.parts[0]!.table]?.label || block.parts[0]!.table) === block.name;
+    const same = block.parts.length === 1 && !block.parts[0]!.by && (system.tables?.[block.parts[0]!.table]?.label || block.parts[0]!.table) === blockLabel(system, block.key);
     const source = sourceOf(block);
     return same || !source ? '' : `из: ${source}`;
   };
   const branch = (nodes: BlockNode[], depth: number): ReactNode => nodes.map(({ block, children }) => {
-    const on = shown(block.name);
+    const on = shown(block.key);
     const count = fieldCount(block);
     return (
-      <details key={instanceOf('блок', block.name)} className={`block-fold${depth ? ' block-fold--nested' : ''}${on ? '' : ' faint'}${drag.mark(block.name)}`} open={block.name === activeBlock || undefined}>
-        <summary className="block-fold__head" {...drag.props(block.name)} title="перетащите выше или ниже — так блок встанет на листе">
+      <details key={instanceOf('блок', block.key)} className={`block-fold${depth ? ' block-fold--nested' : ''}${on ? '' : ' faint'}${drag.mark(block.key)}`} open={block.key === activeBlock || undefined}>
+        <summary className="block-fold__head" {...drag.props(block.key)} title="перетащите выше или ниже — так блок встанет на листе">
           <span className="drag-grip" aria-hidden>⋮⋮</span>
           {kind ? (
             <input type="checkbox" checked={on} title={on ? 'есть на этом листе' : 'нет на этом листе'}
-              onClick={event => event.stopPropagation()} onChange={() => toggle(block.name)} />
+              onClick={event => event.stopPropagation()} onChange={() => toggle(block.key)} />
           ) : null}
-          <button type="button" className={`block-fold__name${block.name === activeBlock ? ' block-fold__name--on' : ''}`} title="настройки блока"
-            onClick={event => { event.preventDefault(); pickBlock(block.name); }}>{block.name}</button>
+          <button type="button" className={`block-fold__name${block.key === activeBlock ? ' block-fold__name--on' : ''}`} title="настройки блока"
+            onClick={event => { event.preventDefault(); pickBlock(block.key); }}>{blockLabel(system, block.key)}</button>
           <span className="block-fold__count">{count}</span>
           <span className="block-fold__from">{from(block)}{children.length ? ` · внутри блоков: ${children.length}` : ''}</span>
 
         </summary>
         <div className="block-fold__body">
-          {block.parts.map((part, index) => describe(part, block.name, index))}
+          {block.parts.map((part, index) => describe(part, block.key, index))}
           <div className="inline inline--tight">
-            <Button size="sm" variant="ghost" title="одно значение: хиты, уровень, имя" onClick={() => add(block.name)}>+ поле</Button>
-            <Button size="sm" variant="ghost" title="строки и колонки: характеристики, навыки" onClick={() => addTable(block.name)}>+ таблица</Button>
+            <Button size="sm" variant="ghost" title="одно значение: хиты, уровень, имя" onClick={() => add(block.key)}>+ поле</Button>
+            <Button size="sm" variant="ghost" title="строки и колонки: характеристики, навыки" onClick={() => addTable(block.key)}>+ таблица</Button>
           </div>
           {branch(children, depth + 1)}
         </div>
@@ -243,7 +247,7 @@ export function CharacterSection({ system, editSystem, docked }: {
               <span key={`${item.table}.${item.column}`} className="inline inline--tight">
                 <Button size="sm" variant="ghost"
                   onClick={() => (item.single ? pickField(item.column) : pickCell({ table: item.table, column: item.column }))}>{item.label}</Button>
-                <Select<string> label={`«${item.label}»: в блок`} value="" options={[['', 'в блок…'], ...names.map(n => [n, n] as const)]}
+                <Select<string> label={`«${item.label}»: в блок`} value="" options={[['', 'в блок…'], ...names.map(n => [n, blockLabel(system, n)] as const)]}
                   onChange={name => name && editSystem(draft => addColumnToBlock(draft, name, item.table, item.column))} />
               </span>
             ))}

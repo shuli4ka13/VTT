@@ -98,11 +98,11 @@ function viewsFor(world: World, path: Key[]): View[] {
   }
   if (part === 'pages' && id) {
     const page = world.system.pages?.[Number(id)];
-    return page ? [sheet({ activePage: page.name })] : [];
+    return page ? [sheet({ activePage: page.key })] : [];
   }
   if (part === 'blocks' && id) {
     const block = world.system.blocks?.[Number(id)];
-    return block ? [sheet({ activeBlock: block.name })] : [];
+    return block ? [sheet({ activeBlock: block.key })] : [];
   }
   const section = SECTION[part ?? ''];
   return [

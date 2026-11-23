@@ -190,11 +190,11 @@ describe('списки в блоках листа', () => {
   const withPages = (lists: Record<string, string[]>, hidden?: string[]) => {
     const state = room();
     const system = state.system as unknown as Record<string, unknown>;
-    system.pages = [{ name: 'Шапка', top: true }, ...Object.keys(lists).map(name => ({ name }))];
-    const listed = Object.entries(lists).flatMap(([page, on]) => on.map(list => ({ name: NAMES[list]!, page, list, parts: [] })));
+    system.pages = [{ key: 'Шапка', top: true }, ...Object.keys(lists).map(name => ({ key: name }))];
+    const listed = Object.entries(lists).flatMap(([page, on]) => on.map(list => ({ key: NAMES[list]!, page, list, parts: [] })));
     system.blocks = [...((system.blocks as unknown[]) ?? []), ...listed];
     if (hidden) {
-      system.sheets = { враг: { label: 'Враг', blocks: listed.map(block => block.name).filter(name => !hidden.includes(name)) } };
+      system.sheets = { враг: { label: 'Враг', blocks: listed.map(block => block.key).filter(name => !hidden.includes(name)) } };
       (state.sheets as unknown as Record<string, unknown>[]).forEach(sheet => { sheet.of = 'враг'; });
     }
     useRoom.setState(s => ({ ...s, room: state, mySheetId: 'а' }));
@@ -295,8 +295,8 @@ describe('роли полей на листе за столом', () => {
         прочее: { shape: 'single', owner: 'sheet', label: 'Прочее', columns: [{ key: 'флаг', label: 'Служебный флаг', sees: 'none', expr: { expr: '1' } }] },
       },
       blocks: [
-        { name: 'Основа', parts: [{ table: 'лист' }] },
-        { name: 'Служебное', parts: [{ table: 'прочее' }] },
+        { key: 'Основа', parts: [{ table: 'лист' }] },
+        { key: 'Служебное', parts: [{ table: 'прочее' }] },
       ],
     },
     compendium: { records: [] },

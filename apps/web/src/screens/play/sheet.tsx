@@ -1,4 +1,4 @@
-import { claimWords, blockNames, blockOf, NO_BLOCK, availableActions, recordsOf, isItem, sheetKinds, sheetKindOf, shownOn, recordKindOf, fieldsFor, livesOn, isGroup, sharedOf, isDesk as atDesk, fieldsOf, itemCells, blockOfList, pagesOf, SHEET_LIST_KEYS } from '@vtt/engine';
+import { claimWords, blockLabel, blockNames, blockOf, NO_BLOCK, availableActions, recordsOf, isItem, sheetKinds, sheetKindOf, shownOn, recordKindOf, fieldsFor, livesOn, isGroup, sharedOf, isDesk as atDesk, fieldsOf, itemCells, blockOfList, pagesOf, SHEET_LIST_KEYS } from '@vtt/engine';
 import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useRoom } from '../../store/room.ts';
@@ -377,7 +377,7 @@ function useSheetPieces(room: RoomState, sheet: Sheet): { hangingNow: ReactNode;
               {shelves.length === 0
                 ? <span className="faint">Ничего не нашлось.</span>
                 : shelves.map(([block, list]) => (
-                  <Fold key={`${block}${found ? ' ·' : ''}`} title={block} count={list.length} open={found}>
+                  <Fold key={`${block}${found ? ' ·' : ''}`} title={blockLabel(room.system, block)} count={list.length} open={found}>
                     <div className="inline inline--tight">
                       {list.map(item => (
                         <Chip key={item.id} active={copies(item.id).length > 0} title={hints.get(item.id) || undefined} onClick={() => add(item.id)}>

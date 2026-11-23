@@ -154,7 +154,8 @@ export const sheetPart = z.object({
 export const sheetList = z.enum(['hanging', 'things', 'actions']);
 
 export const sheetBlock = z.object({
-  name: z.string().min(1),
+  key: z.string().min(1),
+  label: z.string().min(1).optional(),
   parent: z.string().min(1).optional(),
   page: z.string().min(1).optional(),
   width: z.number().int().min(1).max(12).optional(),
@@ -168,11 +169,13 @@ export const sheetBlock = z.object({
 }).strict();
 
 export const sheetPage = z.object({
-  name: z.string().min(1),
+  key: z.string().min(1),
+  label: z.string().min(1).optional(),
   top: z.literal(true).optional(),
 }).strict();
 
 export const groupSpec = z.object({
+  label: z.string().min(1).optional(),
   parent: z.string().optional(),
 }).strict();
 

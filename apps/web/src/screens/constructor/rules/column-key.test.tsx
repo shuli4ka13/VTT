@@ -32,7 +32,7 @@ describe('ключ колонки идёт за названием, пока н�
   it('поле листа, уже стоящее в блоке, получает ключ по названию — и блок следует за ним', () => {
     open(base(
       { лист: { shape: 'single', columns: [{ key: 'field_4', label: 'Новое поле', kind: 'number' }] } },
-      [{ name: 'Здоровье', parts: [{ table: 'лист', columns: ['field_4'], views: { field_4: { kind: 'bar' } } }] }],
+      [{ key: 'Здоровье', parts: [{ table: 'лист', columns: ['field_4'], views: { field_4: { kind: 'bar' } } }] }],
     ), 'лист', 'field_4');
     rename('Здоровье');
     expect(columns('лист')).toEqual(['здоровье']);
@@ -74,7 +74,7 @@ describe('ключ таблицы идёт за названием, пока н�
 
   it('новая таблица на листе: «таблица» → по названию, и блок следует за ней', () => {
     const system = base({ характеристики: { label: 'Характеристики', key: 'word', rows: [] }, таблица: skills },
-      [{ name: 'Навыки', parts: [{ table: 'таблица' }] }]);
+      [{ key: 'Навыки', parts: [{ table: 'таблица' }] }]);
     const fresh = renameTable(system, 'таблица', 'Навыки Warhammer', {});
     expect(fresh).toBe('навыки_warhammer');
     moveTable(system, 'таблица', fresh);

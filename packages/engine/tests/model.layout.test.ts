@@ -12,9 +12,9 @@ const system = (): System => ({
       rows: [{ value: 'атлетика', label: 'Атлетика' }, { value: 'магия', label: 'Магия' }] },
   },
   blocks: [
-    { name: 'Всё', parts: [{ table: 'лист' }] },
-    { name: 'Защита', parts: [{ table: 'лист', columns: ['кд'] }] },
-    { name: 'Навыки', parts: [{ table: 'навыки', columns: ['ранг'], rows: ['атлетика'], by: 'база' }] },
+    { key: 'Всё', parts: [{ table: 'лист' }] },
+    { key: 'Защита', parts: [{ table: 'лист', columns: ['кд'] }] },
+    { key: 'Навыки', parts: [{ table: 'навыки', columns: ['ранг'], rows: ['атлетика'], by: 'база' }] },
   ],
 } as unknown as System);
 
@@ -36,12 +36,12 @@ describe('раскладка листа следует за правками т�
 
   it('уборка: пропавшие колонки, строки и таблицы уходят; «все в порядке таблицы» снимает ключ; пустой блок остаётся', () => {
     const s = system();
-    s.blocks!.push({ name: 'Новый', parts: [] });
+    s.blocks!.push({ key: 'Новый', parts: [] });
     s.tables!.навыки!.rows = s.tables!.навыки!.rows!.filter(r => r.value !== 'атлетика');
     s.blocks![1]!.parts[0]!.columns = ['хиты', 'кд'];
     s.blocks![0]!.parts.push({ table: 'нет_такой' });
     tidyLayout(s);
-    expect(s.blocks!.map(b => [b.name, b.parts])).toEqual([
+    expect(s.blocks!.map(b => [b.key, b.parts])).toEqual([
       ['Всё', [{ table: 'лист' }]],
       ['Защита', [{ table: 'лист' }]],
       ['Навыки', []],
@@ -63,10 +63,10 @@ describe('раскладка листа следует за правками т�
     const s = system();
     s.tables!.навыки!.columns!.push({ key: 'природа', label: 'Природа', kind: 'text' });
     for (const row of s.tables!.навыки!.rows!) row.cells = { природа: 'общая' };
-    s.blocks = [{ name: 'Навыки', parts: [{ table: 'навыки', columns: ['ранг', 'база'] }] }];
+    s.blocks = [{ key: 'Навыки', parts: [{ table: 'навыки', columns: ['ранг', 'база'] }] }];
     tidyLayout(s);
     expect(s.blocks[0]!.parts[0]!.columns).toBeUndefined();
-    s.blocks = [{ name: 'Навыки', parts: [{ table: 'навыки', columns: ['база', 'ранг'] }] }];
+    s.blocks = [{ key: 'Навыки', parts: [{ table: 'навыки', columns: ['база', 'ранг'] }] }];
     tidyLayout(s);
     expect(s.blocks[0]!.parts[0]!.columns).toEqual(['база', 'ранг']);
   });

@@ -31,12 +31,12 @@ export function SheetTab() {
   const activeBlock = useWorld(s => s.activeBlock);
   const activeRow = useWorld(s => s.activeRow);
   const activePage = useWorld(s => s.activePage);
-  const pageOpen = Boolean(activePage && system.pages?.some(p => p.name === activePage));
+  const pageOpen = Boolean(activePage && system.pages?.some(p => p.key === activePage));
   const activeThing = useWorld(s => s.activeThing);
   const thingOpen = Boolean(activeThing && system.tables?.[activeThing]);
   const rowOpen = Boolean(activeRow && system.tables?.[activeRow.table]?.rows?.some(r => rowKeyOf(r) === activeRow.row));
   const active = activeTag ? fieldOf(system, activeTag) ?? null : null;
-  const blockOpen = Boolean(activeBlock && system.blocks?.some(b => b.name === activeBlock));
+  const blockOpen = Boolean(activeBlock && system.blocks?.some(b => b.key === activeBlock));
   const columnOpen = Boolean(activeColumn && system.tables?.[activeColumn.table]?.columns?.some(c => c.key === activeColumn.column));
   const activeSheetTable = useWorld(s => s.activeSheetTable);
   const tableOpen = Boolean(activeSheetTable && system.tables?.[activeSheetTable]);
@@ -154,7 +154,7 @@ function ColumnPanel({ table: id, column: key, system }: { table: string; column
   const activeIn = useWorld(s => s.activeIn);
   const table = system.tables![id]!;
   const column = table.columns!.find(c => c.key === key)!;
-  const placed = activeIn !== null && (system.blocks ?? []).some(b => b.name === activeIn && b.parts.some(p => holds(p, id, key)));
+  const placed = activeIn !== null && (system.blocks ?? []).some(b => b.key === activeIn && b.parts.some(p => holds(p, id, key)));
   return (
     <>
       {placed ? <Card><BlockViewField tableId={id} column={column} system={system} block={activeIn} /></Card> : null}

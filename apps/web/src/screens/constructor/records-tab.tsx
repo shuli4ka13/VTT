@@ -8,7 +8,7 @@ import {
   Card, CardHead, Field, Input, Select, Button, Empty, Verdict, Chip, DangerButton, LabelInput, Fold,
 } from '../../ui/primitives.tsx';
 import type { System, SheetKind, Table } from '@vtt/schema';
-import { argsWithProps, propKeysOf, recordKinds, sheetKinds, recordsOf, DESK_ID, kindWord, blockOf } from '@vtt/engine';
+import { argsWithProps, propKeysOf, recordKinds, sheetKinds, recordsOf, DESK_ID, kindWord, blockOf, labelBlock } from '@vtt/engine';
 import type { RecordKind, AnyKind } from '@vtt/engine';
 import { TableColumnCard } from './rules/tables-section.tsx';
 import { useState } from 'react';
@@ -16,7 +16,7 @@ import { BlockPick } from './block-pick.tsx';
 import { GrantsEditor } from './grants-editor.tsx';
 import { createEffect } from './effects/factory.ts';
 import { blockTree, BlockBranches } from './block-tree.tsx';
-import { freeGroupName } from './groups.ts';
+import { newGroup } from './groups.ts';
 import { focusNew } from '../../ui/focus-new.ts';
 
 const BASIS = [
@@ -115,10 +115,13 @@ export function RecordsTab() {
     pick({ activeRecordKind: made.key });
   };
 
-  const addTo = (block: string) => {
+  const addTo = (block: string, title?: string) => {
     focusNew('как зовётся тип');
     const made = newRecordKind(system);
-    editSystem(draft => { (draft.tables ??= {})[made.key] = { ...made.value, block }; });
+    editSystem(draft => {
+      (draft.tables ??= {})[made.key] = { ...made.value, block };
+      if (title) labelBlock(draft, block, title);
+    });
     pick({ activeRecordKind: made.key });
   };
 
@@ -131,7 +134,7 @@ export function RecordsTab() {
       {...(lookup ? { right: lookup } : {})}
       left={{
         head: 'книги',
-        tools: <Button size="sm" onClick={() => addTo(freeGroupName(system, 'Новый блок'))}>+ блок</Button>,
+        tools: <Button size="sm" onClick={() => { const fresh = newGroup(system); addTo(fresh.key, fresh.title); }}>+ блок</Button>,
         body: kinds.length === 0
           ? <Empty
               title="типов ещё нет"

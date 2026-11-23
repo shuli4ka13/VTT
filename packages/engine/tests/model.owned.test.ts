@@ -66,8 +66,8 @@ group('тип листа — как запись, которую лист нос
   const withKinds = {
     ...system,
     blocks: [
-      { name: 'Щиты', parent: 'Защита', parts: [{ table: 'лист', columns: ['кд'] }] },
-      { name: 'Магия', parts: [{ table: 'лист', columns: ['ячейки'] }] },
+      { key: 'Щиты', parent: 'Защита', parts: [{ table: 'лист', columns: ['кд'] }] },
+      { key: 'Магия', parts: [{ table: 'лист', columns: ['ячейки'] }] },
     ],
     tables: { лист: { shape: 'single', columns: [
       { key: 'кд', label: 'Класс брони', kind: 'number', default: 10 },

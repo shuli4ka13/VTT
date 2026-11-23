@@ -3,7 +3,7 @@ export { editPalette, paletteKeyOf } from '../engine/roll-edits.ts';
 export { outcomeWords, tagWords } from '../engine/roll-tags.ts';
 export { ADVANTAGE_METHODS, installMethod, recipesToInstall } from '../model/advantage-methods.ts';
 export { writeTableCall } from '../model/amounts.ts';
-export { blockNames, blockOf, fieldsByBlock, NO_BLOCK, sheetBlockNames } from '../model/blocks.ts';
+export { blockLabel, blockNames, blockOf, fieldsByBlock, labelBlock, NO_BLOCK, sheetBlockNames } from '../model/blocks.ts';
 export { blockParts, bringIn, closure } from '../model/bring.ts';
 export type { Brought, Part, PartKind } from '../model/bring.ts';
 export { rolesOf } from '../model/buttons.ts';
@@ -23,7 +23,7 @@ export { choiceTablesAt, labelsAt, labelsOf, namesAt, resultsOf, sheetNamesAt } 
 export type { NameAt, Place as NamePlace } from '../model/names-at.ts';
 export { argsWithProps, blockLine, blockShown, findRecord, isBook, isItem, isUnder, keyOf as entryKeyOf, kindOf, kindsOf, propKeysOf, propsNeeded, propsOf, recordKindOf, recordKinds, recordsOf, sheetKindOf, sheetKinds, shownOn, withLibrary } from '../model/owned.ts';
 export type { AnyKind, RecordKind } from '../model/owned.ts';
-export { blockOfList, cellHead, cellsOf, GRID, HEIGHT_STEP, pageOfBlock, pagesOf, placeBlock, removePage, renamePage, setHeight, setWidth, SHEET_LIST_KEYS, tabPages, topPage } from '../model/pages.ts';
+export { blockOfList, cellHead, cellsOf, GRID, HEIGHT_STEP, pageOfBlock, pagesOf, placeBlock, labelPage, pageLabel, removePage, setHeight, setWidth, SHEET_LIST_KEYS, tabPages, topPage } from '../model/pages.ts';
 export type { Place as BlockPlace } from '../model/pages.ts';
 export { columnChoices, sheetChoices, walkColumns, walkSheet } from '../model/paths.ts';
 export type { ColumnChoice } from '../model/paths.ts';

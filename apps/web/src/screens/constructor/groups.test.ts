@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { System } from '@vtt/schema';
-import { groupTree, subtreeNames, renameGroup, freeGroupName } from './groups.ts';
+import { groupTree, subtreeNames, newGroup } from './groups.ts';
 
 const make = (over: Partial<System> = {}): System => ({
   tables: {
@@ -21,9 +21,9 @@ const make = (over: Partial<System> = {}): System => ({
     'Навыки от ловкости': { parent: 'Навыки' },
   },
   blocks: [
-    { name: 'Характеристики', parts: [{ table: 'лист', columns: ['str'] }] },
-    { name: 'Навыки', parts: [{ table: 'лист', columns: ['ath'] }, { table: 'saves' }] },
-    { name: 'Навыки от ловкости', parent: 'Навыки', parts: [{ table: 'лист', columns: ['acr'] }] },
+    { key: 'Характеристики', parts: [{ table: 'лист', columns: ['str'] }] },
+    { key: 'Навыки', parts: [{ table: 'лист', columns: ['ath'] }, { table: 'saves' }] },
+    { key: 'Навыки от ловкости', parent: 'Навыки', parts: [{ table: 'лист', columns: ['acr'] }] },
   ],
   sheets: { hero: { blocks: ['Навыки'] } },
   effects: {},
@@ -54,21 +54,9 @@ describe('groupTree', () => {
   });
 });
 
-describe('renameGroup', () => {
-  it('тянет за собой типы листов и ссылки детей', () => {
-    const system = make();
-    renameGroup(system, 'Навыки', 'Умения');
-    expect(system.sheets!.hero!.blocks).toEqual(['Умения']);
-    expect(system.groups!['Умения']).toBeTruthy();
-    expect(system.groups!['Навыки']).toBeUndefined();
-    expect(system.groups!['Навыки от ловкости']!.parent).toBe('Умения');
-    expect(subtreeNames(system, 'Умения')).toContain('Навыки от ловкости');
-  });
-});
-
-describe('freeGroupName', () => {
-  it('не даёт занять имя существующей группы', () => {
-    expect(freeGroupName(make(), 'Навыки')).toBe('Навыки 2');
-    expect(freeGroupName(make(), 'Магия')).toBe('Магия');
+describe('newGroup', () => {
+  it('ключ свободный, подпись не повторяет чужую', () => {
+    expect(newGroup(make(), 'Навыки')).toEqual({ key: 'навыки_2', title: 'Навыки 2' });
+    expect(newGroup(make(), 'Магия')).toEqual({ key: 'магия', title: 'Магия' });
   });
 });

@@ -468,7 +468,7 @@ describe('Словари: кости, правки броска, таблицы'
     useWorld.setState(state => ({
       ...state,
       system: { ...emptySystem(), tables: { броня: { label: 'Броня', owner: 'sheet', key: 'word', columns: [{ key: 'класс', label: 'Класс', kind: 'number' }], rows: [{ value: 'голова' }] } },
-        blocks: [{ name: 'Бой', parts: [{ table: 'броня' }] }] },
+        blocks: [{ key: 'Бой', parts: [{ table: 'броня' }] }] },
       activeEffectId: null,
     }));
     renderOpen(<RulesTab />);

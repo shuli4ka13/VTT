@@ -13,7 +13,7 @@ const laid = (input: unknown): System => {
     const own = column as { key: string; control?: unknown };
     if (own.control) { views[own.key] = own.control; delete own.control; }
   }
-  out.blocks = [{ name: 'Лист', parts: [{ table: 'лист', views } as never] }];
+  out.blocks = [{ key: 'Лист', parts: [{ table: 'лист', views } as never] }];
   return out;
 };
 

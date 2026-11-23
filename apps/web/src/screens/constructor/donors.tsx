@@ -4,7 +4,7 @@ import { bring, undoFresh, useCurrentFresh } from '../../store/fresh.ts';
 import { Select, Empty, Fold, Button } from '../../ui/primitives.tsx';
 import type { System, Effect } from '@vtt/schema';
 import { SAMPLE_SYSTEMS, PIECES, bringPiece, donorOf } from '@vtt/engine/samples';
-import { bringIn, blockParts, closure, blockLine, launchOf, LAUNCHES, fieldsOf, fieldOf, kindOf, NO_BLOCK } from '@vtt/engine';
+import { bringIn, blockParts, closure, blockLine, launchOf, LAUNCHES, fieldsOf, fieldOf, kindOf, NO_BLOCK, blockLabel } from '@vtt/engine';
 import type { Part, PartKind } from '@vtt/engine';
 import { counted } from '../../ui/plural.ts';
 import { defaultDonor, effectStanding, fieldsStanding, ownWords, piecesStanding } from './donor-compare.ts';
@@ -48,7 +48,7 @@ export function findDonorBlock(tag: string): { donor: System; group: string } | 
 }
 
 export function copyDonorBlock(donor: System, group: string): void {
-  bring(`Блок «${group}»`, system => bringIn(system, donor, blockParts(donor, group)));
+  bring(`Блок «${blockLabel(donor, group)}»`, system => bringIn(system, donor, blockParts(donor, group)));
 }
 
 const PART_WORDS: Record<PartKind, string> = {
@@ -68,8 +68,8 @@ function partLabel(system: System, part: Part): string {
     case 'recordKind': return kindOf(system, part.key)?.label ?? part.key;
     case 'record': return system.library?.find(r => r.id === part.key)?.label ?? part.key;
     case 'roll': return system.rolls?.[part.key]?.label ?? part.key;
-    case 'group': return part.key;
-    case 'block': return part.key;
+    case 'group': return blockLabel(system, part.key);
+    case 'block': return blockLabel(system, part.key);
   }
 }
 
@@ -181,9 +181,9 @@ function Blocks({ donor }: { donor: System }) {
             onClick={() => copyDonorBlock(donor, group)}
             style={already ? { opacity: 0.5, cursor: 'default' } : undefined}
           >
-            <span className="card__title">{group}</span>
+            <span className="card__title">{blockLabel(donor, group)}</span>
             <span className="card__sub">
-              {standing === 'same' ? 'уже в системе' : standing === 'own' ? ownWords(group) : `полей: ${count}`}
+              {standing === 'same' ? 'уже в системе' : standing === 'own' ? ownWords(blockLabel(donor, group)) : `полей: ${count}`}
               {!already && brings.length > 1 ? ` · и ещё ${counted(brings.length - 1, 'блок', 'блока', 'блоков')}` : ''}
             </span>
           </button>
@@ -221,7 +221,7 @@ function Effects({ donor }: { donor: System }) {
           >
             <span className="card__title">{effect.label ?? id}</span>
             <span className="card__sub">
-              {standing === 'same' ? 'уже в системе' : standing === 'own' ? ownWords(effect.label ?? id) : `${effect.group ?? 'Механики'} · ${activationWord(effect)}`}
+              {standing === 'same' ? 'уже в системе' : standing === 'own' ? ownWords(effect.label ?? id) : `${effect.group ? blockLabel(donor, effect.group) : 'Механики'} · ${activationWord(effect)}`}
             </span>
           </button>
         );

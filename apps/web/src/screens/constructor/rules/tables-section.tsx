@@ -1,7 +1,7 @@
 import { ColumnSheetFields } from '../table-field.tsx';
 import type { CellValue } from '@vtt/schema';
 import { rowNames } from '../row-names.ts';
-import { renameLayoutColumn, renameLayoutTable, retagFields, kindsFor, kindWord, isFormulaCell, onSheet, isSingle, holderOf, fieldsOf, withColumn, forgetFields, rowPieces, listUsers, isRange, tableKeyOf as keyOf, choiceTables, rowTables, numberTables, rowUsers, renameRow, renameRowInBook, asDice, toDice } from '@vtt/engine';
+import { blockLabel, renameLayoutColumn, renameLayoutTable, retagFields, kindsFor, kindWord, isFormulaCell, onSheet, isSingle, holderOf, fieldsOf, withColumn, forgetFields, rowPieces, listUsers, isRange, tableKeyOf as keyOf, choiceTables, rowTables, numberTables, rowUsers, renameRow, renameRowInBook, asDice, toDice } from '@vtt/engine';
 import type { RowPiece, TableColumn, Holder } from '@vtt/engine';
 export { rowNames } from '../row-names.ts';
 import { Card, CardHead, Input, NumInput, Button, DangerButton, Fold, Select, Verdict, Empty, Field, Chip, TextArea } from '../../../ui/primitives.tsx';
@@ -173,7 +173,7 @@ export function TableCard({ id, table, system, editSystem, usage, opened, onReke
   const byRange = isRange(table);
   const rows = table.rows ?? [];
   const columns = table.columns ?? [];
-  const blocks = (system.blocks ?? []).filter(block => block.parts.some(part => part.table === id)).map(block => `блок «${block.name}»`);
+  const blocks = (system.blocks ?? []).filter(block => block.parts.some(part => part.table === id)).map(block => `блок «${blockLabel(system, block.key)}»`);
   const users = [...new Set([...listUsers(system, id), ...usersOf(usage, 'table', id, system, insideTable(id)), ...blocks])];
   const wanted = useWorld(s => s.activeTableId) === id;
   const [openAtStart] = useState(wanted || Boolean(opened));

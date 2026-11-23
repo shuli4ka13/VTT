@@ -8,7 +8,7 @@ const system = (): System => ({
   tables: { лист: { shape: 'single', columns: [
     { key: 'хиты', label: 'Хиты', kind: 'number' }, { key: 'кд', label: 'КД', kind: 'number' }, { key: 'опыт', label: 'Опыт', kind: 'number' },
   ] } },
-  blocks: [{ name: 'Здоровье', parts: [{ table: 'лист', columns: ['хиты', 'кд'] }] }, { name: 'Шапка', parts: [{ table: 'лист', columns: ['хиты'] }] }],
+  blocks: [{ key: 'Здоровье', parts: [{ table: 'лист', columns: ['хиты', 'кд'] }] }, { key: 'Шапка', parts: [{ table: 'лист', columns: ['хиты'] }] }],
 } as unknown as System);
 
 describe('одно поле — в нескольких блоках', () => {
@@ -30,24 +30,24 @@ describe('одно поле — в нескольких блоках', () => {
 
 describe('порядок на листе — перетаскиванием', () => {
   const blocks = () => ({ tables: {}, effects: {}, blocks: [
-    { name: 'А', parts: [] }, { name: 'Б', parts: [] }, { name: 'В', parts: [] }, { name: 'В1', parent: 'В', parts: [] },
+    { key: 'А', parts: [] }, { key: 'Б', parts: [] }, { key: 'В', parts: [] }, { key: 'В1', parent: 'В', parts: [] },
   ] } as unknown as System);
 
   it('блок встаёт перед или после того, на который его бросили', () => {
     const s = blocks();
     moveBlockTo(s, 'В', 'А', false);
-    expect(s.blocks!.map(b => b.name)).toEqual(['В', 'А', 'Б', 'В1']);
+    expect(s.blocks!.map(b => b.key)).toEqual(['В', 'А', 'Б', 'В1']);
     moveBlockTo(s, 'В', 'Б', true);
-    expect(s.blocks!.map(b => b.name)).toEqual(['А', 'Б', 'В', 'В1']);
+    expect(s.blocks!.map(b => b.key)).toEqual(['А', 'Б', 'В', 'В1']);
   });
 
   it('брошенный рядом с вложенным блоком становится его соседом внутри, а в собственного потомка — не бросается', () => {
     const s = blocks();
     moveBlockTo(s, 'А', 'В1', false);
-    expect(s.blocks!.find(b => b.name === 'А')!.parent).toBe('В');
-    const before = s.blocks!.map(b => `${b.name}:${b.parent ?? ''}`);
+    expect(s.blocks!.find(b => b.key === 'А')!.parent).toBe('В');
+    const before = s.blocks!.map(b => `${b.key}:${b.parent ?? ''}`);
     moveBlockTo(s, 'В', 'В1', true);
-    expect(s.blocks!.map(b => `${b.name}:${b.parent ?? ''}`)).toEqual(before);
+    expect(s.blocks!.map(b => `${b.key}:${b.parent ?? ''}`)).toEqual(before);
   });
 
   it('колонка в блоке встаёт на место той, на которую её бросили; порядок пишется в раскладку', () => {

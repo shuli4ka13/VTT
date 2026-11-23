@@ -151,8 +151,8 @@ export function dependencies(donor: System): (part: Part) => Part[] {
       if (parent) out.push({ kind: 'group', key: parent });
     }
     if (part.kind === 'block') {
-      const block = (donor.blocks ?? []).find(b => b.name === part.key);
-      if (block?.parent && (donor.blocks ?? []).some(b => b.name === block.parent)) out.push({ kind: 'block', key: block.parent });
+      const block = (donor.blocks ?? []).find(b => b.key === part.key);
+      if (block?.parent && (donor.blocks ?? []).some(b => b.key === block.parent)) out.push({ kind: 'block', key: block.parent });
     }
     return out;
   };
@@ -162,7 +162,7 @@ const exists = (system: System, part: Part): boolean => {
   switch (part.kind) {
     case 'field': return hasField(system, part.key);
     case 'group': return Boolean(system.groups?.[part.key]);
-    case 'block': return (system.blocks ?? []).some(block => block.name === part.key);
+    case 'block': return (system.blocks ?? []).some(block => block.key === part.key);
     case 'effect': return Boolean(system.effects?.[part.key]);
     case 'table': return Boolean(system.tables?.[part.key]);
     case 'constant': return Boolean(system.constants?.[part.key]);
@@ -286,12 +286,12 @@ export function bringIn(target: System, donor: System, roots: Part[], grants: st
   const fresh = new Set<SheetPart>();
   const arrived = new Set<string>();
   for (const part of blocks) {
-    const from = clone((donor.blocks ?? []).find(block => block.name === part.key)!);
+    const from = clone((donor.blocks ?? []).find(block => block.key === part.key)!);
     const list = (system.blocks ??= []);
-    const have = list.find(block => block.name === from.name);
+    const have = list.find(block => block.key === from.key);
     const pieces = have ? from.parts.filter(piece => !have.parts.some(p => JSON.stringify(p) === JSON.stringify(piece))) : from.parts;
     for (const piece of pieces) fresh.add(piece);
-    if (have) { have.parts.push(...pieces); kept.push(part); } else { list.push(from); added.push(part); arrived.add(from.name); }
+    if (have) { have.parts.push(...pieces); kept.push(part); } else { list.push(from); added.push(part); arrived.add(from.key); }
   }
   for (const key of grants) {
     if (!(system.grants ?? []).includes(key)) system.grants = [...system.grants ?? [], key];
@@ -325,6 +325,6 @@ function pruneBlocks(system: System, donor: System, fresh: Set<SheetPart>, arriv
     });
   }
   const blocks = system.blocks;
-  system.blocks = blocks.filter(block => !arrived.has(block.name) || block.parts.length > 0 || block.list || blocks.some(other => other.parent === block.name));
+  system.blocks = blocks.filter(block => !arrived.has(block.key) || block.parts.length > 0 || block.list || blocks.some(other => other.parent === block.key));
   tidyLayout(system);
 }

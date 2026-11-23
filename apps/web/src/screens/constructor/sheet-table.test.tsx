@@ -11,7 +11,7 @@ const press = (name: string | RegExp) => { fireEvent.click(screen.getAllByRole('
 describe('таблица прямо на листе', () => {
   beforeEach(() => {
     useWorld.getState().replaceWorld({
-      system: { ...emptySystem(), blocks: [{ name: 'Характеристики', parts: [] }] },
+      system: { ...emptySystem(), blocks: [{ key: 'Характеристики', parts: [] }] },
       compendium: { records: [] },
       sheets: [],
     });

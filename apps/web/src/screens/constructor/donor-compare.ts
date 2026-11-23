@@ -50,7 +50,7 @@ export function partOf(system: System, part: Part): unknown {
     case 'record': return system.library?.find(one => one.id === part.key);
     case 'roll': return system.rolls?.[part.key];
     case 'group': return system.groups?.[part.key];
-    case 'block': return system.blocks?.find(one => one.name === part.key);
+    case 'block': return system.blocks?.find(one => one.key === part.key);
   }
 }
 

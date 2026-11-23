@@ -27,9 +27,9 @@ const base = {
     },
   },
   blocks: [
-    { name: 'Характеристики', parts: [{ table: 'abilities', columns: ['score'] }] },
-    { name: 'Модификаторы', parts: [{ table: 'abilities', columns: ['mod'] }] },
-    { name: 'Навыки', parts: [{ table: 'skills', by: 'ability' }] },
+    { key: 'Характеристики', parts: [{ table: 'abilities', columns: ['score'] }] },
+    { key: 'Модификаторы', parts: [{ table: 'abilities', columns: ['mod'] }] },
+    { key: 'Навыки', parts: [{ table: 'skills', by: 'ability' }] },
   ],
 } as unknown as System;
 
@@ -59,7 +59,7 @@ group('таблица на листе: пустая клетка — ввод, �
     eq(skill.group, 'Навыки');
     eq(skill.section, 'Сила');
     const only = copy();
-    only.blocks = [{ name: 'Сила', parts: [{ table: 'abilities', rows: ['сила'] }] }];
+    only.blocks = [{ key: 'Сила', parts: [{ table: 'abilities', rows: ['сила'] }] }];
     eq(fieldOf(only, 'abilities.сила.score')!.group, 'Сила');
     eq(fieldOf(only, 'abilities.ловкость.score')!.group, undefined);
     eq(fieldOf(only, 'level')!.group, undefined);

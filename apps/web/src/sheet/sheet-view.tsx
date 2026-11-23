@@ -5,7 +5,7 @@ import { FieldCell } from './field-cell.tsx';
 import type { Reader } from '../engine/use-calc.ts';
 import { Tabs } from '../ui/layout.tsx';
 import type { Sheet, System, StoredValue, SheetList } from '@vtt/schema';
-import { fieldsOf, rowKeyOf, fieldOf, optionsOf, fieldsByBlock, blockShown, pagesOf, topPage, tabPages, pageOfBlock, isNoteField } from '@vtt/engine';
+import { fieldsOf, rowKeyOf, fieldOf, optionsOf, fieldsByBlock, blockShown, pagesOf, topPage, tabPages, pageOfBlock, isNoteField, blockLabel, pageLabel } from '@vtt/engine';
 import type { Field as FieldModel } from '@vtt/engine';
 import { SheetGrid } from './sheet-grid.tsx';
 import type { GridEdit } from './sheet-grid.tsx';
@@ -33,10 +33,10 @@ export function SheetView({ system, sheet, reader, onChange, onShift, mayEdit, m
   const all = fields ?? fieldsOf(system);
   const visibleBlock = blockShown(system, sheet);
   const byFields = fieldsByBlock(system, only ? all.filter(f => only.includes(f.tag)) : all, visibleBlock);
-  const order = (system.blocks ?? []).map(block => block.name);
+  const order = (system.blocks ?? []).map(block => block.key);
   const listed = (system.blocks ?? [])
-    .filter(block => block.list && lists?.[block.list] != null && visibleBlock(block.name) && !byFields.some(([group]) => group === block.name))
-    .map(block => [block.name, []] as [string, FieldModel[]]);
+    .filter(block => block.list && lists?.[block.list] != null && visibleBlock(block.key) && !byFields.some(([group]) => group === block.key))
+    .map(block => [block.key, []] as [string, FieldModel[]]);
   const rank = (name: string) => (order.indexOf(name) < 0 ? order.length : order.indexOf(name));
   const shown = listed.length ? [...byFields, ...listed].sort(([a], [b]) => rank(a) - rank(b)) : byFields;
 
@@ -64,10 +64,10 @@ export function SheetView({ system, sheet, reader, onChange, onShift, mayEdit, m
   };
 
   const card = (group: string, fields: FieldModel[]) => {
-    const own = (system.blocks ?? []).find(block => block.name === group);
+    const own = (system.blocks ?? []).find(block => block.key === group);
     return (
     <Card key={group}>
-      <CardHead title={onPickBlock ? <button type="button" className="sheet-pick__head" title="настройки блока" onClick={() => onPickBlock(group)}>{group}</button> : group} />
+      <CardHead title={onPickBlock ? <button type="button" className="sheet-pick__head" title="настройки блока" onClick={() => onPickBlock(group)}>{blockLabel(system, group)}</button> : blockLabel(system, group)} />
       {piecesOf(fields).map(piece => (piece.table ? (
         <TableBlock key={piece.table} system={system} tableId={piece.table!} split={own?.split} sections={sectionsOf(piece.fields, system, reader)} cell={cell} {...(onPickRow ? { onPickRow } : {})} />
       ) : (
@@ -104,19 +104,19 @@ export function SheetView({ system, sheet, reader, onChange, onShift, mayEdit, m
   const top = topPage(system);
   const blocksOn = (name: string) => shown.filter(([group]) => pageOfBlock(system, group) === name);
   const filled = (name: string) => blocksOn(name).length > 0;
-  const visible = tabPages(system).filter(page => pages.all || filled(page.name));
-  const current = visible.find(page => page.name === pages.at) ?? visible[0];
+  const visible = tabPages(system).filter(page => pages.all || filled(page.key));
+  const current = visible.find(page => page.key === pages.at) ?? visible[0];
 
-  const body = (page: NonNullable<typeof top>) => grid(page.name, blocksOn(page.name).map(([group]) => group));
+  const body = (page: NonNullable<typeof top>) => grid(page.key, blocksOn(page.key).map(([group]) => group));
 
   return (
     <div className="sheet sheet--paged">
       {head}
       {top ? body(top) : null}
       {visible.length ? (
-        <Tabs value={current?.name ?? ''} options={visible.map(page => ({ key: page.name, label: page.name }))} onChange={pages.onAt} />
+        <Tabs value={current?.key ?? ''} options={visible.map(page => ({ key: page.key, label: pageLabel(system, page.key) }))} onChange={pages.onAt} />
       ) : null}
-      {current ? <div className="sheet-page">{filled(current.name) ? body(current) : <span className="faint">На этой странице пока пусто — выберите блок и укажите ему эту страницу.</span>}</div> : null}
+      {current ? <div className="sheet-page">{filled(current.key) ? body(current) : <span className="faint">На этой странице пока пусто — выберите блок и укажите ему эту страницу.</span>}</div> : null}
     </div>
   );
 }
@@ -158,7 +158,7 @@ function sectionTitle(field: FieldModel, system: System, reader: Reader): [strin
   const options = by ? optionsOf(system, by) : [];
   const at = options.findIndex(option => String(option.value) === String(value));
   if (at >= 0) return [options[at]!.label, at];
-  const part = (system.blocks ?? []).find(block => block.name === field.group)?.parts.find(p => p.table === field.home && p.by);
+  const part = (system.blocks ?? []).find(block => block.key === field.group)?.parts.find(p => p.table === field.home && p.by);
   const view = part?.by ? part.views?.[part.by] : undefined;
   if (typeof value === 'boolean') return [value ? view?.yes ?? 'да' : view?.no ?? 'нет', value ? 1 : 0];
   return [value === undefined || value === null || value === '' ? '—' : String(value), Number.MAX_SAFE_INTEGER];

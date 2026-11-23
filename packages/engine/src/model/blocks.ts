@@ -6,7 +6,19 @@ import { basedOn } from './inherit.ts';
 
 export const NO_BLOCK = 'Без блока';
 
-export const sheetBlockNames = (system: System): string[] => (system.blocks ?? []).map(block => block.name);
+export const sheetBlockNames = (system: System): string[] => (system.blocks ?? []).map(block => block.key);
+
+export const blockLabel = (system: System, key: string): string =>
+  (system.blocks ?? []).find(block => block.key === key)?.label ?? system.groups?.[key]?.label ?? key;
+
+export function labelBlock(system: System, key: string, label: string): void {
+  const said = label && label !== key ? label : undefined;
+  const block = (system.blocks ?? []).find(one => one.key === key);
+  const group = system.groups?.[key];
+  if (block) { if (said) block.label = said; else delete block.label; }
+  if (group) { if (said && !block) group.label = said; else delete group.label; }
+  if (!block && !group && said) system.groups = { ...(system.groups ?? {}), [key]: { label: said } };
+}
 
 export function blockNames(system: System): string[] {
   const out = new Set<string>(Object.keys(system.groups ?? {}));

@@ -98,7 +98,7 @@ describe('поле «текст»: где оно бывает', () => {
   });
 
   it('вид у текста — замечание: на листе будет обычное поле', () => {
-    const system = base([NOTES], { blocks: [{ name: 'Заметки', parts: [{ table: 'лист', columns: ['заметки'], views: { заметки: { kind: 'big' } } }] }] });
+    const system = base([NOTES], { blocks: [{ key: 'Заметки', parts: [{ table: 'лист', columns: ['заметки'], views: { заметки: { kind: 'big' } } }] }] });
     expect(lintSystem(system).some(problem => problem.level === 'warn' && problem.text.includes('не подходит к типу значения'))).toBe(true);
   });
 });

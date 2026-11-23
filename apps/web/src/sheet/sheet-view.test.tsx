@@ -118,7 +118,7 @@ describe('лист за столом', () => {
           { value: 'stealth', label: 'Скрытность', cells: { ability: 'dex' } },
         ] },
       },
-      blocks: [{ name: 'Навыки', parts: [{ table: 'навыки', by: 'ability' }] }],
+      blocks: [{ key: 'Навыки', parts: [{ table: 'навыки', by: 'ability' }] }],
     } as unknown as System;
     render(<SheetView system={grouped} sheet={{ id: 'б', name: 'Бор', values: {} } as unknown as Sheet} reader={reader} onChange={() => {}} />);
     const titles = [...document.querySelectorAll('.sheet-section__title')].map(node => node.textContent);
@@ -138,7 +138,7 @@ describe('лист за столом', () => {
           { value: 'stealth', label: 'Скрытность' },
         ] },
       },
-      blocks: [{ name: 'Навыки', parts: [{ table: 'навыки', by: 'prof' }] }],
+      blocks: [{ key: 'Навыки', parts: [{ table: 'навыки', by: 'prof' }] }],
     } as unknown as System;
     const values: Record<string, unknown> = { 'навыки.athletics.prof': 2, 'навыки.stealth.prof': 1 };
     const own: Reader = { valueOf: tag => ({ ok: true, value: values[tag] ?? 0 }), rollOf: () => null, storedOf: tag => values[tag] ?? 0 };
@@ -153,12 +153,12 @@ const single = (key: string, label: string) => ({ shape: 'single', columns: [{ k
 
 const pagedSystem = (extra: Record<string, unknown> = {}) => ({
   tables: { а: single('а1', 'Сила'), б: single('б1', 'Хиты'), в: single('в1', 'Монеты'), г: single('г1', 'Заметка') },
-  pages: [{ name: 'Шапка', top: true }, { name: 'Бой' }, { name: 'Вещи' }, { name: 'Пустая' }],
+  pages: [{ key: 'Шапка', top: true }, { key: 'Бой' }, { key: 'Вещи' }, { key: 'Пустая' }],
   blocks: [
-    { name: 'Главное', page: 'Шапка', parts: [{ table: 'а' }] },
-    { name: 'Здоровье', page: 'Бой', parts: [{ table: 'б' }] },
-    { name: 'Деньги', page: 'Вещи', parts: [{ table: 'в' }] },
-    { name: 'Скрытое', page: 'Пустая', parts: [{ table: 'г' }] },
+    { key: 'Главное', page: 'Шапка', parts: [{ table: 'а' }] },
+    { key: 'Здоровье', page: 'Бой', parts: [{ table: 'б' }] },
+    { key: 'Деньги', page: 'Вещи', parts: [{ table: 'в' }] },
+    { key: 'Скрытое', page: 'Пустая', parts: [{ table: 'г' }] },
   ],
   ...extra,
 }) as unknown as System;
@@ -194,8 +194,8 @@ describe('страницы листа', () => {
 
   it('блок со списком без полей виден, только если список передан; список рисуется внутри блока', () => {
     const system = pagedSystem({
-      pages: [{ name: 'Шапка', top: true }, { name: 'Бой' }, { name: 'Сумка' }],
-      blocks: [{ name: 'Здоровье', page: 'Бой', parts: [{ table: 'б' }] }, { name: 'Вещи', page: 'Сумка', list: 'things', parts: [] }],
+      pages: [{ key: 'Шапка', top: true }, { key: 'Бой' }, { key: 'Сумка' }],
+      blocks: [{ key: 'Здоровье', page: 'Бой', parts: [{ table: 'б' }] }, { key: 'Вещи', page: 'Сумка', list: 'things', parts: [] }],
     });
     const { rerender } = render(<SheetView system={system} {...base} pages={{ at: 'Сумка', onAt: () => {} }} />);
     expect(screen.getAllByRole('tab').map(tab => tab.textContent)).toEqual(['Бой']);
@@ -206,12 +206,12 @@ describe('страницы листа', () => {
 
   it('сетка: ячейка шириной блока, «под» — в той же ячейке, скрытый первый блок держит ячейку, пустая ячейка уходит', () => {
     const system = pagedSystem({
-      pages: [{ name: 'Главная' }],
+      pages: [{ key: 'Главная' }],
       blocks: [
-        { name: 'Один', width: 4, parts: [{ table: 'а' }] },
-        { name: 'Два', under: true, parts: [{ table: 'б' }] },
-        { name: 'Три', width: 8, parts: [{ table: 'в' }] },
-        { name: 'Четыре', parts: [{ table: 'г' }] },
+        { key: 'Один', width: 4, parts: [{ table: 'а' }] },
+        { key: 'Два', under: true, parts: [{ table: 'б' }] },
+        { key: 'Три', width: 8, parts: [{ table: 'в' }] },
+        { key: 'Четыре', parts: [{ table: 'г' }] },
       ],
     });
     const cells = () => [...document.querySelectorAll('.sheet-page .sheet-cell')].map(cell => [(cell as HTMLElement).style.getPropertyValue('--w'), [...cell.querySelectorAll('.sheet-slot')].map(slot => (slot as HTMLElement).dataset.slot)]);
@@ -222,7 +222,7 @@ describe('страницы листа', () => {
   });
 
   it('заданная высота ставится блоку; без высоты — по содержимому', () => {
-    const system = pagedSystem({ pages: [{ name: 'Главная' }], blocks: [{ name: 'Один', height: 300, parts: [{ table: 'а' }] }, { name: 'Два', parts: [{ table: 'б' }] }] });
+    const system = pagedSystem({ pages: [{ key: 'Главная' }], blocks: [{ key: 'Один', height: 300, parts: [{ table: 'а' }] }, { key: 'Два', parts: [{ table: 'б' }] }] });
     render(<SheetView system={system} {...base} pages={{ at: null, onAt: () => {} }} />);
     const one = document.querySelector('[data-slot="Один"]') as HTMLElement;
     expect(one.className).toContain('sheet-slot--sized');
@@ -236,7 +236,7 @@ describe('страницы листа', () => {
   });
 
   it('«по два в строку» ставит полям блока два столбца', () => {
-    const system = pagedSystem({ blocks: [{ name: 'Главное', per: 2, parts: [{ table: 'а' }] }] });
+    const system = pagedSystem({ blocks: [{ key: 'Главное', per: 2, parts: [{ table: 'а' }] }] });
     render(<SheetView system={system} {...base} />);
     expect((document.querySelector('.row--per') as HTMLElement).style.gridTemplateColumns).toBe('repeat(2, minmax(0, 1fr))');
   });
@@ -266,7 +266,7 @@ describe('таблица блока в несколько столбцов', () 
   };
   const make = (part: Record<string, unknown>, split?: number) => ({
     tables: table,
-    blocks: [{ name: 'Навыки', ...(split ? { split } : {}), parts: [{ table: 'навыки', ...part }] }],
+    blocks: [{ key: 'Навыки', ...(split ? { split } : {}), parts: [{ table: 'навыки', ...part }] }],
   }) as unknown as System;
 
   it('split 2: две сетки, у каждой свои шапки колонок', () => {

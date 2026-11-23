@@ -10,7 +10,7 @@ const load = (pages: System['pages'], activePage: string | null = null) => useWo
   system: {
     ...(({ pages: _gone, ...rest }) => rest)(state.system), tables: {}, effects: {},
     ...(pages ? { pages } : {}),
-    blocks: [{ name: 'Навыки', page: 'Основное', parts: [] }, { name: 'Заклинания', page: 'Магия', parts: [] }],
+    blocks: [{ key: 'Навыки', page: 'Основное', parts: [] }, { key: 'Заклинания', page: 'Магия', parts: [] }],
   } as unknown as System,
   activePage,
 }));
@@ -28,52 +28,56 @@ const panel = (name: string) => render(<Live name={name} />);
 
 describe('страницы листа в конструкторе', () => {
   afterEach(() => { cleanup(); });
-  beforeEach(() => { load([{ name: 'Основное' }, { name: 'Магия' }]); });
+  beforeEach(() => { load([{ key: 'Основное' }, { key: 'Магия' }]); });
 
   it('«+ страница»: первая зовётся «Основное», дальше «Страница N», новая открывается', () => {
     load(undefined);
     render(<LiveBar />);
     fireEvent.click(screen.getByText('+ страница'));
-    expect(sys().pages).toEqual([{ name: 'Основное' }]);
-    expect(useWorld.getState().activePage).toBe('Основное');
+    expect(sys().pages).toEqual([{ key: 'основное', label: 'Основное' }]);
+    expect(useWorld.getState().activePage).toBe('основное');
     cleanup();
     render(<LiveBar />);
     fireEvent.click(screen.getByText('+ страница'));
-    expect(sys().pages!.map(p => p.name)).toEqual(['Основное', 'Страница 2']);
+    expect(sys().pages!.map(p => p.key)).toEqual(['основное', 'страница_2']);
+    expect(sys().pages!.map(p => p.label)).toEqual(['Основное', 'Страница 2']);
   });
 
-  it('переименование: блоки идут следом, пустое и занятое имя не принимаются', () => {
+  it('переименование меняет только подпись: ключ и блоки прежние, занятая и пустая подписи не принимаются, равная ключу не хранится', () => {
     panel('Магия');
     const name = screen.getByPlaceholderText('как зовётся страница');
     fireEvent.change(name, { target: { value: 'Основное' } });
     fireEvent.blur(name);
-    expect(sys().pages!.map(p => p.name)).toEqual(['Основное', 'Магия']);
+    expect(sys().pages).toEqual([{ key: 'Основное' }, { key: 'Магия' }]);
     fireEvent.change(name, { target: { value: 'Заклинания' } });
     fireEvent.blur(name);
-    expect(sys().pages!.map(p => p.name)).toEqual(['Основное', 'Заклинания']);
-    expect(sys().blocks!.find(b => b.name === 'Заклинания')!.page).toBe('Заклинания');
-    expect(useWorld.getState().activePage).toBe('Заклинания');
+    expect(sys().pages).toEqual([{ key: 'Основное' }, { key: 'Магия', label: 'Заклинания' }]);
+    expect(sys().blocks!.find(b => b.key === 'Заклинания')!.page).toBe('Магия');
+    expect(useWorld.getState().activePage).toBe(null);
+    fireEvent.change(name, { target: { value: 'Магия' } });
+    fireEvent.blur(name);
+    expect(sys().pages).toEqual([{ key: 'Основное' }, { key: 'Магия' }]);
   });
 
   it('шапка одна: включение у другой страницы снимает прежнюю, выключение снимает ключ', () => {
-    load([{ name: 'Основное', top: true }, { name: 'Магия' }]);
+    load([{ key: 'Основное', top: true }, { key: 'Магия' }]);
     panel('Магия');
     fireEvent.click(screen.getByLabelText('Над закладками — видна всегда'));
-    expect(sys().pages).toEqual([{ name: 'Основное' }, { name: 'Магия', top: true }]);
+    expect(sys().pages).toEqual([{ key: 'Основное' }, { key: 'Магия', top: true }]);
     fireEvent.click(screen.getByLabelText('Над закладками — видна всегда'));
-    expect(sys().pages).toEqual([{ name: 'Основное' }, { name: 'Магия' }]);
+    expect(sys().pages).toEqual([{ key: 'Основное' }, { key: 'Магия' }]);
   });
 
   it('удаление: блоки остаются без страницы', () => {
     panel('Магия');
     fireEvent.click(screen.getByText('Удалить страницу'));
     fireEvent.click(screen.getByText('точно убрать'));
-    expect(sys().pages).toEqual([{ name: 'Основное' }]);
-    expect(sys().blocks!.find(b => b.name === 'Заклинания')).not.toHaveProperty('page');
+    expect(sys().pages).toEqual([{ key: 'Основное' }]);
+    expect(sys().blocks!.find(b => b.key === 'Заклинания')).not.toHaveProperty('page');
   });
 
   it('порядок: перенос страницы за другую меняет порядок закладок', () => {
     useWorld.getState().editSystem(draft => movePage(draft, 'Основное', 'Магия', true));
-    expect(sys().pages!.map(p => p.name)).toEqual(['Магия', 'Основное']);
+    expect(sys().pages!.map(p => p.key)).toEqual(['Магия', 'Основное']);
   });
 });

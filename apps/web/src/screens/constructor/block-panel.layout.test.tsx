@@ -14,8 +14,8 @@ const load = (withPages = true) => useWorld.setState(state => ({
       лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number' }] },
       навыки: { owner: 'sheet', key: 'word', columns: [{ key: 'ранг', label: 'Ранг', kind: 'number' }], rows: [{ value: 'атлетика' }] },
     },
-    ...(withPages ? { pages: [{ name: 'Основное' }, { name: 'Магия' }] } : {}),
-    blocks: [{ name: 'Навыки', parts: [{ table: 'навыки' }] }, { name: 'Внутри', parent: 'Навыки', parts: [{ table: 'лист' }] }],
+    ...(withPages ? { pages: [{ key: 'Основное' }, { key: 'Магия' }] } : {}),
+    blocks: [{ key: 'Навыки', parts: [{ table: 'навыки' }] }, { key: 'Внутри', parent: 'Навыки', parts: [{ table: 'лист' }] }],
   } as unknown as System,
 }));
 
@@ -40,6 +40,20 @@ describe('раскладка блока', () => {
     expect(sys().blocks![0]!.page).toBe('Магия');
     pickCombo(screen.getByLabelText('страница блока'), '');
     expect(sys().blocks![0]).not.toHaveProperty('page');
+  });
+
+  it('переименование меняет только подпись: ключ и ссылки прежние, занятая подпись отвергается, равная ключу не хранится', () => {
+    panel('Навыки');
+    const title = screen.getByPlaceholderText('как зовётся блок');
+    fireEvent.change(title, { target: { value: 'Умения' } });
+    fireEvent.blur(title);
+    expect(sys().blocks!.map(b => [b.key, b.label, b.parent])).toEqual([['Навыки', 'Умения', undefined], ['Внутри', undefined, 'Навыки']]);
+    fireEvent.change(title, { target: { value: 'Внутри' } });
+    fireEvent.blur(title);
+    expect(sys().blocks![0]!.label).toBe('Умения');
+    fireEvent.change(title, { target: { value: 'Навыки' } });
+    fireEvent.blur(title);
+    expect(sys().blocks![0]).not.toHaveProperty('label');
   });
 
   it('«Ширина» пишет ширину ячейке, 12 снимает ключ; «Под предыдущим блоком» ставит under и снимает свою ширину', () => {
@@ -98,7 +112,7 @@ describe('раскладка блока', () => {
           оружие: { label: 'Оружие', shape: 'book', use: 'item', columns: [] },
           доспех: { label: 'Доспех', shape: 'book', use: 'item', columns: [] },
         },
-        blocks: [{ name: 'Снаряжение', list: 'things', parts: [] }],
+        blocks: [{ key: 'Снаряжение', list: 'things', parts: [] }],
       } as unknown as System,
     }));
     panel('Снаряжение');

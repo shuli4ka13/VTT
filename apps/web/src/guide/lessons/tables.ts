@@ -1,4 +1,4 @@
-import { ROW, compile } from '@vtt/engine';
+import { ROW, compile, blockLabel } from '@vtt/engine';
 import type { System } from '@vtt/schema';
 import type { Lesson, View, Move } from '../types.ts';
 import { tableBy, columnBy, fieldBy, columnOf, figure, same, exprOf, errorsOf, FORMULA_DONE, barOpen, barText } from '../find.ts';
@@ -16,7 +16,7 @@ const skills = (view: View) => {
   return found && found[1].shape !== 'book' && found[1].shape !== 'single' ? found : undefined;
 };
 
-const blockNamed = (view: View, name: string) => (view.system.blocks ?? []).find(block => same(block.name, name));
+const blockNamed = (view: View, name: string) => (view.system.blocks ?? []).find(block => same(blockLabel(view.system, block.key), name));
 
 const placedIn = (view: View, name: string): boolean => {
   const block = blockNamed(view, name);

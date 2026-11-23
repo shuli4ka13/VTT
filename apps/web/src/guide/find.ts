@@ -1,5 +1,5 @@
 import type { System, Effect, Table, Column, Step as EffectStep } from '@vtt/schema';
-import { lintSystem, flattenSystem, armsOf, flowOf, fieldsOf, compile } from '@vtt/engine';
+import { lintSystem, flattenSystem, armsOf, flowOf, fieldsOf, compile, blockLabel } from '@vtt/engine';
 import type { Field } from '@vtt/engine';
 import type { Anchor, View } from './types.ts';
 
@@ -9,8 +9,8 @@ export const same = (a: unknown, b: string): boolean =>
 export const fieldBy = (system: System, label: string): Field | undefined =>
   fieldsOf(system).find(field => !field.cell && same(field.label, label));
 
-export const inBlock = (field: Field | undefined, block: string): boolean =>
-  Boolean(field?.placements?.some(place => place.group === block));
+export const inBlock = (system: System, field: Field | undefined, title: string): boolean =>
+  Boolean(field?.placements?.some(place => same(blockLabel(system, place.group), title)));
 
 export const columnOf = (system: System, field: Field | undefined): Column | undefined =>
   field ? system.tables?.[field.home]?.columns?.find(column => column.key === field.tag) : undefined;
