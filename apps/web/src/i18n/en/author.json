@@ -1,0 +1,51 @@
+{
+  "title": "Where do we start?",
+  "continue": {
+    "name": "Continue working",
+    "hint": "Open your own system — a draft or an already published one."
+  },
+  "copy": {
+    "name": "Make a copy",
+    "hint": "Take someone else's or your own as a base — the original stays untouched."
+  },
+  "blank": {
+    "name": "Start from scratch",
+    "hint": "An empty system: take ready-made pieces or set everything up yourself."
+  },
+  "naming": {
+    "title": "What shall we call the system",
+    "sub": "The name can be changed later — it is needed so the system can be found in the list."
+  },
+  "create": "Create",
+  "creating": "creating…",
+  "list": {
+    "openTitle": "What to open",
+    "copyTitle": "What to copy",
+    "copyHint": "A copy takes everything as a whole, other people's parts too. If you only need pieces, use \"Start from scratch\" and \"Ready-made from samples\".",
+    "emptyTitle": "No systems yet",
+    "emptyHint": "Start from scratch — it will appear here right after it is created.",
+    "drafts": "Your drafts"
+  },
+  "act": {
+    "open": "Open",
+    "copy": "Make a copy",
+    "remove": "Delete"
+  },
+  "head": {
+    "system": "System",
+    "state": "State",
+    "author": "Author",
+    "changed": "Changed"
+  },
+  "order": {
+    "time": "by time",
+    "title": "by title",
+    "author": "by author"
+  },
+  "state": {
+    "draft": "draft",
+    "published": "published",
+    "publishedBehind": "published · has changes"
+  },
+  "copySuffix": "copy"
+}

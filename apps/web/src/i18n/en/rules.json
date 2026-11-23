@@ -1,0 +1,48 @@
+{
+  "langs": {
+    "title": "Languages",
+    "sub": "Titles are written in the main language; add a language and translate the titles for players who read in it.",
+    "addLabel": "add language",
+    "addOption": "+ language",
+    "mainField": "Main language",
+    "mainLabel": "main language",
+    "headLang": "Language",
+    "headTranslation": "Translation",
+    "lacking": "untranslated: {{left}} of {{total}}",
+    "translate": "Translate",
+    "drop": "Remove",
+    "single": "Only one language — no translations.",
+    "translateTitle": "Translation · {{name}}",
+    "onlyBare": "untranslated only",
+    "all": "all",
+    "left": "left: {{n}}",
+    "allDone": "all translated",
+    "nothingBare": "Everything is translated.",
+    "nothingAtAll": "No translatable labels.",
+    "headWhat": "What it is",
+    "headMain": "Main language",
+    "placeholder": "translation",
+    "field": {
+      "label": "title",
+      "asLabel": "loop row name",
+      "question": "question",
+      "yes": "\"yes\" answer",
+      "no": "\"no\" answer",
+      "hint": "hint",
+      "title": "heading",
+      "description": "description",
+      "note": "\"Stop\" note"
+    },
+    "section": {
+      "blocks": "Sheet blocks",
+      "pages": "Sheet pages",
+      "groups": "Folders",
+      "sheets": "Sheet types",
+      "tags": "Tags",
+      "rolls": "Rolls",
+      "roll_edits": "Roll edits",
+      "constants": "Dice",
+      "other": "Other"
+    }
+  }
+}

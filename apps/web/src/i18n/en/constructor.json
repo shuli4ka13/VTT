@@ -1,0 +1,23 @@
+{
+  "bar": {
+    "brand": "<em>VTT</em> system",
+    "brandTitle": "change role",
+    "switch": "change",
+    "noChanges": "no changes",
+    "notCreated": "system not created",
+    "publish": "Publish",
+    "langButton": "language: {{name}}",
+    "langTitle": "interface language: formula writing and sheet display follow it — the data does not change"
+  },
+  "publication": {
+    "draft": "draft",
+    "live": "published",
+    "behind": "changes not published",
+    "behindTitle": "the table sees the previous version — press \"Publish\""
+  },
+  "publish": {
+    "refused": "система не готова к публикации",
+    "notSaved": "not published: changes were not saved",
+    "problems": "not published — errors in \"Problems\""
+  }
+}

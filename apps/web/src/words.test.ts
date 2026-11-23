@@ -31,7 +31,12 @@ function filesOf(dir: string): string[] {
   return out;
 }
 
-const all = ROOTS.flatMap(dir => filesOf(join(root, dir)))
+const dictionariesOf = (): string[] => {
+  const dir = join(root, 'apps/web/src/i18n/ru');
+  return readdirSync(dir).filter(name => name.endsWith('.json')).map(name => join(dir, name));
+};
+
+const all = [...ROOTS.flatMap(dir => filesOf(join(root, dir))), ...dictionariesOf()]
   .map(path => ({ path: relative(root, path), code: readFileSync(path, 'utf8') }))
   .filter(f => !SELF.includes(f.path));
 

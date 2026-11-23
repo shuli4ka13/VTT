@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useSession } from '../../store/session.ts';
 import { Button, Input, Verdict } from '../../ui/primitives.tsx';
+import { Trans, useT } from '../../i18n/index.ts';
 
 export function GateScreen() {
   const name = useSession(s => s.name);
@@ -9,6 +10,7 @@ export function GateScreen() {
   const enter = useSession(s => s.enter);
   const leave = useSession(s => s.leave);
   const navigate = useNavigate();
+  const t = useT('gate');
 
   const [draft, setDraft] = useState(name);
   const [trouble, setTrouble] = useState<string | null>(null);
@@ -28,49 +30,43 @@ export function GateScreen() {
 
   return (
     <div className="roles">
-      <div className="roles__eyebrow">Конструктор систем · стол</div>
-      <h1 className="roles__title"><em>VTT</em> — ролевые системы своими руками</h1>
+      <div className="roles__eyebrow">{t('eyebrow')}</div>
+      <h1 className="roles__title"><Trans i18nKey="gate:title" components={{ em: <em /> }} /></h1>
 
       {signed ? (
         <>
           <p className="roles__lead">
-            Вы вошли как <b>{name}</b>. Автор собирает мир, партия за ним играет.
+            <Trans i18nKey="gate:signedIn" values={{ name }} components={{ b: <b /> }} />
           </p>
 
           <div className="roles__grid">
             <button type="button" className="role" onClick={() => navigate('/author/start')}>
               <span className="role__mark" />
-              <span className="role__tag">механика</span>
-              <span className="role__name">Автор системы</span>
-              <span className="role__hint">
-                Лист, таблицы, кости, эффекты — механика мира. Своя система, свои правила.
-              </span>
+              <span className="role__tag">{t('role.system.tag')}</span>
+              <span className="role__name">{t('role.system.name')}</span>
+              <span className="role__hint">{t('role.system.hint')}</span>
             </button>
 
             <button type="button" className="role" onClick={() => navigate('/book/start')}>
               <span className="role__mark" />
-              <span className="role__tag">содержимое</span>
-              <span className="role__name">Автор книги</span>
-              <span className="role__hint">
-                Вещи для готовой системы: оружие, заклинания, доспехи. Система может быть чужой.
-              </span>
+              <span className="role__tag">{t('role.book.tag')}</span>
+              <span className="role__name">{t('role.book.name')}</span>
+              <span className="role__hint">{t('role.book.hint')}</span>
             </button>
 
             <button type="button" className="role" onClick={() => navigate('/play/table')}>
               <span className="role__mark" />
-              <span className="role__tag">за столом</span>
-              <span className="role__name">Игра</span>
-              <span className="role__hint">Открыть опубликованный мир, вести персонажа, ходить за столом.</span>
+              <span className="role__tag">{t('role.play.tag')}</span>
+              <span className="role__name">{t('role.play.name')}</span>
+              <span className="role__hint">{t('role.play.hint')}</span>
             </button>
           </div>
 
-          <Button size="sm" variant="ghost" onClick={leave}>войти под другим именем</Button>
+          <Button size="sm" variant="ghost" onClick={leave}>{t('switchName')}</Button>
         </>
       ) : (
         <>
-          <p className="roles__lead">
-            Представьтесь — имя видят соседи по столу, и им подписаны опубликованные миры.
-          </p>
+          <p className="roles__lead">{t('introduce')}</p>
 
           {trouble ? <Verdict tone="bad">{trouble}</Verdict> : null}
 
@@ -78,11 +74,11 @@ export function GateScreen() {
             <Input
               value={draft}
               onChange={setDraft}
-              placeholder="ваше имя"
+              placeholder={t('namePlaceholder')}
               onKeyDown={e => { if (e.key === 'Enter') void submit(); }}
             />
             <Button variant="primary" onClick={() => void submit()} disabled={busy}>
-              {busy ? 'входим…' : 'Войти'}
+              {busy ? t('entering') : t('enter')}
             </Button>
           </div>
         </>

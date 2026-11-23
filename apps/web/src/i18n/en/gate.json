@@ -1,0 +1,27 @@
+{
+  "eyebrow": "System builder · table",
+  "title": "<em>VTT</em> — build tabletop rule systems with your own hands",
+  "signedIn": "You are signed in as <b>{{name}}</b>. The author builds the world, the party plays in it.",
+  "role": {
+    "system": {
+      "tag": "mechanics",
+      "name": "System author",
+      "hint": "Sheet, tables, dice, effects — the mechanics of a world. Your own system, your own rules."
+    },
+    "book": {
+      "tag": "content",
+      "name": "Book author",
+      "hint": "Items for a ready system: weapons, spells, armor. The system may be someone else's."
+    },
+    "play": {
+      "tag": "at the table",
+      "name": "Play",
+      "hint": "Open a published world, run a character, take turns at the table."
+    }
+  },
+  "switchName": "sign in under another name",
+  "introduce": "Introduce yourself — your table mates see the name, and published worlds are signed with it.",
+  "namePlaceholder": "your name",
+  "enter": "Sign in",
+  "entering": "signing in…"
+}

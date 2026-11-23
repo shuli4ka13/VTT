@@ -14,8 +14,10 @@
     "@tanstack/react-query": "^5.101.4",
     "@vtt/engine": "*",
     "@vtt/schema": "*",
+    "i18next": "^27.2.6",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "react-i18next": "^18.0.3",
     "react-router": "^8.3.0",
     "zod": "^4.4.3",
     "zustand": "^5.0.15"

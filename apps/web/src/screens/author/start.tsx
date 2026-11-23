@@ -7,16 +7,13 @@ import { stampOf } from '../../ui/stamp.ts';
 import { listSystems, getSystem, createSystem, deleteSystem } from '../../api/client.ts';
 import { rememberVersion, markClean } from '../../store/autosave.ts';
 import type { SystemSummary } from '@vtt/schema';
+import { t, useT } from '../../i18n/index.ts';
 
 type Mode = 'edit' | 'copy' | 'blank' | null;
 
 type Order = 'time' | 'title' | 'author';
 
-const ORDERS = [
-  { key: 'time', label: 'по времени' },
-  { key: 'title', label: 'по названию' },
-  { key: 'author', label: 'по автору' },
-] as const;
+const ORDER_KEYS = ['time', 'title', 'author'] as const;
 
 const byText = (x: string, y: string): number => x.localeCompare(y, 'ru');
 
@@ -28,10 +25,11 @@ export function sortSystems(items: readonly SystemSummary[], order: Order): Syst
 }
 
 export const stateOf = (status: 'draft' | 'published', behind?: boolean): string =>
-  status === 'published' ? (behind ? 'опубликована · есть правки' : 'опубликована') : 'черновик';
+  status === 'published' ? (behind ? t('author:state.publishedBehind') : t('author:state.published')) : t('author:state.draft');
 
 export function copyTitle(title: string, taken: readonly string[]): string {
-  const base = `${title.replace(/ — копия(?: \d+)?$/u, '')} — копия`;
+  const word = t('author:copySuffix');
+  const base = `${title.replace(new RegExp(` — ${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?: \\d+)?$`, 'u'), '')} — ${word}`;
   if (!taken.includes(base)) return base;
   let n = 2;
   while (taken.includes(`${base} ${n}`)) n += 1;
@@ -42,6 +40,8 @@ export function SystemStart() {
   const replaceWorld = useWorld(s => s.replaceWorld);
   const setOrigin = useWorld(s => s.setOrigin);
   const navigate = useNavigate();
+  const t = useT('author');
+  const orders = ORDER_KEYS.map(key => ({ key, label: t(`order.${key}`) }));
 
   const [mode, setMode] = useState<Mode>(null);
   const [systems, setSystems] = useState<SystemSummary[]>([]);
@@ -109,38 +109,38 @@ export function SystemStart() {
 
   return (
     <div className="start__scroll"><div className="start">
-      <h1 className="start__title">С чего начнём?</h1>
+      <h1 className="start__title">{t('title')}</h1>
       {trouble ? <Verdict tone="bad">{trouble}</Verdict> : null}
 
       <div className="roles__grid">
         <button type="button" className={`role${mode === 'edit' ? ' role--active' : ''}`}
           onClick={() => setMode('edit')}>
-          <span className="role__name">Продолжить работу</span>
-          <span className="role__hint">Открыть свою систему — черновик или уже опубликованную.</span>
+          <span className="role__name">{t('continue.name')}</span>
+          <span className="role__hint">{t('continue.hint')}</span>
         </button>
 
         <button type="button" className={`role${mode === 'copy' ? ' role--active' : ''}`}
           onClick={() => setMode('copy')}>
-          <span className="role__name">Сделать копию</span>
-          <span className="role__hint">Взять чужую или свою за основу — оригинал останется нетронутым.</span>
+          <span className="role__name">{t('copy.name')}</span>
+          <span className="role__hint">{t('copy.hint')}</span>
         </button>
 
         <button type="button" className={`role${mode === 'blank' ? ' role--active' : ''}`}
           onClick={() => setMode('blank')}>
-          <span className="role__name">Начать с нуля</span>
-          <span className="role__hint">Пустая система: берёте готовые куски или заводите всё сами.</span>
+          <span className="role__name">{t('blank.name')}</span>
+          <span className="role__hint">{t('blank.hint')}</span>
         </button>
       </div>
 
       {mode === 'blank' ? (
         <Card>
-          <CardHead title="Как назовём систему" sub="Имя можно поменять потом — оно нужно, чтобы система нашлась в списке." />
+          <CardHead title={t('naming.title')} sub={t('naming.sub')} />
           <div className="gate__form">
             <Input value={title} onChange={setTitle}
               onKeyDown={e => { if (e.key === 'Enter' && title.trim()) void start(title.trim()); }} />
             <Button variant="primary" disabled={!title.trim() || busy}
               onClick={() => void start(title.trim())}>
-              {busy ? 'создаём…' : 'Создать'}
+              {busy ? t('creating') : t('create')}
             </Button>
           </div>
         </Card>
@@ -149,19 +149,19 @@ export function SystemStart() {
       {mode === 'edit' || mode === 'copy' ? (
         <Card>
           <CardHead
-            title={mode === 'edit' ? 'Что открыть' : 'С чего снять копию'}
-            sub={mode === 'copy' ? 'Копия берёт всё целиком, и чужое тоже. Нужны только куски — «Начать с нуля» и «Готовое из образцов».' : undefined}
-            actions={<Segmented value={order} options={ORDERS} onChange={setOrder} />}
+            title={mode === 'edit' ? t('list.openTitle') : t('list.copyTitle')}
+            sub={mode === 'copy' ? t('list.copyHint') : undefined}
+            actions={<Segmented value={order} options={orders} onChange={setOrder} />}
           />
           {shown.length === 0
-            ? <Empty title="Систем пока нет" hint="Начните с нуля — она появится здесь сразу после создания." />
+            ? <Empty title={t('list.emptyTitle')} hint={t('list.emptyHint')} />
             : (
               <>
-                <SystemList items={sortSystems(main, order)} busy={busy} act={mode === 'copy' ? 'Снять копию' : 'Открыть'} onOpen={item => void open(item)}
+                <SystemList items={sortSystems(main, order)} busy={busy} act={mode === 'copy' ? t('act.copy') : t('act.open')} onOpen={item => void open(item)}
                   onRemove={mode === 'edit' ? remove : undefined} />
                 {drafts.length ? (
-                  <Fold title="Ваши черновики" count={drafts.length}>
-                    <SystemList items={sortSystems(drafts, order)} busy={busy} act="Снять копию" onOpen={item => void open(item)} />
+                  <Fold title={t('list.drafts')} count={drafts.length}>
+                    <SystemList items={sortSystems(drafts, order)} busy={busy} act={t('act.copy')} onOpen={item => void open(item)} />
                   </Fold>
                 ) : null}
               </>
@@ -179,13 +179,14 @@ function SystemList({ items, busy, act, onOpen, onRemove }: {
   onOpen: (item: SystemSummary) => void;
   onRemove?: ((item: SystemSummary) => void) | undefined;
 }) {
+  const t = useT('author');
   return (
     <RowsTable
       columns={[
-        { head: 'Система', width: 'minmax(0, 2fr)' },
-        { head: 'Состояние', width: 'minmax(0, 1.5fr)', minor: true },
-        { head: 'Автор', width: 'minmax(0, 1fr)', minor: true },
-        { head: 'Изменена', width: '132px', minor: true },
+        { head: t('head.system'), width: 'minmax(0, 2fr)' },
+        { head: t('head.state'), width: 'minmax(0, 1.5fr)', minor: true },
+        { head: t('head.author'), width: 'minmax(0, 1fr)', minor: true },
+        { head: t('head.changed'), width: '132px', minor: true },
         { head: '', width: 'auto' },
       ]}
       rows={items.map(item => ({
@@ -198,7 +199,7 @@ function SystemList({ items, busy, act, onOpen, onRemove }: {
           stampOf(item.updatedAt),
           <>
             <Button size="sm" disabled={busy} onClick={() => onOpen(item)}>{act}</Button>
-            {onRemove && item.mine ? <DangerButton size="sm" onConfirm={() => onRemove(item)}>Удалить</DangerButton> : null}
+            {onRemove && item.mine ? <DangerButton size="sm" onConfirm={() => onRemove(item)}>{t('act.remove')}</DangerButton> : null}
           </>,
         ],
       }))}

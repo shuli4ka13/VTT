@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
-import { langsOf, langWord, localized, localizedBook } from '@vtt/engine';
+import { langsOf, localized, localizedBook } from '@vtt/engine';
 import type { System } from '@vtt/schema';
 import type { RoomState } from '@vtt/schema';
 import { useRoom } from '../../store/room.ts';
 import { useLocale, viewerLang } from '../../store/locale.ts';
 import { Select } from '../../ui/primitives.tsx';
+import { langName, useT } from '../../i18n/index.ts';
 
 export function shownRoom(room: RoomState | null, lang: string): RoomState | null {
   if (!room) return null;
@@ -23,14 +24,15 @@ export function LangSwitch() {
   const room = useRoom(s => s.room);
   const lang = useLocale(viewerLang);
   const setShown = useLocale(s => s.setShown);
+  const t = useT('play');
   if (!room) return null;
   const langs = langsOf(room.system as System);
   if (langs.length < 2) return null;
   const current = langs.includes(lang) ? lang : langs[0]!;
   return (
     <Select
-      value={current} label="язык показа"
-      options={langs.map(code => [code, langWord(code)] as const)}
+      value={current} label={t('shownLang')}
+      options={langs.map(code => [code, langName(code)] as const)}
       onChange={code => setShown(code)}
     />
   );
