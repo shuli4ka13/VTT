@@ -169,7 +169,8 @@
         ],
         "rows": [
           {
-            "value": "ближний бой — Сила",
+            "value": "blizhniy_boy___Sila",
+            "label": "ближний бой — Сила",
             "cells": {
               "attack": {
                 "expr": "@abilities.strength.mod"
@@ -180,7 +181,8 @@
             }
           },
           {
-            "value": "дальний бой — Ловкость",
+            "value": "dalniy_boy___Lovkost",
+            "label": "дальний бой — Ловкость",
             "cells": {
               "attack": {
                 "expr": "@abilities.dexterity.mod"
@@ -1026,7 +1028,8 @@
         ]
       },
       {
-        "key": "В бою",
+        "key": "V_boyu",
+        "label": "В бою",
         "parts": [
           {
             "table": "list",
@@ -1073,7 +1076,7 @@
         "table": "weapon",
         "cells": {
           "weapon_die": "1d8",
-          "wield": "ближний бой — Сила"
+          "wield": "blizhniy_boy___Sila"
         }
       },
       {
@@ -1083,7 +1086,7 @@
         "table": "weapon",
         "cells": {
           "weapon_die": "1d4",
-          "wield": "ближний бой — Сила"
+          "wield": "blizhniy_boy___Sila"
         }
       },
       {
@@ -1093,7 +1096,7 @@
         "table": "weapon",
         "cells": {
           "weapon_die": "1d8",
-          "wield": "дальний бой — Ловкость"
+          "wield": "dalniy_boy___Lovkost"
         }
       },
       {

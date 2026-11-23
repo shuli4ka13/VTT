@@ -5,7 +5,7 @@ import { recordKinds } from '../model/owned.ts';
 import { loopOf } from '../engine/steps/each.ts';
 import { effectLabelOf } from './actions.ts';
 import { breakReasonWord, registry as stepRegistry, splitsTargets } from '../engine/steps/index.ts';
-import { outcomeWords, rollTitle as titleOf } from '../engine/roll-tags.ts';
+import { outcomeWords, partSaid, rollTitle as titleOf, tagSaid } from '../engine/roll-tags.ts';
 import type { System, Sheet } from '../model/types.ts';
 import { hasField, valueWord, fieldOf } from '../model/sheet-columns.ts';
 import { isSecret } from '../model/roles.ts';
@@ -180,7 +180,7 @@ export function describeParts(
       const gone = CALL_WORDS.roll.canceled(trace.canceled ?? []);
       const bonus = step?.bonus ? ` + ${refLabel(step.bonus, trace.within) ?? 'Бонус'}: ${trace.bonus}` : trace.bonus ? ` + ${trace.bonus}` : '';
       const parts = trace.parts && Object.keys(trace.parts).length
-        ? ' · ' + Object.entries(trace.parts).map(([k, v]) => `${k}: ${v}`).join(', ') : '';
+        ? ' · ' + Object.entries(trace.parts).map(([k, v]) => `${partSaid(system, k)}: ${v}`).join(', ') : '';
       const verdict = verdictText({ threshold: trace.threshold, under: trace.under === true, success: trace.success, margin: trace.said, degree: trace.degree });
       return `${title}: ${rolls}${edits}${addendsText(addsOf(trace))}${bonus} = ${trace.total}${parts}${verdict}${gone}`;
     }
@@ -210,7 +210,7 @@ export function describeParts(
     const line = stepRegistry.get(String(trace.type))?.traceLine;
     if (!line) return [];
     const helpers = {
-      labelOf, eventLabel,
+      labelOf, eventLabel, tagSaid: (tag: string) => tagSaid(system, tag),
       tableLabel: (id: string) => system.tables?.[id]?.label ?? id,
       effectLabel: (id: string) => effectLabelOf(system, id),
     };

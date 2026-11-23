@@ -1,0 +1,60 @@
+import type { System } from './types.ts';
+
+const LATIN = /^[A-Za-z][A-Za-z0-9_]*$/;
+
+const STEP_LISTS = ['steps', 'cost'] as const;
+
+function stepKeys(steps: unknown, out: Set<string>): void {
+  if (!Array.isArray(steps)) return;
+  for (const step of steps as Record<string, unknown>[]) {
+    if (typeof step?.id === 'string') out.add(step.id);
+    if (typeof step?.as === 'string') out.add(step.as);
+    for (const tag of Array.isArray(step?.tags) ? step.tags : []) if (typeof tag === 'string') out.add(tag);
+  }
+}
+
+export function keysOf(system: System): string[] {
+  const out = new Set<string>();
+  const any = system as unknown as Record<string, any>;
+  for (const [key, table] of Object.entries(any.tables ?? {}) as [string, any][]) {
+    out.add(key);
+    for (const column of table.columns ?? []) {
+      out.add(column.key);
+      for (const stage of column.stages ?? []) out.add(stage.key);
+    }
+    for (const row of table.rows ?? []) {
+      if (typeof row.value === 'string' && row.value) out.add(row.value.replace(/ /g, '_'));
+      for (const cell of Object.keys(row.cells ?? {})) out.add(cell);
+    }
+  }
+  for (const [key, effect] of Object.entries(any.effects ?? {}) as [string, any][]) {
+    out.add(key);
+    if (effect.group) out.add(effect.group.replace(/ /g, '_'));
+    for (const param of effect.params ?? []) {
+      out.add(param.key);
+      for (const stage of param.stages ?? []) out.add(stage.key);
+    }
+    for (const column of effect.returns ?? []) out.add(column.key);
+    for (const tag of effect.tags ?? []) out.add(tag.replace(/ /g, '_'));
+    for (const list of STEP_LISTS) stepKeys(effect[list], out);
+    for (const handler of effect.on ?? []) for (const list of STEP_LISTS) stepKeys(handler[list], out);
+  }
+  for (const name of ['tags', 'rolls', 'roll_edits', 'sheets', 'groups', 'constants'] as const) {
+    for (const key of Object.keys(any[name] ?? {})) out.add(key.replace(/ /g, '_'));
+  }
+  for (const constant of Object.values(any.constants ?? {}) as any[]) {
+    for (const part of constant?.dice ?? []) if (typeof part?.name === 'string') out.add(part.name);
+  }
+  for (const block of any.blocks ?? []) out.add(String(block.key).replace(/ /g, '_'));
+  for (const page of any.pages ?? []) out.add(String(page.key).replace(/ /g, '_'));
+  return [...out];
+}
+
+export const foreignKeys = (system: System): string[] => keysOf(system).filter(key => !LATIN.test(key));
+
+export function foreignKeysText(system: System): string | null {
+  const found = foreignKeys(system);
+  if (!found.length) return null;
+  const shown = found.slice(0, 3).map(key => `«${key}»`).join(', ');
+  return `ключей не латиницей: ${found.length} (${shown}${found.length > 3 ? ' …' : ''}) — такая система не откроется авторам с другим языком`;
+}

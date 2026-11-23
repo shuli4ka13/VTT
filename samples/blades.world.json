@@ -10,6 +10,9 @@
       },
       "Priemy": {
         "label": "Приёмы"
+      },
+      "Obschie_pravila": {
+        "label": "Общие правила"
       }
     },
     "constants": {
@@ -583,7 +586,7 @@
       },
       "zero_rating_rule": {
         "label": "Бросок без рейтинга",
-        "group": "Общие правила",
+        "group": "Obschie_pravila",
         "activation": "passive",
         "duration": {
           "kind": "permanent"

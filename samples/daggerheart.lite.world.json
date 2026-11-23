@@ -500,7 +500,8 @@
         ],
         "rows": [
           {
-            "value": "Бард (Bard)",
+            "value": "Bard__Bard",
+            "label": "Бард (Bard)",
             "cells": {
               "evasion": 10,
               "hp": 5,
@@ -510,7 +511,8 @@
             }
           },
           {
-            "value": "Друид (Druid)",
+            "value": "Druid__Druid",
+            "label": "Друид (Druid)",
             "cells": {
               "evasion": 10,
               "hp": 6,
@@ -520,7 +522,8 @@
             }
           },
           {
-            "value": "Страж (Guardian)",
+            "value": "Strazh__Guardian",
+            "label": "Страж (Guardian)",
             "cells": {
               "evasion": 9,
               "hp": 7,
@@ -530,7 +533,8 @@
             }
           },
           {
-            "value": "Следопыт (Ranger)",
+            "value": "Sledopyt__Ranger",
+            "label": "Следопыт (Ranger)",
             "cells": {
               "evasion": 12,
               "hp": 6,
@@ -540,7 +544,8 @@
             }
           },
           {
-            "value": "Плут (Rogue)",
+            "value": "Plut__Rogue",
+            "label": "Плут (Rogue)",
             "cells": {
               "evasion": 12,
               "hp": 6,
@@ -550,7 +555,8 @@
             }
           },
           {
-            "value": "Серафим (Seraph)",
+            "value": "Serafim__Seraph",
+            "label": "Серафим (Seraph)",
             "cells": {
               "evasion": 9,
               "hp": 7,
@@ -560,7 +566,8 @@
             }
           },
           {
-            "value": "Чародей (Sorcerer)",
+            "value": "Charodey__Sorcerer",
+            "label": "Чародей (Sorcerer)",
             "cells": {
               "evasion": 10,
               "hp": 6,
@@ -570,7 +577,8 @@
             }
           },
           {
-            "value": "Воин (Warrior)",
+            "value": "Voin__Warrior",
+            "label": "Воин (Warrior)",
             "cells": {
               "evasion": 11,
               "hp": 6,
@@ -580,7 +588,8 @@
             }
           },
           {
-            "value": "Волшебник (Wizard)",
+            "value": "Volshebnik__Wizard",
+            "label": "Волшебник (Wizard)",
             "cells": {
               "evasion": 11,
               "hp": 5,
@@ -628,7 +637,8 @@
         ],
         "rows": [
           {
-            "value": "Кланк (Clank)",
+            "value": "Klank__Clank",
+            "label": "Кланк (Clank)",
             "cells": {
               "first": "Purposeful Design: +1 навсегда к одному опыту",
               "second": "Efficient: на коротком отдыхе можно выбрать дело долгого",
@@ -639,7 +649,8 @@
             }
           },
           {
-            "value": "Дракона (Drakona)",
+            "value": "Drakona__Drakona",
+            "label": "Дракона (Drakona)",
             "cells": {
               "first": "Scales: при тяжёлом уроне отметить Стресс и отметить на одну клетку хитов меньше",
               "second": "Elemental Breath: атака Чутьём, очень близко, к8 маг. по мастерству",
@@ -650,7 +661,8 @@
             }
           },
           {
-            "value": "Дворф (Dwarf)",
+            "value": "Dvorf__Dwarf",
+            "label": "Дворф (Dwarf)",
             "cells": {
               "first": "Thick Skin: при лёгком уроне отметить 2 Стресса вместо клетки хитов",
               "second": "Increased Fortitude: за 3 Надежды вдвое уменьшить физический урон",
@@ -661,7 +673,8 @@
             }
           },
           {
-            "value": "Эльф (Elf)",
+            "value": "Elf__Elf",
+            "label": "Эльф (Elf)",
             "cells": {
               "first": "Quick Reactions: отметить Стресс — преимущество на реакцию",
               "second": "Celestial Trance: ещё одно дело на отдыхе",
@@ -672,7 +685,8 @@
             }
           },
           {
-            "value": "Фея (Faerie)",
+            "value": "Feya__Faerie",
+            "label": "Фея (Faerie)",
             "cells": {
               "first": "Luckbender: раз за сессию за 3 Надежды перебросить кости двойственности",
               "second": "Wings: полёт; отметить Стресс — +2 уклонения против атаки",
@@ -683,7 +697,8 @@
             }
           },
           {
-            "value": "Фавн (Faun)",
+            "value": "Favn__Faun",
+            "label": "Фавн (Faun)",
             "cells": {
               "first": "Caprine Leap: прыжок в пределах ближней дистанции",
               "second": "Kick: отметить Стресс — +2к6 урона и отбросить",
@@ -694,7 +709,8 @@
             }
           },
           {
-            "value": "Фирболг (Firbolg)",
+            "value": "Firbolg__Firbolg",
+            "label": "Фирболг (Firbolg)",
             "cells": {
               "first": "Charge: рывок и 1к12 физ. всем вплотную за Стресс",
               "second": "Unshakable: при отметке Стресса к6, на 6 не отмечать",
@@ -705,7 +721,8 @@
             }
           },
           {
-            "value": "Фунгрил (Fungril)",
+            "value": "Fungril__Fungril",
+            "label": "Фунгрил (Fungril)",
             "cells": {
               "first": "Fungril Network: связь на любом расстоянии",
               "second": "Death Connection: память из недавнего тела за Стресс",
@@ -716,7 +733,8 @@
             }
           },
           {
-            "value": "Галапа (Galapa)",
+            "value": "Galapa__Galapa",
+            "label": "Галапа (Galapa)",
             "cells": {
               "first": "Shell: + мастерство к порогам урона",
               "second": "Retract: отметить Стресс — сопротивление физическому урону",
@@ -727,7 +745,8 @@
             }
           },
           {
-            "value": "Великан (Giant)",
+            "value": "Velikan__Giant",
+            "label": "Великан (Giant)",
             "cells": {
               "first": "Endurance: +1 клетка хитов при создании",
               "second": "Reach: ближний бой считается «очень близко»",
@@ -738,7 +757,8 @@
             }
           },
           {
-            "value": "Гоблин (Goblin)",
+            "value": "Goblin__Goblin",
+            "label": "Гоблин (Goblin)",
             "cells": {
               "first": "Surefooted: помеха на броски Проворства не действует",
               "second": "Danger Sense: раз за отдых заставить противника перебросить атаку",
@@ -749,7 +769,8 @@
             }
           },
           {
-            "value": "Полурослик (Halfling)",
+            "value": "Poluroslik__Halfling",
+            "label": "Полурослик (Halfling)",
             "cells": {
               "first": "Luckbringer: в начале сессии вся партия получает Надежду",
               "second": "Internal Compass: перебросить 1 на кости Надежды",
@@ -760,7 +781,8 @@
             }
           },
           {
-            "value": "Человек (Human)",
+            "value": "Chelovek__Human",
+            "label": "Человек (Human)",
             "cells": {
               "first": "High Stamina: +1 клетка Стресса при создании",
               "second": "Adaptability: провал с опытом — отметить Стресс и перебросить",
@@ -771,7 +793,8 @@
             }
           },
           {
-            "value": "Инфернис (Infernis)",
+            "value": "Infernis__Infernis",
+            "label": "Инфернис (Infernis)",
             "cells": {
               "first": "Fearless: бросок со Страхом — отметить 2 Стресса, чтобы он стал с Надеждой",
               "second": "Dread Visage: преимущество, чтобы запугать",
@@ -782,7 +805,8 @@
             }
           },
           {
-            "value": "Катари (Katari)",
+            "value": "Katari__Katari",
+            "label": "Катари (Katari)",
             "cells": {
               "first": "Feline Instincts: на Проворство за 2 Надежды перебросить кость Надежды",
               "second": "Retracting Claws: цель вплотную становится уязвимой",
@@ -793,7 +817,8 @@
             }
           },
           {
-            "value": "Орк (Orc)",
+            "value": "Ork__Orc",
+            "label": "Орк (Orc)",
             "cells": {
               "first": "Sturdy: на последней клетке хитов атаки по вам с помехой",
               "second": "Tusks: попадание вплотную — за Надежду +1к6 урона",
@@ -804,7 +829,8 @@
             }
           },
           {
-            "value": "Риббет (Ribbet)",
+            "value": "Ribbet__Ribbet",
+            "label": "Риббет (Ribbet)",
             "cells": {
               "first": "Amphibious: дышит и двигается под водой",
               "second": "Long Tongue: отметить Стресс — атака языком, к12 физ.",
@@ -815,7 +841,8 @@
             }
           },
           {
-            "value": "Симиа (Simiah)",
+            "value": "Simia__Simiah",
+            "label": "Симиа (Simiah)",
             "cells": {
               "first": "Natural Climber: преимущество, чтобы лазать и держать равновесие",
               "second": "Nimble: +1 к уклонению при создании",
@@ -839,55 +866,64 @@
         ],
         "rows": [
           {
-            "value": "Знать (Highborne)",
+            "value": "Znat__Highborne",
+            "label": "Знать (Highborne)",
             "cells": {
               "feature": "Privilege: преимущество среди знати, в торге и когда пускаете в ход репутацию"
             }
           },
           {
-            "value": "Книжники (Loreborne)",
+            "value": "Knizhniki__Loreborne",
+            "label": "Книжники (Loreborne)",
             "cells": {
               "feature": "Well-Read: преимущество на историю, культуру и политику"
             }
           },
           {
-            "value": "Орден (Orderborne)",
+            "value": "Orden__Orderborne",
+            "label": "Орден (Orderborne)",
             "cells": {
               "feature": "Dedicated: три заповеди; раз за отдых, следуя им, кость Надежды — к20"
             }
           },
           {
-            "value": "Горцы (Ridgeborne)",
+            "value": "Gorcy__Ridgeborne",
+            "label": "Горцы (Ridgeborne)",
             "cells": {
               "feature": "Steady: преимущество на скалах и в суровой местности"
             }
           },
           {
-            "value": "Мореходы (Seaborne)",
+            "value": "Morehody__Seaborne",
+            "label": "Мореходы (Seaborne)",
             "cells": {
               "feature": "Know the Tide: бросок со Страхом даёт жетон, жетон — +1 к броску действия"
             }
           },
           {
-            "value": "Проныры (Slyborne)",
+            "value": "Pronyry__Slyborne",
+            "label": "Проныры (Slyborne)",
             "cells": {
               "feature": "Scoundrel: преимущество с преступниками, на ложь и укрытие"
             }
           },
           {
-            "value": "Подземные (Underborne)",
+            "value": "Podzemnye__Underborne",
+            "label": "Подземные (Underborne)",
             "cells": {
               "feature": "Low-Light Living: преимущество в полутьме — прятаться, искать, замечать"
             }
           },
           {
-            "value": "Странники (Wanderborne)",
+            "value": "Stranniki__Wanderborne",
+            "label": "Странники (Wanderborne)",
             "cells": {
               "feature": "Nomadic Pack: раз за сессию за Надежду достать полезную вещь"
             }
           },
           {
-            "value": "Лесные (Wildborne)",
+            "value": "Lesnye__Wildborne",
+            "label": "Лесные (Wildborne)",
             "cells": {
               "feature": "Lightfoot: двигается бесшумно"
             }
@@ -981,7 +1017,8 @@
         ],
         "rows": [
           {
-            "value": "Кислотный землерой (Acid Burrower)",
+            "value": "Kislotnyy_zemleroy__Acid_Burrower",
+            "label": "Кислотный землерой (Acid Burrower)",
             "cells": {
               "type": "Solo",
               "difficulty": 14,
@@ -994,7 +1031,8 @@
             }
           },
           {
-            "value": "Медведь (Bear)",
+            "value": "Medved__Bear",
+            "label": "Медведь (Bear)",
             "cells": {
               "type": "Bruiser",
               "difficulty": 14,
@@ -1007,7 +1045,8 @@
             }
           },
           {
-            "value": "Пещерный огр (Cave Ogre)",
+            "value": "Peschernyy_ogr__Cave_Ogre",
+            "label": "Пещерный огр (Cave Ogre)",
             "cells": {
               "type": "Solo",
               "difficulty": 13,
@@ -1020,7 +1059,8 @@
             }
           },
           {
-            "value": "Конструкт (Construct)",
+            "value": "Konstrukt__Construct",
+            "label": "Конструкт (Construct)",
             "cells": {
               "type": "Solo",
               "difficulty": 13,
@@ -1033,7 +1073,8 @@
             }
           },
           {
-            "value": "Придворный (Courtier)",
+            "value": "Pridvornyy__Courtier",
+            "label": "Придворный (Courtier)",
             "cells": {
               "type": "Social",
               "difficulty": 12,
@@ -1046,7 +1087,8 @@
             }
           },
           {
-            "value": "Гигантские комары (Giant Mosquitoes)",
+            "value": "Gigantskie_komary__Giant_Mosquitoes",
+            "label": "Гигантские комары (Giant Mosquitoes)",
             "cells": {
               "type": "Horde",
               "difficulty": 10,
@@ -1059,7 +1101,8 @@
             }
           },
           {
-            "value": "Защитник Глубоких корней (Deeproot Defender)",
+            "value": "Zaschitnik_Glubokih_korney__Deeproot_Defender",
+            "label": "Защитник Глубоких корней (Deeproot Defender)",
             "cells": {
               "type": "Bruiser",
               "difficulty": 10,
@@ -1072,7 +1115,8 @@
             }
           },
           {
-            "value": "Гигантская крыса (Giant Rat)",
+            "value": "Gigantskaya_krysa__Giant_Rat",
+            "label": "Гигантская крыса (Giant Rat)",
             "cells": {
               "type": "Minion",
               "difficulty": 10,
@@ -1085,7 +1129,8 @@
             }
           },
           {
-            "value": "Лютый волк (Dire Wolf)",
+            "value": "Lyutyy_volk__Dire_Wolf",
+            "label": "Лютый волк (Dire Wolf)",
             "cells": {
               "type": "Skulk",
               "difficulty": 12,
@@ -1098,7 +1143,8 @@
             }
           },
           {
-            "value": "Гигантский скорпион (Giant Scorpion)",
+            "value": "Gigantskiy_skorpion__Giant_Scorpion",
+            "label": "Гигантский скорпион (Giant Scorpion)",
             "cells": {
               "type": "Bruiser",
               "difficulty": 13,
@@ -1111,7 +1157,8 @@
             }
           },
           {
-            "value": "Стеклянный змей (Glass Snake)",
+            "value": "Steklyannyy_zmey__Glass_Snake",
+            "label": "Стеклянный змей (Glass Snake)",
             "cells": {
               "type": "Standard",
               "difficulty": 14,
@@ -1124,7 +1171,8 @@
             }
           },
           {
-            "value": "Застрельщик (Harrier)",
+            "value": "Zastrelschik__Harrier",
+            "label": "Застрельщик (Harrier)",
             "cells": {
               "type": "Standard",
               "difficulty": 12,
@@ -1137,7 +1185,8 @@
             }
           },
           {
-            "value": "Стражник с клинком (Bladed Guard)",
+            "value": "Strazhnik_s_klinkom__Bladed_Guard",
+            "label": "Стражник с клинком (Bladed Guard)",
             "cells": {
               "type": "Standard",
               "difficulty": 12,
@@ -1150,7 +1199,8 @@
             }
           },
           {
-            "value": "Начальник стражи (Head Guard)",
+            "value": "Nachalnik_strazhi__Head_Guard",
+            "label": "Начальник стражи (Head Guard)",
             "cells": {
               "type": "Leader",
               "difficulty": 15,
@@ -1163,7 +1213,8 @@
             }
           },
           {
-            "value": "Стражник-лучник (Archer Guard)",
+            "value": "Strazhnik_luchnik__Archer_Guard",
+            "label": "Стражник-лучник (Archer Guard)",
             "cells": {
               "type": "Ranged",
               "difficulty": 10,
@@ -1176,7 +1227,8 @@
             }
           },
           {
-            "value": "Разбойник Зазубренного ножа (Jagged Knife Bandit)",
+            "value": "Razboynik_Zazubrennogo_nozha__Jagged_Knife_Bandit",
+            "label": "Разбойник Зазубренного ножа (Jagged Knife Bandit)",
             "cells": {
               "type": "Standard",
               "difficulty": 12,
@@ -1189,7 +1241,8 @@
             }
           },
           {
-            "value": "Ворожей Зазубренного ножа (Jagged Knife Hexer)",
+            "value": "Vorozhey_Zazubrennogo_nozha__Jagged_Knife_Hexer",
+            "label": "Ворожей Зазубренного ножа (Jagged Knife Hexer)",
             "cells": {
               "type": "Support",
               "difficulty": 13,
@@ -1202,7 +1255,8 @@
             }
           },
           {
-            "value": "Лейтенант Зазубренного ножа (Jagged Knife Lieutenant)",
+            "value": "Leytenant_Zazubrennogo_nozha__Jagged_Knife_Lieutenant",
+            "label": "Лейтенант Зазубренного ножа (Jagged Knife Lieutenant)",
             "cells": {
               "type": "Leader",
               "difficulty": 13,
@@ -1215,7 +1269,8 @@
             }
           },
           {
-            "value": "Костолом Зазубренного ножа (Jagged Knife Kneebreaker)",
+            "value": "Kostolom_Zazubrennogo_nozha__Jagged_Knife_Kneebreaker",
+            "label": "Костолом Зазубренного ножа (Jagged Knife Kneebreaker)",
             "cells": {
               "type": "Bruiser",
               "difficulty": 12,
@@ -1228,7 +1283,8 @@
             }
           },
           {
-            "value": "Тень Зазубренного ножа (Jagged Knife Shadow)",
+            "value": "Ten_Zazubrennogo_nozha__Jagged_Knife_Shadow",
+            "label": "Тень Зазубренного ножа (Jagged Knife Shadow)",
             "cells": {
               "type": "Skulk",
               "difficulty": 12,
@@ -1241,7 +1297,8 @@
             }
           },
           {
-            "value": "Шестёрка Зазубренного ножа (Jagged Knife Lackey)",
+            "value": "Shesterka_Zazubrennogo_nozha__Jagged_Knife_Lackey",
+            "label": "Шестёрка Зазубренного ножа (Jagged Knife Lackey)",
             "cells": {
               "type": "Minion",
               "difficulty": 9,
@@ -1254,7 +1311,8 @@
             }
           },
           {
-            "value": "Снайпер Зазубренного ножа (Jagged Knife Sniper)",
+            "value": "Snayper_Zazubrennogo_nozha__Jagged_Knife_Sniper",
+            "label": "Снайпер Зазубренного ножа (Jagged Knife Sniper)",
             "cells": {
               "type": "Ranged",
               "difficulty": 13,
@@ -1267,7 +1325,8 @@
             }
           },
           {
-            "value": "Торговец (Merchant)",
+            "value": "Torgovec__Merchant",
+            "label": "Торговец (Merchant)",
             "cells": {
               "type": "Social",
               "difficulty": 12,
@@ -2133,7 +2192,7 @@
           }
         ],
         "blocks": [
-          "Пороги урона",
+          "Porogi_urona",
           "Zdorove",
           "Protivnik"
         ]
@@ -2141,7 +2200,8 @@
     },
     "blocks": [
       {
-        "key": "Личное дело",
+        "key": "Lichnoe_delo",
+        "label": "Личное дело",
         "parts": [
           {
             "table": "who",
@@ -2187,7 +2247,8 @@
         ]
       },
       {
-        "key": "Уклонение и броня",
+        "key": "Uklonenie_i_bronya",
+        "label": "Уклонение и броня",
         "parts": [
           {
             "table": "who",
@@ -2209,7 +2270,8 @@
         ]
       },
       {
-        "key": "Пороги урона",
+        "key": "Porogi_urona",
+        "label": "Пороги урона",
         "parts": [
           {
             "table": "who",
@@ -2606,9 +2668,9 @@
       "of": "hero",
       "name": "Бран",
       "values": {
-        "class": "Воин (Warrior)",
-        "ancestry": "Человек (Human)",
-        "community": "Горцы (Ridgeborne)",
+        "class": "Voin__Warrior",
+        "ancestry": "Chelovek__Human",
+        "community": "Gorcy__Ridgeborne",
         "exp1": "Наёмник",
         "exp2": "Выносливый",
         "agility": 2,
@@ -2640,9 +2702,9 @@
       "of": "hero",
       "name": "Ильзе",
       "values": {
-        "class": "Плут (Rogue)",
-        "ancestry": "Симиа (Simiah)",
-        "community": "Проныры (Slyborne)",
+        "class": "Plut__Rogue",
+        "ancestry": "Simia__Simiah",
+        "community": "Pronyry__Slyborne",
         "exp1": "Вор",
         "exp2": "Акробатка",
         "agility": 1,
@@ -2674,9 +2736,9 @@
       "of": "hero",
       "name": "Тома",
       "values": {
-        "class": "Серафим (Seraph)",
-        "ancestry": "Галапа (Galapa)",
-        "community": "Орден (Orderborne)",
+        "class": "Serafim__Seraph",
+        "ancestry": "Galapa__Galapa",
+        "community": "Orden__Orderborne",
         "exp1": "Храмовница",
         "exp2": "Лекарка",
         "agility": 0,

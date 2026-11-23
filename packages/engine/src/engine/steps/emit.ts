@@ -32,7 +32,8 @@ const NOTHING = 'не задано — шаг пропущен';
 
 export function traceLine(t: any, h: any) {
   const name = typeof h?.eventLabel === 'function' ? h.eventLabel(t.event) : t.event;
-  const tags = t.tags?.length ? ` [${t.tags.join(', ')}]` : '';
+  const said = (tag: string): string => (typeof h?.tagSaid === 'function' ? h.tagSaid(tag) : tag);
+  const tags = t.tags?.length ? ` [${t.tags.map(said).join(', ')}]` : '';
   const mods = t.incoming !== t.amount
     ? ` (отправлено ${t.incoming}, после правок ${t.amount})`
     : '';

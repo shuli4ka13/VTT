@@ -33,8 +33,26 @@ export function outcomeWords(system: System, tags: readonly string[]): { success
   return { success: found.success ?? OUTCOME_COLUMNS.success, fail: found.fail ?? OUTCOME_COLUMNS.fail };
 }
 
+export function tagSaid(system: System | undefined, tag: string): string {
+  const own = system?.rolls?.[tag]?.label || system?.tags?.[tag]?.label;
+  if (own) return own;
+  for (const table of Object.values(system?.tables ?? {})) {
+    const row = (table.rows ?? []).find(one => one.value === tag);
+    if (row?.label) return row.label;
+  }
+  return tag;
+}
+
+export function partSaid(system: System | undefined, name: string): string {
+  for (const constant of Object.values(system?.constants ?? {}) as { dice?: { name?: string; label?: string }[] }[]) {
+    const part = (constant?.dice ?? []).find(one => one.name === name);
+    if (part?.label) return part.label;
+  }
+  return name;
+}
+
 export const rollTitle = (title: string, tags: readonly string[] | undefined, system?: System): string => {
-  const names = [...new Set((tags ?? []).map(tag => system?.rolls?.[tag]?.label || tag))].filter(name => name.toLowerCase() !== title.toLowerCase());
+  const names = [...new Set((tags ?? []).map(tag => tagSaid(system, tag)))].filter(name => name.toLowerCase() !== title.toLowerCase());
   return names.length ? `${title} (${names.join(', ')})` : title;
 };
 

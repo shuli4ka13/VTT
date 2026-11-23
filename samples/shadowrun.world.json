@@ -66,6 +66,9 @@
       },
       "Snaryazhenie": {
         "label": "Снаряжение"
+      },
+      "Sposobnosti_adepta": {
+        "label": "Способности адепта"
       }
     },
     "constants": {
@@ -2010,7 +2013,8 @@
             }
           },
           {
-            "value": "против цели, которой мешает слух"
+            "value": "protiv_celi__kotoroy_meshaet_sluh",
+            "label": "против цели, которой мешает слух"
           },
           {
             "value": "uzkoe_mesto",
@@ -3647,14 +3651,16 @@
         ],
         "rows": [
           {
-            "value": "Карманный/Лёгкий/Автоматический пистолет",
+            "value": "Karmannyy_Legkiy_Avtomaticheskiy_pistolet",
+            "label": "Карманный/Лёгкий/Автоматический пистолет",
             "cells": {
               "price": 5,
               "avail": 1
             }
           },
           {
-            "value": "Тяжёлый пистолет/Пистолет-пулемёт",
+            "value": "Tyazhelyy_pistolet_Pistolet_pulemet",
+            "label": "Тяжёлый пистолет/Пистолет-пулемёт",
             "cells": {
               "price": 10,
               "avail": 1
@@ -3755,14 +3761,14 @@
             "value": "karmannyy_pistolet",
             "label": "карманный пистолет",
             "cells": {
-              "ammo": "Карманный/Лёгкий/Автоматический пистолет"
+              "ammo": "Karmannyy_Legkiy_Avtomaticheskiy_pistolet"
             }
           },
           {
             "value": "legkiy_pistolet",
             "label": "лёгкий пистолет",
             "cells": {
-              "ammo": "Карманный/Лёгкий/Автоматический пистолет",
+              "ammo": "Karmannyy_Legkiy_Avtomaticheskiy_pistolet",
               "mounts": [
                 "sverhu",
                 "stvol"
@@ -3773,7 +3779,7 @@
             "value": "avtomaticheskiy_pistolet",
             "label": "автоматический пистолет",
             "cells": {
-              "ammo": "Карманный/Лёгкий/Автоматический пистолет",
+              "ammo": "Karmannyy_Legkiy_Avtomaticheskiy_pistolet",
               "mounts": [
                 "sverhu",
                 "stvol"
@@ -3784,7 +3790,7 @@
             "value": "tyazhelyy_pistolet",
             "label": "тяжёлый пистолет",
             "cells": {
-              "ammo": "Тяжёлый пистолет/Пистолет-пулемёт",
+              "ammo": "Tyazhelyy_pistolet_Pistolet_pulemet",
               "mounts": [
                 "sverhu",
                 "stvol"
@@ -3792,9 +3798,10 @@
             }
           },
           {
-            "value": "пистолет-пулемёт",
+            "value": "pistolet_pulemet",
+            "label": "пистолет-пулемёт",
             "cells": {
-              "ammo": "Тяжёлый пистолет/Пистолет-пулемёт",
+              "ammo": "Tyazhelyy_pistolet_Pistolet_pulemet",
               "mounts": [
                 "sverhu",
                 "stvol"
@@ -4574,7 +4581,8 @@
             }
           },
           {
-            "value": "б/у",
+            "value": "b_u",
+            "label": "б/у",
             "cells": {
               "ess": 1.1,
               "cost": 0.5,
@@ -4950,7 +4958,7 @@
         "hint": "Стоит очки способностей (ОС), уровни — у экземпляра.",
         "shape": "book",
         "use": "item",
-        "block": "Способности адепта",
+        "block": "Sposobnosti_adepta",
         "columns": [
           {
             "key": "pp",
@@ -5384,7 +5392,8 @@
         ],
         "rows": [
           {
-            "value": "Логика + ВМ",
+            "value": "Logika___VM",
+            "label": "Логика + ВМ",
             "cells": {
               "persona": {
                 "expr": "@cel.logic + @cel.m_dp"
@@ -5395,7 +5404,8 @@
             }
           },
           {
-            "value": "Воля + СЭ",
+            "value": "Volya___SE",
+            "label": "Воля + СЭ",
             "cells": {
               "persona": {
                 "expr": "@cel.willpower + @cel.m_firewall"
@@ -5406,7 +5416,8 @@
             }
           },
           {
-            "value": "Воля + У",
+            "value": "Volya___U",
+            "label": "Воля + У",
             "cells": {
               "persona": {
                 "expr": "@cel.willpower + @cel.m_sleaze"
@@ -5417,7 +5428,8 @@
             }
           },
           {
-            "value": "Логика + СЭ",
+            "value": "Logika___SE",
+            "label": "Логика + СЭ",
             "cells": {
               "persona": {
                 "expr": "@cel.logic + @cel.m_firewall"
@@ -5428,7 +5440,8 @@
             }
           },
           {
-            "value": "Интуиция + СЭ",
+            "value": "Intuiciya___SE",
+            "label": "Интуиция + СЭ",
             "cells": {
               "persona": {
                 "expr": "@cel.intuition + @cel.m_firewall"
@@ -5439,7 +5452,8 @@
             }
           },
           {
-            "value": "ВМ + СЭ",
+            "value": "VM___SE",
+            "label": "ВМ + СЭ",
             "cells": {
               "persona": {
                 "expr": "@cel.m_dp + @cel.m_firewall"
@@ -5450,7 +5464,8 @@
             }
           },
           {
-            "value": "Харизма + ВМ",
+            "value": "Harizma___VM",
+            "label": "Харизма + ВМ",
             "cells": {
               "persona": {
                 "expr": "@cel.charisma + @cel.m_dp"
@@ -5461,7 +5476,8 @@
             }
           },
           {
-            "value": "Интуиция + ВМ",
+            "value": "Intuiciya___VM",
+            "label": "Интуиция + ВМ",
             "cells": {
               "persona": {
                 "expr": "@cel.intuition + @cel.m_dp"
@@ -5472,7 +5488,8 @@
             }
           },
           {
-            "value": "ВМ + рейтинг",
+            "value": "VM___reyting",
+            "label": "ВМ + рейтинг",
             "cells": {
               "persona": {
                 "expr": "@cel.m_dp + @cel.dev_rating"
@@ -5483,7 +5500,8 @@
             }
           },
           {
-            "value": "Воля + П",
+            "value": "Volya___P",
+            "label": "Воля + П",
             "cells": {
               "persona": {
                 "expr": "@cel.willpower + @cel.m_attack"
@@ -5494,7 +5512,8 @@
             }
           },
           {
-            "value": "Воля + ВМ",
+            "value": "Volya___VM",
+            "label": "Воля + ВМ",
             "cells": {
               "persona": {
                 "expr": "@cel.willpower + @cel.m_dp"
@@ -5524,7 +5543,8 @@
             }
           },
           {
-            "value": "Рейтинг + СЭ",
+            "value": "Reyting___SE",
+            "label": "Рейтинг + СЭ",
             "cells": {
               "persona": {
                 "expr": "@cel.dev_rating + @cel.m_firewall"
@@ -5938,7 +5958,7 @@
             "value": "vzryvnoy",
             "label": "взрывной",
             "cells": {
-              "defense": "Логика + СЭ",
+              "defense": "Logika___SE",
               "text": "Урон Матрицы = рейтинг сервера, цель залипает.",
               "dmg": {
                 "expr": "@deystvuyuschiy.host_rating"
@@ -5950,7 +5970,7 @@
             "value": "vyslezhivayuschiy",
             "label": "выслеживающий",
             "cells": {
-              "defense": "Воля + У",
+              "defense": "Volya___U",
               "text": "Раскрывает физическое местоположение цели."
             }
           },
@@ -5958,7 +5978,7 @@
             "value": "dozornyy",
             "label": "дозорный",
             "cells": {
-              "defense": "Воля + У",
+              "defense": "Volya___U",
               "text": "Внимание в Матрице раз в минуту (рейтинг × 2), урона нет."
             }
           },
@@ -5966,7 +5986,7 @@
             "value": "edkiy",
             "label": "едкий",
             "cells": {
-              "defense": "Воля + СЭ",
+              "defense": "Volya___SE",
               "text": "Сетевой экран цели −1 за чистый успех.",
               "cut": "SE"
             }
@@ -5975,7 +5995,7 @@
             "value": "iskryaschiy",
             "label": "искрящий",
             "cells": {
-              "defense": "Интуиция + СЭ",
+              "defense": "Intuiciya___SE",
               "text": "Биоотдача: рейтинг сервера + чистые успехи.",
               "dmg": 0,
               "bio": {
@@ -5987,7 +6007,7 @@
             "value": "lipnuschiy",
             "label": "липнущий",
             "cells": {
-              "defense": "Логика + СЭ",
+              "defense": "Logika___SE",
               "text": "Залипание.",
               "lock": true
             }
@@ -5996,7 +6016,7 @@
             "value": "podavlyayuschiy",
             "label": "подавляющий",
             "cells": {
-              "defense": "Воля + П",
+              "defense": "Volya___P",
               "text": "Проникновение цели −1 за чистый успех.",
               "cut": "P"
             }
@@ -6005,7 +6025,7 @@
             "value": "probivayuschiy",
             "label": "пробивающий",
             "cells": {
-              "defense": "Воля + СЭ",
+              "defense": "Volya___SE",
               "text": "Цель перезагружает устройство на следующем ходу, если не залипла."
             }
           },
@@ -6013,7 +6033,7 @@
             "value": "proyavlyayuschiy",
             "label": "проявляющий",
             "cells": {
-              "defense": "Воля + У",
+              "defense": "Volya___U",
               "text": "Ускользание цели −1 за чистый успех.",
               "cut": "U"
             }
@@ -6022,7 +6042,7 @@
             "value": "skovyvayuschiy",
             "label": "сковывающий",
             "cells": {
-              "defense": "Воля + ВМ",
+              "defense": "Volya___VM",
               "text": "Вычислительная мощность цели −1 за чистый успех; при 0 — никаких действий в Матрице.",
               "cut": "VM"
             }
@@ -6031,7 +6051,7 @@
             "value": "sokrushayuschiy",
             "label": "сокрушающий",
             "cells": {
-              "defense": "Интуиция + СЭ",
+              "defense": "Intuiciya___SE",
               "text": "Останавливает одну случайную программу до перезагрузки."
             }
           },
@@ -6039,7 +6059,7 @@
             "value": "ubivayuschiy",
             "label": "убивающий",
             "cells": {
-              "defense": "Интуиция + СЭ",
+              "defense": "Intuiciya___SE",
               "text": "Урон Матрицы: чистые успехи + рейтинг сервера.",
               "dmg": {
                 "expr": "@deystvuyuschiy.host_rating + @otpor_itog.chistye"
@@ -6050,7 +6070,7 @@
             "value": "chernyy",
             "label": "чёрный",
             "cells": {
-              "defense": "Интуиция + СЭ",
+              "defense": "Intuiciya___SE",
               "text": "Рейтинг сервера + чистые успехи урона и в Матрице, и биоотдачей.",
               "dmg": {
                 "expr": "@deystvuyuschiy.host_rating + @otpor_itog.chistye"
@@ -6352,7 +6372,8 @@
         ],
         "rows": [
           {
-            "value": "Воля + Интуиция",
+            "value": "Volya___Intuiciya",
+            "label": "Воля + Интуиция",
             "cells": {
               "pool": {
                 "expr": "@cel.willpower + @cel.intuition"
@@ -6361,7 +6382,8 @@
             }
           },
           {
-            "value": "Реакция + Воля",
+            "value": "Reakciya___Volya",
+            "label": "Реакция + Воля",
             "cells": {
               "pool": {
                 "expr": "@cel.reaction + @cel.willpower"
@@ -6370,7 +6392,8 @@
             }
           },
           {
-            "value": "Тело + Воля",
+            "value": "Telo___Volya",
+            "label": "Тело + Воля",
             "cells": {
               "pool": {
                 "expr": "@cel.body + @cel.willpower"
@@ -6379,7 +6402,8 @@
             }
           },
           {
-            "value": "Логика + Воля",
+            "value": "Logika___Volya",
+            "label": "Логика + Воля",
             "cells": {
               "pool": {
                 "expr": "@cel.logic + @cel.willpower"
@@ -6398,7 +6422,8 @@
             }
           },
           {
-            "value": "Интуиция + Логика",
+            "value": "Intuiciya___Logika",
+            "label": "Интуиция + Логика",
             "cells": {
               "pool": {
                 "expr": "@cel.intuition + @cel.logic"
@@ -6417,7 +6442,8 @@
             }
           },
           {
-            "value": "Тело + Сила",
+            "value": "Telo___Sila",
+            "label": "Тело + Сила",
             "cells": {
               "pool": {
                 "expr": "@cel.body + @cel.strength"
@@ -6426,7 +6452,8 @@
             }
           },
           {
-            "value": "Воля + выбранная характеристика",
+            "value": "Volya___vybrannaya_harakteristika",
+            "label": "Воля + выбранная характеристика",
             "cells": {
               "pool": {
                 "expr": "@cel.willpower + (@attr.target or @cel.willpower)"
@@ -6473,7 +6500,8 @@
             }
           },
           {
-            "value": "Мощь источника × 2",
+            "value": "Mosch_istochnika___2",
+            "label": "Мощь источника × 2",
             "cells": {
               "versus": {
                 "expr": "@porog"
@@ -6504,7 +6532,8 @@
             "label": "В"
           },
           {
-            "value": "В(о)"
+            "value": "V_o",
+            "label": "В(о)"
           },
           {
             "value": "O",
@@ -7148,37 +7177,43 @@
         ],
         "rows": [
           {
-            "value": "0 успехов",
+            "value": "k_0_uspehov",
+            "label": "0 успехов",
             "cells": {
               "text": "Информации нет."
             }
           },
           {
-            "value": "1 успех",
+            "value": "k_1_uspeh",
+            "label": "1 успех",
             "cells": {
               "text": "Общее состояние здоровья цели (здорова или больна); общее эмоциональное состояние (радость, грусть, злость и т. д.); является ли цель простаком или Пробуждённым."
             }
           },
           {
-            "value": "2 успеха",
+            "value": "k_2_uspeha",
+            "label": "2 успеха",
             "cells": {
               "text": "Наличие и местоположение любых стандартных кибернетических имплантов; класс или тип активной магии (дух огня, заклинание управления, источник силы и т. д.); если ауру видели ранее, её можно узнать проверкой Памяти (стр. 68), даже если она сокрыта или замаскирована."
             }
           },
           {
-            "value": "3 успеха",
+            "value": "k_3_uspeha",
+            "label": "3 успеха",
             "cells": {
               "text": "Наличие и местоположение альфа-имплантов; выше, ниже или равны ли Сущность и Магия цели уровню Магии наблюдателя; выше, ниже или равна ли Мощь уровню Магии наблюдателя; общий диагноз недугов (болезнь, токсины); любые астральные следы, оставленные на цели."
             }
           },
           {
-            "value": "4 успеха",
+            "value": "k_4_uspeha",
+            "label": "4 успеха",
             "cells": {
               "text": "Наличие и местоположение биоимплантов и бета-имплантов; точный уровень Сущности, Магии и Мощи цели; причина наличия астрального следа (боевое заклинание, дух воздуха и т. д.)."
             }
           },
           {
-            "value": "5+ успехов",
+            "value": "k_5__uspehov",
+            "label": "5+ успехов",
             "cells": {
               "text": "Наличие и местоположение дельта-имплантов, генных и нанотехнологических модификаций; точный диагноз болезни или токсинов; является ли цель техномантом или монадой."
             }
@@ -14094,7 +14129,7 @@
             }
           },
           {
-            "value": "1_2_implanta_predmeta",
+            "value": "k_1_2_implanta_predmeta",
             "label": "1–2 импланта/предмета",
             "cells": {
               "delta": 3,
@@ -14104,7 +14139,7 @@
             }
           },
           {
-            "value": "3_4_implanta_predmeta",
+            "value": "k_3_4_implanta_predmeta",
             "label": "3–4 импланта/предмета",
             "cells": {
               "delta": 2,
@@ -14114,7 +14149,7 @@
             }
           },
           {
-            "value": "4_5_implantov_predmetov",
+            "value": "k_4_5_implantov_predmetov",
             "label": "4–5 имплантов/предметов",
             "cells": {
               "delta": 1,
@@ -14124,7 +14159,7 @@
             }
           },
           {
-            "value": "6_implantov_predmetov",
+            "value": "k_6_implantov_predmetov",
             "label": "6+ имплантов/предметов",
             "cells": {
               "delta": 0,
@@ -14517,23 +14552,28 @@
             "label": "лечение Матрицы"
           },
           {
-            "value": "шум цели +"
+            "value": "shum_celi",
+            "label": "шум цели +"
           },
           {
-            "value": "ПН цели +"
+            "value": "PN_celi",
+            "label": "ПН цели +"
           },
           {
-            "value": "свой ПН −"
+            "value": "svoy_PN",
+            "label": "свой ПН −"
           },
           {
-            "value": "свой шум −",
+            "value": "svoy_shum",
+            "label": "свой шум −",
             "cells": {
               "status": "form_channel",
               "on_self": true
             }
           },
           {
-            "value": "характеристика +",
+            "value": "harakteristika",
+            "label": "характеристика +",
             "cells": {
               "status": "form_infusion",
               "amount": {
@@ -14543,7 +14583,8 @@
             }
           },
           {
-            "value": "характеристика −",
+            "value": "harakteristika_2",
+            "label": "характеристика −",
             "cells": {
               "status": "form_diffusion",
               "amount": {
@@ -15058,6 +15099,12 @@
       },
       "elektronika": {
         "label": "электроника"
+      },
+      "gasit_gorenie": {
+        "label": "гасит горение"
+      },
+      "priem_Preimuschestva": {
+        "label": "приём Преимущества"
       }
     },
     "roll_edits": {
@@ -15961,7 +16008,7 @@
         "label": "Залечить за Преимущество",
         "group": "Preimuschestvo",
         "tags": [
-          "приём Преимущества"
+          "priem_Preimuschestva"
         ],
         "params": [
           {
@@ -16083,7 +16130,7 @@
         "label": "Преимущество: перебросить все неуспехи",
         "group": "Preimuschestvo",
         "tags": [
-          "приём Преимущества"
+          "priem_Preimuschestva"
         ],
         "activation": "passive",
         "duration": {
@@ -16130,7 +16177,7 @@
         "label": "Преимущество: добавить к набору",
         "group": "Preimuschestvo",
         "tags": [
-          "приём Преимущества"
+          "priem_Preimuschestva"
         ],
         "activation": "passive",
         "duration": {
@@ -16490,7 +16537,7 @@
         "group": "Sostoyaniya",
         "tags": [
           "stihiya",
-          "гасит горение"
+          "gasit_gorenie"
         ],
         "activation": "passive",
         "duration": {
@@ -17771,7 +17818,7 @@
             ]
           },
           {
-            "on": "gained:гасит горение",
+            "on": "gained:gasit_gorenie",
             "if": {
               "expr": "@sheet == @holder"
             },
@@ -17791,7 +17838,7 @@
           {
             "type": "status",
             "mode": "remove",
-            "effect": "гасит горение",
+            "effect": "gasit_gorenie",
             "to": {
               "expr": "@holder"
             },
@@ -18081,7 +18128,7 @@
         "label": "Сырость",
         "group": "Sostoyaniya",
         "tags": [
-          "гасит горение"
+          "gasit_gorenie"
         ],
         "activation": "passive",
         "duration": {
@@ -18213,7 +18260,7 @@
         "label": "Преимущество: перебросить 1 кубик",
         "group": "Preimuschestvo",
         "tags": [
-          "приём Преимущества"
+          "priem_Preimuschestva"
         ],
         "activation": "passive",
         "duration": {
@@ -18257,7 +18304,7 @@
         "label": "Преимущество: +1 к значению кубика",
         "group": "Preimuschestvo",
         "tags": [
-          "приём Преимущества"
+          "priem_Preimuschestva"
         ],
         "activation": "passive",
         "duration": {
@@ -18304,7 +18351,7 @@
         "label": "Преимущество: +3 к инициативе",
         "group": "Preimuschestvo",
         "tags": [
-          "приём Преимущества"
+          "priem_Preimuschestva"
         ],
         "activation": "passive",
         "duration": {
@@ -18350,7 +18397,7 @@
         "label": "Преимущество: +1 успех",
         "group": "Preimuschestvo",
         "tags": [
-          "приём Преимущества"
+          "priem_Preimuschestva"
         ],
         "activation": "passive",
         "duration": {
@@ -21147,7 +21194,7 @@
           {
             "type": "orElse",
             "if": {
-              "expr": "@slozhnaya_forma.outcome == \"шум цели +\""
+              "expr": "@slozhnaya_forma.outcome == \"shum_celi\""
             }
           },
           {
@@ -21163,7 +21210,7 @@
           {
             "type": "orElse",
             "if": {
-              "expr": "@slozhnaya_forma.outcome == \"ПН цели +\""
+              "expr": "@slozhnaya_forma.outcome == \"PN_celi\""
             }
           },
           {
@@ -21179,7 +21226,7 @@
           {
             "type": "orElse",
             "if": {
-              "expr": "@slozhnaya_forma.outcome == \"свой ПН −\""
+              "expr": "@slozhnaya_forma.outcome == \"svoy_PN\""
             }
           },
           {
@@ -24267,7 +24314,7 @@
         "blocks": [
           "Harakteristiki",
           "Navyki",
-          "Наборы кубиков",
+          "Nabory_kubikov",
           "Zaschita",
           "Schetchiki",
           "Iniciativa"
@@ -24281,7 +24328,7 @@
         "blocks": [
           "Harakteristiki",
           "Navyki",
-          "Наборы кубиков",
+          "Nabory_kubikov",
           "Zaschita",
           "Schetchiki",
           "Iniciativa"
@@ -24983,7 +25030,8 @@
     },
     "blocks": [
       {
-        "key": "Личное дело",
+        "key": "Lichnoe_delo",
+        "label": "Личное дело",
         "parts": [
           {
             "table": "list",
@@ -25052,7 +25100,8 @@
         ]
       },
       {
-        "key": "Наборы кубиков",
+        "key": "Nabory_kubikov",
+        "label": "Наборы кубиков",
         "parts": [
           {
             "table": "list",
@@ -26967,7 +27016,7 @@
         "label": "Брутфорс",
         "description": "Незаконный доступ; админ без пользователя — СЭ +2 и значение защиты +4. (стр. 180).",
         "cells": {
-          "zaschita": "Воля + СЭ",
+          "zaschita": "Volya___SE",
           "illegal": true,
           "link": "Proniknovenie",
           "action": "брутфорс"
@@ -26979,7 +27028,7 @@
         "label": "Инфошип",
         "description": "(стр. 181).",
         "cells": {
-          "zaschita": "ВМ + СЭ",
+          "zaschita": "VM___SE",
           "illegal": true,
           "link": "Proniknovenie",
           "action": "инфошип"
@@ -27001,7 +27050,7 @@
         "label": "Смоляная яма",
         "description": "(стр. 184).",
         "cells": {
-          "zaschita": "ВМ + СЭ",
+          "zaschita": "VM___SE",
           "illegal": true,
           "link": "Proniknovenie",
           "action": "смоляная яма",
@@ -27024,7 +27073,7 @@
         "label": "Спрятаться",
         "description": "(стр. 184).",
         "cells": {
-          "zaschita": "Интуиция + ВМ",
+          "zaschita": "Intuiciya___VM",
           "illegal": true,
           "action": "спрятаться"
         },
@@ -27046,7 +27095,7 @@
         "description": "Как Огненный удар, по области. (стр. 133)",
         "cells": {
           "category": "boevoe",
-          "range": "В(о)",
+          "range": "V_o",
           "stype": "F",
           "duration": "M",
           "drain": 6,
@@ -27054,7 +27103,7 @@
           "combat": "kosvennoe",
           "damage": "fizicheskiy",
           "element": "fire",
-          "defense": "Реакция + Воля",
+          "defense": "Reakciya___Volya",
           "outcome": "uron"
         }
       },
@@ -27073,7 +27122,7 @@
           "combat": "pryamoe",
           "damage": "fizicheskiy",
           "element": "none",
-          "defense": "Воля + Интуиция",
+          "defense": "Volya___Intuiciya",
           "outcome": "uron"
         }
       },
@@ -27284,7 +27333,7 @@
           "duration": "D",
           "skill": "elektronika",
           "defense": "porog",
-          "outcome": "характеристика +",
+          "outcome": "harakteristika",
           "threshold": 4
         }
       },
@@ -27298,7 +27347,7 @@
           "duration": "M",
           "skill": "vzlom",
           "illegal": true,
-          "defense": "Воля + СЭ",
+          "defense": "Volya___SE",
           "outcome": "uron_Matricy"
         }
       },
@@ -27310,7 +27359,7 @@
         "cells": {
           "action": "slozhnoe",
           "skill": "vzlom",
-          "defense": "Воля + СЭ",
+          "defense": "Volya___SE",
           "status": "sprite_trap"
         }
       },

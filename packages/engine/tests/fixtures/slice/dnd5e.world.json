@@ -2101,7 +2101,7 @@
           }
         ],
         "steps": [],
-        "group": "Правила комнаты"
+        "group": "Pravila_komnaty"
       },
       "mastery_rule": {
         "label": "Мастерство даёт фору",
@@ -2125,7 +2125,7 @@
           }
         ],
         "steps": [],
-        "group": "Правила комнаты"
+        "group": "Pravila_komnaty"
       },
       "thorns": {
         "label": "Шипы",
@@ -2686,6 +2686,9 @@
       },
       "Sostoyaniya": {
         "label": "Состояния"
+      },
+      "Pravila_komnaty": {
+        "label": "Правила комнаты"
       }
     },
     "roll_edits": {

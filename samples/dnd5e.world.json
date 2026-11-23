@@ -1780,7 +1780,8 @@
         ],
         "rows": [
           {
-            "value": "ближний бой — Сила",
+            "value": "blizhniy_boy___Sila",
+            "label": "ближний бой — Сила",
             "cells": {
               "reach": "blizhniy",
               "attack": {
@@ -1792,7 +1793,8 @@
             }
           },
           {
-            "value": "фехтовальное — Сила или Ловкость",
+            "value": "fehtovalnoe___Sila_ili_Lovkost",
+            "label": "фехтовальное — Сила или Ловкость",
             "cells": {
               "reach": "blizhniy",
               "attack": {
@@ -1804,7 +1806,8 @@
             }
           },
           {
-            "value": "дальний бой — Ловкость",
+            "value": "dalniy_boy___Lovkost",
+            "label": "дальний бой — Ловкость",
             "cells": {
               "reach": "dalniy",
               "attack": {
@@ -7276,7 +7279,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "cell:wield.ближний бой — Сила.damage",
+            "target": "cell:wield.blizhniy_boy___Sila.damage",
             "op": "add",
             "value": {
               "expr": "@rage_damage"
@@ -9227,19 +9230,19 @@
           "Progressiya",
           "Spasbroski",
           "Navyki",
-          "Чувства и движение",
+          "Chuvstva_i_dvizhenie",
           "Zaschita",
           "Zdorove",
           "Ataka",
-          "В бою",
+          "V_boyu",
           "Magiya",
-          "Ячейки заклинаний",
-          "Ресурсы класса",
+          "Yacheyki_zaklinaniy",
+          "Resursy_klassa",
           "Bogatstvo",
           "Snaryazhenie",
-          "Висит сейчас",
+          "Visit_seychas",
           "Deystviya",
-          "Стойкость к урону",
+          "Stoykost_k_uronu",
           "Zametki"
         ]
       },
@@ -9260,13 +9263,13 @@
           "Progressiya",
           "Spasbroski",
           "Navyki",
-          "Чувства и движение",
+          "Chuvstva_i_dvizhenie",
           "Zaschita",
           "Zdorove",
-          "Блок монстра",
-          "В бою",
-          "Стойкость к урону",
-          "Висит сейчас",
+          "Blok_monstra",
+          "V_boyu",
+          "Stoykost_k_uronu",
+          "Visit_seychas",
           "Deystviya",
           "Zametki"
         ],
@@ -9465,7 +9468,8 @@
         ]
       },
       {
-        "key": "Чувства и движение",
+        "key": "Chuvstva_i_dvizhenie",
+        "label": "Чувства и движение",
         "width": 6,
         "parts": [
           {
@@ -9486,7 +9490,8 @@
         ]
       },
       {
-        "key": "В бою",
+        "key": "V_boyu",
+        "label": "В бою",
         "under": true,
         "parts": [
           {
@@ -9500,7 +9505,8 @@
         ]
       },
       {
-        "key": "Блок монстра",
+        "key": "Blok_monstra",
+        "label": "Блок монстра",
         "under": true,
         "parts": [
           {
@@ -9532,7 +9538,8 @@
         ]
       },
       {
-        "key": "Стойкость к урону",
+        "key": "Stoykost_k_uronu",
+        "label": "Стойкость к урону",
         "under": true,
         "parts": [
           {
@@ -9666,7 +9673,8 @@
         ]
       },
       {
-        "key": "Ячейки заклинаний",
+        "key": "Yacheyki_zaklinaniy",
+        "label": "Ячейки заклинаний",
         "parts": [
           {
             "table": "slots",
@@ -9680,7 +9688,8 @@
         "parent": "Magiya"
       },
       {
-        "key": "Ресурсы класса",
+        "key": "Resursy_klassa",
+        "label": "Ресурсы класса",
         "page": "Magiya",
         "parts": [
           {
@@ -9727,7 +9736,8 @@
         "parts": []
       },
       {
-        "key": "Висит сейчас",
+        "key": "Visit_seychas",
+        "label": "Висит сейчас",
         "page": "Effekty",
         "list": "hanging",
         "width": 6,
@@ -9811,7 +9821,7 @@
           "damage_dice": "1d8",
           "damage_type": "rubyaschiy",
           "damage_source": "nemagicheskiy",
-          "wield": "ближний бой — Сила",
+          "wield": "blizhniy_boy___Sila",
           "properties": [
             "universalnoe"
           ],
@@ -9828,7 +9838,7 @@
           "damage_dice": "2d6",
           "damage_type": "rubyaschiy",
           "damage_source": "nemagicheskiy",
-          "wield": "ближний бой — Сила",
+          "wield": "blizhniy_boy___Sila",
           "properties": [
             "tyazheloe",
             "dvuruchnoe"
@@ -9846,7 +9856,7 @@
           "damage_dice": "1d4",
           "damage_type": "kolyuschiy",
           "damage_source": "nemagicheskiy",
-          "wield": "фехтовальное — Сила или Ловкость",
+          "wield": "fehtovalnoe___Sila_ili_Lovkost",
           "properties": [
             "legkoe",
             "fehtovalnoe",
@@ -9865,7 +9875,7 @@
           "damage_dice": "1d8",
           "damage_type": "kolyuschiy",
           "damage_source": "nemagicheskiy",
-          "wield": "фехтовальное — Сила или Ловкость",
+          "wield": "fehtovalnoe___Sila_ili_Lovkost",
           "properties": [
             "fehtovalnoe"
           ],
@@ -9882,7 +9892,7 @@
           "damage_dice": "1d6",
           "damage_type": "kolyuschiy",
           "damage_source": "nemagicheskiy",
-          "wield": "дальний бой — Ловкость",
+          "wield": "dalniy_boy___Lovkost",
           "range": "80/320",
           "properties": [
             "dvuruchnoe",
@@ -9904,7 +9914,7 @@
           "damage_dice": "1d8",
           "damage_type": "rubyaschiy",
           "damage_source": "magicheskiy",
-          "wield": "ближний бой — Сила",
+          "wield": "blizhniy_boy___Sila",
           "properties": [],
           "weight": 3
         }
@@ -9936,7 +9946,7 @@
           "damage_dice": "1d8",
           "damage_type": "rubyaschiy",
           "damage_source": "magicheskiy",
-          "wield": "ближний бой — Сила",
+          "wield": "blizhniy_boy___Sila",
           "properties": [],
           "weight": 3
         }

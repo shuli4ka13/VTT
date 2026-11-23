@@ -527,7 +527,7 @@
             }
           },
           {
-            "value": "спрятать / найти",
+            "value": "spryatat___nayti",
             "label": "Спрятать / найти",
             "cells": {
               "stat": "int",
@@ -615,7 +615,7 @@
             }
           },
           {
-            "value": "пилотирование: воздух",
+            "value": "pilotirovanie__vozduh",
             "label": "Пилотирование: воздух",
             "cells": {
               "stat": "ref",
@@ -623,7 +623,7 @@
             }
           },
           {
-            "value": "пилотирование: море",
+            "value": "pilotirovanie__more",
             "label": "Пилотирование: море",
             "cells": {
               "stat": "ref",
@@ -1953,7 +1953,8 @@
     },
     "blocks": [
       {
-        "key": "Личное дело",
+        "key": "Lichnoe_delo",
+        "label": "Личное дело",
         "parts": [
           {
             "table": "who",
@@ -2045,7 +2046,8 @@
         ]
       },
       {
-        "key": "Навыки — внимание",
+        "key": "Navyki___vnimanie",
+        "label": "Навыки — внимание",
         "parts": [
           {
             "table": "skills",
@@ -2066,7 +2068,8 @@
         "parent": "Navyki"
       },
       {
-        "key": "Навыки — тело",
+        "key": "Navyki___telo",
+        "label": "Навыки — тело",
         "parts": [
           {
             "table": "skills",
@@ -2088,7 +2091,8 @@
         "parent": "Navyki"
       },
       {
-        "key": "Навыки — управление",
+        "key": "Navyki___upravlenie",
+        "label": "Навыки — управление",
         "parts": [
           {
             "table": "skills",
@@ -2108,7 +2112,8 @@
         "parent": "Navyki"
       },
       {
-        "key": "Навыки — образование",
+        "key": "Navyki___obrazovanie",
+        "label": "Навыки — образование",
         "parts": [
           {
             "table": "skills",
@@ -2140,7 +2145,8 @@
         "parent": "Navyki"
       },
       {
-        "key": "Навыки — бой",
+        "key": "Navyki___boy",
+        "label": "Навыки — бой",
         "parts": [
           {
             "table": "skills",
@@ -2160,7 +2166,8 @@
         "parent": "Navyki"
       },
       {
-        "key": "Навыки — выступление",
+        "key": "Navyki___vystuplenie",
+        "label": "Навыки — выступление",
         "parts": [
           {
             "table": "skills",
@@ -2178,7 +2185,8 @@
         "parent": "Navyki"
       },
       {
-        "key": "Навыки — стрельба",
+        "key": "Navyki___strelba",
+        "label": "Навыки — стрельба",
         "parts": [
           {
             "table": "skills",
@@ -2199,7 +2207,8 @@
         "parent": "Navyki"
       },
       {
-        "key": "Навыки — общение",
+        "key": "Navyki___obschenie",
+        "label": "Навыки — общение",
         "parts": [
           {
             "table": "skills",
@@ -2224,7 +2233,8 @@
         "parent": "Navyki"
       },
       {
-        "key": "Навыки — техника",
+        "key": "Navyki___tehnika",
+        "label": "Навыки — техника",
         "parts": [
           {
             "table": "skills",
@@ -2255,7 +2265,8 @@
         "parent": "Navyki"
       },
       {
-        "key": "В бою",
+        "key": "V_boyu",
+        "label": "В бою",
         "parts": [
           {
             "table": "who",

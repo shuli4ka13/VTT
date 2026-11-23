@@ -44,3 +44,4 @@ export type { Want as ChoiceWant } from '../model/typed-choices.ts';
 export type { Compendium, CompendiumRecord, DieConstant, Field, Holder, Sheet, System, TableColumn } from '../model/types.ts';
 export { NAMES, NAME_LABELS, nameLabel, saidName } from '../words/names.ts';
 export type { ServiceName } from '../words/names.ts';
+export { foreignKeys, foreignKeysText } from '../model/latin-keys.ts';
