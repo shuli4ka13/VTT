@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import type { System } from '@vtt/schema';
 import { rollGroupsOf } from '@vtt/engine';
 import { Field, Button } from '../../ui/primitives.tsx';
+import { tagSaid } from './tag-said.ts';
 import { TagsField, type TagValue, type TagGroup } from './tags-field.tsx';
 
 export type RollsKey = 'tags' | 'anyTags' | 'notTags';
@@ -11,20 +12,21 @@ export interface RollsValue { tags?: readonly string[]; anyTags?: readonly strin
 const words = (list: readonly TagValue[]): string[] => list.filter((tag): tag is string => typeof tag === 'string');
 
 export function rollsLead(system: System): { lead: TagGroup[]; labels: Map<string, string> } {
-  const { rules, kinds } = rollGroupsOf(system);
+  const { rules, kinds: carried } = rollGroupsOf(system);
+  const kinds = carried.map(kind => ({ value: kind.value, label: tagSaid(system, kind.value) }));
   return {
     lead: [
       { title: 'правила бросков', list: rules.map(rule => [rule.value, rule.label] as const) },
       { title: 'метки, которые несут броски', list: kinds.map(kind => [kind.value, kind.label] as const) },
     ],
-    labels: new Map(rules.map(rule => [rule.value, rule.label])),
+    labels: new Map([...kinds, ...rules].map(rule => [rule.value, rule.label] as const)),
   };
 }
 
 function mainHint(system: System, tags: readonly string[]): string {
   if (!tags.length) return 'Пусто — все броски.';
   const rules = tags.filter(tag => system.rolls?.[tag]);
-  const named = rules.map(tag => `«${system.rolls![tag]!.label || tag}» — броски по полям этого правила и броски-шаги с меткой «${tag}».`);
+  const named = rules.map(tag => `«${system.rolls![tag]!.label || tag}» — броски по полям этого правила и броски-шаги с меткой «${tagSaid(system, tag).toLowerCase()}».`);
   const together = rules.some(key => rules.every(other => other === key || (system.rolls![key]!.tags ?? []).includes(other)));
   const two = rules.length > 1 && !together ? ' Два правила сразу у одного броска не бывает — возьмите «Или хотя бы одно из».' : '';
   return ['Бросок должен подходить под всё выбранное.', ...named].join(' ') + two;

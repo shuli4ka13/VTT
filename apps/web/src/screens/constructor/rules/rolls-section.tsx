@@ -13,6 +13,7 @@ import type { Grouped } from '../field-groups.ts';
 import type { System, SystemRoll } from '@vtt/schema';
 import type { WorldState } from '../../../store/world.ts';
 import { editsOnRule } from '../modifier-words.ts';
+import { tagsSaid } from '../tag-said.ts';
 
 type EditSystem = WorldState['editSystem'];
 
@@ -143,7 +144,7 @@ function RollRow({ id, roll, system, editSystem }: { id: string; roll: SystemRol
   const ruleNames = namesFor(RULE_WORDS, system, roll);
   const degreeNames = namesFor(DEGREE_WORDS, system, roll);
   const sample = fieldsOf(system).find(f => roll.fields.some(one => one.table === f.home && (f.cell ? f.cell.column === one.column : f.tag === one.column)))?.roll;
-  const tags = sample?.tags?.length ? `метки: ${sample.tags.join(', ')}` : '';
+  const tags = sample?.tags?.length ? `метки: ${tagsSaid(system, sample.tags)}` : '';
   return (
     <div className="dict-block roll-word">
       <div className="dict-row">

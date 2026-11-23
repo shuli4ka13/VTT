@@ -32,7 +32,7 @@ describe('откуда это: щелчок по фишке объясняет �
   });
 
   it('метка броска и кость системы', () => {
-    expect(explain('атака')).toMatchObject({ kind: 'метка броска', facts: expect.arrayContaining([['Успех', 'попадание']]) });
+    expect(explain('ataka')).toMatchObject({ kind: 'метка броска', facts: expect.arrayContaining([['Успех', 'попадание']]) });
     expect(explain('цель.lead_die')).toMatchObject({
       kind: 'кость системы', facts: expect.arrayContaining([['кто бросает', '«цель»']]),
     });

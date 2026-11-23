@@ -3,6 +3,7 @@ import type { LaunchKind } from '@vtt/engine';
 import type { Step, System, Effect } from '@vtt/schema';
 import { labelOfTag } from '../../../ui/formula.tsx';
 import type { CardGroup } from '../cards.ts';
+import { tagsSaid } from '../tag-said.ts';
 
 export const LAUNCH_KINDS = (['manual', 'passive'] as const)
   .map(key => ({ key: key as LaunchKind, label: key === 'passive' ? 'Висит' : LAUNCHES[key].label, title: LAUNCHES[key].hint }));
@@ -67,7 +68,7 @@ export const cardTitle = (cards: CardGroup[], index: number, system: System, eff
   const own = card.indices.length > 1 && card.amount && card.indices[0] === index ? card.amount : card.step;
   if (own.type === 'roll' && (own as { by?: unknown }).by !== undefined) {
     const tags = (((own as { tags?: unknown[] }).tags) ?? []).filter((tag): tag is string => typeof tag === 'string');
-    return tags.length ? `Бросок «${tags.join(', ')}»` : 'Бросок';
+    return tags.length ? `Бросок «${tagsSaid(system, tags)}»` : 'Бросок';
   }
   return titleOf(card.kind, card.step, system, effect);
 };

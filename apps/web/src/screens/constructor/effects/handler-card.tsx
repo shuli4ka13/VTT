@@ -11,6 +11,7 @@ import { WhileWhenRow } from './while-when.tsx';
 import { cardTitle } from './words.ts';
 import { outcomeRefs, fieldedOf } from '../slots.tsx';
 import type { System, Handler } from '@vtt/schema';
+import { tagSaid } from '../tag-said.ts';
 
 type Kind = 'call' | 'seen' | 'rolled' | 'moment' | 'field' | 'gained' | 'lost';
 
@@ -119,7 +120,7 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove, startO
       : kind === 'field' ? watchable.map(f => [f.tag, `«${f.label}»`] as const)
         : kind === 'gained' || kind === 'lost' ? [
           ...hanging.map(([key, e]) => [key, `«${e.label ?? key}»`] as const),
-          ...effectTags.map(tag => [tag, `с меткой «${tag}»`, 'метки'] as const),
+          ...effectTags.map(tag => [tag, `с меткой «${tagSaid(system, tag)}»`, 'метки'] as const),
         ]
           : [];
 
@@ -143,7 +144,7 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove, startO
 
   const spoken = kind === 'call' && phase !== 'done' ? callSubjects(tags, actions, true) : subjects;
   const subjectWord = spoken.find(([key]) => key === subject)?.[1] ?? subject;
-  const quoted = (list?: readonly string[]): string => (list ?? []).map(tag => `«${tag}»`).join(', ');
+  const quoted = (list?: readonly string[]): string => (list ?? []).map(tag => `«${tagSaid(system, tag)}»`).join(', ');
   const filter = [
     handler.tags?.length ? `только с метками ${quoted(handler.tags)}` : '',
     handler.anyTags?.length ? `с любой из меток ${quoted(handler.anyTags)}` : '',

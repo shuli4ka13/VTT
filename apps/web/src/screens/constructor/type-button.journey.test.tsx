@@ -23,14 +23,14 @@ describe('новый тип с нуля: «+ кнопка» → «Атака» �
     expect(kind.bindings![0]!.label).toBe('Атака');
     expect((kind.columns ?? []).map(column => column.key)).toEqual(['attack_with', 'damage_dice', 'damage_type', 'damage_source']);
 
-    pickCombo(screen.getByLabelText('«Источник урона» — чем заполняет тип'), '"магический"');
+    pickCombo(screen.getByLabelText('«Источник урона» — чем заполняет тип'), '"magicheskiy"');
     expect(useWorld.getState().system.tables!.mag!.bindings![0]!.args).toEqual({
       attack_with: { expr: '@attack_with' }, damage_dice: { expr: '@damage_dice' }, damage_type: { expr: '@damage_type' },
-      damage_source: { expr: '"магический"' },
+      damage_source: { expr: '"magicheskiy"' },
     });
 
     const built = useWorld.getState().system;
-    const compendium = { ...dnd.compendium, records: [...dnd.compendium.records, { id: 'жезл', table: 'mag', label: 'Огненный жезл', cells: { attack_with: 5, damage_dice: '1d8', damage_type: 'огонь' } }] } as Compendium;
+    const compendium = { ...dnd.compendium, records: [...dnd.compendium.records, { id: 'жезл', table: 'mag', label: 'Огненный жезл', cells: { attack_with: 5, damage_dice: '1d8', damage_type: 'fire' } }] } as Compendium;
     const sheets = structuredClone(dnd.sheets).map(sheet => (sheet.id === 'arven' ? { ...sheet, has: [...(sheet.has ?? []), { of: 'жезл' }] } : sheet));
     const before = Number(sheets.find(sheet => sheet.id === 'goblin')!.values?.hp_current ?? NaN);
 

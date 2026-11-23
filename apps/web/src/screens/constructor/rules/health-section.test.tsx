@@ -45,7 +45,7 @@ describe('правила: здоровье', () => {
     fireEvent.click(screen.getByText('+ таблица ступеней'));
     const { health, tables } = now();
     expect(health?.steps).toEqual({ table: 'health_steps', from: 'from', state: 'state' });
-    expect(tables!.health_steps!.rows!.map(row => [row.value, row.cells?.from])).toEqual([['цел', 100], ['ранен', 50], ['тяжело ранен', 0]]);
+    expect(tables!.health_steps!.rows!.map(row => [row.value, row.cells?.from])).toEqual([['whole', 100], ['hurt', 50], ['badly_hurt', 0]]);
     expect(lintSystem(now()).filter(problem => problem.where.section === 'vitals')).toEqual([]);
   });
 

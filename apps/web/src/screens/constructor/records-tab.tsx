@@ -1,7 +1,7 @@
 import { ButtonEditor } from './button-editor.tsx';
 import { useWorld, freeId } from '../../store/world.ts';
 import { ModifiersEditor } from './modifiers.tsx';
-import { newRecordKind, newBinding, newProp } from './factory.ts';
+import { newRecordKind, newBinding, newProp, GEAR_BLOCK } from './factory.ts';
 import { Columns, List, ListItem } from '../../ui/layout.tsx';
 import { useLookupPane } from './lookup-panel.tsx';
 import {
@@ -111,7 +111,7 @@ export function RecordsTab() {
   const add = () => {
     focusNew('как зовётся тип');
     const made = newRecordKind(system);
-    editSystem(draft => { (draft.tables ??= {})[made.key] = made.value; });
+    editSystem(draft => { (draft.tables ??= {})[made.key] = made.value; labelBlock(draft, made.value.block!, GEAR_BLOCK); });
     pick({ activeRecordKind: made.key });
   };
 

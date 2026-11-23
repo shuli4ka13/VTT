@@ -8,6 +8,7 @@ import { useWorld } from '../../../store/world.ts';
 import { openAll } from '../../../testing/render-open.tsx';
 import { within, stepCard, block, blocks, headOf, addArm, addToArm, callIf, outcomeIf, armWord, dragParamBefore } from '../../../testing/cards.ts';
 import { EffectsTab } from './effects-tab.tsx';
+import { folded } from '../../../testing/folded.ts';
 
 const worldOf = (id: string) => SAMPLE_WORLDS.find(w => w.system.id === id)!;
 
@@ -54,7 +55,7 @@ const marks = (card: HTMLElement, ...tags: string[]): void => {
   }
 };
 
-const built = (id: string): Effect | undefined => useWorld.getState().system.effects[id];
+const built = (id: string): Effect | undefined => folded(useWorld.getState().system.effects[id]);
 
 const dump = (what: unknown) => {
   if (process.env.BUILD_DUMP) writeFileSync(process.env.BUILD_DUMP, JSON.stringify(what, null, 1));
@@ -110,44 +111,44 @@ describe('эффекты D&D собираются в конструкторе р
 
   it('D&D «Доспех мага» (mage_armored): до конца сцены, правит поле «задать» с наибольшим', { timeout: 60000 }, () => {
     const [goal] = start('dnd5e', ['mage_armored']);
-    fresh('+ висит', goal!.label!, 'mage_armored', 'Состояния', goal!.description!);
+    fresh('+ висит', goal!.label!, 'mage_armored', 'Sostoyaniya', goal!.description!);
     lifetime('scene', 'refresh');
     valueModifier('ac_base', 'set', '13');
     dump({ got: built('mage_armored'), goal });
-    expect(built('mage_armored')).toEqual(goal);
+    expect(built('mage_armored')).toEqual(folded(goal));
   });
 
   it('D&D «В рывке» (dashing): на 1 ход, спадает в конце хода, умножить; умолч: duration.ends = "turn-end"', { timeout: 60000 }, () => {
     const [goal] = start('dnd5e', ['dashing']);
-    const ui = fresh('+ висит', goal!.label!, 'dashing', 'Состояния', goal!.description!);
+    const ui = fresh('+ висит', goal!.label!, 'dashing', 'Sostoyaniya', goal!.description!);
     lifetime('turns', 'refresh');
     ui.type('Сколько', '1');
     ui.select('Спадает', 'turn-end');
     valueModifier('speed', 'mul', '2');
     dump({ got: built('dashing'), goal });
-    expect(built('dashing')).toEqual(presetDefault(goal!, ['duration', 'ends']));
+    expect(built('dashing')).toEqual(folded(presetDefault(goal!, ['duration', 'ends'])));
   });
 
   it('D&D «Каменная кожа» (stoneskin): правка вызова урона — кроме меток, «где у метки»', { timeout: 60000 }, () => {
     const [goal] = start('dnd5e', ['stoneskin']);
-    fresh('+ висит', goal!.label!, 'stoneskin', 'Состояния', goal!.description!);
+    fresh('+ висит', goal!.label!, 'stoneskin', 'Sostoyaniya', goal!.description!);
     lifetime('permanent', 'refresh');
     within().click('+ правка вызова');
     const card = lastModifier;
     within(card()).select('Чей вызов', 'damage');
     within(card()).formula('На сколько', '0.5');
-    within(card()).select('Этап', 'сопротивление');
-    within(card()).select('Кроме меток', 'магический');
+    within(card()).select('Этап', 'soprotivlenie');
+    within(card()).select('Кроме меток', 'magicheskiy');
     within(card()).select('Где у метки', 'damage_types\u0000nature');
-    within(within(card()).field('Где у метки')).select(within(card()).field('Где у метки').querySelectorAll('[role="combobox"]')[1] as HTMLElement, 'физический');
-    within(card()).select('Кого касается', '@лист == @holder');
+    within(within(card()).field('Где у метки')).select(within(card()).field('Где у метки').querySelectorAll('[role="combobox"]')[1] as HTMLElement, 'fizicheskiy');
+    within(card()).select('Кого касается', '@list_2 == @holder');
     dump({ got: built('stoneskin'), goal });
-    expect(built('stoneskin')).toEqual(goal);
+    expect(built('stoneskin')).toEqual(folded(goal));
   });
 
   it('D&D «Что доходит до меня» (taken_rule): две правки вызова урона — строка типа урона по значению, сопротивление и уязвимость по этапам', { timeout: 120000 }, () => {
     const [goal] = start('dnd5e', ['taken_rule']);
-    fresh('+ висит', goal!.label!, 'taken_rule', 'Общие правила', goal!.description!);
+    fresh('+ висит', goal!.label!, 'taken_rule', 'Obschie_pravila', goal!.description!);
     for (const m of goal!.modifiers ?? []) {
       const one = m as { value: { expr: string }; stage: string };
       within().click('+ правка вызова');
@@ -155,16 +156,16 @@ describe('эффекты D&D собираются в конструкторе р
       within(card()).select('Чей вызов', 'damage');
       within(card()).formula('На сколько', one.value.expr);
       within(card()).select('Этап', one.stage);
-      within(card()).select('Кого касается', '@лист == @holder');
+      within(card()).select('Кого касается', '@list_2 == @holder');
       within(card()).when('=не пусто(@holder.damage_types.[@damage_type].taken)');
     }
     dump({ got: built('taken_rule'), goal });
-    expect(built('taken_rule')).toEqual(goal);
+    expect(built('taken_rule')).toEqual(folded(goal));
   });
 
   it('D&D «Недееспособен» (incapacitated): при наложении снимает концентрацию; обход: пустые modifiers снимаются только добавлением и удалением правки', { timeout: 60000 }, () => {
     const [goal] = start('dnd5e', ['incapacitated']);
-    const ui = fresh('+ висит', goal!.label!, 'incapacitated', 'Состояния', goal!.description!);
+    const ui = fresh('+ висит', goal!.label!, 'incapacitated', 'Sostoyaniya', goal!.description!);
     lifetime('permanent', 'refresh');
     ui.click('+ правит поле');
     within(lastModifier()).click('Удалить');
@@ -178,12 +179,12 @@ describe('эффекты D&D собираются в конструкторе р
     within(card).select('Какое', 'concentration');
     within(card).formula('С кого', '@holder');
     dump({ got: built('incapacitated'), goal });
-    expect(built('incapacitated')).toEqual(goal);
+    expect(built('incapacitated')).toEqual(folded(goal));
   });
 
   it('D&D «Парализован» (paralyzed): выдаёт «Беспомощен», вход-память, подписка на конец хода зовёт «Повторный спасбросок»', { timeout: 90000 }, () => {
     const [goal] = start('dnd5e', ['paralyzed']);
-    const ui = fresh('+ висит', goal!.label!, 'paralyzed', 'Состояния', goal!.description!);
+    const ui = fresh('+ висит', goal!.label!, 'paralyzed', 'Sostoyaniya', goal!.description!);
     lifetime('permanent', 'refresh');
     ui.click('+ правит поле');
     within(lastModifier()).click('Удалить');
@@ -201,24 +202,24 @@ describe('эффекты D&D собираются в конструкторе р
     within(handlerHead(1)).select('Что случилось', 'moment');
     within(handlerHead(1)).select('Когда', 'turn-end');
     within(handlerHead(1)).select('Кого касается', '@mover == @holder');
-    within(handlerHead(1)).when('=(@запомнено или 0) > 0');
+    within(handlerHead(1)).when('=(@zapomneno или 0) > 0');
 
     within(handlerAt(1)).click('+ изменение');
     const made = () => stepCard(/^1 · /, handlerAt(1));
     within(made()).click('вызов');
     within(made()).select('Какой эффект', 'repeat_save');
     within(made()).formula(within(made()).arg('Кто спасается'), '@holder');
-    within(made()).formula(within(made()).arg('Чем спасается'), '"мудрость"');
-    within(made()).formula(within(made()).arg('Сложность'), '@запомнено');
+    within(made()).formula(within(made()).arg('Чем спасается'), '"wisdom"');
+    within(made()).formula(within(made()).arg('Сложность'), '@zapomneno');
     within(made()).select(within(made()).arg('Что снимается').querySelector<HTMLElement>('[role="combobox"]')!, 'paralyzed');
 
     dump({ got: built('paralyzed'), goal });
-    expect(built('paralyzed')).toEqual(goal);
+    expect(built('paralyzed')).toEqual(folded(goal));
   });
 
   it('D&D «Кость вдохновения наготове» (bardic_ready): вход-кость с умолчанием, на 1 срабатывание, «увидев кости» — прибавить кость из входа', { timeout: 60000 }, () => {
     const [goal] = start('dnd5e', ['bardic_ready']);
-    const ui = fresh('+ висит', goal!.label!, 'bardic_ready', 'Реакции', goal!.description!, goal!.note);
+    const ui = fresh('+ висит', goal!.label!, 'bardic_ready', 'Reakcii', goal!.description!, goal!.note);
     within().click('+ когда');
     ui.click('+ вход');
     ui.type(ui.cell('Название', 0), 'Кость вдохновения');
@@ -230,18 +231,18 @@ describe('эффекты D&D собираются в конструкторе р
     lifetime('uses');
     within(handlerHead(1)).select('Что случилось', 'seen');
     within(handlerHead(1)).select('Кого касается', '@roller == @holder');
-    within(handlerHead(1)).when('=@roller == @holder и (есть(@roll.tags, "атака") или есть(@roll.tags, "спасбросок") или есть(@roll.tags, "проверка"))');
+    within(handlerHead(1)).when('=@roller == @holder и (есть(@roll.tags, "ataka") или есть(@roll.tags, "spasbrosok") или есть(@roll.tags, "proverka"))');
     within(handlerHead(1)).select('Решение', 'ask');
     within(handlerAt(1)).click('+ прибавить');
     const card = stepCard(/^1 · /, handlerAt(1));
-    within(card).select('Сколько', 'expr:@кость');
+    within(card).select('Сколько', 'expr:@kost');
     dump({ got: built('bardic_ready'), goal });
-    expect(built('bardic_ready')).toEqual(goal);
+    expect(built('bardic_ready')).toEqual(folded(goal));
   });
 
   it('D&D «Героическое вдохновение» (inspire): «увидев кости», цена подписки — трата поля, перебросить одну меньшую кость; смена режима снимает порог', { timeout: 60000 }, () => {
     const [goal] = start('dnd5e', ['inspire']);
-    fresh('+ висит', goal!.label!, 'inspire', 'Реакции', goal!.description!);
+    fresh('+ висит', goal!.label!, 'inspire', 'Reakcii', goal!.description!);
     within().click('+ когда');
     within(handlerHead(1)).select('Что случилось', 'seen');
     within(handlerHead(1)).select('Кого касается', '@roller == @holder');
@@ -253,7 +254,7 @@ describe('эффекты D&D собираются в конструкторе р
     card = stepCard(/^1 · /, handlerAt(1));
     within(card).select('Какой эффект', 'spend');
     const args = (goal!.on![0]!.cost![0] as { args: Record<string, { expr: string }> }).args;
-    const label: Record<string, string> = { what: 'Что тратим', amount: 'Сколько', note: 'Если не хватает', лист: 'Лист', источник: 'Источник' };
+    const label: Record<string, string> = { what: 'Что тратим', amount: 'Сколько', note: 'Если не хватает', list_2: 'Лист', istochnik: 'Источник' };
     for (const [key, value] of Object.entries(args)) {
       card = stepCard(/^1 · /, handlerAt(1));
       within(card).formula(within(card).arg(label[key]!), value.expr);
@@ -267,12 +268,12 @@ describe('эффекты D&D собираются в конструкторе р
     card = stepCard(/^2 · /, handlerAt(1));
     expect(card.textContent).not.toContain('Перебросить, где выпало не больше');
     dump({ got: built('inspire'), goal });
-    expect(built('inspire')).toEqual(goal);
+    expect(built('inspire')).toEqual(folded(goal));
   });
 
   it('«Перебросить»: назад к порогу — порог снова 1, режим в данных не пишется', { timeout: 60000 }, () => {
     const [goal] = start('dnd5e', ['inspire']);
-    fresh('+ висит', 'Проба режима', 'reroll_probe', 'Реакции', goal!.description!);
+    fresh('+ висит', 'Проба режима', 'reroll_probe', 'Reakcii', goal!.description!);
     within().click('+ когда');
     within(handlerHead(1)).select('Что случилось', 'seen');
     within(handlerAt(1)).click('+ перебросить');
@@ -288,12 +289,12 @@ describe('эффекты D&D собираются в конструкторе р
 
   it('D&D «Щит» (shield): «до» всего с меткой «атака», цена реакцией и ячейкой, вешает состояние на себя', { timeout: 60000 }, () => {
     const [goal] = start('dnd5e', ['shield']);
-    const ui = fresh('+ висит', goal!.label!, 'shield', 'Реакции', goal!.description!);
+    const ui = fresh('+ висит', goal!.label!, 'shield', 'Reakcii', goal!.description!);
     within().click('+ когда');
-    within(handlerHead(1)).select('Что именно', 'атака');
+    within(handlerHead(1)).select('Что именно', 'ataka');
     within(handlerHead(1)).select('Когда именно', 'before');
-    within(handlerHead(1)).select('Кого касается', '@цель == @holder');
-    within(handlerHead(1)).when('=@бросок.исход.hit');
+    within(handlerHead(1)).select('Кого касается', '@aim == @holder');
+    within(handlerHead(1)).when('=@brosok.ishod.hit');
     within(handlerHead(1)).select('Решение', 'ask');
 
     ui.select(handlerAt(1).querySelector<HTMLElement>('.add-cost [role="combobox"]')!, 'cost_reaction');
@@ -317,33 +318,33 @@ describe('эффекты D&D собираются в конструкторе р
     within(card).select('Какое', 'shield_up');
     within(card).formula('На кого', '@holder');
     dump({ got: built('shield'), goal });
-    expect(built('shield')).toEqual(goal);
+    expect(built('shield')).toEqual(folded(goal));
   });
 
   it('D&D «Не замечает» (hidden): срок 1 ход, спадает в начале хода листа из входа, две правки броска по двум листам', { timeout: 60000 }, () => {
     const [goal] = start('dnd5e', ['hidden']);
-    const ui = fresh('+ висит', goal!.label!, 'hidden', 'Состояния', goal!.description!);
+    const ui = fresh('+ висит', goal!.label!, 'hidden', 'Sostoyaniya', goal!.description!);
     ui.click('+ вход');
     ui.type(ui.cell('Название', 0), 'Кого не замечает');
     ui.select(ui.cell('Вид', 0), 'sheet');
     if (ui.has('ещё')) ui.click('ещё');
-    ui.type(ui.cell('Имя в формулах', 0), 'кого');
+    ui.type(ui.cell('Имя в формулах', 0), 'whom');
     lifetime('turns', 'refresh');
     ui.type('Сколько', '1');
     ui.select('Спадает', 'turn-start');
-    ui.select('Чьи ходы считать', 'кого');
+    ui.select('Чьи ходы считать', 'whom');
 
     const rollEdit = (edit: string, when: string) => {
       within().click('+ правка вызова');
       const card = lastModifier;
-      within(card()).select('Какие броски', 'атака');
+      within(card()).select('Какие броски', 'ataka');
       within(card()).select('Какое слово', edit);
       within(card()).when(`=${when}`);
     };
-    rollEdit('advantage', '@against == @holder and @roller == @кого');
-    rollEdit('disadvantage', '@roller == @holder and @against == @кого');
+    rollEdit('advantage', '@against == @holder and @roller == @whom');
+    rollEdit('disadvantage', '@roller == @holder and @against == @whom');
     dump({ got: built('hidden'), goal });
-    expect(built('hidden')).toEqual(goal);
+    expect(built('hidden')).toEqual(folded(goal));
   });
 
   it('D&D «Засада» (hide): бросок выше «Для каждого из» — один; бросающий чипом в начале строки формулы, «Против кого» нет, метки под строкой', { timeout: 30000 }, () => {
@@ -400,8 +401,8 @@ describe('общие эффекты D&D собираются руками: ци�
   it('D&D «Ячейка заклинания» (spell_slot): «Потратить» клетку строки по значению — @лист.slots.[@circle]', { timeout: 90000 }, () => {
     const [goal] = start('dnd5e', ['spell_slot']);
     const ui = calledHead(goal!, 'spell_slot');
-    param(ui, 'spell_slot', 0, 'Лист', 'sheet', 'лист', { role: 'actor' });
-    param(ui, 'spell_slot', 1, 'Источник', 'sheet', 'источник', { ask: 'empty', role: 'actor' });
+    param(ui, 'spell_slot', 0, 'Лист', 'sheet', 'list_2', { role: 'actor' });
+    param(ui, 'spell_slot', 1, 'Источник', 'sheet', 'istochnik', { ask: 'empty', role: 'actor' });
     param(ui, 'spell_slot', 2, 'Круг ячейки', 'number', 'circle', { main: true });
     ui.click('+ изменение');
     const made = () => stepCard(/^1 · /);
@@ -411,7 +412,7 @@ describe('общие эффекты D&D собираются руками: ци�
     within(made()).formula(within(made()).arg('Сколько'), '1');
     within(made()).formula(within(made()).arg('Если не хватает'), '@лист.slots.[@circle].none');
     dump({ got: built('spell_slot'), goal });
-    expect(built('spell_slot')).toEqual(goal);
+    expect(built('spell_slot')).toEqual(folded(goal));
   });
 
   it('D&D «Ресурсы классов после отдыха» (resources_rest): две подписки, цикл по строкам ресурсов, «Если» по колонке строки', { timeout: 120000 }, () => {
@@ -424,9 +425,9 @@ describe('общие эффекты D&D собираются руками: ци�
     within(handlerAt(1)).click('+ для каждого из списка');
     rows(handlerAt(1), 'resources', 'ресурс');
     within(handlerAt(1)).click('+ если');
-    within(headOf(block(0, handlerAt(1)))).when('=@holder.ресурс.short');
+    within(headOf(block(0, handlerAt(1)))).when('=@holder.resurs.short');
     addToArm(block(0, handlerAt(1)), 0, 'change');
-    change(() => stepCard(/^2 · /, handlerAt(1)), 'holder', 'ресурс.left', 'set', '@holder.ресурс.max');
+    change(() => stepCard(/^2 · /, handlerAt(1)), 'holder', 'resurs.left', 'set', '@holder.resurs.max');
 
     ui.click('+ когда');
     within(handlerHead(2)).select('Что случилось', 'moment');
@@ -434,9 +435,9 @@ describe('общие эффекты D&D собираются руками: ци�
     within(handlerAt(2)).click('+ для каждого из списка');
     rows(handlerAt(2), 'resources', 'ресурс');
     within(handlerAt(2)).click('+ изменение');
-    change(() => stepCard(/^2 · /, handlerAt(2)), 'holder', 'ресурс.left', 'set', '@holder.ресурс.max');
+    change(() => stepCard(/^2 · /, handlerAt(2)), 'holder', 'resurs.left', 'set', '@holder.resurs.max');
 
     dump({ got: built('resources_rest'), goal });
-    expect(built('resources_rest')).toEqual(goal);
+    expect(built('resources_rest')).toEqual(folded(goal));
   });
 });

@@ -16,7 +16,7 @@ export const healthNumbers = (system: System): FieldModel[] => fieldsOf(system).
 export const stepTables = (system: System): [string, string][] =>
   rowTables(system).filter(([, table]) => !onSheet(table)).map(([key, table]) => [key, table.label || key]);
 
-export const STEP_ROWS: readonly (readonly [string, number])[] = [['цел', 100], ['ранен', 50], ['тяжело ранен', 0]];
+export const STEP_ROWS: readonly (readonly [string, string, number])[] = [['whole', 'цел', 100], ['hurt', 'ранен', 50], ['badly_hurt', 'тяжело ранен', 0]];
 
 export function addStepTable(draft: System): void {
   if (!draft.health) return;
@@ -24,7 +24,7 @@ export function addStepTable(draft: System): void {
   (draft.tables ??= {})[key] = {
     label: 'Ступени здоровья', key: 'word',
     columns: [{ key: 'from', label: 'От доли, %', kind: 'number' }, { key: 'state', label: 'При состоянии', kind: 'effect' }],
-    rows: STEP_ROWS.map(([label, from]) => ({ value: label, cells: { from } })),
+    rows: STEP_ROWS.map(([value, label, from]) => ({ value, label, cells: { from } })),
   };
   draft.health.steps = { table: key, from: 'from', state: 'state' };
 }

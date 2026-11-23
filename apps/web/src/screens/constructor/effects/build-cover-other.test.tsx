@@ -68,7 +68,7 @@ describe('эффекты пресетов собираются руками: Sha
       within(card()).formula('На сколько', value);
     }
     dump({ got: built('shocked'), goal });
-    expect(built('shocked')).toEqual(goal);
+    expect(built('shocked')).toEqual(folded(goal));
   });
 
   it('Cyberpunk «Тяжёлая рана» (serious_wound_rule): одна правка броска «прибавка» на любую из двух меток, умолчание «складываются» в данные не пишется', { timeout: 60000 }, () => {
@@ -81,13 +81,13 @@ describe('эффекты пресетов собираются руками: Sha
     within(card()).select('Чей вызов', 'roll');
     within(card()).select('Что правим', 'bonus');
     within(card()).click('+ или / кроме');
-    within(card()).select('Или хотя бы одно из', 'атака');
-    within(card()).select('Или хотя бы одно из', 'проверка');
+    within(card()).select('Или хотя бы одно из', 'attack');
+    within(card()).select('Или хотя бы одно из', 'proverka');
     within(card()).formula('Сколько', '-2');
     within(card()).select('Кого касается', '@roller == @holder');
     within(card()).when('=@holder.seriously');
     dump({ got: built('serious_wound_rule'), goal });
-    expect(built('serious_wound_rule')).toEqual(goal);
+    expect(built('serious_wound_rule')).toEqual(folded(goal));
   });
 
   it('Shadowrun «Сбой» (glitch): подписка «бросок окончен», без шагов', { timeout: 60000 }, () => {
@@ -99,9 +99,9 @@ describe('эффекты пресетов собираются руками: Sha
     ui.select('Кого касается', '@roller == @holder');
     ui.when('=@roll.atMin * 2 > @roll.rolled и @roll.natural >= 1');
     ui.click('+ или / кроме');
-    ui.select('Кроме', 'инициатива');
+    ui.select('Кроме', 'iniciativa');
     dump({ got: built('glitch'), goal });
-    expect(built('glitch')).toEqual(goal);
+    expect(built('glitch')).toEqual(folded(goal));
   });
 
   const spendFromHolder = () => {
@@ -130,14 +130,14 @@ describe('эффекты пресетов собираются руками: Sha
     seenHead(ui);
     ui.when('=не @roll.atMin * 2 > @roll.rolled');
     ui.click('+ или / кроме');
-    ui.select('Кроме', 'инициатива');
-    ui.select('Кроме', 'без Преимущества');
+    ui.select('Кроме', 'iniciativa');
+    ui.select('Кроме', 'bez_Preimuschestva');
     spendFromHolder();
     ui.click('+ перебросить');
     const card = stepCard(/^2 · /);
     within(card).formula('Перебросить, где выпало не больше', '4');
     dump({ got: built('reroll_failures'), goal });
-    expect(built('reroll_failures')).toEqual(goal);
+    expect(built('reroll_failures')).toEqual(folded(goal));
   });
 
   it('Shadowrun «Добавить к набору» (push_edge): докинуть со взрывом', { timeout: 60000 }, () => {
@@ -147,15 +147,15 @@ describe('эффекты пресетов собираются руками: Sha
     ui.click('+ когда');
     seenHead(ui);
     ui.click('+ или / кроме');
-    ui.select('Кроме', 'инициатива');
-    ui.select('Кроме', 'без Преимущества');
+    ui.select('Кроме', 'iniciativa');
+    ui.select('Кроме', 'bez_Preimuschestva');
     spendFromHolder();
     ui.click('+ докинуть');
     const card = () => stepCard(/^2 · /);
     within(card()).formula('Сколько костей', '@holder.edge');
     within(card()).select('Максимум', 'true');
     dump({ got: built('push_edge'), goal });
-    expect(built('push_edge')).toEqual(goal);
+    expect(built('push_edge')).toEqual(folded(goal));
   });
   const handlerAt = (n: number): HTMLElement => stepCard(new RegExp(`^Когда №${n}`)).parentElement!;
 
@@ -192,7 +192,7 @@ describe('эффекты пресетов собираются руками: Sha
     within(at(1, 1)()).select('Что бросает', 'die:lead_die');
     within(at(1, 1)()).click('+ прибавка');
     within(at(1, 1)()).formula('Прибавка', '@holder.death_penalty');
-    within(at(1, 1)()).select('Метки', 'спасбросок');
+    within(at(1, 1)()).select('Метки', 'saving_throw');
     nameStep(at(1, 1), 'спас_бросок');
 
     within(handlerAt(1)).click('+ проверка');
@@ -215,7 +215,7 @@ describe('эффекты пресетов собираются руками: Sha
     change(at(2, 1), 'holder', 'death_penalty', 'set', '0');
 
     dump({ got: built('death_save'), goal });
-    expect(built('death_save')).toEqual(goal);
+    expect(built('death_save')).toEqual(folded(goal));
   });
 
   const param = (ui: ReturnType<typeof within>, id: string, row: number, label: string, kind: string, key: string, more: { from?: string; ask?: string; main?: boolean; role?: string } = {}) => {
@@ -238,7 +238,7 @@ describe('эффекты пресетов собираются руками: Sha
     const [goal] = start('daggerheart', ['spend']);
     const ui = within();
     calledHead(ui, 'spend', goal!);
-    param(ui, 'spend', 0, 'Лист', 'sheet', 'лист', { role: 'actor' });
+    param(ui, 'spend', 0, 'Лист', 'sheet', 'who', { role: 'actor' });
     param(ui, 'spend', 1, 'Источник', 'sheet', 'источник', { ask: 'empty', role: 'actor' });
     param(ui, 'spend', 2, 'Что тратим', 'field', 'what');
     param(ui, 'spend', 3, 'Сколько', 'number', 'amount');
@@ -256,22 +256,22 @@ describe('эффекты пресетов собираются руками: Sha
     within(at(2)()).formula('Сколько', '@amount');
 
     dump({ got: built('spend'), goal });
-    expect(built('spend')).toEqual(goal);
+    expect(built('spend')).toEqual(folded(goal));
   });
 
   it('Cyberpunk «Урон» (damage): вызываемый, проверки без броска, условия на шагах, расчёты', { timeout: 120000 }, () => {
     const [goal] = start('cp-slice', ['damage']);
     const ui = within();
     calledHead(ui, 'damage', goal!);
-    param(ui, 'damage', 0, 'Лист', 'sheet', 'лист', { role: 'target' });
+    param(ui, 'damage', 0, 'Лист', 'sheet', 'who', { role: 'target' });
     param(ui, 'damage', 1, 'Источник', 'sheet', 'источник', { ask: 'empty', role: 'actor' });
     param(ui, 'damage', 2, 'Сколько урона', 'number', 'amount', { main: true });
     param(ui, 'damage', 3, 'Тип урона', 'choice', 'damage_type', { from: 'damage_types' });
     param(ui, 'damage', 4, 'Куда попали', 'choice', 'aim', { from: 'aim_places', ask: 'empty' });
 
     const at = (k: number) => () => stepCard(new RegExp(`^${k} · `));
-    const body = '@aim == "по телу" and @damage_type.armor == "через броню"';
-    const headshot = '@aim == "по голове" and @damage_type.armor == "через броню"';
+    const body = '@aim == "po_telu" and @damage_type.armor == "cherez_bronyu"';
+    const headshot = '@aim == "po_golove" and @damage_type.armor == "cherez_bronyu"';
     const guarded = (flow: number, expr: string) => {
       ui.click('+ если');
       within(headOf(block(flow))).when(`=${expr}`);
@@ -295,7 +295,7 @@ describe('эффекты пресетов собираются руками: Sha
     };
     const apply = (flow: number, k: number, field: string, value: string) => {
       addToArm(block(flow), 0, 'change');
-      change(at(k), 'лист', field, 'subtract', value);
+      change(at(k), 'who', field, 'subtract', value);
     };
 
     guarded(0, body);
@@ -308,11 +308,11 @@ describe('эффекты пресетов собираются руками: Sha
     number(2, 8, 'if(true, floor((@в_голову_всего) * 2), @в_голову_всего)', 'в_голову');
     apply(2, 9, 'hp', 'в голову');
     apply(2, 9, 'sp_head', '1');
-    guarded(4, '@damage_type.armor == "мимо брони"');
+    guarded(4, '@damage_type.armor == "mimo_broni"');
     apply(4, 10, 'hp', '@amount');
 
     dump({ got: built('damage'), goal });
-    expect(built('damage')).toEqual(goal);
+    expect(built('damage')).toEqual(folded(goal));
   });
 
 });

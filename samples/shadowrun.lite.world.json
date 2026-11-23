@@ -12903,7 +12903,13 @@
         "each": "cel",
         "outputs": [
           "vred"
-        ]
+        ],
+        "said": {
+          "deystvuyuschiy": "действующий",
+          "aims": "цели",
+          "cel": "цель",
+          "vred": "вред"
+        }
       },
       "strelba": {
         "label": "стрельба",
@@ -12939,7 +12945,13 @@
         "each": "cel",
         "outputs": [
           "otpor_itog"
-        ]
+        ],
+        "said": {
+          "deystvuyuschiy": "действующий",
+          "aims": "цели",
+          "cel": "цель",
+          "otpor_itog": "отпор_итог"
+        }
       },
       "led": {
         "label": "лёд",
@@ -12962,7 +12974,11 @@
             "key": "amount",
             "kind": "number"
           }
-        ]
+        ],
+        "said": {
+          "list": "лист",
+          "source": "источник"
+        }
       },
       "biootdacha": {
         "label": "биоотдача",
@@ -12975,7 +12991,10 @@
             "key": "amount",
             "kind": "number"
           }
-        ]
+        ],
+        "said": {
+          "list": "лист"
+        }
       },
       "zaklinanie": {
         "label": "заклинание",
@@ -12993,7 +13012,13 @@
         "each": "cel",
         "outputs": [
           "zaschita"
-        ]
+        ],
+        "said": {
+          "deystvuyuschiy": "действующий",
+          "aims": "цели",
+          "cel": "цель",
+          "zaschita": "защита"
+        }
       },
       "visyaschee_zaklinanie": {
         "label": "висящее заклинание",
@@ -13020,7 +13045,11 @@
             "kind": "sheet",
             "many": true
           }
-        ]
+        ],
+        "said": {
+          "deystvuyuschiy": "действующий",
+          "aims": "цели"
+        }
       },
       "ritual_2": {
         "label": "ритуал",
@@ -13029,7 +13058,10 @@
             "key": "deystvuyuschiy",
             "kind": "sheet"
           }
-        ]
+        ],
+        "said": {
+          "deystvuyuschiy": "действующий"
+        }
       },
       "slozhnaya_forma": {
         "label": "сложная форма",
@@ -13049,7 +13081,11 @@
             "kind": "sheet",
             "many": true
           }
-        ]
+        ],
+        "said": {
+          "deystvuyuschiy": "действующий",
+          "aims": "цели"
+        }
       },
       "visyaschaya_forma": {
         "label": "висящая форма",
@@ -13091,7 +13127,12 @@
             "many": true
           }
         ],
-        "each": "cel"
+        "each": "cel",
+        "said": {
+          "deystvuyuschiy": "действующий",
+          "aims": "цели",
+          "cel": "цель"
+        }
       },
       "vozhdenie": {
         "label": "вождение",
@@ -13106,7 +13147,12 @@
             "many": true
           }
         ],
-        "each": "cel"
+        "each": "cel",
+        "said": {
+          "deystvuyuschiy": "действующий",
+          "aims": "цели",
+          "cel": "цель"
+        }
       },
       "astral": {
         "label": "астрал"

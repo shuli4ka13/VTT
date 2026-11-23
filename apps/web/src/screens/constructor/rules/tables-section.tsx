@@ -78,7 +78,7 @@ const addTable = (editSystem: EditSystem) => {
 export function renameTable(system: System, id: string, label: string, world: { compendium?: unknown; sheets?: unknown }): string {
   const table = system.tables?.[id];
   if (!table) return id;
-  const auto = /^таблица(_\d+)?$/u.test(id) || id === slugOf(table.label ?? '');
+  const auto = new RegExp(`^${slugOf('таблица')}(_\\d+)?$`, 'u').test(id) || id === slugOf(table.label ?? '');
   const { [id]: _self, ...others } = system.tables ?? {};
   const rest = JSON.stringify({ s: { ...system, blocks: undefined, tables: others }, c: world.compendium, sh: world.sheets });
   const named = new RegExp(`(?<![\\p{L}\\p{N}_])${id}(?![\\p{L}\\p{N}_])`, 'u').test(rest);
@@ -405,7 +405,7 @@ export function TableColumnCard({ id, table, column, system, edit, onClose, onRe
     const state = useWorld.getState();
     const key = column.key;
     const world = JSON.stringify({ s: { ...state.system, blocks: undefined }, c: state.compendium, sh: state.sheets });
-    const auto = /^(field|колонка)(_\d+)?$/u.test(key) || key === slugOf(column.label ?? '');
+    const auto = new RegExp(`^(field|${slugOf('колонка')})(_\\d+)?$`, 'u').test(key) || key === slugOf(column.label ?? '');
     const named = new RegExp(`[@#.]${key}(?![\\p{L}\\p{N}_])`, 'u').test(world);
     const filled = (table.rows ?? []).some(row => row.cells && key in row.cells);
     const virgin = !book && auto && !named && (single ? world.split(`"${key}"`).length - 1 <= 1 : !filled);

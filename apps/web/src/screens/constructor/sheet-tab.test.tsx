@@ -34,7 +34,7 @@ describe('колонка персонажа: человеческие теги',
     fireEvent.blur(name);
     const field = fieldsOf(useWorld.getState().system)[0]!;
     expect(field.label).toBe('Урон');
-    expect(field.tag).toBe('урон');
+    expect(field.tag).toBe('uron');
   });
 
   it('на тег с живой ссылкой название больше не влияет', () => {

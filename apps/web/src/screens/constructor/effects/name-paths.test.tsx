@@ -58,12 +58,12 @@ describe('имена из справочной движка', () => {
     const world = structuredClone(SAMPLE_WORLDS.find(one => one.system.id === 'dnd5e')!);
     const system = world.system as System;
     const names = placeNamesAt(system, 'resources_rest', { part: 'handler', handler: 0, index: 2 });
-    render(<FormulaChips value="@holder.ресурс" system={system} sheets={new Map([['holder', 'носитель']])} extraNames={names} onChange={() => {}} />);
+    render(<FormulaChips value="@holder.resurs" system={system} sheets={new Map([['holder', 'носитель']])} extraNames={names} onChange={() => {}} />);
     const input = document.querySelectorAll('input.chips__text')[1] as HTMLInputElement;
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: '.', selectionStart: 1 } });
     const shown = [...document.querySelectorAll('.slot__option')].map(option => option.textContent ?? '');
     expect(shown.some(one => one.includes('Осталось')), shown.join(' | ')).toBe(true);
-    expect(names.has('ресурс.left')).toBe(true);
+    expect(names.has('resurs.left')).toBe(true);
   });
 });

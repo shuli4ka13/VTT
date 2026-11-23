@@ -1,4 +1,4 @@
-import { compile, printFormula, operandText, NOT, degreeWords as tableWords, listOf, choiceTableOf, fieldOf, activationOf, loopOf, loopParam, loopsAt, splitsTargets, armsOf, sees, endOf, outcomeWords, namesAt, blockLabel, stepSaid } from '@vtt/engine';
+import { compile, printFormula, operandText, NOT, degreeWords as tableWords, listOf, choiceTableOf, fieldOf, activationOf, loopOf, loopParam, loopsAt, splitsTargets, armsOf, sees, endOf, outcomeWords, namesAt, blockLabel, stepSaid, labelBlock, COST_BLOCK } from '@vtt/engine';
 import type { NamePlace as Place } from '@vtt/engine';
 import { withRole } from './roles.ts';
 import type { ReactNode } from 'react';
@@ -14,7 +14,7 @@ import { outcomeRefs, fieldedOf } from '../slots.tsx';
 import { groupSteps, moveGroup, moveSpan, blockSpan, removeSteps, armEnd, addArm, unwrapBlock, BRICKS, SEEN_BRICKS } from '../cards.ts';
 import type { Removal } from '../cards.ts';
 import { FlowHead, FlowActions, ArmLabel, OutcomePick, HeadFrame } from './cards/flow-parts.tsx';
-import { newCost } from '../factory.ts';
+import { newCost, saidId } from '../factory.ts';
 import { GroupCard } from './cards/group-card.tsx';
 import { sheetsAt, placeNamesAt, placeTablesAt } from './names.ts';
 import { filledStep } from './call-args.ts';
@@ -238,7 +238,11 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
     const after = (base: string, make: (id: string) => Step[]) => () => edit(draft => {
       const list = draft.steps ?? [];
       const step = list[own] as Step & { id?: string };
-      if (!step.id) step.id = freeId([...stepIdsOf(draft), ...(draft.params ?? []).map(p => p.key)], (system.effects?.[base]?.label ?? base).toLowerCase());
+      if (!step.id) {
+        const named = saidId([...stepIdsOf(draft), ...(draft.params ?? []).map(p => p.key)], (system.effects?.[base]?.label ?? base).toLowerCase());
+        step.id = named.id;
+        if (named.label) (step as { label?: string }).label = named.label;
+      }
       list.splice(group.indices[group.indices.length - 1]! + 1, 0, ...make(String(step.id)), { type: 'end' } as unknown as Step);
     });
     const branch = (expr: string): Step => ({ type: 'branch', if: { expr } }) as unknown as Step;
@@ -309,7 +313,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
           if (amountAt < 0) {
             const taken = steps.map(step => step.id).filter(Boolean) as string[];
             steps.splice(applyAt, 0, {
-              id: freeId(taken, 'число'), type: 'roll',
+              ...saidId(taken, 'число'), type: 'roll',
             } as never);
             amountAt = applyAt;
           }
@@ -653,7 +657,7 @@ export function CostPick({ system, except, onPick }: { system: System; except?: 
           if (!pick) return;
           if (pick !== NEW_COST) { onPick(pick); return; }
           const made = newCost(system);
-          editSystem(draft => { draft.effects[made.key] = made.value; });
+          editSystem(draft => { draft.effects[made.key] = made.value; labelBlock(draft, made.value.group!, COST_BLOCK); });
           onPick(made.key);
         }}
       />

@@ -58,8 +58,8 @@ describe('«Если» по ступеням — switch', () => {
       const steps = system.effects.ic_attack!.steps!;
       const kinds = ['взрывной', 'искрящий', 'чёрный'];
       steps.splice(6, steps.length - 6, ...kinds.flatMap((kind, i) => [
-        { type: i === 0 ? 'branch' : 'orElse', if: { expr: `@действующий.ic_kind == "${kind}"` } },
-        { type: 'status', effect: 'link_lock', to: { expr: '@цель' } },
+        { type: i === 0 ? 'branch' : 'orElse', if: { expr: `@deystvuyuschiy.ic_kind == "${kind}"` } },
+        { type: 'status', effect: 'link_lock', to: { expr: '@cel' } },
       ] as never[]), { type: 'end' } as never);
     });
     expect(switches().map(text).join(' | ')).toContain('чёрный:');
@@ -81,6 +81,6 @@ describe('«Если» по ступеням — switch', () => {
     expect(text(block)).not.toContain('Если«Бросок атаки»');
     expect(within(document.body).has('+ по итогу')).toBe(false);
     const steps = useWorld.getState().system.effects.strike!.steps!;
-    expect(steps.some(step => (step as { if?: { expr?: string } }).if?.expr === '@бросок.исход == "крит"')).toBe(true);
+    expect(steps.some(step => (step as { if?: { expr?: string } }).if?.expr === '@brosok.ishod == "krit"')).toBe(true);
   }, 60_000);
 });

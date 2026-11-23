@@ -12,21 +12,21 @@ const rollOf = (systemId: string, effectId: string) => {
 
 const refsOf = (systemId: string, effectId: string): string[] => {
   const { system, effect, step } = rollOf(systemId, effectId);
-  const earlier = [{ id: String(step.id ?? 'бросок'), type: 'roll', ...fieldedOf(system, effect.params ?? [], step) }];
+  const earlier = [{ id: String(step.id ?? 'brosok'), type: 'roll', ...fieldedOf(system, effect.params ?? [], step) }];
   return outputRefs(earlier as never).map(one => one.ref);
 };
 
 describe('итоги броска поля по правилам системы', () => {
   it('Fabula «атака»: адрес вычисленный, правила не дают успех и степени — плашек нет', () => {
-    const refs = refsOf('fabula-ultima', 'атака');
-    expect(refs).toContain('бросок.total');
-    expect(refs).not.toContain('бросок.success');
-    expect(refs).not.toContain('бросок.margin');
+    const refs = refsOf('fabula-ultima', 'attack');
+    expect(refs).toContain('brosok.total');
+    expect(refs).not.toContain('brosok.success');
+    expect(refs).not.toContain('brosok.margin');
   });
 
   it('Warhammer «выстрел»: бросок поля с порогом даёт «пройден» и степени успеха', () => {
-    const refs = refsOf('imperium-maledictum', 'выстрел');
-    expect(refs).toContain('бросок.success');
-    expect(refs).toContain('бросок.margin');
+    const refs = refsOf('imperium-maledictum', 'vystrel');
+    expect(refs).toContain('brosok.success');
+    expect(refs).toContain('brosok.margin');
   });
 });

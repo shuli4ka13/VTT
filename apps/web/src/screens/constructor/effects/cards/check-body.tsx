@@ -9,7 +9,8 @@ import type { EditFn } from '../words.ts';
 import { badFormula } from '../../roll-expr.ts';
 import { DegreesEditor } from '../../degrees-editor.tsx';
 import { whoOf } from '../../readback.ts';
-import { tagWords, splitsTargets, NAMES, NAME_LABELS, DESK_ID } from '@vtt/engine';
+import { tagWords, stepSaid, splitsTargets, NAMES, NAME_LABELS, DESK_ID } from '@vtt/engine';
+import { tagSaid, tagsSaid } from '../../tag-said.ts';
 
 const loose = (draft: unknown): Record<string, any> => draft as Record<string, any>;
 
@@ -26,7 +27,7 @@ export function CheckBody({ step, context, edit, system, asIf = false }: {
 
   const names = useMemo(() => {
     const out = namesOf(context);
-    for (const word of tagWords(context.system).keys()) out.set(word, word);
+    for (const word of tagWords(context.system).keys()) out.set(word, tagSaid(context.system, word));
     return out;
   }, [context]);
   const shared = { extraNames: names, badges: inputBadges(context), ...(context.sheets ? { sheets: context.sheets } : {}) };
@@ -213,7 +214,7 @@ function ContestLine({ step, roll, context }: { step: any; roll: any | null; con
   const part = (at: number) => {
     const one = steps[at];
     const tags = ((one.tags ?? []) as unknown[]).filter((tag): tag is string => typeof tag === 'string');
-    const what = tags.length ? `«${tags.join(', ')}»` : `«${String(one.id)}»`;
+    const what = tags.length ? `«${tagsSaid(context.system, tags)}»` : `«${stepSaid(one)}»`;
     const when = split >= 0 && at < split ? 'один на все цели' : split >= 0 ? 'у каждой цели свой' : '';
     return <span className="contest__side">{whoOf(context.effect, one.by)} бросает {what}{when ? <span className="faint"> — {when}</span> : null}</span>;
   };

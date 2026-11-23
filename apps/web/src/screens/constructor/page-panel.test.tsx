@@ -34,12 +34,12 @@ describe('страницы листа в конструкторе', () => {
     load(undefined);
     render(<LiveBar />);
     fireEvent.click(screen.getByText('+ страница'));
-    expect(sys().pages).toEqual([{ key: 'основное', label: 'Основное' }]);
-    expect(useWorld.getState().activePage).toBe('основное');
+    expect(sys().pages).toEqual([{ key: 'osnovnoe', label: 'Основное' }]);
+    expect(useWorld.getState().activePage).toBe('osnovnoe');
     cleanup();
     render(<LiveBar />);
     fireEvent.click(screen.getByText('+ страница'));
-    expect(sys().pages!.map(p => p.key)).toEqual(['основное', 'страница_2']);
+    expect(sys().pages!.map(p => p.key)).toEqual(['osnovnoe', 'stranica_2']);
     expect(sys().pages!.map(p => p.label)).toEqual(['Основное', 'Страница 2']);
   });
 

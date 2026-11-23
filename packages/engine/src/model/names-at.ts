@@ -107,6 +107,14 @@ const returnsOf = (system: System | undefined, step: Step): NameChild[] => {
 export const stepSaid = (step: { id?: unknown; label?: unknown }): string =>
   (typeof step.label === 'string' && step.label ? step.label : String(step.id ?? '').replace(/_/g, ' '));
 
+function contractSaid(system: System | undefined, name: string): string {
+  for (const contract of Object.values(system?.tags ?? {}) as { said?: Record<string, string> }[]) {
+    const said = contract?.said?.[name];
+    if (said) return said;
+  }
+  return name;
+}
+
 function stepLabel(system: System | undefined, step: Step, fallback: string): string {
   const called = (step as { effect?: unknown }).effect;
   const label = step.type === 'emit' && typeof called === 'string' ? system?.effects?.[called]?.label : undefined;
@@ -173,7 +181,7 @@ function heard(system: System, handler: NonNullable<Effect['on']>[number]): Name
   const out: NameAt[] = [];
   for (const name of names.sheets) {
     const param = params.get(name);
-    out.push(param ? fromParam(param, 'heard', system) : { name, label: HEARD_LABELS[name] ?? name, kind: 'sheet', group: 'heard' });
+    out.push(param ? fromParam(param, 'heard', system) : { name, label: HEARD_LABELS[name] ?? contractSaid(system, name), kind: 'sheet', group: 'heard' });
   }
   for (const name of names.seeds) {
     const column = returned.get(name);
@@ -190,7 +198,7 @@ function heard(system: System, handler: NonNullable<Effect['on']>[number]): Name
       out.push({ name, label: HEARD_LABELS[name]!, kind: 'rows', group: 'heard', children: targetsChildren(listened, system) });
       continue;
     }
-    out.push({ name, label: HEARD_LABELS[name] ?? name, kind: name === CALL_TAGS ? 'tags' : 'result', group: 'heard' });
+    out.push({ name, label: HEARD_LABELS[name] ?? contractSaid(system, name), kind: name === CALL_TAGS ? 'tags' : 'result', group: 'heard' });
   }
   return out;
 }
@@ -232,8 +240,8 @@ export function namesAt(raw: System, effectId: string, place: Place): NameAt[] {
       const call = callNamesOf(system, mod.call);
       const params = new Map((system.effects?.[mod.call]?.params ?? []).map(param => [param.key, param]));
       const callNames: NameAt[] = [
-        ...call.sheets.map(name => (params.get(name) ? fromParam(params.get(name)!, 'heard', system) : { name, label: HEARD_LABELS[name] ?? name, kind: 'sheet', group: 'heard' as const })),
-        ...call.values.map(name => (params.get(name) ? fromParam(params.get(name)!, 'heard', system) : { name, label: HEARD_LABELS[name] ?? name, kind: name === CALL_TAGS ? 'tags' : 'number', group: 'heard' as const })),
+        ...call.sheets.map(name => (params.get(name) ? fromParam(params.get(name)!, 'heard', system) : { name, label: HEARD_LABELS[name] ?? contractSaid(system, name), kind: 'sheet', group: 'heard' as const })),
+        ...call.values.map(name => (params.get(name) ? fromParam(params.get(name)!, 'heard', system) : { name, label: HEARD_LABELS[name] ?? contractSaid(system, name), kind: name === CALL_TAGS ? 'tags' : 'number', group: 'heard' as const })),
       ];
       return dedupe([holder(), ...callNames, ...inputs, ...constants(system)]);
     }

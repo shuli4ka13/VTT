@@ -932,7 +932,13 @@
         "each": "aim",
         "outputs": [
           "brosok"
-        ]
+        ],
+        "said": {
+          "deystvuyuschiy": "действующий",
+          "aims": "цели",
+          "aim": "цель",
+          "brosok": "бросок"
+        }
       }
     },
     "blocks": [

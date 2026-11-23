@@ -1,6 +1,6 @@
-import { STEP_WORDS, COST_BLOCK, fieldsOf, rowTables } from '@vtt/engine';
+import { STEP_WORDS, COST_BLOCK, fieldsOf, rowTables, blockNames, blockLabel, stepSaid } from '@vtt/engine';
 import type { LaunchKind, RecordKind } from '@vtt/engine';
-import { freeId } from '../../store/world.ts';
+import { freeId, slugOf } from '../../store/world.ts';
 import { dice } from '../../words.ts';
 import type { System, Effect, Handler, Binding, Step, SystemConstant, RollEdit, Table, Column } from '@vtt/schema';
 import type { SheetNames } from '../../ui/formula-chips.tsx';
@@ -8,6 +8,19 @@ import { filledStep } from './effects/call-args.ts';
 import { isThrow } from './cards-kind.ts';
 
 export interface Made<T> { key: string; value: T }
+
+export const GEAR_BLOCK = 'Снаряжение';
+
+export const costBlockKey = (system: System): string =>
+  blockNames(system).find(key => blockLabel(system, key) === COST_BLOCK) ?? slugOf(COST_BLOCK);
+
+export const gearBlockKey = (system: System): string =>
+  blockNames(system).find(key => blockLabel(system, key) === GEAR_BLOCK) ?? slugOf(GEAR_BLOCK);
+
+export const saidId = (taken: string[], word: string): { id: string; label?: string } => {
+  const id = freeId(taken, word);
+  return stepSaid({ id }) === word ? { id } : { id, label: word };
+};
 
 
 export const newHandler = (): Handler => ({ on: 'before:*', steps: [] });
@@ -17,7 +30,7 @@ export const newEffect = (system: System, kind: LaunchKind): Made<Effect> => ({
   value: kind === 'manual'
     ? {
       label: 'Новый эффект',
-      params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }],
+      params: [{ key: slugOf('действующий'), label: 'Кто действует', kind: 'sheet' }],
       steps: [],
     }
     : {
@@ -33,7 +46,7 @@ export const newColumn = (system: System, _block?: string): Made<Column> => {
 
 export const newRecordKind = (system: System): Made<RecordKind> => ({
   key: freeId([...Object.keys(system.tables ?? {}), ...Object.keys(system.sheets ?? {})], 'kind'),
-  value: { shape: 'book', use: 'item', label: 'Новый тип', block: 'Снаряжение' },
+  value: { shape: 'book', use: 'item', label: 'Новый тип', block: gearBlockKey(system) },
 });
 
 export const newBinding = (): Binding => ({ effect: '' });
@@ -61,7 +74,7 @@ const DIE_SHAPES: Record<DieKind, Omit<SystemConstant, 'label' | 'kind'>> = {
   hits: { dice: [{ sides: 6 }], read: { kind: 'count', atLeast: 5 } },
   best: { dice: [{ sides: 6 }], read: 'best' },
   percent: { dice: [{ sides: 100 }] },
-  parts: { dice: [{ sides: 12, name: 'первая', label: 'Первая' }, { sides: 12, name: 'вторая', label: 'Вторая' }] },
+  parts: { dice: [{ sides: 12, name: 'first', label: 'Первая' }, { sides: 12, name: 'second', label: 'Вторая' }] },
 };
 
 export const newDie = (system: System, kind: DieKind = 'one'): Made<SystemConstant> => ({
@@ -81,7 +94,7 @@ export const newTable = (system: System): Made<Table> => ({
 
 export const newCost = (system: System): Made<Effect> => ({
   key: freeId(Object.keys(system.effects ?? {}), 'стоимость'),
-  value: { label: `${COST_BLOCK}: новая`, group: COST_BLOCK, steps: [] },
+  value: { label: `${COST_BLOCK}: новая`, group: costBlockKey(system), steps: [] },
 });
 
 export const costsOf = (system: System): [string, Effect][] => {
@@ -112,7 +125,7 @@ const rollerOf = (effect: Effect | undefined, sheets: SheetNames | undefined): s
 const blankRoll = (system: System, taken: string[], effect?: Effect, sheets?: SheetNames): Step[] => {
   const die = firstDie(system);
   const by = rollerOf(effect, sheets);
-  return [{ id: freeId(taken, 'бросок'), type: 'roll', ...(die ? { die } : {}), ...(by ? { by: { expr: `@${by}` } } : {}) } as unknown as Step];
+  return [{ ...saidId(taken, 'бросок'), type: 'roll', ...(die ? { die } : {}), ...(by ? { by: { expr: `@${by}` } } : {}) } as unknown as Step];
 };
 
 const wholeRef = (value: unknown): string | null =>
@@ -126,7 +139,7 @@ const freeRoll = (effect: Effect | undefined): string | undefined => {
 
 const blankCheck = (taken: string[], effect?: Effect): Step[] => {
   const roll = freeRoll(effect);
-  return [{ id: freeId(taken, 'проверка'), type: 'check', ...(roll ? { value: { expr: `@${roll}` } } : {}), versus: { expr: '10' } } as unknown as Step];
+  return [{ ...saidId(taken, 'проверка'), type: 'check', ...(roll ? { value: { expr: `@${roll}` } } : {}), versus: { expr: '10' } } as unknown as Step];
 };
 
 export const SEEN_BRICKS: StepTemplate[] = (['roll-add', 'roll-reroll', 'roll-plus', 'roll-bump'] as const).map(type => ({
@@ -154,7 +167,7 @@ export const BRICKS: StepTemplate[] = [
     key: 'table', label: '+ таблица',
     hint: 'Прочитать строку таблицы по броску или числу: травма, исход, сложность по дистанции.',
     make: (system, taken) => [{
-      id: freeId(taken, 'таблица'), type: 'table',
+      ...saidId(taken, 'таблица'), type: 'table',
       table: rowTables(system)[0]?.[0] ?? '',
       dice: { expr: JSON.stringify(dice(1, 6)) },
     } as unknown as Step],
@@ -165,8 +178,8 @@ export const BRICKS: StepTemplate[] = [
     make: (_system, _taken, effect) => {
       const found = (effect?.params ?? []).find(p => p.kind === 'sheet' && p.many)?.key;
       if (found || !effect || (effect.activation ?? 'manual') !== 'manual') return [{ type: 'each', of: found ?? '' } as unknown as Step];
-      (effect.params ??= []).push({ key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель', label: 'Цель' } } as never);
-      return [{ type: 'each', of: 'цели' } as unknown as Step];
+      (effect.params ??= []).push({ key: 'celi', label: 'Цели', kind: 'sheet', many: true, item: { key: 'cel', label: 'Цель' } } as never);
+      return [{ type: 'each', of: 'celi' } as unknown as Step];
     },
   },
   {
@@ -187,6 +200,6 @@ export const BRICKS: StepTemplate[] = [
   {
     key: 'number', label: '+ число',
     hint: 'Число формулой: урон, лечение, одно число на несколько изменений.',
-    make: (_system, taken) => [{ id: freeId(taken, 'число'), type: 'roll', fixed: { expr: '0' } } as unknown as Step],
+    make: (_system, taken) => [{ ...saidId(taken, 'число'), type: 'roll', fixed: { expr: '0' } } as unknown as Step],
   },
 ];

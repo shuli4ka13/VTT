@@ -70,9 +70,9 @@ describe('листы: блоки и типы', () => {
   it('«+ блок» заводит пустой блок и выбирает его', () => {
     render(<Sheets />);
     fireEvent.click(screen.getByText('+ блок'));
-    expect(blocksNow().map(b => b.key)).toContain('новый_блок');
-    expect(blocksNow().find(b => b.key === 'новый_блок')!.parts).toEqual([]);
-    expect(useWorld.getState().activeBlock).toBe('новый_блок');
+    expect(blocksNow().map(b => b.key)).toContain('novyy_blok');
+    expect(blocksNow().find(b => b.key === 'novyy_blok')!.parts).toEqual([]);
+    expect(useWorld.getState().activeBlock).toBe('novyy_blok');
   });
 
   it('часть «таблица навыки, группировать по характеристике»', () => {
@@ -80,11 +80,11 @@ describe('листы: блоки и типы', () => {
     fireEvent.click(screen.getByText('+ блок'));
     pickCombo(screen.getByLabelText('добавить поля из таблицы'), 'навыки');
     pickCombo(screen.getByLabelText('группировать по'), 'ability');
-    const block = blocksNow().find(b => b.key === 'новый_блок')!;
+    const block = blocksNow().find(b => b.key === 'novyy_blok')!;
     expect(block.parts[0]!.table).toBe('навыки');
     expect(block.parts[0]!.by).toBe('ability');
     const field = fieldsOf(useWorld.getState().system).find(f => f.cell?.column === 'bonus')!;
-    expect(field.group).toBe('новый_блок');
+    expect(field.group).toBe('novyy_blok');
     expect(field.section).toBe('мудрость');
   });
 
@@ -95,13 +95,13 @@ describe('листы: блоки и типы', () => {
     fireEvent.click(screen.getByText('+ блок'));
     pickCombo(screen.getByLabelText('добавить поля из таблицы'), id);
     expect(useWorld.getState().system.tables![id]!.owner).toBeUndefined();
-    expect(blocksNow().find(b => b.key === 'новый_блок')!.parts).toEqual([]);
+    expect(blocksNow().find(b => b.key === 'novyy_blok')!.parts).toEqual([]);
     fireEvent.click(screen.getByText('Нет'));
     expect(screen.queryByText('Да, своими у каждого листа')).toBeNull();
     pickCombo(screen.getByLabelText('добавить поля из таблицы'), id);
     fireEvent.click(screen.getByText('Да, своими у каждого листа'));
     expect(useWorld.getState().system.tables![id]!.owner).toBe('sheet');
-    expect(blocksNow().find(b => b.key === 'новый_блок')!.parts.map(p => p.table)).toEqual([id]);
+    expect(blocksNow().find(b => b.key === 'novyy_blok')!.parts.map(p => p.table)).toEqual([id]);
   });
 
   it('переименование блока меняет только подпись: ключ, типы листов и вложенные блоки прежние', () => {

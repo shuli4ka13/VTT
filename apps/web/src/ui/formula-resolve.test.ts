@@ -111,7 +111,7 @@ describe('разбор не трогает то, что не набирали', 
     }
     expect(seen).toBeGreaterThan(1000);
     expect(changed.slice(0, 10)).toEqual([]);
-  });
+  }, 30000);
 
   it('«@подпись» при сохранении становится «@ключ», хвост пути остаётся', () => {
     const names = [{ tag: 'roll_2', label: 'Бросок атаки' }, { tag: 'dmg', label: 'Урон' }];

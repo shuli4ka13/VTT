@@ -182,7 +182,7 @@ function DiceComposer({ dice, onEdit, driven = false }: {
                 value={term.label ?? term.name ?? ''}
                 placeholder="как зовётся эта часть"
                 onChange={label => onEdit(list => {
-                  const name = slugOf(label) || `часть_${i + 1}`;
+                  const name = slugOf(label) || `part_${i + 1}`;
                   list[i]!.name = name;
                   if (label && label !== name) list[i]!.label = label; else delete list[i]!.label;
                 })}

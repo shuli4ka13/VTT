@@ -1828,7 +1828,13 @@
         "each": "cel",
         "outputs": [
           "hit"
-        ]
+        ],
+        "said": {
+          "deystvuyuschiy": "действующий",
+          "aims": "цели",
+          "cel": "цель",
+          "hit": "попадание"
+        }
       },
       "proverka": {
         "label": "проверка"

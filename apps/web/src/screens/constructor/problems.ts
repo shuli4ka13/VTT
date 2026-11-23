@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { lintSystem, describeWhere, flattenSystem, isSingle, isBook } from '@vtt/engine';
+import { lintSystem, describeWhere, flattenSystem, foreignKeysText, isSingle, isBook } from '@vtt/engine';
 import type { Problem, Where } from '@vtt/engine';
 import type { System } from '@vtt/schema';
 import { useWorld, useBook } from '../../store/world.ts';
@@ -14,7 +14,11 @@ export function useProblems(): Problem[] {
   const mode = useWorld(s => s.origin.mode);
   const book = mode === 'compendium' || compendium.records?.length
     ? compendium : undefined;
-  return useMemo(() => lintSystem(flattenSystem(system, true), book), [system, book]);
+  return useMemo(() => {
+    const found = lintSystem(flattenSystem(system, true), book);
+    const foreign = foreignKeysText(system);
+    return foreign ? [...found, { where: { tab: 'rules' as const }, level: 'warn' as const, text: foreign }] : found;
+  }, [system, book]);
 }
 
 export const whereLabel = (where: Where, system: System): string => describeWhere(where, system);

@@ -116,7 +116,7 @@ describe('BRICKS', () => {
 
   it('«+ бросок» кладёт один шаг: первая кость системы и первый одиночный лист, список целей пропускается', () => {
     const made = brick('roll', inputs(['цели', true], ['атакующий'], ['защитник']));
-    expect(made).toEqual([{ id: 'бросок', type: 'roll', die: 'lead', by: { expr: '@атакующий' } }]);
+    expect(made).toEqual([{ id: 'brosok', label: 'бросок', type: 'roll', die: 'lead', by: { expr: '@атакующий' } }]);
     expect(groupSteps(made as unknown as Step[]).map(g => g.kind)).toEqual(['roll']);
   });
 
@@ -139,7 +139,7 @@ describe('BRICKS', () => {
 
   it('«+ проверка» кладёт один шаг: без пары и без имён «_бросок»; порог 10', () => {
     const made = brick('check', inputs(['действующий']));
-    expect(made).toEqual([{ id: 'проверка', type: 'check', versus: { expr: '10' } }]);
+    expect(made).toEqual([{ id: 'proverka', label: 'проверка', type: 'check', versus: { expr: '10' } }]);
   });
 
   it('«+ проверка» берёт ближайший выше бросок, который ещё ни с чем не сравнён', () => {
@@ -161,7 +161,7 @@ describe('BRICKS', () => {
   });
 
   it('«+ число» — один расчётный шаг с нулём', () => {
-    expect(brick('number', undefined)).toEqual([{ id: 'число', type: 'roll', fixed: { expr: '0' } }]);
+    expect(brick('number', undefined)).toEqual([{ id: 'chislo', label: 'число', type: 'roll', fixed: { expr: '0' } }]);
     expect(groupSteps(brick('number', undefined) as unknown as Step[]).map(g => g.kind)).toEqual(['number']);
   });
 });

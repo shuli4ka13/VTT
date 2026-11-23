@@ -56,7 +56,7 @@ describe('groupTree', () => {
 
 describe('newGroup', () => {
   it('ключ свободный, подпись не повторяет чужую', () => {
-    expect(newGroup(make(), 'Навыки')).toEqual({ key: 'навыки_2', title: 'Навыки 2' });
-    expect(newGroup(make(), 'Магия')).toEqual({ key: 'магия', title: 'Магия' });
+    expect(newGroup(make(), 'Навыки')).toEqual({ key: 'navyki_2', title: 'Навыки 2' });
+    expect(newGroup(make(), 'Магия')).toEqual({ key: 'magiya', title: 'Магия' });
   });
 });

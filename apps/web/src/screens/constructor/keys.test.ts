@@ -3,19 +3,19 @@ import { followKey, referenced, effectUsed, paramUsed } from './keys.ts';
 import type { System } from '@vtt/schema';
 
 describe('имя идёт за названием, пока на него никто не ссылается', () => {
-  const world = (formula: string) => ({ effects: { удар: { params: [{ key: 'вход', label: 'Новый вход' }], steps: [{ value: { expr: formula } }] } } });
+  const world = (formula: string) => ({ effects: { удар: { params: [{ key: 'vhod', label: 'Новый вход' }], steps: [{ value: { expr: formula } }] } } });
 
   it('автоимя без ссылок следует за названием', () => {
-    expect(followKey({ used: referenced(world('1'), 'вход'), key: 'вход', base: 'вход', before: 'Новый вход', after: 'Кость урона', taken: ['вход'] })).toBe('кость_урона');
+    expect(followKey({ used: referenced(world('1'), 'vhod'), key: 'vhod', base: 'vhod', before: 'Новый вход', after: 'Кость урона', taken: ['vhod'] })).toBe('kost_urona');
   });
 
   it('на имя ссылается формула — имя остаётся', () => {
-    expect(referenced(world('@вход + 1'), 'вход')).toBe(true);
-    expect(followKey({ used: referenced(world('@вход + 1'), 'вход'), key: 'вход', base: 'вход', before: 'Новый вход', after: 'Кость урона', taken: ['вход'] })).toBe('вход');
+    expect(referenced(world('@vhod + 1'), 'vhod')).toBe(true);
+    expect(followKey({ used: referenced(world('@vhod + 1'), 'vhod'), key: 'vhod', base: 'vhod', before: 'Новый вход', after: 'Кость урона', taken: ['vhod'] })).toBe('vhod');
   });
 
   it('имя, заданное руками, не перетирается названием', () => {
-    expect(followKey({ used: false, key: 'damage_dice', base: 'вход', before: 'Кость урона', after: 'Кости урона', taken: ['damage_dice'] })).toBe('damage_dice');
+    expect(followKey({ used: false, key: 'damage_dice', base: 'vhod', before: 'Кость урона', after: 'Кости урона', taken: ['damage_dice'] })).toBe('damage_dice');
   });
 });
 

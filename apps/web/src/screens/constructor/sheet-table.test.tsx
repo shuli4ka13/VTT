@@ -94,19 +94,19 @@ describe('таблица прямо на листе', () => {
     const rows = () => useWorld.getState().system.tables!.действия!.rows!;
 
     name('Бонусное действие');
-    expect(rows()[0]!.value).toBe('бонусное_действие');
+    expect(rows()[0]!.value).toBe('bonusnoe_deystvie');
     expect(rows()[0]!.label).toBe('Бонусное действие');
 
     name('Реакция', 0);
-    expect(rows()[0]!.value, 'слово идёт за названием').toBe('реакция');
+    expect(rows()[0]!.value, 'слово идёт за названием').toBe('reakciya');
     expect(rows()[0]!.label).toBe('Реакция');
 
     useWorld.getState().editSystem(draft => { draft.tables!.действия!.rows = [{ value: 'главное', cells: {} }]; });
     openAll();
     name('Главное действие', 0);
-    expect(rows()[0]!.value).toBe('главное_действие');
+    expect(rows()[0]!.value).toBe('glavnoe_deystvie');
     expect(rows()[0]!.label).toBe('Главное действие');
     const formula = useWorld.getState().system.tables!.лист!.columns![0]!.expr as { expr: string };
-    expect(formula.expr, 'формула, которая читала строку, переписана на новое слово').toBe('@действия.главное_действие.value');
+    expect(formula.expr, 'формула, которая читала строку, переписана на новое слово').toBe('@действия.glavnoe_deystvie.value');
   });
 });

@@ -1,9 +1,10 @@
 import type { System, Modifier } from '@vtt/schema';
-import { ROLL_CALL, CALL_WORDS, targetStages, paramStages, typeColumn, tiedToHolder, ROW, HOLDER, NAMES, ruleLabelOf } from '@vtt/engine';
+import { ROLL_CALL, CALL_WORDS, targetStages, paramStages, typeColumn, tiedToHolder, ROW, HOLDER, NAMES } from '@vtt/engine';
 import { labelOfTag } from '../../ui/formula.tsx';
 import { formulaWords } from '../../ui/formula-words.ts';
 import { addendWords } from './readback.ts';
 import { rowNames } from './row-names.ts';
+import { tagSaid } from './tag-said.ts';
 
 type Loose = Record<string, unknown>;
 
@@ -89,7 +90,7 @@ export function modifierSentence(system: System, modifier: Modifier, table?: str
   }
   const call = String(mod.call ?? '');
   if (call === ROLL_CALL) {
-    const rolled = (list: unknown): string => ((list as string[] | undefined) ?? []).map(tag => `«${ruleLabelOf(system, tag) ?? tag}»`).join(', ');
+    const rolled = (list: unknown): string => ((list as string[] | undefined) ?? []).map(tag => `«${tagSaid(system, tag)}»`).join(', ');
     const all = rolled(mod.tags);
     const some = rolled(mod.anyTags);
     const except = rolled(mod.notTags);

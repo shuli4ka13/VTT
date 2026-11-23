@@ -16,7 +16,7 @@ describe('D&D: однотипное лежит таблицами, а не ро�
   it('счётчики хода — строки таблицы «За ход», у каждой свой потолок и начало', () => {
     const turn = fieldsOf(system).filter(field => field.home === 'turn');
     expect(turn.map(field => field.label)).toEqual(['Действие', 'Бонусное действие', 'Реакция', 'Раз за ход', 'Свирепый атакующий', 'Атак осталось']);
-    const action = fieldOf(system, 'turn.действие.left')!;
+    const action = fieldOf(system, 'turn.deystvie.left')!;
     expect(action.value).toMatchObject({ kind: 'stored', default: 1, max: '2' });
 
     const pass = newPass(system, hero, { compendium: world.compendium });
@@ -28,11 +28,11 @@ describe('D&D: однотипное лежит таблицами, а не ро�
 
   it('стойкость к урону — одна колонка у типов урона, спасбросок — колонка характеристик', () => {
     expect(fieldsOf(system).filter(field => field.cell?.column === 'taken').length).toBe(13);
-    expect(fieldOf(system, 'damage_types.огонь.taken')!.value).toMatchObject({ type: 'choice', from: 'taken', default: 'как есть' });
-    expect(fieldOf(system, 'abilities.сила.save')!.label).toBe('Спасбросок: Сила');
+    expect(fieldOf(system, 'damage_types.fire.taken')!.value).toMatchObject({ type: 'choice', from: 'taken', default: 'kak_est' });
+    expect(fieldOf(system, 'abilities.strength.save')!.label).toBe('Спасбросок: Сила');
     expect(system.tables!.saves).toBeUndefined();
     expect(fieldsOf(system).some(field => /^taken_\d+$|^turn_/.test(field.tag))).toBe(false);
     const pass = newPass(system, hero, { compendium: world.compendium });
-    expect(calc(system, hero, 'abilities.сила.save', pass)).toBe(calc(system, hero, 'abilities.сила.mod', pass) as number + (calc(system, hero, 'prof_bonus', pass) as number));
+    expect(calc(system, hero, 'abilities.strength.save', pass)).toBe(calc(system, hero, 'abilities.strength.mod', pass) as number + (calc(system, hero, 'prof_bonus', pass) as number));
   });
 });

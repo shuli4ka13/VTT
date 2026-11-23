@@ -6,6 +6,7 @@ import { formulaWords } from '../../ui/formula-words.ts';
 import { shownFormula } from '../../ui/formula-lang.ts';
 import { plural } from '../../ui/plural.ts';
 import { diceSaid as diceText, asDice, DIE_LETTER } from '../../words.ts';
+import { tagsSaid } from './tag-said.ts';
 
 
 export type Segment = { text: string } | { hole: string };
@@ -139,7 +140,7 @@ export function rollReadback(step: Step, system: System, effect: Effect, names?:
     if (!('text' in bonus) || (bonus.text !== '0' && bonus.text !== '')) out.push(seg('+'), bonus);
   }
   const tags = ((r.tags ?? []) as unknown[]).filter((tag): tag is string => typeof tag === 'string');
-  if (tags.length) out.push(seg(`(${tags.join(', ')})`));
+  if (tags.length) out.push(seg(`(${tagsSaid(system, tags)})`));
   return out;
 }
 

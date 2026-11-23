@@ -7,7 +7,7 @@ import { useWorld, emptySystem } from '../../store/world.ts';
 import { SheetTab } from './sheet-tab.tsx';
 import { world as W } from '@vtt/schema';
 import { PIECES } from '@vtt/engine/samples';
-import { lintSystem, errorsOf, fieldsOf } from '@vtt/engine';
+import { lintSystem, errorsOf, fieldsOf, blockLabel } from '@vtt/engine';
 
 describe('куски на пустом листе', () => {
   beforeEach(() => {
@@ -40,7 +40,7 @@ describe('куски на пустом листе', () => {
     fireEvent.click(screen.getAllByText('Характеристики к20')[0]!);
 
     const system = useWorld.getState().system;
-    expect(fieldsOf(system).some(f => f.group === 'Характеристики')).toBe(true);
+    expect(fieldsOf(system).some(f => blockLabel(system, f.group ?? '') === 'Характеристики')).toBe(true);
     expect(W.system.safeParse(system).success).toBe(true);
     expect(errorsOf(lintSystem(system)).map(p => p.text)).toEqual([]);
   });
@@ -91,8 +91,8 @@ describe('вид поля на листе выбирается в констру
     expect(screen.getByText(/не хватает: верх/)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: '+ колонка для верха' }));
     const columns = useWorld.getState().system.tables!.лист!.columns!;
-    expect(columns.map(c => c.key)).toEqual(['хиты_max', 'хиты']);
-    expect(columns[1]!.max).toEqual({ expr: '@хиты_max' });
+    expect(columns.map(c => c.key)).toEqual(['hity_max', 'хиты']);
+    expect(columns[1]!.max).toEqual({ expr: '@hity_max' });
     expect(screen.queryByText(/не хватает: верх/)).toBeNull();
   });
 

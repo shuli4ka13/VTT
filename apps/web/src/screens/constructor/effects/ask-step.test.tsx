@@ -32,15 +32,15 @@ describe('шаг «Спросить» в конструкторе', () => {
   it('из палитры: заготовка с именем без вопроса, «Проблемы» просят вписать вопрос', () => {
     start();
     within().click('+ спросить');
-    expect(steps()).toEqual([{ id: 'решение', type: 'ask' }]);
+    expect(steps()).toEqual([{ id: 'reshenie', type: 'ask' }]);
     expect(stepCard(/^1 · Спросить/).textContent).toContain('Вопрос');
     expect(stepCard(/^1 · Спросить/).querySelector('.verdict--bad')).not.toBeNull();
   });
 
   it('второй шаг получает другое имя', () => {
-    start([{ id: 'решение', type: 'ask', label: 'Первый?' }]);
+    start([{ id: 'reshenie', type: 'ask', label: 'Первый?' }]);
     within().click('+ спросить');
-    expect(steps().map(step => step.id)).toEqual(['решение', 'решение_2']);
+    expect(steps().map(step => step.id)).toEqual(['reshenie', 'reshenie_2']);
   });
 
   it('вопрос, «Кого» и подписи ответов — данные ровно той формы; стирание подписи снимает ключ', () => {
@@ -55,13 +55,13 @@ describe('шаг «Спросить» в конструкторе', () => {
     within(card).type('Ответ «да» словами', 'Бьющий');
     card = stepCard(/^1 · Спросить/);
     within(card).type('Ответ «нет» словами', 'Защитник');
-    expect(steps()).toEqual([{ id: 'решение', type: 'ask', label: 'Кто победил?', to: { expr: '@цель' }, yes: 'Бьющий', no: 'Защитник' }]);
+    expect(steps()).toEqual([{ id: 'reshenie', type: 'ask', label: 'Кто победил?', to: { expr: '@цель' }, yes: 'Бьющий', no: 'Защитник' }]);
     card = stepCard(/^1 · Спросить/);
     expect(card.querySelector('.verdict--bad')).toBeNull();
     within(card).type('Ответ «да» словами', '');
     card = stepCard(/^1 · Спросить/);
     within(card).formula('Кого', '');
-    expect(steps()).toEqual([{ id: 'решение', type: 'ask', label: 'Кто победил?', no: 'Защитник' }]);
+    expect(steps()).toEqual([{ id: 'reshenie', type: 'ask', label: 'Кто победил?', no: 'Защитник' }]);
   });
 });
 

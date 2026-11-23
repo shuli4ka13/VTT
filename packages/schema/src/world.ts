@@ -331,6 +331,7 @@ export const tagContract = z.object({
   inputs: z.array(z.object({ key: z.string().min(1), kind: valueKind, many: z.boolean().optional() }).strict()).optional(),
   each: z.string().min(1).optional(),
   outputs: z.array(z.string().min(1)).optional(),
+  said: z.record(z.string(), z.string().min(1)).optional(),
 }).strict();
 
 export const effect = z.object({

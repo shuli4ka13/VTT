@@ -7,6 +7,7 @@ import { CARD_TITLES, titleOf } from './words.ts';
 import { checkReadback, changeReadback, numberReadback, rollReadback, sendReadback } from '../readback.ts';
 import type { Segment } from '../readback.ts';
 import { formulaAsLabels } from '../../../ui/formula.tsx';
+import { tagsSaid } from '../tag-said.ts';
 
 type Loose = Record<string, unknown>;
 
@@ -116,8 +117,8 @@ export function WhatNext({ open, onClose, system, eventId, onEdit }: {
                 {m.tags.length ? (
                   <span className="faint">
                     {m.tags.length > 6
-                      ? `· по меткам: ${m.tags.slice(0, 6).join(', ')} и ещё ${m.tags.length - 6}`
-                      : `· по меткам: ${m.tags.join(', ')}`}
+                      ? `· по меткам: ${tagsSaid(system, m.tags.slice(0, 6))} и ещё ${m.tags.length - 6}`
+                      : `· по меткам: ${tagsSaid(system, m.tags)}`}
                   </span>
                 ) : null}
               </div>

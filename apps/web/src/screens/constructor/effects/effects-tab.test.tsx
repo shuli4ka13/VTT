@@ -231,7 +231,7 @@ describe('ссылка на результат шага', () => {
     const before = useWorld.getState().system.effects.strike!.steps!.map(step => step.id);
     const check = String(before.at(-1));
     fireEvent.click(screen.getAllByText(/^имя в формулах/).at(-1)!);
-    const input = [...document.querySelectorAll('input')].find(i => i.value === check.replace(/_/g, ' '))!;
+    const input = [...document.querySelectorAll('input')].find(i => i.value === 'проверка')!;
     fireEvent.change(input, { target: { value: 'hit' } });
     fireEvent.blur(input);
     const steps = useWorld.getState().system.effects.strike!.steps!;
@@ -274,8 +274,8 @@ describe('три вида создания, два вида запуска', () 
     fireEvent.change(input, { target: { value: 'удар_мечом' } });
     fireEvent.blur(input);
     const state = useWorld.getState();
-    expect(Object.keys(state.system.effects)).toEqual(['удар_мечом']);
-    expect(state.activeEffectId).toBe('удар_мечом');
+    expect(Object.keys(state.system.effects)).toEqual(['udar_mechom']);
+    expect(state.activeEffectId).toBe('udar_mechom');
   });
 
   it('палитра создания предлагает ровно два вида и не знает слов «реакция» и «триггерный»', () => {
@@ -339,7 +339,7 @@ describe('вызываемый эффект — обычный эффект', ()
     fireEvent.click(screen.getAllByText('+ кнопкой')[0]!);
     const key = useWorld.getState().activeEffectId!;
     const made = useWorld.getState().system.effects[key]!;
-    expect(made.params!.map(p => [p.key, p.kind])).toEqual([['действующий', 'sheet']]);
+    expect(made.params!.map(p => [p.key, p.kind])).toEqual([['deystvuyuschiy', 'sheet']]);
     expect(made.steps).toEqual([]);
     expect(key.startsWith('event:')).toBe(false);
   });

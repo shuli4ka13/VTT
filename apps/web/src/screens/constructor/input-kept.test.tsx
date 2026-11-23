@@ -277,14 +277,14 @@ describe('ввод не пропадает: редактор живёт у су�
 
     press('+ таблица');
     expectTyping('как зовётся таблица');
-    expect(inputs('как зовётся таблица').map(el => el.value)).toEqual(['', 'Характеристики']);
-    type('Яды');
+    expect(inputs('как зовётся таблица').map(el => el.value)).toEqual(['Характеристики', '']);
+    type('Атаки');
     const row = focused().closest('details')!.querySelector<HTMLInputElement>('input[placeholder="как зовётся строка"]')!;
     click(row);
-    expect(inputs('как зовётся таблица').map(el => el.value), 'таблица переехала по названию').toEqual(['Характеристики', 'Яды']);
+    expect(inputs('как зовётся таблица').map(el => el.value), 'таблица переехала по названию').toEqual(['Атаки', 'Характеристики']);
     expect(focused(), 'щелчок в строку переехавшей таблицы не потерян').toBe(row);
-    type('Мышьяк');
+    type('Меч');
     enter();
-    expect(tables().map(table => `${table.label}: ${rowsOf(table).join(', ')}`)).toEqual(['Характеристики: Сила', 'Яды: Мышьяк']);
+    expect(tables().map(table => `${table.label}: ${rowsOf(table).join(', ')}`)).toEqual(['Характеристики: Сила', 'Атаки: Меч']);
   });
 });

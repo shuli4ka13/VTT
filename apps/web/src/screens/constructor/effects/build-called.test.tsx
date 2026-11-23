@@ -89,26 +89,26 @@ describe('вызываемые блоки D&D собираются руками'
     const [goal] = start('dnd5e', ['attack_roll']);
     const ui = within();
     calledHead(ui, 'attack_roll', goal!);
-    param(ui, 'attack_roll', 0, 'Кто бросает', 'sheet', 'кто', { role: 'actor' });
-    param(ui, 'attack_roll', 1, 'Против кого', 'sheet', 'против', { role: 'target' });
-    param(ui, 'attack_roll', 2, 'Бонус атаки', 'number', 'бонус', { value: '0' });
+    param(ui, 'attack_roll', 0, 'Кто бросает', 'sheet', 'who', { role: 'actor' });
+    param(ui, 'attack_roll', 1, 'Против кого', 'sheet', 'protiv', { role: 'target' });
+    param(ui, 'attack_roll', 2, 'Бонус атаки', 'number', 'bonus_2', { value: '0' });
     const at = (k: number) => () => stepCard(new RegExp(`^${k} · `));
     ui.click('+ бросок');
-    within(at(1)()).select('Кто бросает', '@кто');
+    within(at(1)()).select('Кто бросает', '@who');
     within(at(1)()).select('Что бросает', 'die:lead_die');
     within(at(1)()).click('+ прибавка');
-    within(at(1)()).formula('Прибавка', '@бонус');
-    within(at(1)()).select('Метки', 'атака');
+    within(at(1)()).formula('Прибавка', '@bonus_2');
+    within(at(1)()).select('Метки', 'ataka');
     nameStep(at(1)(), 'бросок');
     ui.click('+ проверка');
     within(at(2)()).formula('Что проверяем', '@бросок');
-    within(at(2)()).formula('С чем', '@против.ac');
-    within(at(2)()).formula('Успех, если на кости не меньше', '@кто.crit_from');
+    within(at(2)()).formula('С чем', '@protiv.ac');
+    within(at(2)()).formula('Успех, если на кости не меньше', '@who.crit_from');
     within(at(2)()).formula('Провал, если на кости не больше', '1');
     nameStep(at(2)(), 'проверка');
     returns([
-      ['исход', 'choice', 'исход', '=если(не @проверка.success, "промах", если(@проверка.natural >= @кто.crit_from, "крит", "попадание"))', undefined, 'attack_outcomes'],
-      ['на костях', 'number', 'на_костях', 'Проверка — что выпало на костях, без прибавок'],
+      ['исход', 'choice', 'ishod', '=если(не @проверка.success, "promah", если(@проверка.natural >= @who.crit_from, "krit", "popadanie"))', undefined, 'attack_outcomes'],
+      ['на костях', 'number', 'na_kostyah', 'Проверка — что выпало на костях, без прибавок'],
     ]);
     dump({ got: built('attack_roll'), goal });
     expect(built('attack_roll')).toEqual(goal);
@@ -118,24 +118,24 @@ describe('вызываемые блоки D&D собираются руками'
     const [goal] = start('dnd5e', ['saving_throw']);
     const ui = within();
     calledHead(ui, 'saving_throw', goal!);
-    param(ui, 'saving_throw', 0, 'Кто спасается', 'sheet', 'кто', { role: 'target' });
-    param(ui, 'saving_throw', 1, 'Чем спасается', 'choice', 'характеристика', { from: 'abilities' });
-    param(ui, 'saving_throw', 2, 'Сложность', 'number', 'сложность');
+    param(ui, 'saving_throw', 0, 'Кто спасается', 'sheet', 'who', { role: 'target' });
+    param(ui, 'saving_throw', 1, 'Чем спасается', 'choice', 'harakteristika', { from: 'abilities' });
+    param(ui, 'saving_throw', 2, 'Сложность', 'number', 'slozhnost');
     const at = (k: number) => () => stepCard(new RegExp(`^${k} · `));
     ui.click('+ бросок');
-    within(at(1)()).select('Что бросает', 'field:характеристика.save');
-    within(at(1)()).select('Ещё метки', 'спасбросок');
+    within(at(1)()).select('Что бросает', 'field:harakteristika.save');
+    within(at(1)()).select('Ещё метки', 'spasbrosok');
     within(at(1)()).select('Ещё метки', ':формула');
-    within(at(1)()).type('Ещё метки', '@характеристика');
+    within(at(1)()).type('Ещё метки', '@harakteristika');
     within(at(1)()).click('добавить');
     nameStep(at(1)(), 'бросок');
     ui.click('+ проверка');
     within(at(2)()).formula('Что проверяем', '@бросок');
-    within(at(2)()).formula('С чем', '@сложность');
+    within(at(2)()).formula('С чем', '@slozhnost');
     nameStep(at(2)(), 'проверка');
     returns([
-      ['спасся', 'boolean', 'прошёл', 'Проверка — пройдена', 'не спасся'],
-      ['на костях', 'number', 'на_костях', 'Проверка — что выпало на костях, без прибавок'],
+      ['спасся', 'boolean', 'proshel', 'Проверка — пройдена', 'не спасся'],
+      ['на костях', 'number', 'na_kostyah', 'Проверка — что выпало на костях, без прибавок'],
     ]);
     dump({ got: built('saving_throw'), goal });
     expect(built('saving_throw')).toEqual(goal);

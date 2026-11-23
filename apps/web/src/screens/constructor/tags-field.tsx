@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { AddCombo } from '../../ui/combo.tsx';
 import type { System } from '@vtt/schema';
 import { tagWords } from '@vtt/engine';
+import { rowSaid } from './tag-said.ts';
 import { Chip, Input, Button } from '../../ui/primitives.tsx';
 import { focusNew } from '../../ui/focus-new.ts';
 import { shownFormula, storedFormula } from '../../ui/formula-lang.ts';
@@ -46,10 +47,11 @@ export function TagsField({ system, value, onChange, known = [], templates = [],
     ['метки с договором', contracts],
     ['метки вызова', known.map(word => [word, word] as const)],
     ...[...new Set(rows.map(([, table]) => table))].map(table => [
-      `метки бросков · ${table}`, rows.filter(([, t]) => t === table).map(([word]) => [word, word] as const),
+      `метки бросков · ${table}`, rows.filter(([, t]) => t === table).map(([word]) => [word, rowSaid(system, word)] as const),
     ] as [string, (readonly [string, string])[]]),
   ];
   const groups = listed.map(([title, list]) => [title, once(list)] as [string, (readonly [string, string])[]]);
+  const said = new Map(groups.flatMap(([, list]) => list.filter(([word, label]) => word !== label)));
   const dictionary = new Set(groups.flatMap(([, list]) => list.map(([word]) => word)));
   const free = groups
     .map(([title, list]) => [title, list.filter(([word]) => !taken.has(word))] as const)
@@ -67,7 +69,7 @@ export function TagsField({ system, value, onChange, known = [], templates = [],
       {picked.map(tag => (
         <Chip key={keyOf(tag)} active={typeof tag === 'string'} onRemove={() => drop(tag)}
           {...(typeof tag === 'string' ? {} : { title: 'метка вычисляется формулой при броске' })}>
-          {typeof tag === 'string' ? (labels?.get(tag) ?? templates.find(t => t.value === tag)?.label ?? tag) : `= ${shownFormula(tag.expr)}`}
+          {typeof tag === 'string' ? (labels?.get(tag) ?? templates.find(t => t.value === tag)?.label ?? said.get(tag) ?? tag) : `= ${shownFormula(tag.expr)}`}
           {typeof tag === 'string' && !dictionary.has(tag) ? <span className="faint tag-unknown" title="такой метки нет в словаре меток бросков"> · нет в словаре</span> : null}
         </Chip>
       ))}

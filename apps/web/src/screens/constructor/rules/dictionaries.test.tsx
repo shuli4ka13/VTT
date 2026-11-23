@@ -69,7 +69,7 @@ describe('Словари: кости, правки броска, таблицы'
     завести('best');
     expect(последняя()).toEqual({ label: '', kind: 'die', dice: [{ sides: 6 }], read: 'best' });
     завести('parts');
-    expect(последняя().dice).toEqual([{ sides: 12, name: 'первая', label: 'Первая' }, { sides: 12, name: 'вторая', label: 'Вторая' }]);
+    expect(последняя().dice).toEqual([{ sides: 12, name: 'first', label: 'Первая' }, { sides: 12, name: 'second', label: 'Вторая' }]);
     завести('sum');
     expect(последняя().dice).toEqual([{ count: 2, sides: 6 }]);
   });
@@ -100,7 +100,7 @@ describe('Словари: кости, правки броска, таблицы'
     const [first] = screen.getAllByPlaceholderText('как зовётся эта часть');
     fireEvent.change(first!, { target: { value: 'Надежда' } });
     expect(Object.values(useWorld.getState().system.constants ?? {})[0]?.dice?.[0])
-      .toEqual({ sides: 20, name: 'надежда', label: 'Надежда' });
+      .toEqual({ sides: 20, name: 'nadezhda', label: 'Надежда' });
   });
 
   it('поле «сколько»: единица и пустое поле снимают ключ — умолчание в данные не пишется', () => {

@@ -45,7 +45,7 @@ describe('стоимость эффекта — одним выбором', () =
   it('«+ новая плата» заводит эффект в блоке «Плата» и сразу его зовёт', () => {
     const effect = lane();
     pickCombo(screen.getByPlaceholderText('+ плата'), ':новая');
-    const made = Object.entries(useWorld.getState().system.effects).find(([id]) => id.startsWith('стоимость'))!;
+    const made = Object.entries(useWorld.getState().system.effects).find(([id]) => id.startsWith('stoimost'))!;
     expect(made[1]).toMatchObject({ group: 'Плата' });
     expect(effect.steps![0]).toMatchObject({ type: 'emit', effect: made[0] });
   });
@@ -492,6 +492,6 @@ describe('«+ бросок» и «+ проверка»: что кладётся 
     render(<Chain id="удар" placeAt={index => ({ part: 'steps', index })} effect={effect} system={system({ удар: effect })} edit={change => change(effect)} />);
     fireEvent.click(screen.getAllByText('+ проверка')[0]!);
     expect(effect.steps).toHaveLength(2);
-    expect(effect.steps![1]).toEqual({ id: 'проверка', type: 'check', value: { expr: '@бросок' }, versus: { expr: '10' } });
+    expect(effect.steps![1]).toEqual({ id: 'proverka', label: 'проверка', type: 'check', value: { expr: '@бросок' }, versus: { expr: '10' } });
   });
 });

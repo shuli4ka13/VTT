@@ -35,31 +35,31 @@ describe('ключ колонки идёт за названием, пока н�
       [{ key: 'Здоровье', parts: [{ table: 'лист', columns: ['field_4'], views: { field_4: { kind: 'bar' } } }] }],
     ), 'лист', 'field_4');
     rename('Здоровье');
-    expect(columns('лист')).toEqual(['здоровье']);
+    expect(columns('лист')).toEqual(['zdorove']);
     const part = useWorld.getState().system.blocks![0]!.parts[0]!;
-    expect(part.columns ?? ['здоровье']).toEqual(['здоровье']);
-    expect(part.views).toEqual({ здоровье: { kind: 'bar' } });
+    expect(part.columns ?? ['zdorove']).toEqual(['zdorove']);
+    expect(part.views).toEqual({ zdorove: { kind: 'bar' } });
   });
 
   it('новая колонка таблицы со строками: «колонка» → по названию', () => {
-    open(base({ навыки: { label: 'Навыки', key: 'word', rows: [{ value: 'атлетика' }], columns: [{ key: 'колонка', label: '', kind: 'number' }] } }), 'навыки', 'колонка');
+    open(base({ навыки: { label: 'Навыки', key: 'word', rows: [{ value: 'атлетика' }], columns: [{ key: 'kolonka', label: '', kind: 'number' }] } }), 'навыки', 'kolonka');
     rename('Развитие');
-    expect(columns('навыки')).toEqual(['развитие']);
+    expect(columns('навыки')).toEqual(['razvitie']);
   });
 
   it('заполненная клетка держит ключ', () => {
-    open(base({ навыки: { label: 'Навыки', key: 'word', rows: [{ value: 'атлетика', cells: { колонка: 2 } }], columns: [{ key: 'колонка', label: '', kind: 'number' }] } }), 'навыки', 'колонка');
+    open(base({ навыки: { label: 'Навыки', key: 'word', rows: [{ value: 'атлетика', cells: { kolonka: 2 } }], columns: [{ key: 'kolonka', label: '', kind: 'number' }] } }), 'навыки', 'kolonka');
     rename('Развитие');
-    expect(columns('навыки')).toEqual(['колонка']);
+    expect(columns('навыки')).toEqual(['kolonka']);
   });
 
   it('колонка, которую читает формула, держит ключ', () => {
     open(base({ навыки: { label: 'Навыки', key: 'word', rows: [{ value: 'атлетика' }], columns: [
-      { key: 'колонка', label: '', kind: 'number' },
-      { key: 'колонка_2', label: 'Значение', expr: { expr: '@row.колонка * 5' } },
-    ] } }), 'навыки', 'колонка');
+      { key: 'kolonka', label: '', kind: 'number' },
+      { key: 'kolonka_2', label: 'Значение', expr: { expr: '@row.kolonka * 5' } },
+    ] } }), 'навыки', 'kolonka');
     rename('Развитие');
-    expect(columns('навыки')).toEqual(['колонка', 'колонка_2']);
+    expect(columns('навыки')).toEqual(['kolonka', 'kolonka_2']);
   });
 
   it('свойство книги ключ не меняет: по нему вход эффекта получает значение сам', () => {
@@ -70,27 +70,27 @@ describe('ключ колонки идёт за названием, пока н�
 });
 
 describe('ключ таблицы идёт за названием, пока на неё никто не ссылается', () => {
-  const skills = { label: '', key: 'word', owner: 'sheet', rows: [{ value: 'атлетика' }], columns: [{ key: 'развитие', label: 'Развитие', kind: 'number' }] };
+  const skills = { label: '', key: 'word', owner: 'sheet', rows: [{ value: 'атлетика' }], columns: [{ key: 'razvitie', label: 'Развитие', kind: 'number' }] };
 
   it('новая таблица на листе: «таблица» → по названию, и блок следует за ней', () => {
-    const system = base({ характеристики: { label: 'Характеристики', key: 'word', rows: [] }, таблица: skills },
-      [{ key: 'Навыки', parts: [{ table: 'таблица' }] }]);
-    const fresh = renameTable(system, 'таблица', 'Навыки Warhammer', {});
-    expect(fresh).toBe('навыки_warhammer');
-    moveTable(system, 'таблица', fresh);
-    expect(Object.keys(system.tables!)).toEqual(['характеристики', 'навыки_warhammer']);
-    expect(system.blocks![0]!.parts[0]!.table).toBe('навыки_warhammer');
+    const system = base({ harakteristiki: { label: 'Характеристики', key: 'word', rows: [] }, tablica: skills },
+      [{ key: 'Навыки', parts: [{ table: 'tablica' }] }]);
+    const fresh = renameTable(system, 'tablica', 'Навыки Warhammer', {});
+    expect(fresh).toBe('navyki_warhammer');
+    moveTable(system, 'tablica', fresh);
+    expect(Object.keys(system.tables!)).toEqual(['harakteristiki', 'navyki_warhammer']);
+    expect(system.blocks![0]!.parts[0]!.table).toBe('navyki_warhammer');
   });
 
   it('таблицу читает формула или ссылается колонка — ключ держится', () => {
-    const read = base({ таблица: skills, лист: { shape: 'single', columns: [{ key: 'x', label: 'X', expr: { expr: '@таблица.атлетика.развитие' } }] } });
-    expect(renameTable(read, 'таблица', 'Навыки', {})).toBe('таблица');
-    const linked = base({ таблица: skills, другая: { label: 'Другая', key: 'word', columns: [{ key: 'навык', label: 'Навык', kind: 'choice', from: 'таблица' }] } });
-    expect(renameTable(linked, 'таблица', 'Навыки', {})).toBe('таблица');
+    const read = base({ tablica: skills, лист: { shape: 'single', columns: [{ key: 'x', label: 'X', expr: { expr: '@tablica.атлетика.развитие' } }] } });
+    expect(renameTable(read, 'tablica', 'Навыки', {})).toBe('tablica');
+    const linked = base({ tablica: skills, другая: { label: 'Другая', key: 'word', columns: [{ key: 'навык', label: 'Навык', kind: 'choice', from: 'tablica' }] } });
+    expect(renameTable(linked, 'tablica', 'Навыки', {})).toBe('tablica');
   });
 
   it('значения листов по этой таблице держат ключ', () => {
-    const system = base({ таблица: skills });
-    expect(renameTable(system, 'таблица', 'Навыки', { sheets: [{ values: { 'таблица.атлетика.развитие': 2 } }] })).toBe('таблица');
+    const system = base({ tablica: skills });
+    expect(renameTable(system, 'tablica', 'Навыки', { sheets: [{ values: { 'tablica.атлетика.развитие': 2 } }] })).toBe('tablica');
   });
 });

@@ -55,8 +55,8 @@ describe('развилка по итогу вызова — с фишки рез
     expect(within(card()).has('в «Если»')).toBe(false);
     ifBy(card(), 'попадание / промах');
     expect(steps()).toEqual([
-      { type: 'emit', effect: 'бросок', id: 'бросок_атаки' },
-      { type: 'branch', if: { expr: '@бросок_атаки.попал' } },
+      { type: 'emit', effect: 'бросок', id: 'brosok_ataki', label: 'бросок атаки' },
+      { type: 'branch', if: { expr: '@brosok_ataki.попал' } },
       { type: 'end' },
     ]);
     expect(isFused(block(0))).toBe(true);
@@ -80,8 +80,8 @@ describe('развилка по итогу вызова — с фишки рез
     start([{ type: 'check', value: { expr: '5' }, versus: { expr: '3' } }]);
     within(stepCard(/^1 · /)).click('+ по итогу');
     expect(steps()).toEqual([
-      { type: 'check', value: { expr: '5' }, versus: { expr: '3' }, id: 'проверка' },
-      { type: 'branch', if: { expr: '@проверка.success' } },
+      { type: 'check', value: { expr: '5' }, versus: { expr: '3' }, id: 'proverka', label: 'проверка' },
+      { type: 'branch', if: { expr: '@proverka.success' } },
       { type: 'end' },
     ]);
     expect(isFused(block(0))).toBe(true);
