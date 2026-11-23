@@ -19,16 +19,18 @@ import { TABS } from '../words.ts';
 import { GuideLayer, PAUSE_MS, useView, movesOf, moveAt, pointOf } from './guide-card.tsx';
 import { LESSONS, lessonOf } from './lessons/index.ts';
 import { findAnchor, firstOf, openedDialog } from './anchor.ts';
-import { compile, bringIn, lintSystem, flattenSystem, labelBlock, fieldsOf, foreignKeys, singleTableOf } from '@vtt/engine';
+import { compile, bringIn, lintSystem, flattenSystem, labelBlock, fieldsOf, foreignKeys, singleTableOf, soleLang, setTongue } from '@vtt/engine';
 import { FORBIDDEN_STEMS } from '../words.ts';
 import { errorsOf } from './find.ts';
 import { bring } from '../store/fresh.ts';
 import { PIECES, bringPiece, SAMPLE_SYSTEMS } from '@vtt/engine/samples';
-import type { View, Lesson, Step as LessonStep } from './types.ts';
+import type { View, Lesson, Anchor, Step as LessonStep } from './types.ts';
+import { inLang, namesOf } from './lazy.ts';
+import { i18n } from '../i18n/author.ts';
 import base from './seeds/base.json' with { type: 'json' };
 import { foldedSystem } from '../testing/folded.ts';
 
-const seed = base as unknown as System;
+const seed = soleLang(base as unknown as System, 'ru');
 
 let view: View | null = null;
 
@@ -66,6 +68,29 @@ const press = (el: HTMLElement) => {
   act(() => { fireEvent.click(target); });
   openPanels();
 };
+const anchorsOf = (at: Anchor | Anchor[] | undefined): Anchor[] => (at === undefined ? [] : Array.isArray(at) ? at : [at]);
+
+const mixedAnchor = (english: Anchor | undefined, russian: Anchor, data: ReadonlySet<string>): Anchor => {
+  if (!english || !('text' in russian) || !('text' in english)) return english ?? russian;
+  return {
+    text: data.has(russian.text) ? russian.text : english.text,
+    ...(russian.in !== undefined ? { in: data.has(russian.in) ? russian.in : english.in ?? russian.in } : {}),
+  };
+};
+
+const englishAnchor = async (lesson: Lesson, stepIndex: number, at: number, move: { at: Anchor | Anchor[] }): Promise<void> => {
+  const english = inLang(lesson, 'en');
+  if (english === lesson) return;
+  const theirs = anchorsOf(movesOf(english.steps[stepIndex]!)[at]?.at);
+  const data = new Set(namesOf(lesson.id, 'ru'));
+  const mixed = anchorsOf(move.at).map((anchor, k) => mixedAnchor(theirs[k], anchor, data));
+  await act(async () => { setTongue('en'); await i18n.changeLanguage('en'); });
+  openAll();
+  const found = firstOf(mixed);
+  await act(async () => { setTongue('ru'); await i18n.changeLanguage('ru'); });
+  expect(found, `${lesson.id}/${english.steps[stepIndex]!.id}: ход ${at + 1}, на английском экране нет якоря ${JSON.stringify(mixed)}`).not.toBeNull();
+};
+
 const problemsOf = () => lintSystem(flattenSystem(useWorld.getState().system, true)).filter(p => p.level === 'error').map(p => p.text).join(' | ');
 const flat = (text: string): string => text.toLowerCase().replace(/ё/g, 'е').replace(/\s+/g, ' ').trim();
 const screenText = (): string => {
@@ -763,6 +788,7 @@ describe('уроки конструктора', () => {
             press(via!);
           }
           expect(firstOf(move.at), `${lesson.id}/${step.id}: ход ${at + 1}, нет якоря ${JSON.stringify(move.at)}`).not.toBeNull();
+          await englishAnchor(lesson, index, at, move);
           openPanels();
           snap();
           const now = screenText();

@@ -1,8 +1,10 @@
 import type { System, Param, Effect } from '@vtt/schema';
 import type { Lesson, View } from '../types.ts';
 import { effectBy, aimKey, fieldBy, stepsOf, is, subtracts, adds, numberOf, armOf, errorsOf, same, isArm, FORMULA_DONE, barOpen, barText } from '../find.ts';
-import { armsOf, stepSaid } from '@vtt/engine';
-import { problemsClean, trialShown } from './first-system.ts';
+import { armsOf, stepSaid, soleLang } from '@vtt/engine';
+import { problemsClean, trialShows } from '../find.ts';
+
+const trialShown = (view: View): boolean => trialShows(view, 'Б · Хиты: 10 → 5');
 import { visible } from '../anchor.ts';
 import base from '../seeds/base.json' with { type: 'json' };
 
@@ -55,7 +57,7 @@ export const links: Lesson = {
   title: 'Вызываемый эффект',
   sub: '«Урон» отдельным эффектом: «Удар» передаёт ему цель и число.',
   start: 'у вас уже есть «Удар»: он сам отнимает у цели 5 хитов и «Урон» не вызывает. «Урон» вы заведёте отдельно и подключите к «Удару».',
-  seed: base as unknown as System,
+  seed: soleLang(base as unknown as System, 'ru'),
   tab: 'effects',
   chapters: [
     { title: 'Вызываемый эффект', sum: '«Урон» получает цель и число, снимает хиты и сообщает, сколько осталось.' },

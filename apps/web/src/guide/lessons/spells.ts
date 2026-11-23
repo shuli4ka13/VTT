@@ -2,8 +2,8 @@ import type { System, Binding, Table } from '@vtt/schema';
 import type { Lesson, View } from '../types.ts';
 import { effectBy, tableBy, columnBy, rowIs, is, errorsOf, FORMULA_DONE, barOpen, barText } from '../find.ts';
 import { visible } from '../anchor.ts';
-import { problemsClean } from './first-system.ts';
-import { bindingHolds } from '@vtt/engine';
+import { problemsClean } from '../find.ts';
+import { bindingHolds, soleLang } from '@vtt/engine';
 import type { System as EngineSystem, CompendiumRecord } from '@vtt/engine';
 import seed from '../seeds/spells.json' with { type: 'json' };
 
@@ -60,7 +60,7 @@ export const spells: Lesson = {
   title: 'Кнопки у типа записи',
   sub: 'Тип «Заклинание»: кнопка «Сотворить», кнопка «Прекратить» только для длительных, якорь «Поддержание».',
   start: 'есть таблица «Сроки» (мгновенное и концентрация), тип «Заклинание» со свойством «Срок» и эффекты «Сотворить» (накладывает «Чары действуют»), «Прекратить», «Поддержание». Кнопок у типа ещё нет.',
-  seed: seed as unknown as System,
+  seed: soleLang(seed as unknown as System, 'ru'),
   tab: 'records',
   chapters: [
     { title: 'Кнопки', sum: 'У «Заклинания» две кнопки: «Сотворить» берёт «Срок» записи, «Прекратить» видна только если срок держится.' },

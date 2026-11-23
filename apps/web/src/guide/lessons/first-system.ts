@@ -2,7 +2,7 @@ import { emptySystem } from '../../store/world.ts';
 import type { Lesson, View } from '../types.ts';
 import { fieldsOf, blockLabel } from '@vtt/engine';
 import { visible } from '../anchor.ts';
-import { fieldBy, inBlock, columnOf, effectBy, actorKey, aimKey, stepsOf, reads, is, subtracts, adds, armOf, numberOf, errorsOf, exprOf, isArm, same, FORMULA_DONE, barOpen, barText } from '../find.ts';
+import { fieldBy, inBlock, columnOf, effectBy, actorKey, aimKey, stepsOf, reads, is, subtracts, adds, armOf, numberOf, errorsOf, exprOf, isArm, same, FORMULA_DONE, barOpen, barText, trialShows, problemsClean } from '../find.ts';
 
 const hp = (view: View) => fieldBy(view.system, 'Хиты');
 const ac = (view: View) => fieldBy(view.system, 'Класс брони');
@@ -44,24 +44,13 @@ const versusOk = (view: View): boolean => {
   return Boolean(key && is(checkOf(view)?.versus, `@${aim(view)}.${key}`));
 };
 
-export const PROBLEMS = 'Проблемы системы';
-
-const textOutsideGuide = (): string => {
-  const root = document.body.cloneNode(true) as HTMLElement;
-  root.querySelectorAll('.guide').forEach(node => node.remove());
-  return (root.textContent ?? '').replace(/\s+/g, ' ');
-};
-
-export const trialShown = (view: View): boolean =>
-  errorsOf(view.system) === 0 && textOutsideGuide().includes('Б · Хиты: 10 → 5');
-
-export const problemsClean = (view: View): boolean => view.opened(PROBLEMS) && errorsOf(view.system) === 0;
+const trialShown = (view: View): boolean => trialShows(view, 'Б · Хиты: 10 → 5');
 
 export const firstSystem: Lesson = {
   id: 'first-system',
   title: 'Первая система с нуля',
   sub: 'Лист с хитами и классом брони, кость и «Удар», который бьёт по цели.',
-  seed: { ...emptySystem(), id: 'учебная', name: 'Учебная система' },
+  seed: { ...emptySystem(), id: 'uchebnaya', name: 'Учебная система' },
   tab: 'sheet',
   chapters: [
     { title: 'Лист', sum: 'На листе блок «Бой»: «Хиты» 10, не ниже 0, и «Класс брони» 12.' },

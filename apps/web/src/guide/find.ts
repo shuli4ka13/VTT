@@ -1,7 +1,8 @@
 import type { System, Effect, Table, Column, Step as EffectStep } from '@vtt/schema';
-import { lintSystem, flattenSystem, armsOf, flowOf, fieldsOf, compile, blockLabel } from '@vtt/engine';
+import { lintSystem, flattenSystem, armsOf, flowOf, fieldsOf, compile, blockLabel, STEP_WORDS } from '@vtt/engine';
 import type { Field } from '@vtt/engine';
 import type { Anchor, View } from './types.ts';
+import { t } from '../i18n/author.ts';
 
 export const same = (a: unknown, b: string): boolean =>
   typeof a === 'string' && a.trim().toLowerCase() === b.trim().toLowerCase();
@@ -91,3 +92,21 @@ export function armOf(steps: Record<string, unknown>[], branch: number): Record<
 
 export const errorsOf = (system: System): number =>
   lintSystem(flattenSystem(system, true)).filter(problem => problem.level === 'error').length;
+
+export const textOutsideGuide = (): string => {
+  const root = document.body.cloneNode(true) as HTMLElement;
+  root.querySelectorAll('.guide').forEach(node => node.remove());
+  return (root.textContent ?? '').replace(/\s+/g, ' ');
+};
+
+export const trialShows = (view: View, text: string): boolean =>
+  errorsOf(view.system) === 0 && textOutsideGuide().includes(text);
+
+export const problemsClean = (view: View): boolean => view.opened(t('fields:problems.dialog')) && errorsOf(view.system) === 0;
+
+type Worded = { label: string; slots: readonly { key?: unknown; label?: unknown }[] };
+
+export const stepWord = (type: string): string => (STEP_WORDS as Record<string, Worded | undefined>)[type]?.label ?? type;
+
+export const slotWord = (type: string, key: string): string =>
+  String((STEP_WORDS as Record<string, Worded | undefined>)[type]?.slots.find(slot => slot.key === key)?.label ?? key);

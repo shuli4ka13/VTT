@@ -1,9 +1,10 @@
 import type { System } from '@vtt/schema';
 import type { Lesson, View } from '../types.ts';
 import { effectBy, tableBy, fieldBy, stepsOf, is, numberOf, same, errorsOf, FORMULA_DONE, barOpen, barText } from '../find.ts';
-import { problemsClean } from './first-system.ts';
+import { problemsClean } from '../find.ts';
 import { visible } from '../anchor.ts';
 import base from '../seeds/base.json' with { type: 'json' };
+import { soleLang } from '@vtt/engine';
 
 const strike = (view: View) => effectBy(view.system, 'Удар');
 const weaponParam = (view: View) => (strike(view)?.[1].params ?? []).find(param => same(param.label, 'Урон оружия'));
@@ -29,7 +30,7 @@ export const items: Lesson = {
   title: 'Вещи с эффектами',
   sub: 'Тип «Оружие»: свойство, кнопка «Удар» у владельца и правка класса брони.',
   start: 'есть «Удар»: он выдан всем листам и сам отнимает 5 хитов. Типа вещи «Оружие» ещё нет.',
-  seed: base as unknown as System,
+  seed: soleLang(base as unknown as System, 'ru'),
   tab: 'records',
   chapters: [
     { title: 'Тип вещи', sum: 'Есть тип «Оружие», а «Удар» ждёт «Урон оружия» и даётся вещью.' },

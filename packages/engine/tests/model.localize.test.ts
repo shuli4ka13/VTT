@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { world as W } from '@vtt/schema';
-import { dropLang, hasLang, langsOf, localized, localizedBook, setLangs, translatable, translate, untranslated } from '../src/model/localize.ts';
+import { dropLang, hasLang, langsOf, localized, localizedBook, setLangs, soleLang, translatable, translate, untranslated } from '../src/model/localize.ts';
 import { lintSystem } from '../src/model/lint.ts';
 import { LITE_WORLDS } from '../src/model/systems.ts';
 import { flattenSystem } from '../src/model/inherit.ts';
@@ -143,4 +143,34 @@ describe('переводы: образцы с подставным перево�
       expect(shown).toEqual(base);
     }, 120000);
   }
+});
+
+describe('система на одном языке: перевод становится основным, остальные языки уходят', () => {
+  const twoLangs = (): System => ({
+    id: 's', name: 's', langs: ['ru', 'en'], effects: {
+      strike: { label: 'Удар', i18n: { en: { label: 'Strike' } }, params: [{ key: 'who', label: 'Кто действует', kind: 'sheet', i18n: { en: { label: 'Who acts' } } }], steps: [] },
+      plain: { label: 'Без перевода', steps: [] },
+    },
+    tables: { list: { shape: 'single', label: 'Лист', i18n: { en: { label: 'Sheet' } }, columns: [{ key: 'hp', label: 'Хиты', kind: 'number', i18n: { en: { label: 'Hit points' } } }] } },
+  } as unknown as System);
+
+  it('на языке перевода: подписи — из перевода, переводов и списка языков больше нет, основной язык — этот', () => {
+    const english = soleLang(twoLangs(), 'en');
+    expect(english.effects.strike!.label).toBe('Strike');
+    expect(english.effects.strike!.params![0]!.label).toBe('Who acts');
+    expect(english.tables!.list!.columns![0]!.label).toBe('Hit points');
+    expect(english.effects.plain!.label).toBe('Без перевода');
+    expect(langsOf(english)).toEqual(['en']);
+    expect(JSON.stringify(english)).not.toContain('i18n');
+  });
+
+  it('на основном языке: система та же, только без переводов; исходная не тронута', () => {
+    const source = twoLangs();
+    const russian = soleLang(source, 'ru');
+    expect(russian.effects.strike!.label).toBe('Удар');
+    expect('langs' in russian).toBe(false);
+    expect(JSON.stringify(russian)).not.toContain('i18n');
+    expect(source).toEqual(twoLangs());
+    expect(russian.effects).not.toBe(source.effects);
+  });
 });

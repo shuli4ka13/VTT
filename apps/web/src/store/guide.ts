@@ -11,6 +11,8 @@ import { settle, markClean, rememberVersion } from './autosave.ts';
 import { getSystem, createSystem } from '../api/client.ts';
 import { lessonOf } from '../guide/lessons/index.ts';
 import { dataT, t } from '../i18n/author.ts';
+import { mainLang } from '@vtt/engine';
+import { useLocale } from './locale.ts';
 
 export interface Snapshot {
   system: System;
@@ -139,7 +141,8 @@ export const useGuide = create<GuideState>()(persist((set, get) => ({
       saved.real = { system: world.system, compendium: world.compendium, sheets: world.sheets, origin: world.origin, tab: world.activeTab };
     }
     if (again) delete saved.lessons[id];
-    const entry = saved.lessons[id];
+    const kept = saved.lessons[id];
+    const entry = kept && mainLang(kept.system) === useLocale.getState().lang ? kept : undefined;
     if (!writeSaved(saved)) {
       set({ note: t('guide:note.cantStash') });
       return false;
@@ -249,7 +252,8 @@ export function reconcile(): void {
     return;
   }
   if (real && (!origin.lesson || origin.lesson !== lesson || origin.systemId)) { close(); return; }
-  if (lesson && !marked(lesson)) close();
+  if (lesson && !marked(lesson)) { close(); return; }
+  if (lesson && mainLang(useWorld.getState().system) !== useLocale.getState().lang) void useGuide.getState().exit();
 }
 
 let hydrated = false;
@@ -263,6 +267,10 @@ const afterBoth = (): void => {
     if (lesson && state.origin !== before.origin && !marked(lesson)) close();
   });
 };
+
+useLocale.subscribe((state, before) => {
+  if (state.lang !== before.lang && useGuide.getState().lesson) void useGuide.getState().exit();
+});
 
 useWorld.persist.onFinishHydration(afterBoth);
 useGuide.persist.onFinishHydration(afterBoth);

@@ -194,3 +194,62 @@ describe('конец и переходы урока', () => {
     expect(useGuide.getState().finished).toBeNull();
   });
 });
+
+describe('язык урока — язык учебной системы', () => {
+  beforeEach(() => { localStorage.clear(); getSystem.mockReset(); saveSystem.mockReset(); createSystem.mockReset(); });
+  afterEach(() => { vi.restoreAllMocks(); });
+
+  const withLocale = async () => {
+    const all = await fresh();
+    const locale = await import('./locale.ts');
+    const engine = await import('@vtt/engine');
+    return { ...all, ...locale, mainLang: engine.mainLang };
+  };
+
+  it('урок, начатый по-русски, на английском не возобновляется, а начинается заново на английской заготовке', async () => {
+    const { useWorld, useGuide, useLocale, mainLang, readSaved } = await withLocale();
+    expect(await useGuide.getState().start('combat')).toBe(true);
+    expect(mainLang(useWorld.getState().system)).toBe('ru');
+    expect(Object.values(useWorld.getState().system.effects)[0]!.label).toBe('Удар');
+    useGuide.getState().go(2);
+    expect(await useGuide.getState().exit()).toBe(true);
+    expect(readSaved().lessons.combat?.step).toBe(2);
+
+    useLocale.getState().setLang('en');
+    expect(await useGuide.getState().start('combat')).toBe(true);
+    expect(useGuide.getState().step).toBe(0);
+    expect(mainLang(useWorld.getState().system)).toBe('en');
+    expect(Object.values(useWorld.getState().system.effects)[0]!.label).toBe('Strike');
+    expect(useWorld.getState().system.name).toBe('Practice system');
+    expect(JSON.stringify(useWorld.getState().system)).not.toMatch(/[А-Яа-яЁё]/u);
+    useGuide.getState().go(1);
+    expect(await useGuide.getState().exit()).toBe(true);
+
+    expect(await useGuide.getState().start('combat')).toBe(true);
+    expect(useGuide.getState().step).toBe(1);
+    expect(await useGuide.getState().exit()).toBe(true);
+    useLocale.getState().setLang('ru');
+  });
+
+  it('прежняя запись прогресса без языка считается русской', async () => {
+    const { useWorld, useGuide, useLocale, mainLang, savedKey } = await withLocale();
+    const old = { id: 'uchebnaya', name: 'Учебная система', effects: { udar: { label: 'Удар', steps: [] } }, grants: [], constants: {}, tables: {} };
+    localStorage.setItem(savedKey(), JSON.stringify({ real: null, lessons: { combat: { step: 3, system: old } } }));
+    expect(await useGuide.getState().start('combat')).toBe(true);
+    expect(useGuide.getState().step).toBe(3);
+    expect(mainLang(useWorld.getState().system)).toBe('ru');
+    expect(await useGuide.getState().exit()).toBe(true);
+    useLocale.getState().setLang('ru');
+  });
+
+  it('смена языка посреди урока выводит из урока: настоящая система возвращается, прогресс сохранён', async () => {
+    const { useWorld, useGuide, useLocale, readSaved } = await withLocale();
+    expect(await useGuide.getState().start('combat')).toBe(true);
+    useGuide.getState().go(1);
+    useLocale.getState().setLang('en');
+    await vi.waitFor(() => expect(useGuide.getState().lesson).toBeNull());
+    expect(useWorld.getState().system.name).toBe('Моя система');
+    expect(readSaved().lessons.combat?.step).toBe(1);
+    useLocale.getState().setLang('ru');
+  });
+});

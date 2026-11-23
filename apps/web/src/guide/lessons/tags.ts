@@ -1,9 +1,9 @@
 import type { System, Effect, Handler } from '@vtt/schema';
-import { NAMES } from '@vtt/engine';
+import { NAMES, soleLang } from '@vtt/engine';
 import type { Lesson, View, Move } from '../types.ts';
 import { effectBy, stepsOf, errorsOf, is, numberOf, exprOf } from '../find.ts';
 import { slugOf } from '../../store/world.ts';
-import { problemsClean } from './first-system.ts';
+import { problemsClean } from '../find.ts';
 import { visible } from '../anchor.ts';
 import seed from '../seeds/tags.json' with { type: 'json' };
 
@@ -67,7 +67,7 @@ export const tags: Lesson = {
   title: 'Метки и реакции',
   sub: 'Метка на эффекте, подписка «появился с меткой» и «кроме меток» у броска.',
   start: 'заведены эффекты «Сырость», «Горение», «Удача», «Холод», «Иней» и «Согреться», пока пустые: без меток и подписок.',
-  seed: seed as unknown as System,
+  seed: soleLang(seed as unknown as System, 'ru'),
   tab: 'effects',
   chapters: [
     { title: 'Метка и реакция', sum: '«Сырость» несёт метку «гасит огонь», а «Горение» снимает себя, когда на лист попадает эффект с этой меткой.' },

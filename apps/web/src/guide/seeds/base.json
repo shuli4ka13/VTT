@@ -1,6 +1,10 @@
 {
-  "id": "учебная",
+  "id": "uchebnaya",
   "name": "Учебная система",
+  "langs": [
+    "ru",
+    "en"
+  ],
   "effects": {
     "udar": {
       "label": "Удар",
@@ -8,7 +12,12 @@
         {
           "key": "deystvuyuschiy",
           "label": "Кто действует",
-          "kind": "sheet"
+          "kind": "sheet",
+          "i18n": {
+            "en": {
+              "label": "Who acts"
+            }
+          }
         },
         {
           "key": "celi",
@@ -17,7 +26,17 @@
           "many": true,
           "item": {
             "key": "cel",
-            "label": "Цель"
+            "label": "Цель",
+            "i18n": {
+              "en": {
+                "label": "Target"
+              }
+            }
+          },
+          "i18n": {
+            "en": {
+              "label": "Targets"
+            }
           }
         }
       ],
@@ -33,6 +52,11 @@
           "die": "kost",
           "by": {
             "expr": "@deystvuyuschiy"
+          },
+          "i18n": {
+            "en": {
+              "label": "roll"
+            }
           }
         },
         {
@@ -44,6 +68,11 @@
           },
           "versus": {
             "expr": "@cel.klass_broni"
+          },
+          "i18n": {
+            "en": {
+              "label": "check"
+            }
           }
         },
         {
@@ -64,7 +93,12 @@
         {
           "type": "end"
         }
-      ]
+      ],
+      "i18n": {
+        "en": {
+          "label": "Strike"
+        }
+      }
     }
   },
   "grants": [
@@ -78,7 +112,12 @@
         {
           "sides": 20
         }
-      ]
+      ],
+      "i18n": {
+        "en": {
+          "label": "Check die"
+        }
+      }
     }
   },
   "tables": {
@@ -91,15 +130,30 @@
           "label": "Хиты",
           "kind": "number",
           "default": 10,
-          "min": 0
+          "min": 0,
+          "i18n": {
+            "en": {
+              "label": "Hit points"
+            }
+          }
         },
         {
           "key": "klass_broni",
           "label": "Класс брони",
           "kind": "number",
-          "default": 12
+          "default": 12,
+          "i18n": {
+            "en": {
+              "label": "Armor class"
+            }
+          }
         }
-      ]
+      ],
+      "i18n": {
+        "en": {
+          "label": "Sheet"
+        }
+      }
     }
   },
   "blocks": [
@@ -110,7 +164,12 @@
         {
           "table": "list"
         }
-      ]
+      ],
+      "i18n": {
+        "en": {
+          "label": "Combat"
+        }
+      }
     }
   ]
 }

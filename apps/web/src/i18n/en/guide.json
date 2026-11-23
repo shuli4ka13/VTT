@@ -57,5 +57,6 @@
     "keepFailed": "could not save as a new system: {{why}}",
     "orphan": "the practice copy is left without your system — open it via “change”"
   },
-  "keepUntitled": "Practice system"
+  "keepUntitled": "Practice system",
+  "seedName": "Practice system"
 }

@@ -1,0 +1,51 @@
+{
+  "name": {
+    "strike": "Strike",
+    "actionsLeft": "Actions left"
+  },
+  "title": "Is combat running",
+  "sub": "The “whether combat is running” condition in “Strike”: spend actions only in combat, and refuse in combat with no actions left.",
+  "start": "there is an empty “Strike” effect granted to every sheet and an “Actions left” field on the sheet.",
+  "open": "In the “Effect library” open “{{name}}”.",
+  "chapter": {
+    "inCombat": {
+      "title": "Only in combat",
+      "sum": "“Strike” takes 1 off “Actions left” only while combat is running. No errors."
+    },
+    "alone": {
+      "title": "On your own",
+      "sum": "You taught “Strike” to refuse in combat with no actions left, without hints."
+    }
+  },
+  "if": {
+    "lead": "The desk knows whether combat is running: it starts when the game master starts the turns. You can ask about it in a condition. Let “Strike” spend “Actions left” only in combat, and cost nothing outside it.",
+    "say": "In “Strike” add an “If” block with the condition “whether combat is running”.",
+    "hint": "The condition reads in words: “whether combat is running” is a suggestion that appears once you start typing “whether”.",
+    "brick": "In the “Step” palette press “+ if”.",
+    "type": "Click the “If” condition and start typing “whether”.",
+    "pick": "Choose “whether combat is running” in the list.",
+    "enter": "Press Enter or “done”.",
+    "result": "The “If” block with “whether combat is running” is in place."
+  },
+  "spend": {
+    "say": "Inside the block make a change: “Actions left” minus 1.",
+    "hint": "“Whose” should say “Who acts” and “How” should say “subtract”: that is how they already are.",
+    "addStep": "In the branch of the block choose “change” in the “+ step” list.",
+    "field": "In “Which field” choose “Actions left”.",
+    "amount": "Click “How much” and type 1.",
+    "enter": "Press Enter or “done”.",
+    "trap": "“Change” stands outside the “If” block — actions will be spent outside combat too. Move it inside.",
+    "result": "In combat “Strike” spends one action."
+  },
+  "problems": {
+    "say": "Press the “No problems” button in the header (if something is found, it says “Problems” and a number). There should be no errors.",
+    "result": "No problems."
+  },
+  "refuse": {
+    "lead": "The last task comes without hints.",
+    "goal": "“Strike” has a “Stop” that fires only when combat is running and “Actions left” is below 1; “Problems” shows no errors.",
+    "say": "Make “Strike” refuse (“Stop”) when combat is running and “Actions left” is below 1.",
+    "hint": "The refusal must come before the action is spent. You can build it as one condition with “and”, or nest a second “If”.",
+    "result": "In combat with no actions left “Strike” refuses."
+  }
+}

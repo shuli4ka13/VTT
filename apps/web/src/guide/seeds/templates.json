@@ -1,6 +1,10 @@
 {
-  "id": "учебная",
+  "id": "uchebnaya",
   "name": "Учебная система",
+  "langs": [
+    "ru",
+    "en"
+  ],
   "blocks": [
     {
       "key": "novyy_blok",
@@ -9,7 +13,12 @@
         {
           "table": "list"
         }
-      ]
+      ],
+      "i18n": {
+        "en": {
+          "label": "Basics"
+        }
+      }
     },
     {
       "key": "novyy_blok_2",
@@ -18,7 +27,12 @@
         {
           "table": "navyki"
         }
-      ]
+      ],
+      "i18n": {
+        "en": {
+          "label": "Skills"
+        }
+      }
     }
   ],
   "effects": {},
@@ -30,7 +44,12 @@
           "key": "zagotovka",
           "label": "Заготовка",
           "kind": "choice",
-          "from": "zagotovki"
+          "from": "zagotovki",
+          "i18n": {
+            "en": {
+              "label": "Template"
+            }
+          }
         }
       ]
     },
@@ -44,19 +63,39 @@
           "key": "rang",
           "label": "Ранг",
           "kind": "number",
-          "default": 0
+          "default": 0,
+          "i18n": {
+            "en": {
+              "label": "Rank"
+            }
+          }
         }
       ],
       "rows": [
         {
           "value": "blizhniy_boy",
-          "label": "Ближний бой"
+          "label": "Ближний бой",
+          "i18n": {
+            "en": {
+              "label": "Melee"
+            }
+          }
         },
         {
           "value": "strelba",
-          "label": "Стрельба"
+          "label": "Стрельба",
+          "i18n": {
+            "en": {
+              "label": "Shooting"
+            }
+          }
         }
-      ]
+      ],
+      "i18n": {
+        "en": {
+          "label": "Skills"
+        }
+      }
     },
     "zagotovki": {
       "label": "Заготовки",
@@ -67,13 +106,23 @@
           "key": "blizhniy_boy",
           "label": "Ближний бой",
           "kind": "number",
-          "default": 0
+          "default": 0,
+          "i18n": {
+            "en": {
+              "label": "Melee"
+            }
+          }
         },
         {
           "key": "strelba",
           "label": "Стрельба",
           "kind": "number",
-          "default": 0
+          "default": 0,
+          "i18n": {
+            "en": {
+              "label": "Shooting"
+            }
+          }
         }
       ],
       "rows": [
@@ -83,6 +132,11 @@
           "cells": {
             "blizhniy_boy": 4,
             "strelba": 2
+          },
+          "i18n": {
+            "en": {
+              "label": "Bruiser"
+            }
           }
         },
         {
@@ -91,14 +145,29 @@
           "cells": {
             "blizhniy_boy": 1,
             "strelba": 5
+          },
+          "i18n": {
+            "en": {
+              "label": "Shooter"
+            }
           }
         }
-      ]
+      ],
+      "i18n": {
+        "en": {
+          "label": "Templates"
+        }
+      }
     }
   },
   "sheets": {
     "po_zagotovke": {
-      "label": "По заготовке"
+      "label": "По заготовке",
+      "i18n": {
+        "en": {
+          "label": "By template"
+        }
+      }
     }
   }
 }

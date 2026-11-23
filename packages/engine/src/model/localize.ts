@@ -112,6 +112,12 @@ function shown<T extends object>(root: T, lang: string): T {
   return known.get(lang) as T;
 }
 
+export function soleLang<T extends System>(system: T, lang: string): T {
+  const out = JSON.parse(JSON.stringify(overlay(system, lang))) as T;
+  setLangs(out, [lang]);
+  return out;
+}
+
 export const localized = <T extends System>(system: T, lang: string | undefined): T =>
   (hasLang(system, lang) ? shown(system, lang) : system);
 

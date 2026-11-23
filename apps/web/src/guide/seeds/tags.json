@@ -1,6 +1,10 @@
 {
-  "id": "учебная",
+  "id": "uchebnaya",
   "name": "Учебная система",
+  "langs": [
+    "ru",
+    "en"
+  ],
   "blocks": [
     {
       "key": "novyy_blok",
@@ -9,7 +13,12 @@
         {
           "table": "list"
         }
-      ]
+      ],
+      "i18n": {
+        "en": {
+          "label": "Combat"
+        }
+      }
     }
   ],
   "tables": {
@@ -21,7 +30,12 @@
           "label": "Хиты",
           "kind": "number",
           "default": 10,
-          "min": 0
+          "min": 0,
+          "i18n": {
+            "en": {
+              "label": "Hit points"
+            }
+          }
         }
       ]
     },
@@ -32,35 +46,75 @@
       "rows": [
         {
           "value": "ataka",
-          "label": "атака"
+          "label": "атака",
+          "i18n": {
+            "en": {
+              "label": "attack"
+            }
+          }
         },
         {
           "value": "zaschita",
-          "label": "защита"
+          "label": "защита",
+          "i18n": {
+            "en": {
+              "label": "defense"
+            }
+          }
         }
-      ]
+      ],
+      "i18n": {
+        "en": {
+          "label": "Roll tags"
+        }
+      }
     }
   },
   "effects": {
     "syrost": {
       "label": "Сырость",
-      "activation": "passive"
+      "activation": "passive",
+      "i18n": {
+        "en": {
+          "label": "Wet"
+        }
+      }
     },
     "gorenie": {
       "label": "Горение",
-      "activation": "passive"
+      "activation": "passive",
+      "i18n": {
+        "en": {
+          "label": "Burning"
+        }
+      }
     },
     "udacha": {
       "label": "Удача",
-      "activation": "passive"
+      "activation": "passive",
+      "i18n": {
+        "en": {
+          "label": "Luck"
+        }
+      }
     },
     "holod": {
       "label": "Холод",
-      "activation": "passive"
+      "activation": "passive",
+      "i18n": {
+        "en": {
+          "label": "Cold"
+        }
+      }
     },
     "iney": {
       "label": "Иней",
-      "activation": "passive"
+      "activation": "passive",
+      "i18n": {
+        "en": {
+          "label": "Frost"
+        }
+      }
     },
     "sogretsya": {
       "label": "Согреться",
@@ -69,10 +123,20 @@
         {
           "key": "deystvuyuschiy",
           "label": "Кто действует",
-          "kind": "sheet"
+          "kind": "sheet",
+          "i18n": {
+            "en": {
+              "label": "Who acts"
+            }
+          }
         }
       ],
-      "steps": []
+      "steps": [],
+      "i18n": {
+        "en": {
+          "label": "Warm up"
+        }
+      }
     }
   }
 }

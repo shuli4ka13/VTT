@@ -1,6 +1,10 @@
 {
-  "id": "учебная",
+  "id": "uchebnaya",
   "name": "Учебная система",
+  "langs": [
+    "ru",
+    "en"
+  ],
   "blocks": [
     {
       "key": "novyy_blok",
@@ -9,7 +13,12 @@
         {
           "table": "list"
         }
-      ]
+      ],
+      "i18n": {
+        "en": {
+          "label": "Combat"
+        }
+      }
     }
   ],
   "tables": {
@@ -21,7 +30,12 @@
           "label": "Хиты",
           "kind": "number",
           "default": 10,
-          "min": 0
+          "min": 0,
+          "i18n": {
+            "en": {
+              "label": "Hit points"
+            }
+          }
         }
       ]
     },
@@ -33,7 +47,12 @@
         {
           "key": "derzhitsya",
           "label": "Держится",
-          "kind": "boolean"
+          "kind": "boolean",
+          "i18n": {
+            "en": {
+              "label": "Lasts"
+            }
+          }
         }
       ],
       "rows": [
@@ -42,6 +61,11 @@
           "label": "Мгновенное",
           "cells": {
             "derzhitsya": false
+          },
+          "i18n": {
+            "en": {
+              "label": "Instant"
+            }
           }
         },
         {
@@ -49,9 +73,19 @@
           "label": "Концентрация",
           "cells": {
             "derzhitsya": true
+          },
+          "i18n": {
+            "en": {
+              "label": "Concentration"
+            }
           }
         }
-      ]
+      ],
+      "i18n": {
+        "en": {
+          "label": "Durations"
+        }
+      }
     },
     "zaklinanie": {
       "label": "Заклинание",
@@ -62,19 +96,39 @@
           "key": "srok",
           "label": "Срок",
           "kind": "choice",
-          "from": "sroki"
+          "from": "sroki",
+          "i18n": {
+            "en": {
+              "label": "Duration"
+            }
+          }
         }
-      ]
+      ],
+      "i18n": {
+        "en": {
+          "label": "Spell"
+        }
+      }
     }
   },
   "effects": {
     "podderzhanie": {
       "label": "Поддержание",
-      "activation": "passive"
+      "activation": "passive",
+      "i18n": {
+        "en": {
+          "label": "Upkeep"
+        }
+      }
     },
     "chary_deystvuyut": {
       "label": "Чары действуют",
-      "activation": "passive"
+      "activation": "passive",
+      "i18n": {
+        "en": {
+          "label": "Spell is active"
+        }
+      }
     },
     "sotvorit": {
       "label": "Сотворить",
@@ -84,14 +138,24 @@
           "key": "koldun",
           "label": "Колдун",
           "kind": "sheet",
-          "role": "actor"
+          "role": "actor",
+          "i18n": {
+            "en": {
+              "label": "Caster"
+            }
+          }
         },
         {
           "key": "srok",
           "label": "Срок",
           "kind": "choice",
           "from": "sroki",
-          "optional": true
+          "optional": true,
+          "i18n": {
+            "en": {
+              "label": "Duration"
+            }
+          }
         }
       ],
       "steps": [
@@ -102,7 +166,12 @@
             "expr": "@koldun"
           }
         }
-      ]
+      ],
+      "i18n": {
+        "en": {
+          "label": "Cast"
+        }
+      }
     },
     "prekratit": {
       "label": "Прекратить",
@@ -112,7 +181,12 @@
           "key": "koldun",
           "label": "Колдун",
           "kind": "sheet",
-          "role": "actor"
+          "role": "actor",
+          "i18n": {
+            "en": {
+              "label": "Caster"
+            }
+          }
         }
       ],
       "steps": [
@@ -124,7 +198,12 @@
             "expr": "@koldun"
           }
         }
-      ]
+      ],
+      "i18n": {
+        "en": {
+          "label": "Dismiss"
+        }
+      }
     }
   }
 }

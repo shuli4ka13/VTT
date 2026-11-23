@@ -1,7 +1,7 @@
 import { emptySystem } from '../../store/world.ts';
 import type { Lesson, View } from '../types.ts';
 import { tableBy, rowIs, fieldBy, effectBy, errorsOf, same } from '../find.ts';
-import { problemsClean } from './first-system.ts';
+import { problemsClean } from '../find.ts';
 import { visible } from '../anchor.ts';
 
 const stats = (view: View) => tableBy(view.system, 'Характеристики');
@@ -16,7 +16,7 @@ export const ready: Lesson = {
   id: 'ready',
   title: 'Взять из готового',
   sub: 'Начать с нуля и принести из образцов только нужное, а лишнее убрать.',
-  seed: { ...emptySystem(), id: 'учебная', name: 'Учебная система' },
+  seed: { ...emptySystem(), id: 'uchebnaya', name: 'Учебная система' },
   tab: 'sheet',
   chapters: [
     { title: 'Кусок листа', sum: 'На листе характеристики из образца, лишнее поле убрано, ошибок нет.' },

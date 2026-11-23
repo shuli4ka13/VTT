@@ -1,8 +1,8 @@
-import { ROW, compile, blockLabel } from '@vtt/engine';
+import { ROW, compile, blockLabel, soleLang } from '@vtt/engine';
 import type { System } from '@vtt/schema';
 import type { Lesson, View, Move } from '../types.ts';
 import { tableBy, columnBy, rowIs, fieldBy, columnOf, figure, same, exprOf, errorsOf, FORMULA_DONE, barOpen, barText } from '../find.ts';
-import { problemsClean } from './first-system.ts';
+import { problemsClean } from '../find.ts';
 import { visible } from '../anchor.ts';
 import base from '../seeds/base.json' with { type: 'json' };
 
@@ -115,7 +115,7 @@ export const tables: Lesson = {
   title: 'Таблицы',
   sub: 'Характеристики и навыки таблицами прямо на листе, формула колонки и класс брони от ловкости.',
   start: 'на листе в блоке «Бой» есть «Хиты» и «Класс брони», есть «Кость проверки» и эффект «Удар», который сам отнимает у цели 5 хитов. Таблиц ещё нет.',
-  seed: base as unknown as System,
+  seed: soleLang(base as unknown as System, 'ru'),
   tab: 'sheet',
   chapters: [
     { title: 'Таблица на листе', sum: 'На листе таблица «Характеристики»: сила и ловкость, «Значение» вписывает игрок, «Модификатор» считается.' },

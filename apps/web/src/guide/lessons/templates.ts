@@ -1,8 +1,8 @@
 import type { System, Modifier, Table } from '@vtt/schema';
 import type { Lesson, View } from '../types.ts';
 import { tableBy, columnBy, fieldBy, same, is, figure, errorsOf, FORMULA_DONE, barOpen, barText } from '../find.ts';
-import { problemsClean } from './first-system.ts';
-import { Views, ROW } from '@vtt/engine';
+import { problemsClean } from '../find.ts';
+import { Views, ROW, soleLang } from '@vtt/engine';
 import type { System as EngineSystem, Sheet, Compendium } from '@vtt/engine';
 import seed from '../seeds/templates.json' with { type: 'json' };
 
@@ -70,7 +70,7 @@ export const templates: Lesson = {
   title: 'Заготовки: правка всей колонки',
   sub: 'Тип листа «По заготовке» одной правкой заполняет колонку «Ранг» у всех навыков из выбранной заготовки.',
   start: 'есть таблицы «Навыки» и «Заготовки» (громила и стрелок), поле «Заготовка» и тип листа «По заготовке», пока без правок.',
-  seed: seed as unknown as System,
+  seed: soleLang(seed as unknown as System, 'ru'),
   tab: 'sheet',
   chapters: [
     { title: 'Правка колонки', sum: 'У типа «По заготовке» есть правка, которая целится в «Ранг» у каждого навыка сразу и задаёт его.' },

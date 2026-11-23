@@ -19,6 +19,8 @@ export function inTongue<T>(lang: string | null | undefined, run: () => T): T {
 
 export const said = (text: string): string => (current === 'ru' ? text : EN[text] ?? text);
 
+export const spokenIn = (lang: string | null | undefined): string[] => (tongueOf(lang) === 'ru' ? Object.keys(EN) : Object.values(EN));
+
 export const everySaid = (text: string): string[] => {
   const other = EN[text];
   return other !== undefined && other !== text ? [text, other] : [text];

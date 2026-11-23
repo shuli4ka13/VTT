@@ -1,6 +1,10 @@
 {
-  "id": "учебная",
+  "id": "uchebnaya",
   "name": "Учебная система",
+  "langs": [
+    "ru",
+    "en"
+  ],
   "blocks": [
     {
       "key": "novyy_blok",
@@ -9,7 +13,12 @@
         {
           "table": "list"
         }
-      ]
+      ],
+      "i18n": {
+        "en": {
+          "label": "Combat"
+        }
+      }
     }
   ],
   "tables": {
@@ -21,7 +30,12 @@
           "label": "Действий осталось",
           "kind": "number",
           "default": 3,
-          "min": 0
+          "min": 0,
+          "i18n": {
+            "en": {
+              "label": "Actions left"
+            }
+          }
         }
       ]
     }
@@ -35,10 +49,20 @@
           "key": "deystvuyuschiy",
           "label": "Кто действует",
           "kind": "sheet",
-          "role": "actor"
+          "role": "actor",
+          "i18n": {
+            "en": {
+              "label": "Who acts"
+            }
+          }
         }
       ],
-      "steps": []
+      "steps": [],
+      "i18n": {
+        "en": {
+          "label": "Strike"
+        }
+      }
     }
   },
   "grants": [
