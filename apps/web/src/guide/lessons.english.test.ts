@@ -113,6 +113,15 @@ describe('уроки на английском', () => {
         expect(namesOf(lesson.id, 'ru').filter(name => !own.includes(name.toLowerCase().slice(0, Math.max(3, name.length - 2))))).toEqual([]);
       });
 
+      it('название вещи из заготовки по-английски — ровно как в английской заготовке: иначе урок её не найдёт', () => {
+        const ours = namesOf(lesson.id, 'ru');
+        const theirs = namesOf(lesson.id, 'en');
+        const before = new Set(flat(russian.seed));
+        const after = new Set(flat(english.seed));
+        const lost = ours.map((name, at) => [name, theirs[at] ?? '']).filter(([name, other]) => before.has(name!) && !after.has(other!));
+        expect(lost).toEqual([]);
+      });
+
       it(`словарь урока — область ${areaOf(lesson.id)}`, () => {
         expect(readdirSync(DICTIONARIES)).toContain(`${areaOf(lesson.id)}.json`);
       });

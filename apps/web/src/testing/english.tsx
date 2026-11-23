@@ -104,7 +104,7 @@ export function english(name: string, list: string, part = 0, parts = 1): void {
 
   describe('при английском интерфейсе русского текста нет', () => {
     beforeEach(() => {
-      try { localStorage.clear(); } catch { /* empty */ }
+      localStorage.clear();
       useLocale.getState().setLang('en');
     });
     afterEach(() => { cleanup(); useLocale.getState().setLang('ru'); });
@@ -114,7 +114,12 @@ export function english(name: string, list: string, part = 0, parts = 1): void {
       const views: View[] = latin ? viewsOf(latin.system, latin.compendium).filter((_, index) => index % parts === part) : [];
       for (const view of views) {
         it(view.name, async () => {
+          useLocale.getState().setLang('ru');
           load(structuredClone(latin!), view.pick);
+          render(view.ui());
+          reveal();
+          cleanup();
+          useLocale.getState().setLang('en');
           render(view.ui());
           reveal();
           act(() => { document.querySelectorAll<HTMLElement>('.chips__text').forEach(input => fireEvent.blur(input)); });

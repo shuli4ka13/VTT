@@ -60,13 +60,13 @@ export const blankSeed = (words: Words): System => ({
 
 export const namesOf = (id: string, lang: string): string[] => {
   const names = i18n.getFixedT(lang)(`${areaOf(id)}:name`, { returnObjects: true, defaultValue: {} }) as unknown;
-  const out: string[] = [];
-  const walk = (node: unknown): void => {
-    if (typeof node === 'string') out.push(node);
-    else if (node && typeof node === 'object') Object.values(node).forEach(walk);
+  const out: [string, string][] = [];
+  const walk = (node: unknown, path: string): void => {
+    if (typeof node === 'string') out.push([path, node]);
+    else if (node && typeof node === 'object') Object.entries(node).forEach(([key, inner]) => walk(inner, `${path}.${key}`));
   };
-  walk(names);
-  return out;
+  walk(names, '');
+  return out.sort((a, b) => a[0].localeCompare(b[0])).map(([, text]) => text);
 };
 
 export const offered = (lesson: Lesson, lang: string = useLocale.getState().lang): boolean => !lesson.langs || lesson.langs.includes(lang);

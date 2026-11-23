@@ -12,6 +12,7 @@ import { RulesTab } from '../screens/constructor/rules/rules-tab.tsx';
 import { EffectsTab } from '../screens/constructor/effects/effects-tab.tsx';
 import { RecordsTab } from '../screens/constructor/records-tab.tsx';
 import { CompendiumScreen } from '../screens/compendium/compendium.tsx';
+import { t } from '../i18n/author.ts';
 
 export type View = { name: string; ui: () => ReactElement; pick: Record<string, unknown> };
 
@@ -37,10 +38,11 @@ export const load = (world: SampleWorld, pick: Record<string, unknown>): void =>
 };
 
 const openReturns = (): void => {
-  const cards = [...document.querySelectorAll<HTMLElement>('.card')].filter(card => /^Что получит тот, кто вызвал/.test(card.textContent ?? ''));
+  const title = t('params:card.returnsTitle');
+  const cards = [...document.querySelectorAll<HTMLElement>('.card')].filter(card => (card.textContent ?? '').startsWith(title));
   for (const card of cards) {
     card.querySelectorAll<HTMLElement>('.param-line__sum[aria-expanded="false"]').forEach(sum => fireEvent.click(sum));
-    card.querySelectorAll<HTMLElement>('.param-form button').forEach(button => { if (button.textContent === 'ещё') fireEvent.click(button); });
+    card.querySelectorAll<HTMLElement>('.param-form button').forEach(button => { if (button.textContent === t('common:more')) fireEvent.click(button); });
   }
 };
 

@@ -59,7 +59,7 @@ const pressAll = (pick: (button: HTMLElement) => boolean): void => {
 
 describe('оболочка при английском интерфейсе: русского текста нет', () => {
   beforeEach(() => {
-    try { localStorage.clear(); } catch { /* empty */ }
+    localStorage.clear();
     useLocale.getState().setLang('en');
     useSession.setState(state => ({ ...state, signed: true, name: 'Ann', userId: 'u' }));
   });

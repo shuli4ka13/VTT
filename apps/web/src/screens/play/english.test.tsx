@@ -29,7 +29,7 @@ const reveal = (): void => {
 
 describe('лист игрока при английском интерфейсе: русского текста нет', () => {
   beforeEach(() => {
-    try { localStorage.clear(); } catch { /* empty */ }
+    localStorage.clear();
     useLocale.getState().setLang('en');
   });
   afterEach(() => { cleanup(); useLocale.getState().setLang('ru'); useLocale.getState().setShown(null); });
@@ -45,7 +45,12 @@ describe('лист игрока при английском интерфейсе
     describe.skipIf(!wanted)(name, () => {
       for (const id of firstOfKind) {
         it(`лист ${id}`, () => {
+          useLocale.getState().setLang('ru');
           useRoom.setState(state => ({ ...state, room: roomOf(latin), mySheetId: id, log: [], error: null }));
+          render(<SheetScreen />);
+          reveal();
+          cleanup();
+          useLocale.getState().setLang('en');
           render(<SheetScreen />);
           reveal();
           note(LIST, shownText());
