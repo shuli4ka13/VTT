@@ -45,7 +45,7 @@ export function walkSheet(system: System, path: string): Walked | null {
   const table = system.tables?.[head];
   if (table && !isRange(table) && !hasField(system, head)) {
     const row = (table.rows ?? []).find(one => rowKeyOf(one) === key);
-    if (!row) return { ok: false, text: `в таблице «${table.label || head}» нет строки «${(key ? system.tables?.[key]?.label : undefined) || key}»` };
+    if (!row) return { ok: false, text: `в таблице «${table.label || head}» нет строки «${key}»` };
     const rowLabel = row.label || String(row.value ?? key);
     if (!rest.length) return { ok: true, label: rowLabel };
     const columns = walkColumns(system, head, rest);

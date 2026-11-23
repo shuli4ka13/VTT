@@ -23,7 +23,7 @@ export function outcomeWords(system: System, tags: readonly string[]): { success
       const row = (table.rows ?? []).find(r => r.value === tag);
       if (!row) continue;
       for (const side of ['success', 'fail'] as const) {
-        const column = (table.columns ?? []).find(c => c.key === OUTCOME_COLUMNS[side]);
+        const column = (table.columns ?? []).find(c => OUTCOME_COLUMNS[side].includes(c.key));
         const cell = column ? (row.cells ?? {})[column.key] : undefined;
         if (!found[side] && typeof cell === 'string' && cell.trim()) found[side] = cell.trim();
       }
@@ -32,15 +32,30 @@ export function outcomeWords(system: System, tags: readonly string[]): { success
   return { success: found.success ?? OUTCOME_WORDS.success, fail: found.fail ?? OUTCOME_WORDS.fail };
 }
 
-export function tagSaid(system: System | undefined, tag: string): string {
-  const own = system?.rolls?.[tag]?.label || system?.tags?.[tag]?.label;
-  if (own) return own;
-  for (const table of Object.values(system?.tables ?? {})) {
-    const row = (table.rows ?? []).find(one => one.value === tag);
-    if (row?.label) return row.label;
+const ROW_WORDS = new WeakMap<object, Map<string, string>>();
+
+function rowWords(system: System): Map<string, string> {
+  const known = ROW_WORDS.get(system);
+  if (known) return known;
+  const words = new Map<string, string>();
+  for (const table of Object.values(system.tables ?? {})) {
+    for (const row of table.rows ?? []) {
+      if (typeof row.value === 'string' && row.label && !words.has(row.value)) words.set(row.value, row.label);
+    }
   }
-  return tag;
+  ROW_WORDS.set(system, words);
+  return words;
 }
+
+export function tagSaid(system: System | undefined, tag: string): string {
+  if (!system) return tag;
+  return system.rolls?.[tag]?.label || system.tags?.[tag]?.label || rowWords(system).get(tag) || tag;
+}
+
+export const rowSaid = (system: System | undefined, table: string, value: unknown): string => {
+  const row = (system?.tables?.[table]?.rows ?? []).find(one => one.value === value);
+  return row?.label || String(value);
+};
 
 export function partSaid(system: System | undefined, name: string): string {
   for (const constant of Object.values(system?.constants ?? {}) as { dice?: { name?: string; label?: string }[] }[]) {

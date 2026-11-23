@@ -45,3 +45,7 @@ export type { Compendium, CompendiumRecord, DieConstant, Field, Holder, Sheet, S
 export { NAMES, NAME_LABELS, nameLabel, saidName } from '../words/names.ts';
 export type { ServiceName } from '../words/names.ts';
 export { foreignKeys, foreignKeysText } from '../model/latin-keys.ts';
+export { dropLang, hasLang, langsOf, localized, localizedBook, setLangs, TEXT_FIELDS, translatable, translate, untranslated } from '../model/localize.ts';
+export type { TextEntry, TextField, TextPath } from '../model/localize.ts';
+export { LANG_WORDS, langWord, MAIN_LANG } from '../words/langs.ts';
+export { partSaid, rowSaid, tagSaid } from '../engine/roll-tags.ts';

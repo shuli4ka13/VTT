@@ -18,7 +18,10 @@ export const tag = z.string().min(1).refine(v => !v.includes(':'), {
   message: 'двоеточие в теге запрещено — им размечены выведенные мишени',
 });
 
+export const i18n = z.record(z.string(), z.record(z.string(), z.string())).optional();
+
 export const fieldOption = z.object({
+  i18n,
   value: z.union([z.number(), z.string(), z.boolean()]),
   label: z.string().min(1),
 });
@@ -26,6 +29,7 @@ export const fieldOption = z.object({
 export const controlKind = z.enum(['signed', 'big', 'stepper', 'slider', 'pips', 'charges', 'bar', 'toggle', 'ring', 'choice', 'chips', 'die']);
 
 export const control = z.object({
+  i18n,
   kind: controlKind,
   step: z.number().positive().optional(),
   worse: z.enum(['low', 'high']).optional(),
@@ -54,6 +58,7 @@ export const rollSpec = z.object({
 }).strict();
 
 export const diceTerm = z.object({
+  i18n,
   count: z.union([z.number().int().positive(), formula]).optional(),
   sides: z.number().int().positive(),
   name: z.string().optional(),
@@ -71,6 +76,7 @@ export const diceReading = z.union([
 ]);
 
 export const dieConstant = z.object({
+  i18n,
   label: z.string().optional(),
   kind: z.literal('die'),
   dice: z.array(diceTerm),
@@ -78,6 +84,7 @@ export const dieConstant = z.object({
 }).strict();
 
 export const systemConstant = z.object({
+  i18n,
   label: z.string().optional(),
   kind: z.string().optional(),
   dice: z.array(diceTerm).optional(),
@@ -98,6 +105,7 @@ const startValue = z.union([tableValue, z.array(tableValue)]);
 export const cellValue = z.union([tableValue, formula, z.array(tableValue), z.null()]);
 
 export const cellView = z.object({
+  i18n,
   label: z.string().optional(),
   roll: z.lazy(() => rollSpec.partial()).optional(),
   default: z.union([startValue, formula]).optional(),
@@ -112,6 +120,7 @@ export const stageCombine = z.object({
 }).strict();
 
 export const stage = z.object({
+  i18n,
   key: z.string().min(1),
   label: z.string().optional(),
   combine: stageCombine.optional(),
@@ -130,6 +139,7 @@ export const columnValue = z.object({
 });
 
 export const column = columnValue.extend({
+  i18n,
   key: tag,
   label: z.string().optional(),
   hint: z.string().optional(),
@@ -154,6 +164,7 @@ export const sheetPart = z.object({
 export const sheetList = z.enum(['hanging', 'things', 'actions']);
 
 export const sheetBlock = z.object({
+  i18n,
   key: z.string().min(1),
   label: z.string().min(1).optional(),
   parent: z.string().min(1).optional(),
@@ -169,17 +180,20 @@ export const sheetBlock = z.object({
 }).strict();
 
 export const sheetPage = z.object({
+  i18n,
   key: z.string().min(1),
   label: z.string().min(1).optional(),
   top: z.literal(true).optional(),
 }).strict();
 
 export const groupSpec = z.object({
+  i18n,
   label: z.string().min(1).optional(),
   parent: z.string().optional(),
 }).strict();
 
 export const tableRow = z.object({
+  i18n,
   value: tableValue.optional(),
   label: z.string().optional(),
 
@@ -201,6 +215,7 @@ export const rollField = z.object({
 }).strict();
 
 export const systemRoll = z.object({
+  i18n,
   label: z.string().optional(),
   die: z.string().min(1),
   number: z.enum(['bonus', 'count', 'sides', 'under', 'over']).optional(),
@@ -242,6 +257,7 @@ export const rollEditOp = z.object({ op: z.string().min(1) }).passthrough().supe
 });
 
 export const rollEdit = z.object({
+  i18n,
   label: z.string().optional(),
   ops: z.array(rollEditOp),
   cancels: z.array(z.string().min(1)).optional(),
@@ -291,6 +307,7 @@ export const durationKind = z.enum(['permanent', 'uses', 'rounds', 'turns', 'com
 export const reapply = z.enum(['ignore', 'refresh', 'stack']);
 
 export const ask = z.object({
+  i18n,
   by: z.enum(['actor', 'gm']),
   hint: z.string().optional(),
   if: formula.optional(),
@@ -300,13 +317,14 @@ export const param = column.extend({
   ask: ask.optional(),
   perTarget: z.boolean().optional(),
   measure: z.boolean().optional(),
-  item: z.object({ key: tag, label: z.string().optional() }).strict().optional(),
+  item: z.object({ key: tag, label: z.string().optional(), i18n }).strict().optional(),
 
   role: z.enum(['amount', 'target', 'actor']).optional(),
   optional: z.boolean().optional(),
 }).strict();
 
 export const step = z.object({
+  i18n,
   id: z.string().optional(),
   label: z.string().min(1).optional(),
   type: z.string().min(1),
@@ -315,6 +333,7 @@ export const step = z.object({
 }).passthrough();
 
 export const handler = z.object({
+  i18n,
   on: z.string().min(1),
   if: formula.optional(),
   tags: z.array(z.string().min(1)).optional(),
@@ -326,6 +345,7 @@ export const handler = z.object({
 }).strict();
 
 export const tagContract = z.object({
+  i18n,
   label: z.string().optional(),
   includes: z.array(z.string().min(1)).optional(),
   inputs: z.array(z.object({ key: z.string().min(1), kind: valueKind, many: z.boolean().optional() }).strict()).optional(),
@@ -335,6 +355,7 @@ export const tagContract = z.object({
 }).strict();
 
 export const effect = z.object({
+  i18n,
   group: z.string().optional(),
   tags: z.array(z.string().min(1)).optional(),
   bond: z.object({ effect: z.string().min(1), by: z.string().min(1), if: formula.optional(), many: z.boolean().optional(), args: z.record(z.string(), formula).optional() }).strict().optional(),
@@ -365,6 +386,7 @@ export const effect = z.object({
 export const bindingArg = formula;
 
 export const binding = z.object({
+  i18n,
   label: z.string().optional(),
   effect: z.string(),
   args: z.record(z.string(), bindingArg).optional(),
@@ -376,6 +398,7 @@ export const tableOwner = z.enum(['sheet', 'group', 'desk']);
 export const tableUse = z.enum(['item', 'action']);
 
 export const table = z.object({
+  i18n,
   label: z.string().optional(),
 
   shape: tableShape.optional(),
@@ -399,6 +422,7 @@ export const table = z.object({
 }).strict();
 
 export const sheetKind = z.object({
+  i18n,
   extends: z.string().min(1).optional(),
   label: z.string().optional(),
   icon: z.string().optional(),
@@ -409,6 +433,7 @@ export const sheetKind = z.object({
 }).strict();
 
 export const system = z.object({
+  langs: z.array(z.string().min(2)).min(1).optional(),
   id: z.string().optional(),
   name: z.string().optional(),
   fields: z.never({ message: 'полей больше нет — это колонки таблицы листа (system.tables, shape: single)' }).optional(),
@@ -486,6 +511,7 @@ export const sheet = z.object({
 }).strict();
 
 export const compendiumRecord = z.object({
+  i18n,
   id: z.string().min(1),
 
   table: z.string().optional(),

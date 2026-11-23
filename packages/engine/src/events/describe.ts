@@ -5,7 +5,7 @@ import { recordKinds } from '../model/owned.ts';
 import { loopOf } from '../engine/steps/each.ts';
 import { effectLabelOf } from './actions.ts';
 import { breakReasonWord, registry as stepRegistry, splitsTargets } from '../engine/steps/index.ts';
-import { outcomeWords, partSaid, rollTitle as titleOf, tagSaid } from '../engine/roll-tags.ts';
+import { outcomeWords, partSaid, rollTitle as titleOf, rowSaid, tagSaid } from '../engine/roll-tags.ts';
 import type { System, Sheet } from '../model/types.ts';
 import { hasField, valueWord, fieldOf } from '../model/sheet-columns.ts';
 import { isSecret } from '../model/roles.ts';
@@ -210,7 +210,7 @@ export function describeParts(
     const line = stepRegistry.get(String(trace.type))?.traceLine;
     if (!line) return [];
     const helpers = {
-      labelOf, eventLabel, tagSaid: (tag: string) => tagSaid(system, tag),
+      labelOf, eventLabel, tagSaid: (tag: string) => tagSaid(system, tag), rowSaid: (table: string, value: unknown) => rowSaid(system, table, value),
       tableLabel: (id: string) => system.tables?.[id]?.label ?? id,
       effectLabel: (id: string) => effectLabelOf(system, id),
     };

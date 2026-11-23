@@ -11,6 +11,8 @@ import type { System, Compendium, Effect, Step, Stage, Guard, Param, Table, Modi
 import { registry, loopsAt, splitsTargets } from '../engine/steps/index.ts';
 import { stepSaid } from './names-at.ts';
 import { tagSaid } from '../engine/roll-tags.ts';
+import { langsOf, untranslated } from './localize.ts';
+import { langWord } from '../words/langs.ts';
 import { numbersOf, kindOfRule, placesOf, fitsPlace, fitKinds, countUnread, rollsCounting, placesMatching, wordFits, hasRollFilter } from './die-kinds.ts';
 import { ROLL_KIND_WORDS, NUMBER_MISFIT, EDIT_MISFIT, EDIT_SIDES_MISFIT, COUNT_UNREAD, rollNumberWord, WORD_MISFITS_ROLLS, WORD_OUTSIDE_ROLLS, TWO_RULES, TAG_UNREACHED } from '../words/dice-kinds.ts';
 import { rollTagReach, unreachedTags } from './roll-reach.ts';
@@ -240,7 +242,7 @@ function stepProblems(steps: Step[], whereOf: (index: number) => Where): Problem
     const unknownChoice = new Set(slots
       .filter(slot => slot.kind === 'choice' && slot.options && valueOf(slot.key) !== null && valueOf(slot.key) !== undefined && !slot.options.includes(valueOf(slot.key)))
       .map(slot => slot.key));
-    const declared = new Set(['type', 'id', 'label', 'asLabel', 'if', ...slots.map(slot => slot.key.split('.')[0]!)]);
+    const declared = new Set(['type', 'id', 'label', 'asLabel', 'i18n', 'if', ...slots.map(slot => slot.key.split('.')[0]!)]);
     for (const key of Object.keys(step)) {
       if (!declared.has(key)) out.push({ where, level: 'error', text: `у ${STEP.gen} «${mod.label}» нет поля «${key}» — уберите` });
     }
@@ -1664,7 +1666,7 @@ function measureProblems(system: System): Problem[] {
 
 export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   const declared = declaredOf(system);
-  const out: Problem[] = [...perTargetProblems(system), ...measureProblems(system)];
+  const out: Problem[] = [...perTargetProblems(system), ...measureProblems(system), ...langProblems(system)];
 
   for (const [id, effect] of Object.entries(system.effects)) {
     for (const chain of chainsOf(id, effect)) {
@@ -1824,11 +1826,29 @@ export function lintCompendium(system: System, compendium: Compendium): Problem[
   return lintSystem(system, compendium).filter(p => p.where.tab === 'book');
 }
 
+function langProblems(system: System): Problem[] {
+  const out: Problem[] = [];
+  const langs = langsOf(system);
+  const where = { tab: 'rules' as const, section: 'langs' };
+  langs.forEach((lang, at) => {
+    if (langs.indexOf(lang) !== at) out.push({ where, level: 'error', text: `язык «${langWord(lang)}» в списке языков дважды` });
+  });
+  for (const [lang, missing] of untranslated(system)) {
+    if (!missing.length) continue;
+    const shown = missing.slice(0, 3).map(entry => `«${entry.text}»`).join(', ');
+    out.push({
+      where: { ...where, key: lang }, level: 'warn',
+      text: `перевод на ${langWord(lang)}: без перевода подписей — ${missing.length} (например ${shown}${missing.length > 3 ? ' …' : ''})`,
+    });
+  }
+  return out;
+}
+
 export const errorsOf = (problems: Problem[]): Problem[] => problems.filter(p => p.level === 'error');
 
 const SECTION_WORDS: Record<string, string> = {
   grants: 'действуют на всех', initiative: 'инициатива', roll_edits: 'правки броска',
-  tables: 'таблицы', constants: 'кости', groups: 'блоки', vitals: 'здоровье',
+  tables: 'таблицы', constants: 'кости', groups: 'блоки', vitals: 'здоровье', langs: 'языки',
 };
 
 const quoted = (label: string | undefined, key: string): string => `«${label || key}»`;
@@ -1983,7 +2003,7 @@ function shapeProblems(system: System, compendium?: Compendium): Problem[] {
       chain.steps.forEach((step, index) => {
         const words = (STEP_WORDS as Record<string, { slots?: readonly { key: string }[] }>)[step.type];
         if (!words) return;
-        const known = new Set(['id', 'label', 'asLabel', 'type', 'if', ...(words.slots ?? []).map(slot => slot.key)]);
+        const known = new Set(['id', 'label', 'asLabel', 'i18n', 'type', 'if', ...(words.slots ?? []).map(slot => slot.key)]);
         for (const key of Object.keys(step)) {
           if (!known.has(key)) out.push({ where: chain.where(index), level: 'error', text: `у шага «${words === undefined ? step.type : (words as { label?: string }).label ?? step.type}» нет поля «${key}»` });
         }

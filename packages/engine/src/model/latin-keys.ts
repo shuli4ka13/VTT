@@ -2,14 +2,26 @@ import type { System } from './types.ts';
 
 const LATIN = /^[A-Za-z][A-Za-z0-9_]*$/;
 
-const STEP_LISTS = ['steps', 'cost'] as const;
+const STEP_LISTS = ['steps', 'cost', 'attach', 'detach'] as const;
+
+const TAG_LISTS = ['tags', 'anyTags', 'notTags', 'includes', 'cancels'] as const;
+
+const NUMBER = /^\d+$/;
+
+function tagKeys(holder: unknown, out: Set<string>): void {
+  if (!holder || typeof holder !== 'object') return;
+  for (const list of TAG_LISTS) {
+    const tags = (holder as Record<string, unknown>)[list];
+    for (const tag of Array.isArray(tags) ? tags : []) if (typeof tag === 'string') out.add(tag.replace(/ /g, '_'));
+  }
+}
 
 function stepKeys(steps: unknown, out: Set<string>): void {
   if (!Array.isArray(steps)) return;
   for (const step of steps as Record<string, unknown>[]) {
     if (typeof step?.id === 'string') out.add(step.id);
     if (typeof step?.as === 'string') out.add(step.as);
-    for (const tag of Array.isArray(step?.tags) ? step.tags : []) if (typeof tag === 'string') out.add(tag);
+    tagKeys(step, out);
   }
 }
 
@@ -23,7 +35,7 @@ export function keysOf(system: System): string[] {
       for (const stage of column.stages ?? []) out.add(stage.key);
     }
     for (const row of table.rows ?? []) {
-      if (typeof row.value === 'string' && row.value) out.add(row.value.replace(/ /g, '_'));
+      if (typeof row.value === 'string' && row.value && !NUMBER.test(row.value)) out.add(row.value.replace(/ /g, '_'));
       for (const cell of Object.keys(row.cells ?? {})) out.add(cell);
     }
   }
@@ -32,16 +44,32 @@ export function keysOf(system: System): string[] {
     if (effect.group) out.add(effect.group.replace(/ /g, '_'));
     for (const param of effect.params ?? []) {
       out.add(param.key);
+      if (typeof param.item?.key === 'string') out.add(param.item.key);
       for (const stage of param.stages ?? []) out.add(stage.key);
     }
     for (const column of effect.returns ?? []) out.add(column.key);
-    for (const tag of effect.tags ?? []) out.add(tag.replace(/ /g, '_'));
+    tagKeys(effect, out);
+    for (const modifier of effect.modifiers ?? []) tagKeys(modifier, out);
     for (const list of STEP_LISTS) stepKeys(effect[list], out);
-    for (const handler of effect.on ?? []) for (const list of STEP_LISTS) stepKeys(handler[list], out);
+    for (const handler of effect.on ?? []) {
+      tagKeys(handler, out);
+      for (const list of STEP_LISTS) stepKeys(handler[list], out);
+    }
   }
   for (const name of ['tags', 'rolls', 'roll_edits', 'sheets', 'groups', 'constants'] as const) {
     for (const key of Object.keys(any[name] ?? {})) out.add(key.replace(/ /g, '_'));
   }
+  for (const contract of Object.values(any.tags ?? {}) as any[]) {
+    tagKeys(contract, out);
+    for (const input of contract?.inputs ?? []) if (typeof input?.key === 'string') out.add(input.key);
+    if (typeof contract?.each === 'string') out.add(contract.each);
+    for (const output of contract?.outputs ?? []) if (typeof output === 'string') out.add(output);
+  }
+  for (const roll of Object.values(any.rolls ?? {}) as any[]) {
+    tagKeys(roll, out);
+    for (const field of roll?.fields ?? []) tagKeys(field, out);
+  }
+  for (const edit of Object.values(any.roll_edits ?? {}) as any[]) tagKeys(edit, out);
   for (const constant of Object.values(any.constants ?? {}) as any[]) {
     for (const part of constant?.dice ?? []) if (typeof part?.name === 'string') out.add(part.name);
   }
