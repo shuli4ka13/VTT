@@ -3,6 +3,7 @@ import { cellTagOf, columnTagOf } from './cells.ts';
 import { isRange } from '../model/tables.ts';
 import type { System } from '../model/types.ts';
 import { fieldsOf } from '../model/sheet-columns.ts';
+import { tr } from '../words/tongue.ts';
 
 export type TargetKind = 'value' | 'cell';
 
@@ -33,8 +34,8 @@ function cellTargets(system: System): Target[] {
       const colName = column.label || column.key;
       out.push({
         tag: columnTagOf(id, column.key),
-        label: `${name} → ${colName} — у каждой строки`,
-        group: 'Таблицы',
+        label: tr`${name} → ${colName} — у каждой строки`,
+        group: tr`Таблицы`,
         kind: 'cell',
         from: id,
       });
@@ -44,7 +45,7 @@ function cellTargets(system: System): Target[] {
         out.push({
           tag: cellTagOf(id, String(row.value), column.key),
           label: `${name} → ${String(row.label ?? row.value)} → ${colName}`,
-          group: 'Таблицы',
+          group: tr`Таблицы`,
           kind: 'cell',
           from: id,
         });

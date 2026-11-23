@@ -16,7 +16,7 @@ import { Path } from './path.ts';
 import { Run, newSink, reportOf } from './run.ts';
 import { runnerOf, idleTrace } from './steps.ts';
 import { keysOf } from './subs.ts';
-import { CUT_WORDS } from './limits.ts';
+import { cutWords } from './limits.ts';
 import type { Journal, Mode, Question } from './external.ts';
 import type { Frame, Delivery, Delivered, Claims, Lazy } from './run.ts';
 import type { Bound } from '../engine/refs.ts';
@@ -28,6 +28,8 @@ import type { System, Sheet, Compendium, Die, WornEffect } from '../model/types.
 import { tableOf } from '../model/buttons.ts';
 import { TARGETS_SEED } from '../model/references.ts';
 import { basedOn } from '../model/inherit.ts';
+import { tr } from '../words/tongue.ts';
+import { inSystemTongue } from '../model/localize.ts';
 
 export { tableOf };
 
@@ -56,6 +58,10 @@ export type ActOutcome =
   | { kind: 'paused'; sheets: Sheet[]; log: string[]; lines: (string[] | null)[]; entries: Entry[]; journal: Journal; fresh: number[]; question: Question };
 
 export function act(world: ActWorld, intent: ActIntent): ActOutcome {
+  return inSystemTongue(world.system, () => actIn(world, intent));
+}
+
+function actIn(world: ActWorld, intent: ActIntent): ActOutcome {
   const { system, compendium, clock } = world;
   const mode: Mode = world.mode ?? (world.declineAll ? 'trial' : 'real');
   const journal: Journal = { ...emptyJournal(), ...world.journal, ids: world.journal.ids ?? {} };
@@ -102,14 +108,14 @@ export function runAct(run: Run, intent: ActIntent, root: Path, upTo?: 'cost'): 
   const { state } = run;
   const targets = [...new Set(intent.toIds)];
   const action = actionOf(intent.actionId, { system, compendium });
-  const effect = requireEffect(system, action.effect, `действие «${action.label}»`);
+  const effect = requireEffect(system, action.effect, tr`действие «${action.label}»`);
   if (!isPipeline(effect)) {
-    throw new EngineError(`действие «${action.label}» зовёт пассивный эффект «${effect.label || action.effect}» — его вешают, а не применяют`);
+    throw new EngineError(tr`действие «${action.label}» зовёт пассивный эффект «${effect.label || action.effect}» — его вешают, а не применяют`);
   }
   const actor = intent.fromId;
   const actorSheet = run.sheet(actor);
-  if (!actorSheet) throw new EngineError(`в комнате нет листа «${actor}»`);
-  for (const id of targets) if (!run.sheet(id)) throw new EngineError(`в комнате нет листа «${id}»`);
+  if (!actorSheet) throw new EngineError(tr`в комнате нет листа «${actor}»`);
+  for (const id of targets) if (!run.sheet(id)) throw new EngineError(tr`в комнате нет листа «${id}»`);
   const given = intent.inputs && Object.keys(intent.inputs).length ? intent.inputs : undefined;
   const flat = given ? Object.fromEntries(Object.entries(given).filter(([, value]) => value === null || typeof value !== 'object')) as Record<string, number | string> : {};
   const inputs = Object.keys(flat).length ? flat : undefined;
@@ -123,7 +129,7 @@ export function runAct(run: Run, intent: ActIntent, root: Path, upTo?: 'cost'): 
   if (given) {
     const asked = new Set(asksOf(intent.actionId, { system, compendium }).map(param => param.key));
     const stray = Object.keys(given).find(key => !asked.has(key));
-    if (stray) throw new EngineError(`«${action.label}»: лишнее значение «${stray}» — действие о нём не спрашивает`);
+    if (stray) throw new EngineError(tr`«${action.label}»: лишнее значение «${stray}» — действие о нём не спрашивает`);
   }
   const args = (action.binding.args || {}) as Record<string, unknown>;
   const entry = entryByKey(actorSheet, action.record.id, action.inst);
@@ -143,7 +149,7 @@ export function runAct(run: Run, intent: ActIntent, root: Path, upTo?: 'cost'): 
     const value = kind ? bound[param.key] : null;
     for (const id of Array.isArray(value) ? value : typeof value === 'string' ? [value] : []) {
       const sheet = run.sheet(id);
-      if (sheet && !isKind(system, sheet.of, kind!)) throw new EngineError(`«${action.label}»: «${param.label ?? param.key}» — нужен лист «${system.sheets?.[kind!]?.label ?? kind}», а «${sheet.name}» не такой`);
+      if (sheet && !isKind(system, sheet.of, kind!)) throw new EngineError(tr`«${action.label}»: «${param.label ?? param.key}» — нужен лист «${system.sheets?.[kind!]?.label ?? kind}», а «${sheet.name}» не такой`);
     }
   }
   const bondSheet = effect.bond ? bound[effect.bond.by] : null;
@@ -154,9 +160,9 @@ export function runAct(run: Run, intent: ActIntent, root: Path, upTo?: 'cost'): 
     args, paramDefs, props, ...(item ? { item } : {}), ...(inputs ? { inputs } : {}), claims, hop: 0, inSub: false, ...(bond ? { bond } : {}), ...extra,
   });
 
-  if (bond && effect.bond?.if && !run.holdsAt(top(root.phase('bond'), `держание «${action.label}»`), effect.bond.if)) bond = undefined;
+  if (bond && effect.bond?.if && !run.holdsAt(top(root.phase('bond'), tr`держание «${action.label}»`), effect.bond.if)) bond = undefined;
   const many = Boolean(effect.bond?.many) && bond !== undefined;
-  const holderArgs = many && effect.bond?.args ? run.valuesAt(top(root.phase('bond'), `держание «${action.label}»`), effect.bond.args) : {};
+  const holderArgs = many && effect.bond?.args ? run.valuesAt(top(root.phase('bond'), tr`держание «${action.label}»`), effect.bond.args) : {};
   if (bond && many) {
     const taken = new Set((run.sheet(bond.sheet)?.effects ?? []).map(entry => entry.inst));
     let inst = run.ext.id(root.phase('bond').phase(bond.effect));
@@ -167,7 +173,7 @@ export function runAct(run: Run, intent: ActIntent, root: Path, upTo?: 'cost'): 
 
   if (effect.cost?.length) {
     const sink = newSink();
-    const costFrame = top(root.phase('cost'), `стоимость действия «${action.label}»`, { alone: true, cost: true });
+    const costFrame = top(root.phase('cost'), tr`стоимость действия «${action.label}»`, { alone: true, cost: true });
     const ran = run.exec(costFrame, effect.cost, sink, run.argValues(costFrame));
     const report = reportOf('cost', action.effect, actor, action.label, sink, ran.stopped, false);
     const why = refusalWords(report, system);
@@ -181,13 +187,13 @@ export function runAct(run: Run, intent: ActIntent, root: Path, upTo?: 'cost'): 
     const released = releaseHolder(system, [...state.sheets], bond.sheet, bond.effect);
     state.replace(released.sheets);
     for (const broken of released.broken) {
-      state.write({ text: `«${effectLabelOf(system, broken.effectId)}» спало с ${run.sheet(broken.sheetId)?.name ?? broken.sheetId}: наложивший взялся за новое` });
+      state.write({ text: tr`«${effectLabelOf(system, broken.effectId)}» спало с ${run.sheet(broken.sheetId)?.name ?? broken.sheetId}: наложивший взялся за новое` });
     }
   }
 
   const steps = effect.steps ?? [];
   const split = steps.findIndex(step => runnerOf(step.type).splits?.(step as StepData) === true);
-  const label = `эффект «${effect.label || action.effect}»`;
+  const label = tr`эффект «${effect.label || action.effect}»`;
   const keys = keysOf(system, action.effect, true);
   let calls: Delivery[];
   let lazy: Lazy | undefined;
@@ -218,7 +224,7 @@ export function runAct(run: Run, intent: ActIntent, root: Path, upTo?: 'cost'): 
     const ran = run.exec(preFrame, pre.filter((_, index) => !plan.guards.has(index) && !plan.hidden.has(index)), sink, seeded);
     if (ran.stopped) {
       const why = refusalWords(reportOf('effect', action.effect, actor, action.label, sink, ran.stopped, false), system);
-      throw new ActRefused(action.label, why ?? 'цепочка оборвана');
+      throw new ActRefused(action.label, why ?? tr`цепочка оборвана`);
     }
     if (sink.trace.some(one => !idleTrace(one, system)) || sink.changes.length || sink.effects.length || sink.removed.length) {
       state.write({ fromId: actor, toId: actor, report: reportOf('effect', action.effect, actor, action.label, sink, null, false) });
@@ -264,10 +270,10 @@ export function runAct(run: Run, intent: ActIntent, root: Path, upTo?: 'cost'): 
   const rows = delivered.filter(out => out.call.subject).map(out => ({ ...out.results, [NAMES.sheet]: out.call.subject }));
   const sink = newSink();
   const seed = { ...run.argValues(top(root.phase('done'), label)), ...summaries, [TARGETS_SEED]: rows };
-  run.hear({ keys: keys.map(key => `done:${key}`), names: bound, seed, rolls: doneRolls, path: root.phase('done'), hop: 0, owner: sub => `«${sub.effect.label || sub.effectId}» — «${action.label}» завершено` }, sink);
+  run.hear({ keys: keys.map(key => `done:${key}`), names: bound, seed, rolls: doneRolls, path: root.phase('done'), hop: 0, owner: sub => tr`«${sub.effect.label || sub.effectId}» — «${action.label}» завершено` }, sink);
   for (const report of sink.reactions) state.write({ fromId: actor, toId: actor, report });
   state.write(...sink.after);
   state.write(...run.window('done', keys.map(key => `done:${key}`), bound, seed, root, action.label, doneRolls));
 }
 
-export { CUT_WORDS };
+export { cutWords };

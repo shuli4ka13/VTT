@@ -1,10 +1,11 @@
 import type { ValueKind } from '../model/types.ts';
+import { live } from './tongue.ts';
 
 export type Kind = ValueKind;
 
 export type KindPlace = 'field' | 'table' | 'prop' | 'param';
 
-export const KIND_LABEL: Record<Kind, string> = {
+export const KIND_LABEL: Record<Kind, string> = live({
   number: 'число',
   text: 'слово',
   note: 'текст',
@@ -18,7 +19,7 @@ export const KIND_LABEL: Record<Kind, string> = {
   column: 'колонка таблицы',
   sheet: 'лист',
   roll: 'бросок',
-};
+});
 
 const ORDER: Kind[] = ['number', 'text', 'note', 'boolean', 'dice', 'roll', 'choice', 'effect', 'record', 'field', 'table', 'column', 'sheet'];
 

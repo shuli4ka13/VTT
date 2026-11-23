@@ -1,4 +1,5 @@
 import type { Sheet } from './types.ts';
+import { tr } from '../words/tongue.ts';
 
 export class SheetShapeError extends Error {
   constructor(message: string) {
@@ -15,7 +16,7 @@ const isScalar = (v: unknown) => v === null || ['number', 'boolean', 'string'].i
 
 export function assertSheetShape(sheet: unknown): Sheet {
   if (!sheet || typeof sheet !== 'object' || Array.isArray(sheet)) {
-    throw new SheetShapeError('лист должен быть объектом');
+    throw new SheetShapeError(tr`лист должен быть объектом`);
   }
 
   const s = sheet as Record<string, any>;
@@ -23,49 +24,49 @@ export function assertSheetShape(sheet: unknown): Sheet {
   for (const key of Object.keys(s)) {
     if (!TOP_KEYS.includes(key)) {
       throw new SheetShapeError(
-        `«${key}» не является полем листа; в DTO допустимы только: ${TOP_KEYS.join(', ')}. ` +
-        'Вычисленные значения в листе не хранятся — их считает движок.');
+        tr`«${key}» не является полем листа; в DTO допустимы только: ${TOP_KEYS.join(', ')}. ` +
+        tr`Вычисленные значения в листе не хранятся — их считает движок.`);
     }
   }
   for (const key of TOP_KEYS) {
-    if (!(key in s) && !OPTIONAL_KEYS.includes(key)) throw new SheetShapeError(`в листе нет обязательного поля «${key}»`);
+    if (!(key in s) && !OPTIONAL_KEYS.includes(key)) throw new SheetShapeError(tr`в листе нет обязательного поля «${key}»`);
   }
 
   for (const key of ['id', 'systemId', 'name']) {
-    if (typeof s[key] !== 'string') throw new SheetShapeError(`«${key}» должен быть строкой`);
+    if (typeof s[key] !== 'string') throw new SheetShapeError(tr`«${key}» должен быть строкой`);
   }
 
   if (!s.values || typeof s.values !== 'object' || Array.isArray(s.values)) {
-    throw new SheetShapeError('«values» должен быть объектом тег → значение');
+    throw new SheetShapeError(tr`«values» должен быть объектом тег → значение`);
   }
   for (const [tag, value] of Object.entries(s.values)) {
     if (!isScalar(value)) {
       throw new SheetShapeError(
-        `значение «${tag}» имеет тип ${typeof value} — хранимое значение обязано быть скаляром. ` +
-        'Похоже, в лист попало вычисленное или производное значение.');
+        tr`значение «${tag}» имеет тип ${typeof value} — хранимое значение обязано быть скаляром. ` +
+        tr`Похоже, в лист попало вычисленное или производное значение.`);
     }
   }
 
-  if (!Array.isArray(s.has)) throw new SheetShapeError('«has» должен быть массивом');
+  if (!Array.isArray(s.has)) throw new SheetShapeError(tr`«has» должен быть массивом`);
   for (const entry of s.has) {
     if (!entry || typeof entry !== 'object' || Array.isArray(entry) || typeof entry.of !== 'string') {
-      throw new SheetShapeError('запись в «has» обязана ссылаться на запись компендиума через «of» — копий записей в листе не держим');
+      throw new SheetShapeError(tr`запись в «has» обязана ссылаться на запись компендиума через «of» — копий записей в листе не держим`);
     }
     for (const [key, value] of Object.entries(entry.values ?? {})) {
-      if (!isScalar(value)) throw new SheetShapeError(`значение «${key}» у «${entry.of}» обязано быть скаляром`);
+      if (!isScalar(value)) throw new SheetShapeError(tr`значение «${key}» у «${entry.of}» обязано быть скаляром`);
     }
   }
 
-  if (!Array.isArray(s.effects)) throw new SheetShapeError('«effects» должен быть массивом');
+  if (!Array.isArray(s.effects)) throw new SheetShapeError(tr`«effects» должен быть массивом`);
   for (const entry of s.effects) {
     if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
-      throw new SheetShapeError('запись в «effects» должна быть объектом');
+      throw new SheetShapeError(tr`запись в «effects» должна быть объектом`);
     }
     if (typeof entry.effectId !== 'string') {
-      throw new SheetShapeError('запись в «effects» обязана ссылаться на эффект через «effectId»');
+      throw new SheetShapeError(tr`запись в «effects» обязана ссылаться на эффект через «effectId»`);
     }
     for (const [key, value] of Object.entries(entry)) {
-      if (!isScalar(value)) throw new SheetShapeError(`поле «${key}» записи эффекта обязано быть скаляром`);
+      if (!isScalar(value)) throw new SheetShapeError(tr`поле «${key}» записи эффекта обязано быть скаляром`);
     }
   }
 
@@ -88,7 +89,7 @@ export function deserializeSheet(json: string): Sheet {
   try {
     parsed = JSON.parse(json);
   } catch (err) {
-    throw new SheetShapeError(`лист не разбирается как JSON: ${(err as Error).message}`);
+    throw new SheetShapeError(tr`лист не разбирается как JSON: ${(err as Error).message}`);
   }
   assertSheetShape(parsed);
   return {

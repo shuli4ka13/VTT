@@ -1,14 +1,15 @@
 import type { ControlKind } from '@vtt/schema';
 import type { TableColumn } from './types.ts';
+import { tr, live } from '../words/tongue.ts';
 
 export type ValueFamily = 'number' | 'boolean' | 'choice' | 'many' | 'dice' | 'text' | 'note';
 
 export const VIEW_KINDS: ControlKind[] = ['signed', 'big', 'stepper', 'slider', 'pips', 'charges', 'bar', 'toggle', 'ring', 'choice', 'chips', 'die'];
 
-export const VIEW_LABELS: Record<ControlKind, string> = {
+export const VIEW_LABELS: Record<ControlKind, string> = live({
   signed: 'Со знаком', big: 'Крупно', stepper: 'Минус и плюс', slider: 'Ползунок', pips: 'Точки', charges: 'Круг зарядов',
   bar: 'Полоса', toggle: 'Переключатель', ring: 'Кружок ступеней', choice: 'Кнопки выбора', chips: 'Метки', die: 'Кость',
-};
+});
 
 export const SHOWS_ONLY: ControlKind[] = ['signed', 'big', 'pips', 'charges', 'bar', 'toggle', 'ring', 'choice', 'chips'];
 
@@ -49,14 +50,14 @@ export function columnFamily(column: Pick<TableColumn, 'kind' | 'many' | 'expr'>
 
 export function viewNeeds(kind: ControlKind, column: Pick<TableColumn, 'kind' | 'many' | 'from' | 'min' | 'max'>): string[] {
   const out: string[] = [];
-  if ((kind === 'pips' || kind === 'charges' || kind === 'bar' || kind === 'slider') && column.max === undefined) out.push('верх');
-  if (kind === 'slider' && column.min === undefined) out.push('низ');
-  if (kind === 'chips' && !column.from) out.push('таблица вариантов');
-  if ((kind === 'ring' || kind === 'choice') && column.kind === 'choice' && !column.from) out.push('таблица вариантов');
+  if ((kind === 'pips' || kind === 'charges' || kind === 'bar' || kind === 'slider') && column.max === undefined) out.push(tr`верх`);
+  if (kind === 'slider' && column.min === undefined) out.push(tr`низ`);
+  if (kind === 'chips' && !column.from) out.push(tr`таблица вариантов`);
+  if ((kind === 'ring' || kind === 'choice') && column.kind === 'choice' && !column.from) out.push(tr`таблица вариантов`);
   if ((kind === 'ring' || kind === 'choice') && column.kind !== 'choice' && column.kind !== 'boolean') {
-    if (column.min === undefined) out.push('низ');
-    if (column.max === undefined) out.push('верх');
-    if (typeof column.min === 'number' && typeof column.max === 'number' && column.max - column.min + 1 > MOST_STEPS) out.push(`не больше ${MOST_STEPS} ступеней`);
+    if (column.min === undefined) out.push(tr`низ`);
+    if (column.max === undefined) out.push(tr`верх`);
+    if (typeof column.min === 'number' && typeof column.max === 'number' && column.max - column.min + 1 > MOST_STEPS) out.push(tr`не больше ${MOST_STEPS} ступеней`);
   }
   return out;
 }

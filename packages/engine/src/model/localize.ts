@@ -1,5 +1,6 @@
 import type { System, Compendium } from './types.ts';
 import { MAIN_LANG } from '../words/langs.ts';
+import { inTongue } from '../words/tongue.ts';
 
 export const TEXT_FIELDS = ['label', 'asLabel', 'question', 'yes', 'no', 'hint', 'title', 'description', 'note'] as const;
 export type TextField = typeof TEXT_FIELDS[number];
@@ -37,6 +38,12 @@ export const langsOf = (system: System): string[] => {
   const langs = (system as { langs?: unknown }).langs;
   return Array.isArray(langs) && langs.length ? langs.map(String) : [MAIN_LANG];
 };
+
+export const mainLang = (system: System): string => langsOf(system)[0] ?? MAIN_LANG;
+
+export const inSystemTongue = <T>(system: System, run: () => T): T => inTongue(mainLang(system), run);
+
+export const inAskedTongue = <T>(lang: string | undefined, run: () => T): T => (lang === undefined ? run() : inTongue(lang, run));
 
 export const hasLang = (system: System, lang: string | undefined): lang is string =>
   Boolean(lang) && langsOf(system).indexOf(lang!) > 0;

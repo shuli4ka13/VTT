@@ -6,7 +6,7 @@ export const FIELD_PREFIX = 'field:';
 export const GAINED_PREFIX = 'gained:';
 export const LOST_PREFIX = 'lost:';
 
-export { PHASES, SEEN, SEEN_LABEL, ROLLED, ROLLED_LABEL, ANY_ACTION, isPhase, callHappening, happeningOf } from './happenings.ts';
+export { PHASES, SEEN, seenLabel, ROLLED, rolledLabel, ANY_ACTION, isPhase, callHappening, happeningOf } from './happenings.ts';
 export type { Phase } from './happenings.ts';
 
 export interface Subscriber {

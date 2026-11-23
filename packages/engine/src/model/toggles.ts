@@ -5,13 +5,15 @@ import { holderConditionOf } from './references.ts';
 import { factorsOf, bare, tight } from './amounts.ts';
 import { rolesOf } from './buttons.ts';
 import type { System, Step } from './types.ts';
+import { tr, live } from '../words/tongue.ts';
+import { inSystemTongue } from './localize.ts';
 
 export type CritChoice = 'off' | 'double' | 'explode';
 export type ArmorChoice = 'none' | 'threshold' | 'ablation';
 
 export interface ToggleOption<T extends string> { key: T; label: string; hint: string }
 
-export const CRIT_OPTIONS: ToggleOption<CritChoice>[] = [
+export const CRIT_OPTIONS: ToggleOption<CritChoice>[] = live([
   { key: 'off', label: 'нет', hint: 'Максимум на кости — просто максимум.' },
   {
     key: 'double', label: 'кости урона вдвое',
@@ -21,9 +23,9 @@ export const CRIT_OPTIONS: ToggleOption<CritChoice>[] = [
     key: 'explode', label: 'взрывная кость',
     hint: 'Кость проверки на максимуме кидается ещё раз и прибавляется — у всех бросков. Так в Cyberpunk RED и Savage Worlds.',
   },
-];
+]);
 
-export const ARMOR_OPTIONS: ToggleOption<ArmorChoice>[] = [
+export const ARMOR_OPTIONS: ToggleOption<ArmorChoice>[] = live([
   { key: 'none', label: 'урон целиком', hint: 'Броня, если есть, живёт в классе защиты: попал — снял всё.' },
   {
     key: 'threshold', label: 'порог',
@@ -33,7 +35,7 @@ export const ARMOR_OPTIONS: ToggleOption<ArmorChoice>[] = [
     key: 'ablation', label: 'вычитание и износ',
     hint: 'Из урона вычитается броня, остаток идёт в хиты, а броня теряет единицу.',
   },
-];
+]);
 
 export const CRIT_EDIT = 'crit_explode';
 export const CRIT_RULE = 'crit_explode_rule';
@@ -52,7 +54,7 @@ const critOfCall = (system: System | undefined, step: Step): string | null => {
   const called = (step as { effect?: unknown }).effect;
   if (step.type !== 'emit' || !step.id || typeof called !== 'string') return null;
   const returns = system?.effects?.[called]?.returns ?? [];
-  if (returns.some(column => column.key === 'крит')) return `if(@${String(step.id)}.крит, 2, 1)`;
+  if (returns.some(column => column.key === tr`крит`)) return tr`if(@${String(step.id)}.крит, 2, 1)`;
   for (const column of returns) {
     if (column.kind !== 'choice' || !column.from || column.many) continue;
     const factor = (system?.tables?.[column.from]?.columns ?? []).find(one => (one.kind ?? 'number') === 'number');
@@ -131,6 +133,10 @@ const withDoubler = (step: Record<string, unknown>, crit: string): void => {
 };
 
 export function setCrit(draft: System, choice: CritChoice): void {
+  inSystemTongue(draft, () => setCritIn(draft, choice));
+}
+
+function setCritIn(draft: System, choice: CritChoice): void {
   const kept = new Set<Step>();
   for (const effect of Object.values(draft.effects)) {
     const doubler = doublerIn(draft, effect.steps ?? []);
@@ -155,10 +161,10 @@ export function setCrit(draft: System, choice: CritChoice): void {
     }
   }
   if (choice === 'explode') {
-    (draft.roll_edits ??= {})[CRIT_EDIT] = { label: 'Взрывная кость', ops: [{ op: 'explode' }] };
+    (draft.roll_edits ??= {})[CRIT_EDIT] = { label: tr`Взрывная кость`, ops: [{ op: 'explode' }] };
     draft.effects[CRIT_RULE] = {
-      label: 'Взрывная кость', activation: 'passive', duration: { kind: 'permanent' },
-      description: 'Кость проверки на максимуме кидается ещё раз, результат прибавляется.',
+      label: tr`Взрывная кость`, activation: 'passive', duration: { kind: 'permanent' },
+      description: tr`Кость проверки на максимуме кидается ещё раз, результат прибавляется.`,
       modifiers: [{ kind: 'edit', call: ROLL_CALL, param: 'edits', edit: CRIT_EDIT, if: { expr: holderConditionOf(draft, ROLL_CALL)! } }],
     };
     draft.grants = [...(draft.grants ?? []), CRIT_RULE];
@@ -174,7 +180,7 @@ export function armorTail(choice: ArmorChoice, armor: string, hp: string, amount
   const through = { type: 'check', value, versus: field(armor), successWhen: 'over', id: ARMOR_STEP } as Step;
   const held = [
     { type: 'branch', if: { expr: `not @${ARMOR_STEP}.success` } } as Step,
-    { type: 'stop', note: { expr: '"броня выдержала"' } } as Step,
+    { type: 'stop', note: { expr: tr`"броня выдержала"` } } as Step,
     { type: 'end' } as Step,
   ];
   if (choice === 'threshold') {
@@ -215,6 +221,10 @@ export const sheetInputOf = (effect: System['effects'][string] | undefined): str
 };
 
 export function setArmor(draft: System, choice: ArmorChoice, at: { event: string; armor: string; hp: string }): void {
+  inSystemTongue(draft, () => setArmorIn(draft, choice, at));
+}
+
+function setArmorIn(draft: System, choice: ArmorChoice, at: { event: string; armor: string; hp: string }): void {
   const called = draft.effects?.[at.event];
   const sheet = sheetInputOf(called);
   if (!called || !sheet) return;

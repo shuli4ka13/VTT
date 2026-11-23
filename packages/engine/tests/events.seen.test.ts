@@ -1,6 +1,6 @@
 import { group, test, eq, ok } from './harness.ts';
 import { act } from '../src/core/act.ts';
-import { CUT_WORDS } from '../src/core/limits.ts';
+import { cutWords } from '../src/core/limits.ts';
 import { emptyJournal } from '../src/core/external.ts';
 import type { Journal } from '../src/core/external.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
@@ -261,7 +261,7 @@ group('ядро: по ревью', () => {
       отзвук: { label: 'Отзвук', activation: 'passive', on: [{ on: 'after:эхо', steps: [{ type: 'emit', effect: 'эхо' }] }] },
     });
     const out = play(system, [sheet('а'), sheet('б', ['отзвук'])], []);
-    ok(out.log.includes(CUT_WORDS), 'обработчик упёрся в глубину — отказ обработчика, строка в журнале');
+    ok(out.log.includes(cutWords()), 'обработчик упёрся в глубину — отказ обработчика, строка в журнале');
   });
 
   test('ложное «Если» над броском действующего — кость не брошена, реакции на неё не будят', () => {

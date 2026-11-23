@@ -1,5 +1,6 @@
 import { NAMES } from '../words/names.ts';
 import { diceExample } from './glossary.ts';
+import { tr, live } from './tongue.ts';
 
 export interface StepWords {
   label: string;
@@ -20,10 +21,10 @@ export function slotShown(slot: { onlyIf?: SlotGate }, step: Readonly<Record<str
   return String(value) === gate.is;
 }
 
-export const STEP_WORDS = {
+export const STEP_WORDS = live({
   roll: {
     label: 'Бросок',
-    hint: `Бросить кости или посчитать число. Если указано, кто бросает, — это чей-то бросок: на него действуют правки и «увидев кости»; против кого — решает сравнение, лист на другой его стороне. Без бросающего — просто расчёт. Кость пишется как ${diceExample}. Или бросить поле листа — как щелчком по нему: кость, успех и степени берутся из «Правил → Броски», бросает тот, чьё поле.`,
+    hint: `Бросить кости или посчитать число. Если указано, кто бросает, — это чей-то бросок: на него действуют правки и «увидев кости»; против кого — решает сравнение, лист на другой его стороне. Без бросающего — просто расчёт. Кость пишется как ${diceExample()}. Или бросить поле листа — как щелчком по нему: кость, успех и степени берутся из «Правил → Броски», бросает тот, чьё поле.`,
     slots: [
       { key: 'die', label: 'Кость', kind: 'ref', main: true, allow: ['name', 'expr', 'empty'], refersTo: 'constant' },
       { key: 'count', label: 'Сколько костей', kind: 'ref', allow: ['expr', 'empty'] },
@@ -283,21 +284,28 @@ export const STEP_WORDS = {
     reasons: { 'emit-stopped': 'общий эффект оборвался' },
     breakLines: {},
   },
-} as const satisfies Record<string, StepWords>;
+} as const satisfies Record<string, StepWords>);
 
 export type StepType = keyof typeof STEP_WORDS;
 
-export const ASK_ONE_WORDS = 'на вопрос нужен один ответ';
-export const ASK_ROLLED = 'выпало';
+export const askOneWords = (): string => tr`на вопрос нужен один ответ`;
+export const askRolled = (): string => tr`выпало`;
 export const ASK_YES = NAMES.yes;
 export const ASK_NO = NAMES.no;
-export const ASK_DESK = 'ведущий';
-export const ASK_DESK_TITLE = 'Ведущий';
-export const ASK_WHOM = 'ведущего';
+export const askDesk = (): string => tr`ведущий`;
+export const askDeskTitle = (): string => tr`Ведущий`;
+export const askWhom = (): string => tr`ведущего`;
+
+export const yesNoPrefix = (): string => tr`да или нет: `;
+
+export const withoutYesNo = (label: string): string => {
+  const prefix = yesNoPrefix();
+  return label.startsWith(prefix) ? label.slice(prefix.length) : label;
+};
 
 export const stepLabel = (type: string): string => (STEP_WORDS as Record<string, StepWords>)[type]?.label ?? type;
 
 export const reasonWordOf = (type: string, reason: string): string | null =>
   (STEP_WORDS as Record<string, StepWords>)[type]?.reasons[reason] ?? null;
 
-export const forcedWords = (die: number, success: boolean): string => `на кости ${die} — всегда ${success ? 'успех' : 'провал'}`;
+export const forcedWords = (die: number, success: boolean): string => tr`на кости ${die} — всегда ${success ? tr`успех` : tr`провал`}`;

@@ -1,6 +1,7 @@
 import { registry } from '../engine/steps/index.ts';
 import { compile, printFormula, joinAnd, NOT } from '../formula/index.ts';
 import type { Node } from '../formula/index.ts';
+import { tr } from '../words/tongue.ts';
 
 export type Flow = 'open' | 'alt' | 'close';
 
@@ -54,16 +55,16 @@ export function balance(steps: readonly { type?: unknown; if?: unknown }[]): { i
     if (flow === 'open') { stack.push({ open: index, bare: false }); return; }
     if (flow === 'alt') {
       const top = stack[stack.length - 1];
-      if (!top) out.push({ index, problem: '«Иначе» без «Если» выше' });
-      else if (top.bare) out.push({ index, problem: '«Иначе» после «Иначе» без условия — сюда не дойдёт' });
+      if (!top) out.push({ index, problem: tr`«Иначе» без «Если» выше` });
+      else if (top.bare) out.push({ index, problem: tr`«Иначе» после «Иначе» без условия — сюда не дойдёт` });
       else if (step.if === undefined) top.bare = true;
       return;
     }
     if (flow === 'close') {
-      if (!stack.pop()) out.push({ index, problem: 'конец блока без «Если»' });
+      if (!stack.pop()) out.push({ index, problem: tr`конец блока без «Если»` });
     }
   });
-  for (const left of stack) out.push({ index: left.open, problem: '«Если» не закрыт' });
+  for (const left of stack) out.push({ index: left.open, problem: tr`«Если» не закрыт` });
   return out;
 }
 

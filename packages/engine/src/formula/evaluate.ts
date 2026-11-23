@@ -1,11 +1,12 @@
 import { FormulaRuntimeError } from './errors.ts';
 import { AND, OR, NOT } from './parse.ts';
-import { DICE_BY_STEP } from '../words/glossary.ts';
+import { diceByStep } from '../words/glossary.ts';
 import { RU_WORDS } from './words.ts';
 
 const saidName = (name: string): string => (RU_WORDS.functions as Record<string, string>)[name] ?? name;
 import type { Node, BinaryNode, CallNode } from './ast.ts';
 import type { Resolve } from '../model/types.ts';
+import { tr } from '../words/tongue.ts';
 
 export type Value = number | boolean | string;
 
@@ -24,14 +25,14 @@ interface Fn {
 const FUNCTIONS: Record<string, Fn> = {
   floor: { arity: 1, apply: args => Math.floor(args[0]!) },
   ceil: { arity: 1, apply: args => Math.ceil(args[0]!) },
-  min: { arity: '1+', apply: () => 0, raw: args => Math.min(...numbers(args, 'меньшее из')) },
-  max: { arity: '1+', apply: () => 0, raw: args => Math.max(...numbers(args, 'большее из')) },
-  sum: { arity: '1+', apply: () => 0, raw: args => numbers(args, 'сумма', true).reduce((sum, value) => sum + value, 0) },
+  min: { arity: '1+', apply: () => 0, raw: args => Math.min(...numbers(args, tr`меньшее из`)) },
+  max: { arity: '1+', apply: () => 0, raw: args => Math.max(...numbers(args, tr`большее из`)) },
+  sum: { arity: '1+', apply: () => 0, raw: args => numbers(args, tr`сумма`, true).reduce((sum, value) => sum + value, 0) },
   count: {
     arity: '1+',
     apply: () => 0,
     raw: args => {
-      if (args.length > 2) throw new FormulaRuntimeError('«сколько» ждёт список и, если нужно, какое значение считать');
+      if (args.length > 2) throw new FormulaRuntimeError(tr`«сколько» ждёт список и, если нужно, какое значение считать`);
       const list = listOf(args[0]).filter(value => value !== null && value !== undefined && value !== '');
       return args.length === 2 ? list.filter(value => String(value) === String(args[1])).length : list.length;
     },
@@ -40,8 +41,8 @@ const FUNCTIONS: Record<string, Fn> = {
     arity: '1+',
     apply: () => 0,
     raw: (args, tools) => {
-      if (args.length < 2 || args.length > 3) throw new FormulaRuntimeError('«строки» ждёт таблицу, колонку и, если нужно, вещь-хозяина');
-      if (!tools.rows) throw new FormulaRuntimeError('«строки» здесь нельзя: таблиц системы тут не видно');
+      if (args.length < 2 || args.length > 3) throw new FormulaRuntimeError(tr`«строки» ждёт таблицу, колонку и, если нужно, вещь-хозяина`);
+      if (!tools.rows) throw new FormulaRuntimeError(tr`«строки» здесь нельзя: таблиц системы тут не видно`);
       return tools.rows(String(args[0]), String(args[1]), args.length === 3 ? String(args[2] ?? '') : undefined) as unknown as Value;
     },
   },
@@ -72,9 +73,9 @@ const FUNCTIONS: Record<string, Fn> = {
     apply: () => 0,
     raw: (args, tools) => {
       if (args.length < 2 || args.length > 3) {
-        throw new FormulaRuntimeError('«таблица» требует два или три аргумента: какая таблица, по чему искать и, если нужно, какая колонка');
+        throw new FormulaRuntimeError(tr`«таблица» требует два или три аргумента: какая таблица, по чему искать и, если нужно, какая колонка`);
       }
-      if (!tools.table) throw new FormulaRuntimeError('«таблица» здесь нельзя: таблиц системы тут не видно');
+      if (!tools.table) throw new FormulaRuntimeError(tr`«таблица» здесь нельзя: таблиц системы тут не видно`);
       return tools.table(String(args[0]), args[1] as Value, args.length > 2 ? String(args[2]) : null);
     },
   },
@@ -82,11 +83,11 @@ const FUNCTIONS: Record<string, Fn> = {
     arity: '1+',
     apply: () => 0,
     raw: args => {
-      if (args.length > 2) throw new FormulaRuntimeError('«кость» ждёт число граней и, если нужно, сколько костей');
+      if (args.length > 2) throw new FormulaRuntimeError(tr`«кость» ждёт число граней и, если нужно, сколько костей`);
       const sides = Number(args[0]);
       const count = args.length > 1 ? Number(args[1]) : 1;
-      if (!Number.isInteger(sides) || sides < 1) throw new FormulaRuntimeError(`«кость»: граней должно быть целое число от 1, получено ${String(args[0])}`);
-      if (!Number.isInteger(count) || count < 1) throw new FormulaRuntimeError(`«кость»: костей должно быть целое число от 1, получено ${String(args[1])}`);
+      if (!Number.isInteger(sides) || sides < 1) throw new FormulaRuntimeError(tr`«кость»: граней должно быть целое число от 1, получено ${String(args[0])}`);
+      if (!Number.isInteger(count) || count < 1) throw new FormulaRuntimeError(tr`«кость»: костей должно быть целое число от 1, получено ${String(args[1])}`);
       return `${count}d${sides}`;
     },
   },
@@ -94,10 +95,10 @@ const FUNCTIONS: Record<string, Fn> = {
     arity: '1+',
     apply: args => args[0]!,
     raw: (args, tools) => {
-      if (args.length > 2) throw new FormulaRuntimeError('«максимум костей» ждёт кости и, если нужно, сколько раз');
-      if (!tools.peak) throw new FormulaRuntimeError('«максимум костей» здесь нельзя: кости здесь не разобрать');
+      if (args.length > 2) throw new FormulaRuntimeError(tr`«максимум костей» ждёт кости и, если нужно, сколько раз`);
+      if (!tools.peak) throw new FormulaRuntimeError(tr`«максимум костей» здесь нельзя: кости здесь не разобрать`);
       const times = args.length > 1 ? Number(args[1]) : 1;
-      if (!Number.isFinite(times)) throw new FormulaRuntimeError('второй аргумент «максимум костей» — сколько раз, должен быть числом');
+      if (!Number.isFinite(times)) throw new FormulaRuntimeError(tr`второй аргумент «максимум костей» — сколько раз, должен быть числом`);
       return tools.peak(String(args[0]), times);
     },
   },
@@ -129,14 +130,14 @@ export function evaluate(ast: Node, resolve: Resolve, tools: Tools = {}): Value 
         const key = visit(node.key);
         if (key === null || key === undefined || key === '') return null as unknown as Value;
         if (typeof key === 'boolean' || (typeof key === 'object')) {
-          throw new FormulaRuntimeError(`«@${node.tag}.[…]»: колонку называет текст или число, получено ${describe(key)}`);
+          throw new FormulaRuntimeError(tr`«@${node.tag}.[…]»: колонку называет текст или число, получено ${describe(key)}`);
         }
         return resolve(`${node.tag}.${String(key)}${node.rest ? `.${node.rest}` : ''}`) as Value;
       }
 
       case 'Unary': {
         if (node.op === NOT) return !given(visit(node.operand));
-        const value = number(visit(node.operand), `операнд «${node.op}»`);
+        const value = number(visit(node.operand), tr`операнд «${node.op}»`);
         return node.op === '-' ? -value : value;
       }
 
@@ -148,12 +149,12 @@ export function evaluate(ast: Node, resolve: Resolve, tools: Tools = {}): Value 
 
       case 'Conditional':
 
-        return boolean(visit(node.test), 'условие тернарного оператора')
+        return boolean(visit(node.test), tr`условие тернарного оператора`)
           ? visit(node.then)
           : visit(node.otherwise);
 
       default:
-        throw new FormulaRuntimeError(`неизвестный узел дерева: ${(node as Node).kind}`);
+        throw new FormulaRuntimeError(tr`неизвестный узел дерева: ${(node as Node).kind}`);
     }
   }
 
@@ -166,41 +167,41 @@ export function evaluate(ast: Node, resolve: Resolve, tools: Tools = {}): Value 
     if (node.op === '==') return left === right;
     if (node.op === '!=') return left !== right;
 
-    const a = number(left, `левый операнд «${node.op}»`);
-    const b = number(right, `правый операнд «${node.op}»`);
+    const a = number(left, tr`левый операнд «${node.op}»`);
+    const b = number(right, tr`правый операнд «${node.op}»`);
 
     switch (node.op) {
       case '+': return a + b;
       case '-': return a - b;
       case '*': return a * b;
       case '/':
-        if (b === 0) throw new FormulaRuntimeError('деление на ноль');
+        if (b === 0) throw new FormulaRuntimeError(tr`деление на ноль`);
         return a / b;
       case '<': return a < b;
       case '<=': return a <= b;
       case '>': return a > b;
       case '>=': return a >= b;
       default:
-        throw new FormulaRuntimeError(`неизвестный оператор «${node.op}»`);
+        throw new FormulaRuntimeError(tr`неизвестный оператор «${node.op}»`);
     }
   }
 
   function call(node: CallNode): Value {
     const fn = FUNCTIONS[node.name];
-    if (!fn && node.name === THROW_NAME) throw new FormulaRuntimeError(DICE_BY_STEP);
+    if (!fn && node.name === THROW_NAME) throw new FormulaRuntimeError(diceByStep());
     if (!fn) {
       throw new FormulaRuntimeError(
-        `нет функции «${saidName(node.name)}»; доступны: ${FUNCTION_NAMES.map(saidName).join(', ')}`);
+        tr`нет функции «${saidName(node.name)}»; доступны: ${FUNCTION_NAMES.map(saidName).join(', ')}`);
     }
     if (fn.arity === '1+' && node.args.length < 1) {
-      throw new FormulaRuntimeError(`«${saidName(node.name)}» требует хотя бы один аргумент`);
+      throw new FormulaRuntimeError(tr`«${saidName(node.name)}» требует хотя бы один аргумент`);
     }
     if (typeof fn.arity === 'number' && node.args.length !== fn.arity) {
       throw new FormulaRuntimeError(
-        `«${saidName(node.name)}» требует аргументов: ${fn.arity}, передано ${node.args.length}`);
+        tr`«${saidName(node.name)}» требует аргументов: ${fn.arity}, передано ${node.args.length}`);
     }
     if (fn.raw) return fn.raw(node.args.map(arg => visit(arg)), tools);
-    const args = node.args.map((arg, n) => number(visit(arg), `аргумент ${n + 1} функции «${node.name}»`));
+    const args = node.args.map((arg, n) => number(visit(arg), tr`аргумент ${n + 1} функции «${node.name}»`));
     return fn.apply(args);
   }
 }
@@ -212,27 +213,27 @@ const listOf = (value: unknown): Value[] => (Array.isArray(value) ? value as Val
 
 function numbers(args: Value[], name: string, empty = false): number[] {
   const list = args.flatMap(listOf).filter(value => value !== null && value !== undefined && value !== '');
-  if (!list.length && !empty) throw new FormulaRuntimeError(`«${name}»: не из чего выбирать — список пуст`);
-  return list.map((value, n) => number(value, `значение ${n + 1} в «${name}»`));
+  if (!list.length && !empty) throw new FormulaRuntimeError(tr`«${name}»: не из чего выбирать — список пуст`);
+  return list.map((value, n) => number(value, tr`значение ${n + 1} в «${name}»`));
 }
 
 function number(value: unknown, what: string): number {
   if (typeof value !== 'number' || Number.isNaN(value)) {
-    throw new FormulaRuntimeError(`${what} должен быть числом, получено ${describe(value)}`);
+    throw new FormulaRuntimeError(tr`${what} должен быть числом, получено ${describe(value)}`);
   }
   return value;
 }
 
 function boolean(value: unknown, what: string): boolean {
   if (typeof value !== 'boolean') {
-    throw new FormulaRuntimeError(`${what} должно быть логическим, получено ${describe(value)}`);
+    throw new FormulaRuntimeError(tr`${what} должно быть логическим, получено ${describe(value)}`);
   }
   return value;
 }
 
 function describe(value: unknown): string {
-  if (typeof value === 'boolean') return `логическое ${value}`;
-  if (typeof value === 'number') return `число ${value}`;
-  if (value === undefined) return 'ничего';
+  if (typeof value === 'boolean') return tr`логическое ${value}`;
+  if (typeof value === 'number') return tr`число ${value}`;
+  if (value === undefined) return tr`ничего`;
   return `${typeof value} ${JSON.stringify(value)}`;
 }

@@ -2,6 +2,7 @@ import { breakReasonWord } from '../engine/steps/index.ts';
 import type { System } from '../model/types.ts';
 import { fieldOf } from '../model/sheet-columns.ts';
 import { isSecret } from '../model/roles.ts';
+import { tr } from '../words/tongue.ts';
 
 interface Stopped { type: string; reason?: string; note?: string }
 
@@ -18,7 +19,7 @@ export function refusalWords(
   if (short) {
     const field = fieldOf(system, short.of);
     const label = field?.label ?? short.of;
-    return isSecret(field) ? `не хватает «${label}»` : `не хватает «${label}» (сейчас ${short.value})`;
+    return isSecret(field) ? tr`не хватает «${label}»` : tr`не хватает «${label}» (сейчас ${short.value})`;
   }
   return breakReasonWord(stopped.type, String(stopped.reason ?? ''));
 }

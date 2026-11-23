@@ -1,5 +1,5 @@
 export { act } from '../core/act.ts';
-export { authorize, FIELD_BY_GM, FIELD_BY_RULES, FIELD_UNSEEN, GROUP_BY_GM } from '../core/authorize.ts';
+export { authorize, fieldByGm, fieldByRules, fieldUnseen, groupByGm } from '../core/authorize.ts';
 export type { Member, Room, Want } from '../core/authorize.ts';
 export { circleOf, handEdited, isSecret, isService, knows, sheetsFor, shows } from '../model/roles.ts';
 export type { Circle, Viewer } from '../model/roles.ts';
@@ -13,7 +13,7 @@ export { idleClock } from '../engine/clock.ts';
 export { EngineError } from '../engine/errors.ts';
 export { DESK_ID, isDesk } from '../engine/owners.ts';
 export { availableActions, bindingHolds, bindingsOf } from '../events/actions.ts';
-export { ANY_ACTION, callHappening, FIELD_PREFIX, GAINED_PREFIX, happeningOf, LOST_PREFIX, MOMENT_PREFIX, PHASES, ROLLED, ROLLED_LABEL, SEEN, SEEN_LABEL } from '../events/bus.ts';
+export { ANY_ACTION, callHappening, FIELD_PREFIX, GAINED_PREFIX, happeningOf, LOST_PREFIX, MOMENT_PREFIX, PHASES, ROLLED, rolledLabel, SEEN, seenLabel } from '../events/bus.ts';
 export type { Phase } from '../events/bus.ts';
 export { blankDesk, deskOf, hasDesk, isGroup, sharedOf } from '../events/desk.ts';
 export { heardMoments, MOMENTS } from '../events/moments.ts';

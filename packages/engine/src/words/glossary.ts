@@ -1,17 +1,19 @@
-export const SHEET = { one: 'лист', gen: 'листа', dat: 'листу', prep: 'листе', many: 'листы', manyGen: 'листов' } as const;
-export const STEP = { one: 'шаг', gen: 'шага', prep: 'шаге', many: 'шаги', manyGen: 'шагов', manyPrep: 'шагах' } as const;
-export const EFFECT = { one: 'эффект', gen: 'эффекта', many: 'эффекты', manyGen: 'эффектов' } as const;
-export const RECORD = { one: 'запись', gen: 'записи', many: 'записи', manyGen: 'записей' } as const;
-export const RECORD_KIND = { one: 'тип записи', many: 'типы записей', manyGen: 'типов записей' } as const;
+import { tr, live, tongue } from './tongue.ts';
+import { wordsOf } from '../formula/words.ts';
+export const SHEET = live({ one: 'лист', gen: 'листа', dat: 'листу', prep: 'листе', many: 'листы', manyGen: 'листов' } as const);
+export const STEP = live({ one: 'шаг', gen: 'шага', prep: 'шаге', many: 'шаги', manyGen: 'шагов', manyPrep: 'шагах' } as const);
+export const EFFECT = live({ one: 'эффект', gen: 'эффекта', many: 'эффекты', manyGen: 'эффектов' } as const);
+export const RECORD = live({ one: 'запись', gen: 'записи', many: 'записи', manyGen: 'записей' } as const);
+export const RECORD_KIND = live({ one: 'тип записи', many: 'типы записей', manyGen: 'типов записей' } as const);
 
-export const TABS = {
+export const TABS = live({
   sheet: 'Лист',
   rules: 'Правила',
   effects: 'Эффекты',
   records: 'Вещи и умения',
-} as const;
+} as const);
 
-export const DIE_LETTER = 'к';
+export const dieLetter = (): string => wordsOf(tongue()).die;
 
 export const DIE_MARK = 'd';
 
@@ -19,9 +21,9 @@ export const dice = (count: number | string | null | undefined, sides: number | 
   `${count ?? 1}${DIE_MARK}${sides}`;
 
 export const diceSaid = (count: number | string | null | undefined, sides: number | string): string =>
-  `${count ?? 1}${DIE_LETTER}${sides}`;
+  `${count ?? 1}${dieLetter()}${sides}`;
 
-export const diceExample = diceSaid(1, 20);
+export const diceExample = (): string => diceSaid(1, 20);
 
 export const DICE_TEXT = /^(\d+)?\s*d\s*(\d+)$/iu;
 
@@ -58,23 +60,24 @@ export const FORBIDDEN_STEMS = ['слушател', 'карточк', 'карт�
 
 export const OUTCOME_COLUMNS: Readonly<Record<'success' | 'fail', readonly string[]>> = { success: ['uspeh', 'success'], fail: ['proval', 'fail'] };
 
-export const OUTCOME_WORDS = { success: 'успех', fail: 'провал' } as const;
+export const OUTCOME_WORDS = live({ success: 'успех', fail: 'провал' } as const);
 
 export const COST_BLOCK = 'plata';
 
-export const COST_BLOCK_LABEL = 'Плата';
+export const costBlockLabel = (): string => tr`Плата`;
 
 export const GEAR_BLOCK = 'snaryazhenie';
 
-export const GEAR_BLOCK_LABEL = 'Снаряжение';
+export const gearBlockLabel = (): string => tr`Снаряжение`;
 
-export const SHEET_LISTS = { hanging: 'Висит сейчас', things: 'Снаряжение', actions: 'Действия' } as const;
+export const SHEET_LISTS = live({ hanging: 'Висит сейчас', things: 'Снаряжение', actions: 'Действия' } as const);
 
-export const WIDTH_WORDS: Record<number, string> = { 3: 'четверть', 4: 'треть', 6: 'половина', 8: 'две трети', 9: 'три четверти', 12: 'вся ширина' };
+export const WIDTH_WORDS: Record<number, string> = live({ 3: 'четверть', 4: 'треть', 6: 'половина', 8: 'две трети', 9: 'три четверти', 12: 'вся ширина' });
 
 export const widthWords = (width: number): string => WIDTH_WORDS[width] ?? `${width}/12`;
 
-const pluralRu = (n: number, one: string, few: string, many: string): string => {
+export const plural = (n: number, one: string, few: string, many: string): string => {
+  if (tongue() !== 'ru') return n === 1 ? one : many;
   const tens = n % 100;
   const ones = n % 10;
   if (tens >= 11 && tens <= 14) return many;
@@ -83,8 +86,8 @@ const pluralRu = (n: number, one: string, few: string, many: string): string => 
   return many;
 };
 
-export const splitWords = (n: number): string => (n <= 1 ? 'одним списком' : `в ${n} ${pluralRu(n, 'столбец', 'столбца', 'столбцов')}`);
+export const splitWords = (n: number): string => (n <= 1 ? tr`одним списком` : tr`в ${n} ${plural(n, tr`столбец`, tr`столбца`, tr`столбцов`)}`);
 
-export const perRowWords = (n: number): string => (n === 1 ? 'по одному в строку' : `по ${n} в строку`);
+export const perRowWords = (n: number): string => (n === 1 ? tr`по одному в строку` : tr`по ${n} в строку`);
 
-export const DICE_BY_STEP = 'кости бросает шаг «Бросок»: поставьте его перед этим шагом и возьмите его итог по имени шага';
+export const diceByStep = (): string => tr`кости бросает шаг «Бросок»: поставьте его перед этим шагом и возьмите его итог по имени шага`;

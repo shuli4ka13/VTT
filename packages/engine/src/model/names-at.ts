@@ -12,6 +12,7 @@ import { columnChoices } from './paths.ts';
 import { onSheet } from './sheet-columns.ts';
 import { dieParts, thrownDie, givesOf } from './rolled.ts';
 import type { System, Effect, Step, Param } from './types.ts';
+import { tr, live } from '../words/tongue.ts';
 
 export type Place =
   | { part: 'steps' | 'cost' | 'attach' | 'detach'; index: number }
@@ -37,7 +38,7 @@ export interface NameAt {
   children?: NameChild[];
 }
 
-const HEARD_LABELS: Record<string, string> = {
+const HEARD_LABELS: Record<string, string> = live({
   [NAMES.roller]: 'кто бросает',
   [NAMES.against]: 'против кого бросок',
   [NAMES.number]: 'число поля, которое бросают',
@@ -45,11 +46,11 @@ const HEARD_LABELS: Record<string, string> = {
   [NAMES.sheet]: 'лист, с которым это случилось',
   [CALL_TAGS]: 'метки вызова',
   [TARGETS_SEED]: 'итоги по каждой цели',
-};
+});
 
 const partsOf = (step: Step, system: System | undefined, inputs: readonly Param[]): NameChild[] =>
   (step.type !== 'roll' || !system ? [] : dieParts(system, thrownDie(system, inputs, step))
-    .map(part => ({ path: `.parts.${part.name}`, label: `что выпало на кости «${part.label}»`, kind: 'number' })));
+    .map(part => ({ path: `.parts.${part.name}`, label: tr`что выпало на кости «${part.label}»`, kind: 'number' })));
 
 const GRADED: Record<string, 'success' | 'margin' | 'degree'> = { '.success': 'success', '.margin': 'margin', '.degree': 'degree' };
 
@@ -87,11 +88,11 @@ const fromParam = (param: Param, group: NameGroup, system?: System): NameAt => w
   ...((param.kind === 'choice' || param.kind === 'record') && param.from ? { from: param.from } : {}),
 }, system);
 
-const holder = (): NameAt => ({ name: HOLDER, label: 'носитель — тот, на ком висит', kind: 'sheet', group: 'holder' });
+const holder = (): NameAt => ({ name: HOLDER, label: tr`носитель — тот, на ком висит`, kind: 'sheet', group: 'holder' });
 
-const left = (): NameAt => ({ name: LEFT_NAME, label: 'осталось срока у этого висящего', kind: 'number', group: 'holder' });
+const left = (): NameAt => ({ name: LEFT_NAME, label: tr`осталось срока у этого висящего`, kind: 'number', group: 'holder' });
 
-const combat = (): NameAt => ({ name: `${DESK_NAME}.${COMBAT_NAME}`, label: 'идёт ли бой', kind: 'boolean', group: 'holder' });
+const combat = (): NameAt => ({ name: `${DESK_NAME}.${COMBAT_NAME}`, label: tr`идёт ли бой`, kind: 'boolean', group: 'holder' });
 
 const returnsOf = (system: System | undefined, step: Step): NameChild[] => {
   const called = (step as { effect?: unknown }).effect;
@@ -165,7 +166,7 @@ function targetsChildren(listened: Effect | null, system?: System): NameChild[] 
   if (at < 0) return [];
   return steps.slice(at + 1).filter(step => step.id).flatMap(step => {
     const outputs = [...returnsOf(system, step), ...outputsOf(step, system, listened.params ?? [])];
-    const own = { path: `.${String(step.id)}`, label: `шаг «${stepSaid(step)}» у каждой цели`, kind: 'result' };
+    const own = { path: `.${String(step.id)}`, label: tr`шаг «${stepSaid(step)}» у каждой цели`, kind: 'result' };
     return [own, ...outputs.map(output => ({ path: `.${String(step.id)}${output.path}`, label: output.label, kind: output.kind }))];
   });
 }

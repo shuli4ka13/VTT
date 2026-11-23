@@ -10,6 +10,7 @@ import { asItem, ITEM_NAME } from './item-ref.ts';
 import { typeColumn } from './inherit.ts';
 import { isBlank, orDefault } from './blank.ts';
 import type { System, Compendium, Ask, Param } from './types.ts';
+import { tr } from '../words/tongue.ts';
 
 export interface AskedParam extends Param {
   ask: Ask;
@@ -91,22 +92,22 @@ export type Inputs = Record<string, InputValue | Record<string, InputValue>>;
 export const isPerTarget = (param: Param): boolean => Boolean((param as { perTarget?: boolean }).perTarget);
 
 function valueProblem(param: AskedParam, value: unknown, name: string, system: System, actor: Pass | undefined): string | null {
-  if (isBlank(value)) return `не заполнено: ${name}`;
+  if (isBlank(value)) return tr`не заполнено: ${name}`;
   const kind = askKindOf(param);
   if (kind === 'number') {
     const number = Number(value);
-    if (!Number.isFinite(number)) return `${name}: нужно число, а пришло «${String(value)}»`;
+    if (!Number.isFinite(number)) return tr`${name}: нужно число, а пришло «${String(value)}»`;
     const low = boundOf(param.min, actor);
     const high = boundOf(param.max, actor);
-    if (low !== null && number < low) return `${name}: не меньше ${low}`;
-    if (high !== null && number > high) return `${name}: не больше ${high}`;
+    if (low !== null && number < low) return tr`${name}: не меньше ${low}`;
+    if (high !== null && number > high) return tr`${name}: не больше ${high}`;
   }
-  if (kind === 'boolean' && !(YES_NO as readonly string[]).includes(String(value))) return `${name}: можно только «да» или «нет»`;
+  if (kind === 'boolean' && !(YES_NO as readonly string[]).includes(String(value))) return tr`${name}: можно только «да» или «нет»`;
   if (kind === 'choice') {
     const options = choicesOf(system, param);
     if (!options.includes(String(value))) {
       const said = (listOf(system, param.from) ?? []).map(option => String((option as { label?: string }).label ?? option.value));
-      return `${name}: можно только ${said.map(one => `«${one}»`).join(', ') || '(список пуст)'}`;
+      return tr`${name}: можно только ${said.map(one => `«${one}»`).join(', ') || tr`(список пуст)`}`;
     }
   }
   return null;
@@ -117,23 +118,23 @@ export function checkInputs(
 ): string | null {
   const given = inputs ?? {};
   for (const key of Object.keys(given)) {
-    if (!asked.some(param => param.key === key)) return `лишнее значение «${key}» — действие о нём не спрашивает`;
+    if (!asked.some(param => param.key === key)) return tr`лишнее значение «${key}» — действие о нём не спрашивает`;
   }
   for (const param of asked) {
     const value = given[param.key];
     const name = param.label ?? param.key;
     const empty = isBlank(value);
     if (empty && param.optional && !isPerTarget(param)) continue;
-    if (isPerTarget(param) && targets && !targets.length) return `${name}: спрашивается для каждой цели — сначала выберите цели`;
+    if (isPerTarget(param) && targets && !targets.length) return tr`${name}: спрашивается для каждой цели — сначала выберите цели`;
     if (!isPerTarget(param)) {
-      if (value !== null && typeof value === 'object') return `${name}: одно значение на всё действие, а пришло по целям`;
+      if (value !== null && typeof value === 'object') return tr`${name}: одно значение на всё действие, а пришло по целям`;
       const problem = valueProblem(param, value, name, system, actor);
       if (problem) return problem;
       continue;
     }
-    if (value === undefined || value === null || typeof value !== 'object') return `не заполнено: ${name} — для каждой цели`;
+    if (value === undefined || value === null || typeof value !== 'object') return tr`не заполнено: ${name} — для каждой цели`;
     const map = value as Record<string, InputValue>;
-    for (const id of Object.keys(map)) if (targets && !targets.includes(id)) return `${name}: «${id}» — не цель этого действия`;
+    for (const id of Object.keys(map)) if (targets && !targets.includes(id)) return tr`${name}: «${id}» — не цель этого действия`;
     for (const id of targets ?? Object.keys(map)) {
       const problem = valueProblem(param, map[id], `${name} (${id})`, system, actor);
       if (problem) return problem;

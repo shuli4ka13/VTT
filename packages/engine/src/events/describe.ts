@@ -18,6 +18,8 @@ import type { Addend } from '../core/dice.ts';
 import { facedText } from '../core/against.ts';
 import type { FacedTrace } from '../core/against.ts';
 import { CALL_WORDS } from '../words/calls.ts';
+import { tr } from '../words/tongue.ts';
+import { inSystemTongue } from '../model/localize.ts';
 
 const addsOf = (trace: Record<string, unknown>): Addend[] => (Array.isArray(trace.adds) ? trace.adds as Addend[] : []);
 
@@ -47,12 +49,16 @@ const rollsText = (trace: Record<string, unknown>): string => {
 const rolled = (one: Record<string, unknown>): boolean => one.type === 'check' || (one.type === 'roll' && Boolean(one.by));
 
 export function previewLines(system: System, effectId: string, trace: Record<string, unknown>[]): string[] {
+  return inSystemTongue(system, () => previewLinesIn(system, effectId, trace));
+}
+
+function previewLinesIn(system: System, effectId: string, trace: Record<string, unknown>[]): string[] {
   const shown = trace.filter(one => !one.skipped && (!one.within || rolled(one)));
   const lines: string[] = [];
   for (const one of shown) {
     if (one.type !== 'roll' || !one.by) continue;
     const tags = (one.tags as string[] | undefined) ?? [];
-    const title = titleOf('Бросок', tags, system);
+    const title = titleOf(tr`Бросок`, tags, system);
     lines.push(`${title}: ${rollsText(one)}${addendsText(addsOf(one))}${one.bonus ? ` + ${one.bonus}` : ''} = ${one.total}`);
   }
   for (const one of shown) {
@@ -61,7 +67,7 @@ export function previewLines(system: System, effectId: string, trace: Record<str
     const forced = one.forced != null ? ` (${forcedWords(Number(one.forced), Boolean(one.success))})` : '';
     const named = typeof one.versusTag === 'string' ? `${tagLabel(system, one.versusTag, system.effects?.[effectId]?.params) ?? one.versusTag} ` : '';
     const against = typeof one.versusTag === 'string' && isSecret(fieldOf(system, one.versusTag)) ? named.trim() : `${named}${one.versus}`;
-    lines.push(`против ${against}: ${one.success ? words.success : words.fail}${forced}`);
+    lines.push(tr`против ${against}: ${one.success ? words.success : words.fail}${forced}`);
   }
   return lines;
 }
@@ -70,8 +76,10 @@ export function describeEntry(
   entry: { fromId: string; toId: string; report: any },
   system: System, sheets: Sheet[],
 ): string {
-  const { head, lines } = describeParts(entry, system, sheets);
-  return lines.length ? `${head} · ${lines.join(' · ')}` : head;
+  return inSystemTongue(system, () => {
+    const { head, lines } = describeParts(entry, system, sheets);
+    return lines.length ? `${head} · ${lines.join(' · ')}` : head;
+  });
 }
 
 export function describeParts(
@@ -81,10 +89,10 @@ export function describeParts(
   const nameOf = (id: string) => sheets.find(s => s.id === id)?.name ?? id;
   const label = String(entry.report.label ?? '') || effectLabelOf(system, entry.report.effect);
   const head = entry.fromId === entry.toId
-    ? `${nameOf(entry.fromId)} применяет «${label}»`
+    ? tr`${nameOf(entry.fromId)} применяет «${label}»`
     : entry.report.reply
-      ? `${nameOf(entry.fromId)} отвечает «${label}» по ${nameOf(entry.toId)}`
-      : `${nameOf(entry.fromId)} применяет «${label}» по ${nameOf(entry.toId)}`;
+      ? tr`${nameOf(entry.fromId)} отвечает «${label}» по ${nameOf(entry.toId)}`
+      : tr`${nameOf(entry.fromId)} применяет «${label}» по ${nameOf(entry.toId)}`;
 
   const changes = ((entry.report.changes ?? []) as { tag: string; from: unknown; to: unknown }[]).filter(c => !isSecret(fieldOf(system, c.tag)));
   const shown = changes.map(c => `${labelOf(c.tag)}: ${valueWord(c.from)} → ${valueWord(c.to)}`);
@@ -92,7 +100,7 @@ export function describeParts(
     const item = parseItemTag(tag);
     if (item) {
       const column = recordKinds(system).flatMap(([, kind]) => kind.columns ?? []).find(one => one.key === item.column);
-      return `${column?.label ?? item.column} (вещь ${item.key})`;
+      return tr`${column?.label ?? item.column} (вещь ${item.key})`;
     }
     return tagLabel(system, tag, system.effects?.[String(entry.report.effect)]?.params) ?? tag;
   }
@@ -128,7 +136,7 @@ export function describeParts(
     const param = params.find(p => p.key === name);
     if (param) return String(param.label ?? name);
     const source = (effect?.steps ?? []).find((step: any) => String(step.id) === name);
-    if (source?.type === 'roll') return rollTitle(system, ((source.tags ?? []) as unknown[]).filter((tag): tag is string => typeof tag === 'string'), source.by || source.field ? 'бросок' : 'расчёт');
+    if (source?.type === 'roll') return rollTitle(system, ((source.tags ?? []) as unknown[]).filter((tag): tag is string => typeof tag === 'string'), source.by || source.field ? tr`бросок` : tr`расчёт`);
     if (typeof source?.label === 'string' && source.label) return source.label;
     return labelOf(name);
   };
@@ -173,29 +181,29 @@ export function describeParts(
       const shown = ((trace.rolls ?? []) as number[])
         .map((v, i) => (raw.length === trace.rolls.length && raw[i] !== v ? `${raw[i]}→${v}` : String(v)))
         .join(', ');
-      const rolls = trace.read === 'count' ? `[${shown}] → успехов ${trace.total - trace.bonus - addedOf(trace)}`
+      const rolls = trace.read === 'count' ? tr`[${shown}] → успехов ${trace.total - trace.bonus - addedOf(trace)}`
         : trace.kept != null && trace.rolls?.length > 1 ? `[${shown}] → ${trace.kept}` : `[${shown}]`;
-      const title = rollTitle(system, tagsOfStep(step, trace), 'Бросок');
+      const title = rollTitle(system, tagsOfStep(step, trace), tr`Бросок`);
       const edits = trace.edits?.length ? ` (${trace.edits.join(', ')})` : '';
       const gone = CALL_WORDS.roll.canceled(trace.canceled ?? []);
-      const bonus = step?.bonus ? ` + ${refLabel(step.bonus, trace.within) ?? 'Бонус'}: ${trace.bonus}` : trace.bonus ? ` + ${trace.bonus}` : '';
+      const bonus = step?.bonus ? ` + ${refLabel(step.bonus, trace.within) ?? tr`Бонус`}: ${trace.bonus}` : trace.bonus ? ` + ${trace.bonus}` : '';
       const parts = trace.parts && Object.keys(trace.parts).length
         ? ' · ' + Object.entries(trace.parts).map(([k, v]) => `${partSaid(system, k)}: ${v}`).join(', ') : '';
       const verdict = verdictText({ threshold: trace.threshold, under: trace.under === true, success: trace.success, margin: trace.said, degree: trace.degree });
       return `${title}: ${rolls}${edits}${addendsText(addsOf(trace))}${bonus} = ${trace.total}${parts}${verdict}${gone}`;
     }
     if (trace.type === 'check') {
-      const versus = typeof trace.versusTag === 'string' ? labelOf(trace.versusTag) : refLabel(step?.versus, trace.within) ?? 'порог';
-      const degree = trace.degree !== undefined && trace.degree !== null ? `, степень ${trace.degree}` : '';
+      const versus = typeof trace.versusTag === 'string' ? labelOf(trace.versusTag) : refLabel(step?.versus, trace.within) ?? tr`порог`;
+      const degree = trace.degree !== undefined && trace.degree !== null ? tr`, степень ${trace.degree}` : '';
       const words = outcomeWords(system, (trace.tags as string[] | undefined) ?? []);
       const forced = trace.forced != null ? ` (${forcedWords(trace.forced, Boolean(trace.success))})` : '';
       const verdict = (trace.success ? words.success : words.fail) + forced + degree;
       const tags = (trace.tags as string[] | undefined) ?? [];
-      const title = tags.length ? rollTitle(system, tags, 'Проверка') : refLabel(step?.value) ?? 'Проверка';
+      const title = tags.length ? rollTitle(system, tags, tr`Проверка`) : refLabel(step?.value) ?? tr`Проверка`;
       const faced = Array.isArray(trace.faced) ? (trace.faced as FacedTrace[]).map(facedText) : [];
       const secret = typeof trace.versusTag === 'string' && isSecret(fieldOf(system, trace.versusTag));
       const closed = typeof trace.of === 'string' && isSecret(fieldOf(system, trace.of));
-      return [...faced, `${title}${closed ? '' : `: ${trace.total}`} против ${versus}${secret ? '' : `: ${trace.versus}`} — ${verdict}`].join(' · ');
+      return [...faced, tr`${title}${closed ? '' : `: ${trace.total}`} против ${versus}${secret ? '' : `: ${trace.versus}`} — ${verdict}`].join(' · ');
     }
     return null;
   };

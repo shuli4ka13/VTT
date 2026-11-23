@@ -9,6 +9,7 @@ import { fieldOf, hasField } from '../model/sheet-columns.ts';
 import { recordKinds } from '../model/owned.ts';
 import { walkColumns } from '../model/paths.ts';
 import { fixedDefault } from '../model/blank.ts';
+import { tr } from '../words/tongue.ts';
 
 type Loose = Record<string, unknown>;
 
@@ -35,12 +36,12 @@ const columnBy = (columns: readonly TableColumn[] | undefined, key: string | und
 
 function columnAt(system: System, tableId: string, columnKey: string, owner: string): TableColumn {
   const table = tableOf(system, tableId);
-  if (!table) throw new EngineError(`${owner}: таблицы «${tableId}» нет`);
+  if (!table) throw new EngineError(tr`${owner}: таблицы «${tableId}» нет`);
   const column = columnBy(table.columns, columnKey);
   if (!column) {
     throw new EngineError(
-      `${owner}: у таблицы «${table.label || tableId}» нет колонки «${columnKey}» — `
-      + `есть: ${(table.columns ?? []).map(c => c.label || c.key).join(', ') || 'ни одной'}`);
+      tr`${owner}: у таблицы «${table.label || tableId}» нет колонки «${columnKey}» — `
+      + tr`есть: ${(table.columns ?? []).map(c => c.label || c.key).join(', ') || tr`ни одной`}`);
   }
   return column;
 }
@@ -49,7 +50,7 @@ function linked(column: TableColumn, columnKey: string, rest: string[], owner: s
   const link = linkOf(column);
   if (!link) {
     throw new EngineError(
-      `${owner}: колонка «${column.label || columnKey}» не из таблицы — дальше «${rest.join('.')}» идти некуда`);
+      tr`${owner}: колонка «${column.label || columnKey}» не из таблицы — дальше «${rest.join('.')}» идти некуда`);
   }
   return link;
 }
@@ -92,20 +93,20 @@ export function reach(
   for (let i = 0; i < path.length; i++) {
     const table = tableOf(system, current);
     if (value === null || value === undefined || value === '') {
-      throw new EngineError(`${owner}: строка «${table?.label || current}» не задана — какую клетку менять?`);
+      throw new EngineError(tr`${owner}: строка «${table?.label || current}» не задана — какую клетку менять?`);
     }
     const column = columnAt(system, current, path[i]!, owner);
     const columnKey = column.key;
     if (i === path.length - 1) {
       const row = rowOf(system, current, value, owner);
-      if (!row) throw new EngineError(`${owner}: в таблице «${table?.label || current}» нет строки «${String(value)}»`);
+      if (!row) throw new EngineError(tr`${owner}: в таблице «${table?.label || current}» нет строки «${String(value)}»`);
       return addressOf(current, row, columnKey);
     }
     const cell = readCell(system, pass, current, value, columnKey, owner);
     current = linked(column, columnKey, path.slice(i + 1), owner);
     value = cell;
   }
-  throw new EngineError(`${owner}: у строки «${current}» не сказано, какую колонку менять`);
+  throw new EngineError(tr`${owner}: у строки «${current}» не сказано, какую колонку менять`);
 }
 
 export function resolveAddress(system: System, pass: Pass, name: string): { value: unknown } | null {
@@ -113,7 +114,7 @@ export function resolveAddress(system: System, pass: Pass, name: string): { valu
   const table = tableId ? system.tables?.[tableId] : undefined;
   if (!table || rowKey === undefined || isRange(table) || hasField(system, tableId)) return null;
   const row = (table.rows ?? []).find(r => rowKeyOf(r) === slugOf(rowKey));
-  if (!row) throw new EngineError(`«${name}»: в таблице «${table.label || tableId}» нет строки «${rowKey}»`);
+  if (!row) throw new EngineError(tr`«${name}»: в таблице «${table.label || tableId}» нет строки «${rowKey}»`);
   if (!segment) return { value: row.value };
   const column = columnBy(table.columns, segment)?.key ?? segment;
   const checked = walkColumns(system, tableId!, [column, ...rest]);
@@ -123,7 +124,7 @@ export function resolveAddress(system: System, pass: Pass, name: string): { valu
   const spec = (table.columns ?? []).find(c => c.key === column);
   const link = linkOf(spec);
   if (!link) {
-    throw new EngineError(`«${name}»: колонка «${spec?.label || column}» не из таблицы — дальше «${rest.join('.')}» идти некуда`);
+    throw new EngineError(tr`«${name}»: колонка «${spec?.label || column}» не из таблицы — дальше «${rest.join('.')}» идти некуда`);
   }
   return { value: walk(system, pass, link, cell, rest, `«${name}»`) };
 }

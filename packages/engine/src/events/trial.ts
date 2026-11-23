@@ -12,21 +12,23 @@ import { isUnder } from '../model/owned.ts';
 import { freshSheet } from '../model/fresh.ts';
 import type { System, Compendium, Sheet, Die, Effect } from '../model/types.ts';
 import type { Clock } from '../engine/clock.ts';
+import { tr, live } from '../words/tongue.ts';
+import { inSystemTongue } from '../model/localize.ts';
 
 export type DiceMode = 'min' | 'avg' | 'max' | 'random';
 
-export const DICE_MODES: Record<DiceMode, { label: string; hint: string }> = {
+export const DICE_MODES: Record<DiceMode, { label: string; hint: string }> = live({
   min: { label: 'минимум', hint: 'на каждой кости единица' },
   avg: { label: 'среднее', hint: 'на каждой кости середина, округлённая вверх' },
   max: { label: 'максимум', hint: 'на каждой кости старшая грань' },
   random: { label: 'случайно', hint: 'как за столом' },
-};
+});
 
 export function dieOf(mode: DiceMode, random?: () => number): Die {
   if (mode === 'min') return () => 1;
   if (mode === 'max') return sides => sides;
   if (mode === 'avg') return sides => Math.ceil((sides + 1) / 2);
-  if (!random) throw new EngineError('проба «случайно»: источник случайности не передан — движок сам костей не выдумывает');
+  if (!random) throw new EngineError(tr`проба «случайно»: источник случайности не передан — движок сам костей не выдумывает`);
   return sides => 1 + Math.floor(random() * sides);
 }
 
@@ -37,7 +39,7 @@ export function sampleArg(
   if (list?.length) return list[0]!.value;
   if (kind === 'dice') return '1d6';
   if (kind === 'number') return 1;
-  if (kind === 'text') return 'проба';
+  if (kind === 'text') return tr`проба`;
   if (kind === 'effect') return Object.keys(system.effects)[0] ?? '';
   if (kind === 'choice' && effect && key) return firstChoice(effect, key) ?? '';
   return '';
@@ -85,11 +87,15 @@ export interface TrialResult {
 const TRIAL_KIND = '__проба';
 const TRIAL_RECORD = '__проба';
 
-export function trial({ system, compendium, effectId, from, to, args, dice = 'avg', random }: TrialArgs): TrialResult {
+export function trial(given: TrialArgs): TrialResult {
+  return inSystemTongue(given.system, () => trialIn(given));
+}
+
+function trialIn({ system, compendium, effectId, from, to, args, dice = 'avg', random }: TrialArgs): TrialResult {
   const effect: Effect | undefined = system.effects[effectId];
-  if (!effect) throw new EngineError(`пробный прогон: система не объявляет эффекта «${effectId}»`);
+  if (!effect) throw new EngineError(tr`пробный прогон: система не объявляет эффекта «${effectId}»`);
   if (!isPipeline(effect)) {
-    throw new EngineError(`пробный прогон: эффект «${effect.label ?? effectId}» висит на листе — его не запускают кнопкой, запустите то, на что он отзывается`);
+    throw new EngineError(tr`пробный прогон: эффект «${effect.label ?? effectId}» висит на листе — его не запускают кнопкой, запустите то, на что он отзывается`);
   }
   const filled: Record<string, unknown> = {};
   for (const param of effect.params ?? []) {
@@ -105,7 +111,7 @@ export function trial({ system, compendium, effectId, from, to, args, dice = 'av
     ...system,
     tables: {
       ...(system.tables ?? {}),
-      [TRIAL_KIND]: { shape: 'book', use: kind?.use ?? 'action', label: 'Проба', columns: kind?.columns ?? [], bindings: [{ label: effect.label ?? effectId, effect: effectId, args: filled }] },
+      [TRIAL_KIND]: { shape: 'book', use: kind?.use ?? 'action', label: tr`Проба`, columns: kind?.columns ?? [], bindings: [{ label: effect.label ?? effectId, effect: effectId, args: filled }] },
     },
   } as System;
   const book: Compendium = {

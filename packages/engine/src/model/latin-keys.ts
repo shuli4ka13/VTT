@@ -1,4 +1,5 @@
 import type { System } from './types.ts';
+import { tr } from '../words/tongue.ts';
 
 const LATIN = /^[A-Za-z][A-Za-z0-9_]*$/;
 
@@ -84,5 +85,5 @@ export function foreignKeysText(system: System): string | null {
   const found = foreignKeys(system);
   if (!found.length) return null;
   const shown = found.slice(0, 3).map(key => `«${key}»`).join(', ');
-  return `ключей не латиницей: ${found.length} (${shown}${found.length > 3 ? ' …' : ''}) — такая система не откроется авторам с другим языком`;
+  return tr`ключей не латиницей: ${found.length} (${shown}${found.length > 3 ? ' …' : ''}) — такая система не откроется авторам с другим языком`;
 }

@@ -1,8 +1,9 @@
 import { EngineError } from '../engine/errors.ts';
 import { readingOf } from '../engine/readings.ts';
-import { DICE_TEXT, DIE_LETTER, asDice } from '../words/glossary.ts';
+import { DICE_TEXT, dieLetter, asDice } from '../words/glossary.ts';
 import type { ReadSpec } from '../engine/readings.ts';
 import type { DieConstant, Die, RollEdit, RollEditOp } from '../model/types.ts';
+import { tr } from '../words/tongue.ts';
 
 export interface Term { count: number; sides: number; part?: string }
 
@@ -69,14 +70,14 @@ export type CountOf = (ref: unknown, what: string) => number;
 export function parse(input: string | DieConstant, countOf?: CountOf): Spec {
   if (typeof input === 'string') {
     const match = DICE_TEXT.exec(input.trim());
-    if (!match) throw new EngineError(`не понимаю запись кубиков «${input}»; ожидается вид «2к6»`);
+    if (!match) throw new EngineError(tr`не понимаю запись кубиков «${input}»; ожидается вид «2к6»`);
     return { label: asDice(input.trim()), terms: [{ count: Number(match[1] ?? 1), sides: Number(match[2]) }], read: { kind: 'sum' } };
   }
   const terms = (input.dice ?? []).map((term): Term => {
     const raw = term.count ?? 1;
-    const count = typeof raw === 'number' ? raw : countOf ? countOf(raw, `счёт костей «${term.label || input.label || '?'}»`) : NaN;
+    const count = typeof raw === 'number' ? raw : countOf ? countOf(raw, tr`счёт костей «${term.label || input.label || '?'}»`) : NaN;
     if (!Number.isInteger(count) || count < 0) {
-      throw new EngineError(`счёт костей «${input.label || '?'}» должен быть целым не меньше нуля, а вышло ${count}`);
+      throw new EngineError(tr`счёт костей «${input.label || '?'}» должен быть целым не меньше нуля, а вышло ${count}`);
     }
     return {
       count, sides: term.sides,
@@ -88,10 +89,10 @@ export function parse(input: string | DieConstant, countOf?: CountOf): Spec {
 
 export function withCount(spec: Spec, count: number, owner: string): Spec {
   if (!Number.isInteger(count) || count < 0) {
-    throw new EngineError(`${owner}: счёт костей «${spec.label || '?'}» должен быть целым не меньше нуля, а вышло ${count}`);
+    throw new EngineError(tr`${owner}: счёт костей «${spec.label || '?'}» должен быть целым не меньше нуля, а вышло ${count}`);
   }
   if (spec.terms.length !== 1) {
-    throw new EngineError(`${owner}: число костей задаёт проверка, а кость «${spec.label || '?'}» составная — возьмите кость из одного вида`);
+    throw new EngineError(tr`${owner}: число костей задаёт проверка, а кость «${spec.label || '?'}» составная — возьмите кость из одного вида`);
   }
   return { ...spec, terms: [{ ...spec.terms[0]!, count }] };
 }
@@ -100,22 +101,22 @@ export function withSides(spec: Spec, sides: number | readonly number[], owner: 
   const list = typeof sides === 'number' ? [sides] : sides;
   const wrong = list.find(one => !Number.isInteger(one) || one < 1);
   if (wrong !== undefined) {
-    throw new EngineError(`${owner}: грани кости «${spec.label || '?'}» должны быть целым числом от единицы, а вышло ${wrong}`);
+    throw new EngineError(tr`${owner}: грани кости «${spec.label || '?'}» должны быть целым числом от единицы, а вышло ${wrong}`);
   }
   if (typeof sides !== 'number') {
     if (spec.terms.length !== list.length) {
-      throw new EngineError(`${owner}: бросают ${list.length} поля, а в кости «${spec.label || '?'}» видов: ${spec.terms.length} — их должно быть поровну`);
+      throw new EngineError(tr`${owner}: бросают ${list.length} поля, а в кости «${spec.label || '?'}» видов: ${spec.terms.length} — их должно быть поровну`);
     }
     return { ...spec, terms: spec.terms.map((term, at) => ({ ...term, sides: list[at]! })) };
   }
   if (spec.terms.length !== 1) {
-    throw new EngineError(`${owner}: грани задаёт проверка, а кость «${spec.label || '?'}» составная — возьмите кость из одного вида`);
+    throw new EngineError(tr`${owner}: грани задаёт проверка, а кость «${spec.label || '?'}» составная — возьмите кость из одного вида`);
   }
   return { ...spec, terms: [{ ...spec.terms[0]!, sides }] };
 }
 
 export function withKeep(spec: Spec, n: number, owner: string, from: Keep['from'] = 'best'): Spec {
-  if (!Number.isInteger(n)) throw new EngineError(`${owner}: оставить можно целое число костей, а вышло ${n}`);
+  if (!Number.isInteger(n)) throw new EngineError(tr`${owner}: оставить можно целое число костей, а вышло ${n}`);
   if (n < 1) return spec;
   return { ...spec, keeps: [...(spec.keeps ?? []), { n, from, scope: 'main' }] };
 }
@@ -127,8 +128,8 @@ export function times(spec: Spec, n: number): Spec {
 
 export function notationOf(spec: Spec): string {
   const term = spec.terms[0];
-  if (spec.terms.length !== 1 || !term) throw new EngineError(`«${spec.label}» — составная кость, числом её не записать`);
-  return `${term.count}к${term.sides}`;
+  if (spec.terms.length !== 1 || !term) throw new EngineError(tr`«${spec.label}» — составная кость, числом её не записать`);
+  return tr`${term.count}к${term.sides}`;
 }
 
 const num = (raw: unknown, fallback: number): number => {
@@ -153,10 +154,10 @@ const CLAIM: Record<string, ClaimOp> = {
     const count = num(op.count, 1);
     const part = partOf(op);
     const first = claim.terms[0];
-    if (!first) throw new EngineError('«добавить кость» нечего добавлять: в броске нет костей');
+    if (!first) throw new EngineError(tr`«добавить кость» нечего добавлять: в броске нет костей`);
     if (part) {
       const at = claim.terms.findIndex(t => t.part === part);
-      if (at < 0) throw new EngineError(`правка адресована части «${part}», а в этом броске такой части нет`);
+      if (at < 0) throw new EngineError(tr`правка адресована части «${part}», а в этом броске такой части нет`);
       return { ...claim, terms: claim.terms.map((t, i) => (i === at ? { ...t, count: t.count + count } : t)) };
     }
     const sides = num(op.sides, first.sides);
@@ -255,7 +256,7 @@ const stageOf = (op: RollEditOp): 'claim' | 'result' | 'plus' => {
   if (name === PLUS_OP) return 'plus';
   if (name in CLAIM) return 'claim';
   if (name in RESULT) return 'result';
-  throw new EngineError(`неизвестная правка броска «${op.op}»; есть: ${[...Object.keys(CLAIM), ...Object.keys(RESULT), PLUS_OP].join(', ')}`);
+  throw new EngineError(tr`неизвестная правка броска «${op.op}»; есть: ${[...Object.keys(CLAIM), ...Object.keys(RESULT), PLUS_OP].join(', ')}`);
 };
 
 export const editStages = (): { op: string; stage: 'claim' | 'result' | 'plus' }[] => [
@@ -347,15 +348,15 @@ export function addTo(roll: Roll, pending: readonly PendingAddend[], die: Die): 
       dice.push({ sides, value: face });
       return face;
     });
-    if (!Number.isFinite(value)) throw new EngineError(`прибавка «${one.label}» дала не число`);
+    if (!Number.isFinite(value)) throw new EngineError(tr`прибавка «${one.label}» дала не число`);
     return { label: one.label, value, dice };
   }));
 }
 
 export function verdictText(made: { threshold?: number | null; under?: boolean; success?: boolean | null; margin?: number | null; degree?: string | null }): string {
-  const bar = made.threshold === null || made.threshold === undefined ? '' : ` · ${made.under ? 'не больше' : 'порог'} ${made.threshold}`;
-  const passed = made.success === null || made.success === undefined ? '' : `${bar ? ':' : ' ·'} ${made.success ? 'успех' : 'провал'}`;
-  const steps = made.margin === null || made.margin === undefined ? '' : ` · степеней: ${made.margin}`;
+  const bar = made.threshold === null || made.threshold === undefined ? '' : ` · ${made.under ? tr`не больше` : tr`порог`} ${made.threshold}`;
+  const passed = made.success === null || made.success === undefined ? '' : `${bar ? ':' : ' ·'} ${made.success ? tr`успех` : tr`провал`}`;
+  const steps = made.margin === null || made.margin === undefined ? '' : tr` · степеней: ${made.margin}`;
   return `${bar}${passed}${steps}${made.degree ? ` · ${made.degree}` : ''}`;
 }
 
@@ -367,8 +368,8 @@ export function addendsText(addends: readonly { label: string; value: number; di
     if (!dice.length) return `${sign}${one.label}: ${size}`;
     const sides = [...new Set(dice.map(d => d.sides))];
     const what = sides.length === 1
-      ? `${dice.length > 1 ? dice.length : ''}${DIE_LETTER}${sides[0]}`
-      : dice.map(d => `${DIE_LETTER}${d.sides}`).join(' + ');
+      ? `${dice.length > 1 ? dice.length : ''}${dieLetter()}${sides[0]}`
+      : dice.map(d => `${dieLetter()}${d.sides}`).join(' + ');
     const sum = dice.reduce((acc, d) => acc + d.value, 0);
     const faces = dice.length > 1 || sum !== size ? ` [${dice.map(d => d.value).join(', ')}]` : '';
     return `${sign}${one.label} ${what}${faces}: ${size}`;
@@ -405,7 +406,7 @@ function read(dice: Rolled[], spec: ReadSpec): { total: number; single: number |
   }
   if (spec.kind === 'count') {
     const direction = Object.keys(PER_DIE).find(key => spec[key] !== undefined);
-    if (!direction) throw new EngineError(`чтению «счёт успехов» нужен порог на кость — одно из: ${Object.keys(PER_DIE).join(', ')}`);
+    if (!direction) throw new EngineError(tr`чтению «счёт успехов» нужен порог на кость — одно из: ${Object.keys(PER_DIE).join(', ')}`);
     const versus = Number(spec[direction]);
     const hit = (d: Rolled) => PER_DIE[direction]!(d.value, versus);
     const wild = (spec as { wild?: boolean }).wild ? dice.find(d => d.wild) : undefined;
@@ -414,7 +415,7 @@ function read(dice: Rolled[], spec: ReadSpec): { total: number; single: number |
     const counted = dice.filter(d => hit(d) && !(glitched && d.value === versus));
     return { total: counted.length + (hit(wild) ? 2 : 0), single: null };
   }
-  throw new EngineError(`неизвестное чтение костей «${spec.kind}»; есть: sum, best, worst, count`);
+  throw new EngineError(tr`неизвестное чтение костей «${spec.kind}»; есть: sum, best, worst, count`);
 }
 
 export function result(roll: Roll): RollResult {

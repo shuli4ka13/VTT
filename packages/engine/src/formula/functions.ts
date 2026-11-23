@@ -1,5 +1,6 @@
 import { lex } from './lex.ts';
 import type { Token, LexWords } from './lex.ts';
+import { live } from '../words/tongue.ts';
 export type Result = 'number' | 'bool' | 'list' | 'any';
 
 export interface Part { label: string; hint: string; optional?: true; many?: true }
@@ -10,10 +11,10 @@ const one = (label: string, hint: string): Part => ({ label, hint });
 const maybe = (label: string, hint: string): Part => ({ label, hint, optional: true });
 const many = (label: string, hint: string): Part => ({ label, hint, many: true });
 
-const NUMBER = one('число', 'что округлить или взять без знака');
-const VALUES = many('значения', 'через запятую — числа, поля или список');
+const NUMBER = live(one('число', 'что округлить или взять без знака'));
+const VALUES = live(many('значения', 'через запятую — числа, поля или список'));
 
-export const FUNCTIONS: readonly FunctionSpec[] = [
+export const FUNCTIONS: readonly FunctionSpec[] = live([
   { name: 'if', result: 'any', hint: 'если условие верно — первое, иначе второе', parts: [
     one('условие', 'да или нет: что проверяем'), one('то', 'что получится, если условие верно'), one('иначе', 'что получится, если нет'),
   ] },
@@ -40,7 +41,7 @@ export const FUNCTIONS: readonly FunctionSpec[] = [
   { name: 'dicemax', result: 'number', hint: 'сколько выпало бы на максимуме', parts: [
     one('кость', 'например 1к8'), maybe('сколько раз', 'сколько таких костей'),
   ] },
-];
+]);
 
 const BY_NAME = new Map(FUNCTIONS.map(spec => [spec.name, spec]));
 

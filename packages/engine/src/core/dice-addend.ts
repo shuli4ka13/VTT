@@ -4,6 +4,7 @@ import { DICE_TEXT } from '../words/glossary.ts';
 import { parse, withCount, start, result } from './dice.ts';
 import type { Spec, PendingAddend } from './dice.ts';
 import type { System } from '../model/types.ts';
+import { tr } from '../words/tongue.ts';
 
 export interface DieSource { die?: unknown; count?: unknown; minus?: unknown }
 
@@ -24,15 +25,15 @@ export function dieSpec(system: System, die: unknown, count: unknown, read: DieR
   } else if (typeof die === 'string' && DICE_TEXT.test(die.trim())) {
     spec = parse(die.trim());
   } else if (typeof die === 'string') {
-    throw new EngineError(`${owner}: кости «${die}» нет в «Костях» системы`);
+    throw new EngineError(tr`${owner}: кости «${die}» нет в «Костях» системы`);
   } else if (die && typeof die === 'object' && 'expr' in die) {
     const text = String(read.text(die) ?? '').trim();
-    if (!DICE_TEXT.test(text)) throw new EngineError(`${owner}: «${text}» — не запись кости; жду вроде «1к20» или «2к6»`);
+    if (!DICE_TEXT.test(text)) throw new EngineError(tr`${owner}: «${text}» — не запись кости; жду вроде «1к20» или «2к6»`);
     spec = parse(text);
   } else {
-    throw new EngineError(`${owner}: нужна кость — из «Костей» системы или запись вроде «1к20»`);
+    throw new EngineError(tr`${owner}: нужна кость — из «Костей» системы или запись вроде «1к20»`);
   }
-  return present(count) ? withCount(spec, read.number(count, 'сколько костей'), owner) : spec;
+  return present(count) ? withCount(spec, read.number(count, tr`сколько костей`), owner) : spec;
 }
 
 export function dieAddend(label: string, system: System, source: DieSource, read: DieReader): PendingAddend {

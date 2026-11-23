@@ -7,6 +7,7 @@ import { orDefault } from '../model/blank.ts';
 import { EngineError } from '../engine/errors.ts';
 import { isDesk } from './desk.ts';
 import type { System, Sheet, Compendium, CompendiumRecord, Binding } from '../model/types.ts';
+import { tr } from '../words/tongue.ts';
 
 export interface Action {
   id: string;
@@ -54,7 +55,7 @@ export function actionOf(
   if (String(actionId).startsWith(GRANTED_ACTION)) {
     const id = String(actionId).slice(GRANTED_ACTION.length);
     const action = grantedAction(id, system);
-    if (!action) throw new EngineError(`эффекта-кнопки «${id}» в системе нет`);
+    if (!action) throw new EngineError(tr`эффекта-кнопки «${id}» в системе нет`);
     return action;
   }
   const at = String(actionId).lastIndexOf(':');
@@ -65,15 +66,15 @@ export function actionOf(
   const inst = mark > 0 ? head.slice(mark + 1) : undefined;
 
   const record = findRecord(compendium, recordId);
-  if (!record) throw new EngineError(`в компендиуме нет записи «${recordId}»`);
+  if (!record) throw new EngineError(tr`в компендиуме нет записи «${recordId}»`);
 
   const action = actionsOfRecord(record, system, isItem(system, record), inst)[index];
   if (!action) {
     throw new EngineError(
-      `запись «${record.label}» (${recordId}) не даёт действия №${index}: ` +
-      'ни своей привязки, ни привязки у её рода');
+      tr`запись «${record.label}» (${recordId}) не даёт действия №${index}: ` +
+      tr`ни своей привязки, ни привязки у её рода`);
   }
-  if (!bindingHolds(system, record, action.binding)) throw new EngineError(`«${action.label}»: у записи «${record.label}» этой кнопки нет`);
+  if (!bindingHolds(system, record, action.binding)) throw new EngineError(tr`«${action.label}»: у записи «${record.label}» этой кнопки нет`);
   return action;
 }
 
@@ -88,7 +89,7 @@ export function bindingHolds(system: System, record: CompendiumRecord, binding: 
     const column = typeColumn(system, record.table, head!);
     return staticCell(system, linkOf(column), orDefault(props[head!], column), path) as never;
   });
-  if (typeof value !== 'boolean') throw new EngineError(`условие кнопки «${binding.label ?? binding.effect}» у «${record.label}» должно давать да/нет, а дало ${JSON.stringify(value)}`);
+  if (typeof value !== 'boolean') throw new EngineError(tr`условие кнопки «${binding.label ?? binding.effect}» у «${record.label}» должно давать да/нет, а дало ${JSON.stringify(value)}`);
   return value;
 }
 
@@ -101,7 +102,7 @@ function actionsOfRecord(record: CompendiumRecord, system: System, fromItem: boo
       id: `${record.id}${inst ? `${INSTANCE}${inst}` : ''}:${index}`,
       ...(inst ? { inst } : {}),
       label: fromItem || bindings.length > 1
-        ? `${record.label} · ${binding.label || 'Применение'}`
+        ? `${record.label} · ${binding.label || tr`Применение`}`
         : String(record.label),
       record,
       binding: { ...binding, ...(args ? { args } : {}) },

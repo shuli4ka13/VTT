@@ -11,7 +11,7 @@ import { lapse, leftOf, LEFT_NAME } from '../events/durations.ts';
 import { sweepBonds, freeHolders } from '../events/bonds.ts';
 import { lifecycleChanges, HOOK_WORDS, HEARD_WORDS } from '../events/lifecycle.ts';
 import { MOMENTS } from '../events/moments.ts';
-import { ROLLED, ROLLED_LABEL } from '../events/happenings.ts';
+import { ROLLED, rolledLabel } from '../events/happenings.ts';
 import type { MomentKey } from '../events/moments.ts';
 import { effectLabelOf } from '../events/actions.ts';
 import { requireEffect, requireCalled, reapplyOf, usesMax } from '../engine/effects.ts';
@@ -24,7 +24,7 @@ import { previewLines } from '../events/describe.ts';
 import { isDesk, DESK_ID } from '../engine/owners.ts';
 import { Views } from './view.ts';
 import { State } from './state.ts';
-import { limitsOf, CUT_WORDS, PROBES_WORDS } from './limits.ts';
+import { limitsOf, cutWords, probesWords } from './limits.ts';
 import { gather, stack, rollHeld, rollMarks, amountOf, wordApplies, THRESHOLD_PARAM } from './edits.ts';
 import { ROLL_CALL, CALL_WORDS } from '../words/calls.ts';
 import { recordOf, retarget, opponentIn, mentions } from './against.ts';
@@ -44,7 +44,7 @@ import type { Pass } from '../engine/calc.ts';
 import type { EmittedEvent, NestedRun } from '../engine/rule.ts';
 import type { System, Sheet, Compendium, Step, Param, StoredValue, WornEffect, Die, Effect } from '../model/types.ts';
 import { Pause } from './external.ts';
-import { ASK_ONE_WORDS, ASK_ROLLED } from '../words/steps.ts';
+import { askOneWords, askRolled } from '../words/steps.ts';
 import type { External, Question, Offer } from './external.ts';
 import type { Path, Window } from './path.ts';
 import type { Report, Entry, Stop, Change } from './log.ts';
@@ -55,6 +55,7 @@ import type { Ctx, StepData, FieldRef } from './steps.ts';
 import { tagWords } from '../engine/roll-tags.ts';
 import { ITEM_NAME, asItem, itemColumn, itemStored, itemTag, parseItemTag, withItemValue } from '../model/item-ref.ts';
 import type { ItemRef } from '../model/item-ref.ts';
+import { tr } from '../words/tongue.ts';
 
 export interface World {
   system: System;
@@ -288,7 +289,7 @@ export class Run {
 
   private spend(): void {
     this.state.budget -= 1;
-    if (this.state.budget < 0) throw new Limit(CUT_WORDS);
+    if (this.state.budget < 0) throw new Limit(cutWords());
   }
 
   exec(frame: Frame, steps: Step[], sink: Sink, seed: Record<string, unknown> = {}, within?: string, rolls: Record<string, RollResult> = {}): Ran {
@@ -329,7 +330,7 @@ export class Run {
       }
       const rows = runnerOf(step.type).rows?.(step);
       if (rows) {
-        if (blocks.length) throw new EngineError(`${frame.owner || 'правило'}: «для каждой строки» не ставится внутрь «Если»`);
+        if (blocks.length) throw new EngineError(tr`${frame.owner || tr`правило`}: «для каждой строки» не ставится внутрь «Если»`);
         sink.trace.push({ step: name, type: step.type, table: rows.table, ...mark });
         for (const row of this.rowsOf(frame, rows)) {
           const inner: Frame = {
@@ -414,8 +415,8 @@ export class Run {
     const sheetOf = (refValue: unknown, what: string): string | null => {
       const value = resolveRef(refValue, ref);
       if (value === null || value === undefined || value === '') return null;
-      if (typeof value !== 'string') throw new EngineError(`${frame.owner || 'правило'}: ${what} — ждали лист, пришло ${JSON.stringify(value)}`);
-      if (!this.sheet(value)) throw new EngineError(`${frame.owner || 'правило'}: ${what} — листа «${value}» в комнате нет`);
+      if (typeof value !== 'string') throw new EngineError(tr`${frame.owner || tr`правило`}: ${what} — ждали лист, пришло ${JSON.stringify(value)}`);
+      if (!this.sheet(value)) throw new EngineError(tr`${frame.owner || tr`правило`}: ${what} — листа «${value}» в комнате нет`);
       return value;
     };
     let rollsMade = 0;
@@ -446,7 +447,7 @@ export class Run {
       holds: guard => {
         if (guard === null || guard === undefined) return true;
         const value = resolveRef(guard, ref);
-        if (typeof value !== 'boolean') throw new EngineError(`${frame.owner || 'правило'}: условие шага должно давать да/нет, а дало ${JSON.stringify(value)}`);
+        if (typeof value !== 'boolean') throw new EngineError(tr`${frame.owner || tr`правило`}: условие шага должно давать да/нет, а дало ${JSON.stringify(value)}`);
         return value;
       },
       sheet: sheetOf,
@@ -469,7 +470,7 @@ export class Run {
         ...(pick.where !== undefined ? { where: (entry: WornEffect) => {
           const blank = Object.fromEntries((this.system.effects?.[effectId]?.params ?? []).map(param => [param.key, null]));
           const value = resolveRef(pick.where, { ...ref, results: { ...results, ...blank, ...(entry.args ?? {}) } });
-          if (typeof value !== 'boolean') throw new EngineError(`${frame.owner || 'правило'}: условие «какие снять» должно давать да/нет, а дало ${JSON.stringify(value)}`);
+          if (typeof value !== 'boolean') throw new EngineError(tr`${frame.owner || tr`правило`}: условие «какие снять» должно давать да/нет, а дало ${JSON.stringify(value)}`);
           return value;
         } } : {}),
         ...(pick.one ? { one: true } : {}),
@@ -491,7 +492,7 @@ export class Run {
     const name = named && frame.item ? asItem(named, frame.paramDefs) : named;
     if (name && frame.item && name.startsWith(`${ITEM_NAME}.`)) {
       const sheet = this.sheet(frame.item.sheet);
-      if (!sheet) throw new EngineError(`${frame.owner || 'правило'}: листа с вещью «${frame.item.key}» нет`);
+      if (!sheet) throw new EngineError(tr`${frame.owner || tr`правило`}: листа с вещью «${frame.item.key}» нет`);
       return { sheet: sheet.id, tag: itemColumn(this.system, this.world.compendium, sheet, frame.item.key, name.slice(ITEM_NAME.length + 1)) };
     }
     if (name) {
@@ -499,20 +500,20 @@ export class Run {
       const passed = param ? frame.args[param.key] : undefined;
       if (passed && typeof passed === 'object' && 'sheet' in passed && 'tag' in passed) return passed as FieldRef;
       if (passed && typeof passed === 'object' && 'expr' in passed) {
-        if (seen.has(name)) throw new EngineError(`${frame.owner || 'правило'}: вход «${param!.label ?? name}» ссылается сам на себя`);
+        if (seen.has(name)) throw new EngineError(tr`${frame.owner || tr`правило`}: вход «${param!.label ?? name}» ссылается сам на себя`);
         return this.fieldOf(frame, passed, ref, new Set([...seen, name]));
       }
       if (name.startsWith(`${DESK_ID}.`)) return { sheet: DESK_ID, tag: this.cellOf(frame, DESK_ID, name.slice(DESK_ID.length + 1), ref) };
       const onSheet = sheetHead(name, ref.sheets);
       if (onSheet?.rest) {
         const id = frame.bound?.[onSheet.head];
-        if (typeof id !== 'string') throw new EngineError(`${frame.owner || 'правило'}: «${onSheet.head}» не задан — поле «${onSheet.rest}» менять не у кого`);
+        if (typeof id !== 'string') throw new EngineError(tr`${frame.owner || tr`правило`}: «${onSheet.head}» не задан — поле «${onSheet.rest}» менять не у кого`);
         return { sheet: id, tag: this.cellOf(frame, id, onSheet.rest, ref) };
       }
     }
     const value = resolveRef(refValue, ref);
     if (value && typeof value === 'object' && 'sheet' in value && 'tag' in value) return value as FieldRef;
-    throw new EngineError(`${frame.owner || 'правило'}: ${expr ?? JSON.stringify(refValue)} — не поле листа; выберите в списке лист, затем его поле`);
+    throw new EngineError(tr`${frame.owner || tr`правило`}: ${expr ?? JSON.stringify(refValue)} — не поле листа; выберите в списке лист, затем его поле`);
   }
 
   private addressName(frame: Frame, expr: string, ref: RefContext): string | null {
@@ -526,7 +527,7 @@ export class Run {
     if (node.kind !== 'Pick') return null;
     const key = resolveRef({ expr: printFormula(node.key) }, ref);
     if (key === null || key === undefined || key === '') {
-      throw new EngineError(`${frame.owner || 'правило'}: в «${expr}» строка не задана — какую клетку менять?`);
+      throw new EngineError(tr`${frame.owner || tr`правило`}: в «${expr}» строка не задана — какую клетку менять?`);
     }
     return `${node.tag}.${String(key)}${node.rest ? `.${node.rest}` : ''}`;
   }
@@ -534,7 +535,7 @@ export class Run {
   private cellOf(frame: Frame, sheetId: string, rest: string, ref: RefContext): string {
     if (hasField(this.system, rest)) return rest;
     const split = splitPath(rest);
-    const owner = frame.owner || 'правило';
+    const owner = frame.owner || tr`правило`;
     const own = split && split.path.length > 1 && !frame.paramDefs.some(param => param.key === split.head) ? this.system.tables?.[split.head] : undefined;
     if (split && own) return reach(this.system, this.view(sheetId), split.head, split.path[0], split.path.slice(1), owner);
     const table = split ? referencedTable(this.system, split.head, frame.paramDefs) : undefined;
@@ -543,16 +544,16 @@ export class Run {
       ? resolveRef({ expr: `@${split.head}` }, ref)
       : this.view(sheetId).resolve(split.head);
     if (key === null || key === undefined || key === '') {
-      throw new EngineError(`${owner}: «${split.head}» не задан — какую строку «${this.system.tables?.[table]?.label || table}» менять?`);
+      throw new EngineError(tr`${owner}: «${split.head}» не задан — какую строку «${this.system.tables?.[table]?.label || table}» менять?`);
     }
     return reach(this.system, this.view(sheetId), table, key, split.path, owner);
   }
 
   private rowsOf(frame: Frame, loop: { table: string; as: string }): { key: string; value: unknown; param: Param }[] {
-    const owner = frame.owner || 'правило';
+    const owner = frame.owner || tr`правило`;
     const table = this.system.tables?.[loop.table];
-    if (!table) throw new EngineError(`${owner}: «для каждой строки» — таблицы «${loop.table}» нет`);
-    if (!loop.as) throw new EngineError(`${owner}: «для каждой строки «${table.label || loop.table}»» — не сказано, как зовётся строка`);
+    if (!table) throw new EngineError(tr`${owner}: «для каждой строки» — таблицы «${loop.table}» нет`);
+    if (!loop.as) throw new EngineError(tr`${owner}: «для каждой строки «${table.label || loop.table}»» — не сказано, как зовётся строка`);
     const param = { key: loop.as, label: loop.as, kind: 'choice', from: loop.table } as Param;
     return (table.rows ?? []).map(row => ({ key: rowKeyOf(row), value: row.value, param }));
   }
@@ -598,13 +599,13 @@ export class Run {
     if (marks.length) {
       const known = tagWords(this.system);
       const stray = marks.find(claim => !known.has(claim));
-      if (stray) throw new EngineError(`заявка «${stray}» — нет ни правки броска с таким именем, ни метки; правки: ${Object.keys(words).join(', ') || '(словарь пуст)'}`);
+      if (stray) throw new EngineError(tr`заявка «${stray}» — нет ни правки броска с таким именем, ни метки; правки: ${Object.keys(words).join(', ') || tr`(словарь пуст)`}`);
       tags = [...tags, ...marks];
     }
     const holders = this.holderViews();
     const added = rollMarks(holders, by, opponent, tags, values);
     if (added.length) tags = [...tags, ...added];
-    const spent = (word: string): string => `заявка\u0000${by}\u0000${word}`;
+    const spent = (word: string): string => `claim\u0000${by}\u0000${word}`;
     const claims = claimed.filter(claim => words[claim] && !(words[claim]!.once && this.state.memo(spent(claim))));
     for (const word of claims) if (words[word]!.once && wordApplies(this.system, word, tags)) this.state.remember(spent(word), true);
     const roller = this.view(by);
@@ -692,17 +693,17 @@ export class Run {
     const holder = this.views.holderOf(this.state.sheets, sheetId, tag);
     if (this.sheet(holder)) return holder;
     if (findField(this.system, tag)?.lives === 'group') return sheetId;
-    throw new EngineError(`поле «${tag}» лежит на «${holder}», а такого листа здесь нет`);
+    throw new EngineError(tr`поле «${tag}» лежит на «${holder}», а такого листа здесь нет`);
   }
 
   durationOf(effect: Effect, sheetId: string, args: Record<string, unknown>, path: Path, owner: string): number | undefined {
     const raw = effect.duration?.max;
     if (!raw || typeof raw !== 'object') return undefined;
     const value = resolveRef(raw, {
-      pass: this.view(sheetId), die: this.ext.dice(path.phase('duration')), owner: `${owner}: срок «${effect.label ?? ''}»`,
+      pass: this.view(sheetId), die: this.ext.dice(path.phase('duration')), owner: tr`${owner}: срок «${effect.label ?? ''}»`,
       params: args, paramDefs: effect.params ?? [],
     });
-    if (typeof value !== 'number' || !Number.isFinite(value)) throw new EngineError(`${owner}: срок «${effect.label ?? ''}» — формула дала не число`);
+    if (typeof value !== 'number' || !Number.isFinite(value)) throw new EngineError(tr`${owner}: срок «${effect.label ?? ''}» — формула дала не число`);
     return value;
   }
 
@@ -715,14 +716,14 @@ export class Run {
   private read(sheetId: string, tag: string): unknown {
     const item = parseItemTag(tag);
     if (item) {
-      const owner = `вещь «${item.key}»`;
+      const owner = tr`вещь «${item.key}»`;
       return itemStored(this.system, this.world.compendium, this.sheet(sheetId)!, item.key, item.column,
         expr => resolveRef({ expr }, { pass: this.view(sheetId), owner })) ?? null;
     }
     const sheet = this.sheet(this.holder(sheetId, tag))!;
     if (Object.prototype.hasOwnProperty.call(sheet.values, tag)) return sheet.values[tag];
     const field = findField(this.system, tag);
-    if (!field) throw new EngineError(`система не объявляет поля «${tag}» — читать нечего`);
+    if (!field) throw new EngineError(tr`система не объявляет поля «${tag}» — читать нечего`);
     return baseOf(this.view(sheet.id), field);
   }
 
@@ -803,7 +804,7 @@ export class Run {
   private callEvent(frame: Frame, event: string, payload: EmittedEvent, args: Record<string, unknown>, sink: Sink, path: Path): NestedRun {
     const callee = requireCalled(this.system, event, frame.owner);
     if (this.chain.length >= this.limits.callDepth) {
-      throw new EngineError(`${frame.owner || 'правило'}: вызовы вложены глубже ${this.limits.callDepth} — похоже, идут по кругу: ${[...this.chain, event].join(' → ')}`);
+      throw new EngineError(tr`${frame.owner || tr`правило`}: вызовы вложены глубже ${this.limits.callDepth} — похоже, идут по кругу: ${[...this.chain, event].join(' → ')}`);
     }
     const names = namesOf(callee.params, args);
     const passed = rollsOf(callee.params, args);
@@ -827,18 +828,18 @@ export class Run {
     this.chain.push(event);
     try {
       const inner: Frame = {
-        path: at, effectId: event, label: callee.label || event, owner: `вызов «${callee.label || event}»`,
+        path: at, effectId: event, label: callee.label || event, owner: tr`вызов «${callee.label || event}»`,
         home, bound: names, args: values, paramDefs: callee.params ?? [], props: null, claims: frame.claims, hop: frame.hop, inSub: false,
         ...(frame.inputs ? { inputs: frame.inputs } : {}),
         ...(frame.cost ? { cost: true } : {}),
       };
       const before = keys.map(key => `before:${key}`);
       const peek = this.listens(before) ? this.probe(() => this.exec(inner, callee.steps ?? [], newSink(), { [NAMES.tags]: payload.tags }, event, passed)) : null;
-      this.hear({ keys: before, names, seed: { ...values, ...(peek?.results ?? {}) }, rolls: peek?.rolls ?? {}, path: at.phase('before'), hop: frame.hop, owner: sub => `«${labelOf(sub)}» — до «${callee.label || event}»` }, sink);
+      this.hear({ keys: before, names, seed: { ...values, ...(peek?.results ?? {}) }, rolls: peek?.rolls ?? {}, path: at.phase('before'), hop: frame.hop, owner: sub => tr`«${labelOf(sub)}» — до «${callee.label || event}»` }, sink);
       const ran = this.exec(inner, callee.steps ?? [], sink, { [NAMES.tags]: payload.tags }, event, passed);
       const returns = this.returnsOf(callee, inner, ran);
       if (returns) emitted.values = { ...values, ...returns };
-      this.hear({ keys: keys.map(key => `after:${key}`), names, seed: { ...values, ...ran.results, ...(returns ?? {}) }, rolls: ran.rolls, path: at.phase('after'), hop: frame.hop, owner: sub => `«${labelOf(sub)}» — после «${callee.label || event}»` }, sink);
+      this.hear({ keys: keys.map(key => `after:${key}`), names, seed: { ...values, ...ran.results, ...(returns ?? {}) }, rolls: ran.rolls, path: at.phase('after'), hop: frame.hop, owner: sub => tr`«${labelOf(sub)}» — после «${callee.label || event}»` }, sink);
       return { results: ran.results, stopped: ran.stopped, ...(returns ? { returns } : {}) };
     } finally {
       this.chain.pop();
@@ -861,7 +862,7 @@ export class Run {
         let accepted = 0;
         for (const holder of this.holders()) {
           if (accepted >= this.limits.probes) {
-            entries.push({ text: PROBES_WORDS });
+            entries.push({ text: probesWords() });
             break;
           }
           const qpath = call.path.ask('target', holder.id);
@@ -886,7 +887,7 @@ export class Run {
         done.push(out);
       } catch (err) {
         if (!(err instanceof Limit) || this.handlers.length) throw err;
-        entries.push({ text: CUT_WORDS });
+        entries.push({ text: cutWords() });
       }
       flush(entries);
     }
@@ -938,7 +939,7 @@ export class Run {
 
   body(call: Delivery, sink: Sink, tried?: { results: Record<string, unknown>; rolls: Record<string, RollResult> }): Delivered {
     const frame: Frame = {
-      path: call.path, effectId: call.effectId, label: call.label, owner: `эффект «${call.label}»`,
+      path: call.path, effectId: call.effectId, label: call.label, owner: tr`эффект «${call.label}»`,
       home: call.home, bound: call.bound,
       args: call.args ?? {}, paramDefs: call.paramDefs ?? [], props: call.props ?? null,
       ...(call.item ? { item: call.item } : {}),
@@ -953,11 +954,11 @@ export class Run {
       ? this.argValues(frame)
       : Object.fromEntries(Object.entries(call.args ?? {}).filter(([, value]) => value === null || typeof value !== 'object'));
     const seed = { ...given, ...(call.seed ?? {}) };
-    this.hear({ keys: call.keys.map(key => `before:${key}`), names: call.bound, seed: { ...seed, ...(tried?.results ?? {}) }, rolls: { ...(call.rolls ?? {}), ...(tried?.rolls ?? {}) }, path: call.path.phase('before'), hop: call.hop, owner: sub => `«${labelOf(sub)}» — до «${call.label}»` }, sink);
+    this.hear({ keys: call.keys.map(key => `before:${key}`), names: call.bound, seed: { ...seed, ...(tried?.results ?? {}) }, rolls: { ...(call.rolls ?? {}), ...(tried?.rolls ?? {}) }, path: call.path.phase('before'), hop: call.hop, owner: sub => tr`«${labelOf(sub)}» — до «${call.label}»` }, sink);
     const ran = this.exec(frame, call.steps, sink, seed, undefined, call.rolls ?? {});
     const callee = this.system.effects?.[call.effectId];
     const returns = callee ? this.returnsOf(callee, frame, ran) : null;
-    this.hear({ keys: call.keys.map(key => `after:${key}`), names: call.bound, seed: { ...given, ...ran.results, ...(returns ?? {}) }, rolls: ran.rolls, path: call.path.phase('after'), hop: call.hop, owner: sub => `«${labelOf(sub)}» — после «${call.label}»` }, sink);
+    this.hear({ keys: call.keys.map(key => `after:${key}`), names: call.bound, seed: { ...given, ...ran.results, ...(returns ?? {}) }, rolls: ran.rolls, path: call.path.phase('after'), hop: call.hop, owner: sub => tr`«${labelOf(sub)}» — после «${call.label}»` }, sink);
     const report = reportOf('effect', call.effectId, call.home, call.label, sink, ran.stopped, call.hop > 0);
     return { call, results: ran.results, rolls: ran.rolls, emitted: sink.emitted, report, ...(returns ? { returns } : {}) };
   }
@@ -973,7 +974,7 @@ export class Run {
       const value = ctx.value(ref);
       if (value === null || value === undefined || value === '') continue;
       if (typeof value !== 'number' && typeof value !== 'string' && typeof value !== 'boolean') {
-        throw new EngineError(`${frame.owner || 'правило'}: держатель запоминает число, строку или лист, а «${key}» дал ${JSON.stringify(value)}`);
+        throw new EngineError(tr`${frame.owner || tr`правило`}: держатель запоминает число, строку или лист, а «${key}» дал ${JSON.stringify(value)}`);
       }
       out[key] = value;
     }
@@ -1046,7 +1047,7 @@ export class Run {
     try {
       const hanging = this.hanging(sub);
       return holdsNow(sub.handler.if, {
-        pass: this.view(sub.sheetId), results: seed, rolls, owner: `подписка «${labelOf(sub)}»`,
+        pass: this.view(sub.sheetId), results: seed, rolls, owner: tr`подписка «${labelOf(sub)}»`,
         choiceOf: (step: string, key: string) => this.choiceOf(sub.effectId, step, key),
         ...(Object.keys(hanging.inputs).length ? { inputs: hanging.inputs } : {}),
         paramDefs: sub.effect.params ?? [],
@@ -1070,7 +1071,7 @@ export class Run {
 
   private pay(sub: Sub, path: Path, names: Record<string, Bound>, seed: Record<string, unknown>, hop: number, rolls: Record<string, RollResult> = {}): { why: string | null; report: Report; after: Entry[]; changed: boolean } {
     const own = newSink();
-    const ran = this.exec({ ...this.subFrame(sub, path, hop, `плата за «${labelOf(sub)}»`, names), cost: true }, sub.handler.cost ?? [], own, seed, undefined, rolls);
+    const ran = this.exec({ ...this.subFrame(sub, path, hop, tr`плата за «${labelOf(sub)}»`, names), cost: true }, sub.handler.cost ?? [], own, seed, undefined, rolls);
     const report = reportOf('effect', sub.effectId, sub.sheetId, labelOf(sub), own, ran.stopped, false);
     return { why: refusalWords(report, this.system), report, after: own.after, changed: own.changes.length > 0 || own.effects.length > 0 || own.removed.length > 0 || own.after.length > 0 };
   }
@@ -1090,22 +1091,22 @@ export class Run {
     const label = o.label ?? labelOf(found);
     const sub = o.builtin ? found : this.live(found);
     if (!sub) {
-      if (o.chosen) entries.push({ text: `«${label}» не состоялось: эффекта уже нет` });
+      if (o.chosen) entries.push({ text: tr`«${label}» не состоялось: эффекта уже нет` });
       return { lead, entries };
     }
     const seed = typeof o.seed === 'function' ? o.seed() : o.seed;
     const rolls = o.rolls ?? {};
     if (!o.builtin && !this.holds(sub, o.names, seed, rolls)) {
-      if (o.chosen) entries.push({ text: `«${label}» не состоялось: условие уже не выполняется` });
+      if (o.chosen) entries.push({ text: tr`«${label}» не состоялось: условие уже не выполняется` });
       return { lead, entries };
     }
     const mark = sub.key;
     if (this.handlers.filter(one => one === mark).length >= this.limits.handlerDepth) {
-      return { lead, entries: [{ text: CUT_WORDS }] };
+      return { lead, entries: [{ text: cutWords() }] };
     }
     const why = o.builtin ? null : this.refusal(sub, o.path.pay(), o.names, seed, o.hop, rolls);
     if (why) {
-      if (o.chosen) entries.push({ text: `«${label}» не состоялось: ${why}` });
+      if (o.chosen) entries.push({ text: tr`«${label}» не состоялось: ${why}` });
       return { lead, entries };
     }
     this.state.begin();
@@ -1117,7 +1118,7 @@ export class Run {
         const paid = this.pay(sub, o.path.pay(), o.names, seed, o.hop, rolls);
         if (paid.why) {
           this.state.rollback();
-          return { lead, entries: [{ text: `«${label}» не состоялось: ${paid.why}` }] };
+          return { lead, entries: [{ text: tr`«${label}» не состоялось: ${paid.why}` }] };
         }
         if (paid.changed) lead.push({ fromId: sub.sheetId, toId: sub.sheetId, report: paid.report }, ...paid.after);
       }
@@ -1136,7 +1137,7 @@ export class Run {
       }
       this.state.rollback();
       if (!(err instanceof Limit)) throw err;
-      return { lead: [], entries: [{ text: CUT_WORDS }] };
+      return { lead: [], entries: [{ text: cutWords() }] };
     } finally {
       this.handlers.pop();
       this.running.pop();
@@ -1170,7 +1171,7 @@ export class Run {
     const held = this.state.sheets.some(sheet => (sheet.effects ?? []).some(entry => entry.bond?.sheet === bond.sheet && entry.bond.effect === bond.effect && entry.bond.inst === bond.inst));
     if (held) return [];
     this.state.put({ ...holder, effects: (holder.effects ?? []).filter(entry => !mine(entry)) });
-    return [{ text: `«${effectLabelOf(this.system, bond.effect)}» спало с ${holder.name}: держать больше нечего` }];
+    return [{ text: tr`«${effectLabelOf(this.system, bond.effect)}» спало с ${holder.name}: держать больше нечего` }];
   }
 
   moment(moment: MomentKey, subjects: readonly string[], path: Path): { sheetId: string; effectId: string }[] {
@@ -1179,7 +1180,7 @@ export class Run {
       const lapsed = lapse({ moment, sheetId }, [...this.state.sheets], this.system, this.clock);
       this.state.replace(lapsed.sheets);
       for (const gone of lapsed.expired) {
-        this.state.write({ text: `«${effectLabelOf(this.system, gone.effectId)}» спало с ${this.sheet(gone.sheetId)?.name ?? gone.sheetId}` });
+        this.state.write({ text: tr`«${effectLabelOf(this.system, gone.effectId)}» спало с ${this.sheet(gone.sheetId)?.name ?? gone.sheetId}` });
       }
       expired.push(...lapsed.expired);
     }
@@ -1191,7 +1192,7 @@ export class Run {
       const names: Record<string, Bound> = subject ? { [turn ? NAMES.mover : NAMES.sheet]: subject } : {};
       const at = subject ? path.phase(moment).at(subject) : path.phase(moment);
       this.hooked(`moment:${moment}`, names, at, { moment: { moment, round, ...(subject ? { sheet: subject } : {}) } }, MOMENTS[moment],
-        sub => `момент «${MOMENTS[moment]}» у «${labelOf(sub)}»`);
+        sub => tr`момент «${MOMENTS[moment]}» у «${labelOf(sub)}»`);
     }
     return expired;
   }
@@ -1223,7 +1224,7 @@ export class Run {
         const pick = found.subs.find(sub => this.live(sub) && !this.refusal(sub, qpath.pick(id).pay(), names, seed, 0)) ?? found.subs[0]!;
         this.momentReact(pick, qpath.pick(id), names, seed, owner(pick), labelOf(pick), false, true);
       }
-      if (skipped) this.state.write({ text: `${this.sheet(holder.id)?.name ?? holder.id} пропускает реакцию` });
+      if (skipped) this.state.write({ text: tr`${this.sheet(holder.id)?.name ?? holder.id} пропускает реакцию` });
     }
   }
 
@@ -1252,22 +1253,22 @@ export class Run {
       const swept = sweepBonds(this.system, [...this.state.sheets]);
       this.state.replace(swept.sheets);
       for (const broken of swept.broken) {
-        this.state.write({ text: `«${effectLabelOf(this.system, broken.effectId)}» спало с ${this.sheet(broken.sheetId)?.name ?? broken.sheetId}: держать стало нечем` });
+        this.state.write({ text: tr`«${effectLabelOf(this.system, broken.effectId)}» спало с ${this.sheet(broken.sheetId)?.name ?? broken.sheetId}: держать стало нечем` });
       }
       const loose = freeHolders(before, [...this.state.sheets]);
       this.state.replace(loose.sheets);
       for (const one of loose.freed) {
-        this.state.write({ text: `«${effectLabelOf(this.system, one.effectId)}» спало с ${this.sheet(one.sheetId)?.name ?? one.sheetId}: держать больше нечего` });
+        this.state.write({ text: tr`«${effectLabelOf(this.system, one.effectId)}» спало с ${this.sheet(one.sheetId)?.name ?? one.sheetId}: держать больше нечего` });
       }
       if (!crossed && !swept.broken.length && !loose.freed.length) return;
     }
-    throw new EngineError(`наложения, поля и связи будят друг друга без остановки: больше ${this.limits.settleRounds} кругов`);
+    throw new EngineError(tr`наложения, поля и связи будят друг друга без остановки: больше ${this.limits.settleRounds} кругов`);
   }
 
   lifecycle(from: Sheet[], path: Path): void {
     let previous = from;
     for (let wave = 0; ; wave += 1) {
-      if (wave > this.limits.settleRounds * 4) throw new EngineError('наложения и спадания будят друг друга без остановки');
+      if (wave > this.limits.settleRounds * 4) throw new EngineError(tr`наложения и спадания будят друг друга без остановки`);
       const changes = lifecycleChanges(previous, [...this.state.sheets], { system: this.system, compendium: this.world.compendium });
       previous = [...this.state.sheets];
       if (!changes.length) return;
@@ -1292,7 +1293,7 @@ export class Run {
         for (const heard of [change.entry.effectId, ...(effect.tags ?? []).filter(tag => tag !== change.entry.effectId)]) {
           const where = heard === change.entry.effectId ? at : at.phase('tag').phase(heard);
           this.hooked(`${turn}:${heard}`, { [NAMES.sheet]: change.sheetId }, where, seed, `«${name}» ${HEARD_WORDS[change.turn]}`,
-            sub => `«${name}» ${HEARD_WORDS[change.turn]} у «${labelOf(sub)}»`);
+            sub => tr`«${name}» ${HEARD_WORDS[change.turn]} у «${labelOf(sub)}»`);
         }
       }
     }
@@ -1312,7 +1313,7 @@ export class Run {
     let previous = from;
     let any = false;
     for (let wave = 0; ; wave += 1) {
-      if (wave > this.limits.settleRounds * 4) throw new EngineError('поля будят эффекты без остановки');
+      if (wave > this.limits.settleRounds * 4) throw new EngineError(tr`поля будят эффекты без остановки`);
       const now = [...this.state.sheets];
       const tags = this.fieldTags();
       const found: { sheetId: string; tag: string; value: unknown }[] = [];
@@ -1330,8 +1331,8 @@ export class Run {
       any = true;
       for (const { sheetId, tag, value } of found) {
         const label = findField(this.system, tag)?.label ?? tag;
-        this.hooked(`field:${tag}`, { [NAMES.sheet]: sheetId }, path.nth(wave).phase(tag).at(sheetId), { field: { tag, value } }, `поле «${label}» стало верным`,
-          sub => `поле «${label}» стало верным у «${labelOf(sub)}»`);
+        this.hooked(`field:${tag}`, { [NAMES.sheet]: sheetId }, path.nth(wave).phase(tag).at(sheetId), { field: { tag, value } }, tr`поле «${label}» стало верным`,
+          sub => tr`поле «${label}» стало верным у «${labelOf(sub)}»`);
       }
     }
   }
@@ -1366,40 +1367,40 @@ export class Run {
     const spec = parse(dieConstant(this.system, check.die), num);
     const slot = check.count !== undefined && check.count !== null ? 'count' : check.sides !== undefined && check.sides !== null ? 'sides'
       : check.bonus ? 'bonus' : check.threshold !== undefined && check.threshold !== null ? 'threshold' : null;
-    if (extra.shift && slot === 'sides') throw new EngineError(`${owner}: число поля — грани кости; поправку к граням не прибавить — это правка броска`);
-    if (extra.shift && slot === null) throw new EngineError(`${owner}: у броска нет числа поля — поправку прибавить не к чему`);
+    if (extra.shift && slot === 'sides') throw new EngineError(tr`${owner}: число поля — грани кости; поправку к граням не прибавить — это правка броска`);
+    if (extra.shift && slot === null) throw new EngineError(tr`${owner}: у броска нет числа поля — поправку прибавить не к чему`);
     const plus = (key: typeof slot): number => (slot === key ? extra.shift : 0);
-    const count = check.count === undefined || check.count === null ? null : num(check.count, `${owner} · сколько костей`);
-    const sides = check.sides === undefined || check.sides === null ? null : num(check.sides, `${owner} · грани`);
+    const count = check.count === undefined || check.count === null ? null : num(check.count, tr`${owner} · сколько костей`);
+    const sides = check.sides === undefined || check.sides === null ? null : num(check.sides, tr`${owner} · грани`);
     const sized0 = count === null ? spec : withCount(spec, Math.max(0, count + plus('count')), owner);
     const counted = count !== null && check.zero ? { ...sized0, zero: check.zero } : sized0;
-    const sides2 = check.sides2 === undefined || check.sides2 === null ? null : num(check.sides2, `${owner} · грани второй кости`);
+    const sides2 = check.sides2 === undefined || check.sides2 === null ? null : num(check.sides2, tr`${owner} · грани второй кости`);
     const sided = sides === null ? counted : withSides(counted, sides2 === null ? sides : [sides, sides2], owner);
-    const sized = check.keep === undefined || check.keep === null ? sided : withKeep(sided, num(check.keep, `${owner} · сколько оставить`), owner);
-    const field = check.bonus ? sheetCtx.optional(check.bonus, `${owner} · прибавка`) ?? 0 : 0;
+    const sized = check.keep === undefined || check.keep === null ? sided : withKeep(sided, num(check.keep, tr`${owner} · сколько оставить`), owner);
+    const field = check.bonus ? sheetCtx.optional(check.bonus, tr`${owner} · прибавка`) ?? 0 : 0;
     const bonus = field + plus('bonus');
     const tags = [...new Set([...(check.tags ?? []), ...extra.tags])];
     const asked = count !== null ? Math.max(0, count + plus('count')) : sides !== null ? sides : check.bonus ? bonus
-      : check.threshold !== undefined && check.threshold !== null ? num(check.threshold, `${owner} · порог`) + plus('threshold') : null;
+      : check.threshold !== undefined && check.threshold !== null ? num(check.threshold, tr`${owner} · порог`) + plus('threshold') : null;
     const thrown = ctx.roll(sized, tags, sheetId, extra.against, check.bonus ? { ref: check.bonus, value: bonus } : undefined, { [NUMBER_NAME]: asked });
     let threshold: number | null = null;
     let base: number | null = null;
     const own = check.threshold !== undefined && check.threshold !== null;
     const given = extra.versus ?? null;
-    if (own && given !== null) throw new EngineError(`${owner}: у броска свой порог — сложность меняют словом правки, а не числом`);
+    if (own && given !== null) throw new EngineError(tr`${owner}: у броска свой порог — сложность меняют словом правки, а не числом`);
     if (own || given !== null) {
       const holders = this.holderViews();
       const view = (id: string) => holders.find(holder => holder.id === id)!.view;
       const shift = gather(holders, { call: ROLL_CALL, param: THRESHOLD_PARAM, tags: thrown.thrower?.tags ?? tags, names: { [NAMES.roller]: sheetId, [NAMES.against]: extra.against }, values: { [NUMBER_NAME]: asked }, view })
         .reduce((sum, held) => sum + amountOf(held), 0);
       const versus = thrown.roll.claim.versusShift * (check.under ? -1 : 1);
-      base = own ? num(check.threshold, `${owner} · порог`) : given!;
+      base = own ? num(check.threshold, tr`${owner} · порог`) : given!;
       threshold = Math.max(0, base + plus('threshold') + shift + versus);
     }
     const number = check.under ? base : count ?? sides ?? (check.bonus ? field : base);
     const raw = thrown.result.total + bonus;
     const total = check.total
-      ? judgeOf({ [ROLLED_NAME]: raw, [ROLL_NAME]: raw, [NUMBER_NAME]: number ?? 0 }, { [ROLL_NAME]: { ...thrown.result, total: raw } }).number(check.total, `${owner} · итог`)
+      ? judgeOf({ [ROLLED_NAME]: raw, [ROLL_NAME]: raw, [NUMBER_NAME]: number ?? 0 }, { [ROLL_NAME]: { ...thrown.result, total: raw } }).number(check.total, tr`${owner} · итог`)
       : raw;
     const named: Record<string, unknown> = { [ROLLED_NAME]: total, [ROLL_NAME]: total, [NUMBER_NAME]: number ?? 0, ...(threshold === null ? {} : { [THRESHOLD_NAME]: threshold }) };
     const self = { [ROLL_NAME]: { ...thrown.result, total } };
@@ -1410,11 +1411,11 @@ export class Run {
     };
     const waits = threshold === null ? [THRESHOLD_NAME] : [];
     const success = check.success && !blind(check.success, ...waits) ? judge.holds(check.success) : threshold === null ? null : check.under ? total <= threshold : total >= threshold;
-    const reckoned = check.margin && !blind(check.margin, ...waits) ? judge.number(check.margin, `${owner} · степени`) : threshold === null ? null : check.under ? threshold - total : total - threshold;
+    const reckoned = check.margin && !blind(check.margin, ...waits) ? judge.number(check.margin, tr`${owner} · степени`) : threshold === null ? null : check.under ? threshold - total : total - threshold;
     const margin = reckoned === null ? null : reckoned + thrown.roll.claim.degreeShift;
     const graded = judgeOf({ ...named, ...(success === null ? {} : { [SUCCESS_NAME]: success }), ...(margin === null ? {} : { [MARGIN_NAME]: margin }) }, self);
     const scale = check.degrees && !Array.isArray(check.degrees) ? check.degrees : null;
-    if (scale?.of === 'margin' && reckoned === null) throw new EngineError(`${owner}: ступень по степеням, а степеней правило не считает — задайте порог или «Степени числом»`);
+    if (scale?.of === 'margin' && reckoned === null) throw new EngineError(tr`${owner}: ступень по степеням, а степеней правило не считает — задайте порог или «Степени числом»`);
     const degree = scale
       ? String(lookupDegree(this.system, scale.table, scale.of === 'margin' ? reckoned : total, thrown.roll.claim.degreeShift, owner) ?? '') || null
       : (Array.isArray(check.degrees) ? check.degrees : []).filter(one => !blind(one.if, ...waits, ...(success === null ? [SUCCESS_NAME] : []), ...(margin === null ? [MARGIN_NAME] : []))).find(one => graded.holds(one.if))?.label ?? null;
@@ -1437,16 +1438,16 @@ export class Run {
       : this.ext.ask(question);
     const unique = [...new Set(chosen)];
     const stray = unique.find(id => !question.offers.some(offer => offer.id === id));
-    if (stray) throw new EngineError(`реакция «${stray}» сейчас не предлагается; можно: ${question.offers.map(o => o.label ?? o.id).join(', ') || '(ничего)'}`);
+    if (stray) throw new EngineError(tr`реакция «${stray}» сейчас не предлагается; можно: ${question.offers.map(o => o.label ?? o.id).join(', ') || tr`(ничего)`}`);
     return { chosen: unique, skipped: byPerson && !unique.length };
   }
 
   private question(sheetId: string, label: string, offers: readonly Offer[], path: Path, rolls: Record<string, RollResult>): string | null {
     const { chosen, skipped } = this.choose({
       key: path.key, sheetId, window: 'step', label, offers: [...offers], results: {}, one: true,
-      preview: Object.entries(rolls).flatMap(([name, roll]) => (roll.dice?.rolls?.length ? [`${name}: ${ASK_ROLLED} ${roll.dice.rolls.join(', ')}`] : [])),
+      preview: Object.entries(rolls).flatMap(([name, roll]) => (roll.dice?.rolls?.length ? [`${name}: ${askRolled()} ${roll.dice.rolls.join(', ')}`] : [])),
     });
-    if (chosen.length > 1 || skipped) throw new EngineError(`${ASK_ONE_WORDS}: ${offers.map(offer => offer.label).join(' / ')}`);
+    if (chosen.length > 1 || skipped) throw new EngineError(`${askOneWords()}: ${offers.map(offer => offer.label).join(' / ')}`);
     return chosen[0] ?? null;
   }
 
@@ -1496,7 +1497,7 @@ export class Run {
       const pick = found.picks.find(ready) ?? found.picks.find(one => this.live(one.sub)) ?? found.picks[0]!;
       const out = this.react(pick.sub, {
         path: path.pick(id), names: pick.names, seed: pick.seed, rolls: pick.rolls, hop, chosen: true,
-        owner: `реакция «${labelOf(pick.sub)}»`,
+        owner: tr`реакция «${labelOf(pick.sub)}»`,
       });
       entries.push(...out.lead);
       if (out.report) {
@@ -1505,7 +1506,7 @@ export class Run {
       }
       entries.push(...out.entries);
     }
-    if (skipped) entries.push({ text: `${this.sheet(question.sheetId)?.name ?? question.sheetId} пропускает реакцию` });
+    if (skipped) entries.push({ text: tr`${this.sheet(question.sheetId)?.name ?? question.sheetId} пропускает реакцию` });
     return { entries, accepted };
   }
 
@@ -1547,7 +1548,7 @@ export class Run {
         for (const sub of listening(false)) {
           const out = this.react(sub, {
             path: path.phase('seen').handler(sheetId, sub.key, sub.inst), names, seed, hop, chosen: false,
-            owner: `«${labelOf(sub)}» — увидев кости`, roll: cell,
+            owner: tr`«${labelOf(sub)}» — увидев кости`, roll: cell,
           });
           sink.after.push(...out.lead);
           if (out.report) sink.after.push({ fromId: sheetId, toId: sheetId, report: out.report });
@@ -1566,20 +1567,20 @@ export class Run {
         const now = result(cell.value);
         const question: Question = {
           key: qpath.key, sheetId, window: 'seen', label: '', offers: [...byKey.values()].map(one => one.offer), results: seed(),
-          preview: [`${rollTitle('Бросок', [...tags], this.system)}: [${now.dice.rolls.join(', ')}]${addendsText(cell.value.addends)}${shown ? ` + ${shown.label ? `${shown.label}: ` : ''}${shown.value}` : ''} → ${now.total + cell.bonus}${CALL_WORDS.roll.canceled(cell.value.canceled ?? [])}`],
+          preview: [`${rollTitle(tr`Бросок`, [...tags], this.system)}: [${now.dice.rolls.join(', ')}]${addendsText(cell.value.addends)}${shown ? ` + ${shown.label ? `${shown.label}: ` : ''}${shown.value}` : ''} → ${now.total + cell.bonus}${CALL_WORDS.roll.canceled(cell.value.canceled ?? [])}`],
         };
         const { chosen, skipped } = this.choose(question);
         for (const id of chosen) {
           const found = byKey.get(id)!;
           const pick = found.subs.find(sub => this.live(sub)) ?? found.subs[0]!;
           const out = this.react(pick, {
-            path: qpath.pick(id), names, seed, hop, chosen: true, owner: `«${labelOf(pick)}» — увидев кости`, roll: cell,
+            path: qpath.pick(id), names, seed, hop, chosen: true, owner: tr`«${labelOf(pick)}» — увидев кости`, roll: cell,
           });
           sink.after.push(...out.lead);
           if (out.report) sink.after.push({ fromId: sheetId, toId: sheetId, report: out.report });
           sink.after.push(...out.entries);
         }
-        if (skipped) sink.after.push({ text: `${this.sheet(sheetId)?.name ?? sheetId} пропускает реакцию` });
+        if (skipped) sink.after.push({ text: tr`${this.sheet(sheetId)?.name ?? sheetId} пропускает реакцию` });
       }
       for (const holder of this.holders()) {
         const sheet = this.sheet(holder.id);
@@ -1587,7 +1588,7 @@ export class Run {
         for (const sub of this.subs(sheet).filter(one => one.handler.on === ROLLED && !one.handler.confirm && tagsFit(one.handler, tags))) {
           const out = this.react(sub, {
             path: path.phase(ROLLED).handler(holder.id, sub.key, sub.inst), names, seed, hop, chosen: false,
-            owner: `«${labelOf(sub)}» — ${ROLLED_LABEL}`, roll: cell,
+            owner: `«${labelOf(sub)}» — ${rolledLabel()}`, roll: cell,
           });
           sink.after.push(...out.lead);
           if (out.report) sink.after.push({ fromId: holder.id, toId: holder.id, report: out.report });

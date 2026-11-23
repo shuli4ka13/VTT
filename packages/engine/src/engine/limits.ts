@@ -2,6 +2,7 @@ import { compile } from '../formula/index.ts';
 import { calc, fieldsFor, newPass } from './calc.ts';
 import type { PassOptions } from './calc.ts';
 import type { Sheet, System } from '../model/types.ts';
+import { tr } from '../words/tongue.ts';
 
 export interface Breach { tag: string; text: string }
 
@@ -26,8 +27,8 @@ export function breaches(system: System, sheet: Sheet, options: PassOptions = {}
       high = bound(field.value.max);
     } catch { continue; }
     if (typeof value !== 'number') continue;
-    if (high !== null && value > high) out.push({ tag: field.tag, text: `«${field.label}»: ${said(value)} — больше ${said(high)}` });
-    if (low !== null && value < low) out.push({ tag: field.tag, text: `«${field.label}»: ${said(value)} — меньше ${said(low)}` });
+    if (high !== null && value > high) out.push({ tag: field.tag, text: tr`«${field.label}»: ${said(value)} — больше ${said(high)}` });
+    if (low !== null && value < low) out.push({ tag: field.tag, text: tr`«${field.label}»: ${said(value)} — меньше ${said(low)}` });
   }
   return out;
 }

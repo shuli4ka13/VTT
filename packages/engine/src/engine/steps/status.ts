@@ -2,15 +2,16 @@ import { EngineError } from '../errors.ts';
 import type { StepContext, StepModule, StepData } from './index.ts';
 import type { StoredValue, System } from '../../model/types.ts';
 import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
+import { tr, live } from '../../words/tongue.ts';
 
 export const type = 'status';
 const words: StepWords = STEP_WORDS.status;
 export const { label, hint, slots, outputs } = words;
 
-export const MODES = {
+export const MODES = live({
   apply: { label: 'Наложить' },
   remove: { label: 'Снять' },
-};
+});
 
 export const mayBreak = false;
 
@@ -23,18 +24,18 @@ export const slotRefers = (step: StepData, slot: string): string | null =>
 export const icon = '☄';
 
 export function traceLine(t: any, h: any) {
-  if (t.effect === null) return 'состояние: не задано — шаг пропущен';
+  if (t.effect === null) return tr`состояние: не задано — шаг пропущен`;
   return t.mode === 'remove'
-    ? `состояние: снято «${h.effectLabel(t.effect)}»`
-    : `состояние: наложено «${h.effectLabel(t.effect)}»`;
+    ? tr`состояние: снято «${h.effectLabel(t.effect)}»`
+    : tr`состояние: наложено «${h.effectLabel(t.effect)}»`;
 }
 
-const who = (ctx: StepContext): string => ctx.owner || 'правило';
+const who = (ctx: StepContext): string => ctx.owner || tr`правило`;
 
 const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
   finish(step, ctx) {
     const mode = String(step.mode || 'apply');
-    if (!(mode in MODES)) throw new EngineError(`${who(ctx)}: у шага «состояние» нет режима «${mode}»; умею ${Object.keys(MODES).join(', ')}`);
+    if (!(mode in MODES)) throw new EngineError(tr`${who(ctx)}: у шага «состояние» нет режима «${mode}»; умею ${Object.keys(MODES).join(', ')}`);
     const picked = ctx.value(step.effect);
     const ids = (Array.isArray(picked) ? picked : [picked]).filter(one => one !== null && one !== undefined && one !== '');
     if (!ids.length) return { value: null, trace: { mode, effect: null }, break: null };
@@ -43,14 +44,14 @@ const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
       return { value: ids, trace: { mode, effect: ids[0], effects: ids, parts: traces }, break: null };
     }
     const id = ids[0];
-    if (typeof id !== 'string') throw new EngineError(`${who(ctx)}: состоянию нужен id эффекта, а пришло ${JSON.stringify(id)}`);
-    const to = ctx.sheet(step.to, 'на кого');
-    if (!to) throw new EngineError(`${who(ctx)}: шагу «состояние» не сказано, на чей лист`);
+    if (typeof id !== 'string') throw new EngineError(tr`${who(ctx)}: состоянию нужен id эффекта, а пришло ${JSON.stringify(id)}`);
+    const to = ctx.sheet(step.to, tr`на кого`);
+    if (!to) throw new EngineError(tr`${who(ctx)}: шагу «состояние» не сказано, на чей лист`);
     if (mode === 'remove' && step.by === 'tag') {
       const tagged = Object.entries(ctx.system.effects ?? {}).filter(([, effect]) => effect.tags?.includes(id)).map(([key]) => key);
-      if (!tagged.length) throw new EngineError(`${who(ctx)}: снять эффекты с меткой «${id}» — ни у одного эффекта нет такой метки`);
-      const sheet = ctx.sheet(step.to, 'с кого');
-      if (!sheet) throw new EngineError(`${who(ctx)}: шагу «состояние» не сказано, с чьего листа`);
+      if (!tagged.length) throw new EngineError(tr`${who(ctx)}: снять эффекты с меткой «${id}» — ни у одного эффекта нет такой метки`);
+      const sheet = ctx.sheet(step.to, tr`с кого`);
+      if (!sheet) throw new EngineError(tr`${who(ctx)}: шагу «состояние» не сказано, с чьего листа`);
       for (const one of tagged) ctx.detach(sheet, one);
       return { value: id, trace: { mode, effect: tagged[0], effects: tagged, sheet }, break: null };
     }
@@ -65,7 +66,7 @@ const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
       const value = ctx.value(ref);
       if (value === null || value === undefined) continue;
       if (typeof value !== 'number' && typeof value !== 'string' && typeof value !== 'boolean') {
-        throw new EngineError(`${who(ctx)}: наложенное запоминает число, строку или лист, а «${key}» дал ${JSON.stringify(value)}`);
+        throw new EngineError(tr`${who(ctx)}: наложенное запоминает число, строку или лист, а «${key}» дал ${JSON.stringify(value)}`);
       }
       given[key] = value;
     }

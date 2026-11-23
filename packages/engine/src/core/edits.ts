@@ -16,6 +16,7 @@ import type { SourcedModifier } from '../engine/modifiers.ts';
 import type { Pass } from '../engine/calc.ts';
 import { cancels } from '../model/cancels.ts';
 import type { RollEdit, RollEditOp } from '../model/types.ts';
+import { tr } from '../words/tongue.ts';
 
 export const COUNT_PARAM = 'count';
 export const THRESHOLD_PARAM = 'threshold';
@@ -72,7 +73,7 @@ function holds(mod: EditMod, ref: RefContext): boolean {
     if (isRuleError(err)) return false;
     throw err;
   }
-  if (typeof value !== 'boolean') throw new EngineError(`условие правки «${condition.expr}» у «${who(mod)}» должно давать да или нет`);
+  if (typeof value !== 'boolean') throw new EngineError(tr`условие правки «${condition.expr}» у «${who(mod)}» должно давать да или нет`);
   return value;
 }
 
@@ -85,16 +86,16 @@ const unbound = (mod: SourcedModifier, spec: Gather): boolean =>
 export function gather(holders: readonly Holder[], spec: Gather): Held[] {
   return holders.flatMap(holder => (editsOf(holder.view, spec.call, spec.param) as EditMod[])
     .filter(mod => editMatches(mod, spec.tags, holder.view.system) && !unbound(mod, spec))
-    .map(mod => ({ ...mod, view: holder.view, ref: refOf(mod, holder, spec, `правка «${who(mod)}»`) }))
+    .map(mod => ({ ...mod, view: holder.view, ref: refOf(mod, holder, spec, tr`правка «${who(mod)}»`) }))
     .filter(mod => holds(mod, mod.ref)));
 }
 
 export function amountOf(held: Held): number {
   const raw = (held as { value?: { expr: string } }).value;
-  if (!raw?.expr?.trim()) throw new EngineError(`правка «${who(held)}»: не задано, на сколько`);
+  if (!raw?.expr?.trim()) throw new EngineError(tr`правка «${who(held)}»: не задано, на сколько`);
   const value = resolveRef(raw, held.ref);
   if (typeof value !== 'number' || !Number.isFinite(value)) {
-    throw new EngineError(`правка «${who(held)}»: «${raw.expr}» дала не число`);
+    throw new EngineError(tr`правка «${who(held)}»: «${raw.expr}» дала не число`);
   }
   return value;
 }
@@ -117,23 +118,23 @@ export interface RollEdits {
 
 function wordAddend(label: string, op: RollEditOp, view: Pass): PendingAddend {
   if (hasDie(op)) {
-    const evaluate = (ref: unknown): unknown => compile(String((ref as { expr?: unknown }).expr ?? '')).evaluate(view.resolve, toolsOf(view.system, view, `правка броска «${label}»`));
+    const evaluate = (ref: unknown): unknown => compile(String((ref as { expr?: unknown }).expr ?? '')).evaluate(view.resolve, toolsOf(view.system, view, tr`правка броска «${label}»`));
     return dieAddend(label, view.system, op, { number: ref => Number(evaluate(ref)), text: evaluate });
   }
   const raw = (op as { value?: unknown }).value;
   const expr = raw && typeof raw === 'object' && 'expr' in raw ? String((raw as { expr: unknown }).expr) : '';
-  if (!expr.trim()) throw new EngineError(`правка броска «${label}»: «прибавить» без формулы`);
+  if (!expr.trim()) throw new EngineError(tr`правка броска «${label}»: «прибавить» без формулы`);
   return {
     label,
     value: () => {
       let value: unknown;
       try {
-        value = compile(expr).evaluate(view.resolve, toolsOf(view.system, view, `правка броска «${label}»`));
+        value = compile(expr).evaluate(view.resolve, toolsOf(view.system, view, tr`правка броска «${label}»`));
       } catch (err) {
-        if (isRuleError(err)) throw new EngineError(`правка броска «${label}»: ${(err as Error).message}`);
+        if (isRuleError(err)) throw new EngineError(tr`правка броска «${label}»: ${(err as Error).message}`);
         throw err;
       }
-      if (typeof value !== 'number' || !Number.isFinite(value)) throw new EngineError(`правка броска «${label}»: «${expr}» дала не число`);
+      if (typeof value !== 'number' || !Number.isFinite(value)) throw new EngineError(tr`правка броска «${label}»: «${expr}» дала не число`);
       return value;
     },
   };
@@ -143,14 +144,14 @@ function bonusAddend(held: Held, system: System): PendingAddend {
   const source: unknown = held;
   if (hasDie(source)) return dieAddend(who(held), system, source, { number: ref => Number(resolveRef(ref as never, held.ref)), text: ref => resolveRef(ref as never, held.ref) });
   const op = (held as { op?: unknown }).op;
-  if (op !== 'add') throw new EngineError(`правка «${who(held)}»: прибавка к броску только прибавляет, а здесь «${String(op ?? 'не задано')}»`);
+  if (op !== 'add') throw new EngineError(tr`правка «${who(held)}»: прибавка к броску только прибавляет, а здесь «${String(op ?? tr`не задано`)}»`);
   return {
     label: who(held),
     value: () => {
       try {
         return amountOf(held);
       } catch (err) {
-        if (isRuleError(err) && !(err instanceof EngineError)) throw new EngineError(`правка «${who(held)}»: ${(err as Error).message}`);
+        if (isRuleError(err) && !(err instanceof EngineError)) throw new EngineError(tr`правка «${who(held)}»: ${(err as Error).message}`);
         throw err;
       }
     },
@@ -173,7 +174,7 @@ export function rollEdits(held: Held[], claims: readonly string[], roller: Pass,
   const given = new Map<string, Map<string, Held>>();
   for (const mod of named) {
     const key = String(mod.edit);
-    if (!dictionary[key]) throw new EngineError(`правка «${who(mod)}» ссылается на правку броска «${key}», которой нет в словаре системы`);
+    if (!dictionary[key]) throw new EngineError(tr`правка «${who(mod)}» ссылается на правку броска «${key}», которой нет в словаре системы`);
     const from = given.get(key) ?? new Map<string, Held>();
     const source = (mod as { source?: { type?: string; id?: string } }).source;
     const id = `${mod.view.sheet.id}\u0000${source?.type ?? ''}\u0000${source?.id ?? ''}`;
@@ -205,7 +206,7 @@ export function rollEdits(held: Held[], claims: readonly string[], roller: Pass,
   })));
   const dice = held.filter(mod => !mod.edit && (mod as { param?: string }).param === COUNT_PARAM).map(mod => {
     const op = (mod as { op?: unknown }).op;
-    if (op !== 'add') throw new EngineError(`правка «${who(mod)}»: кубики к броску только прибавляются, а здесь «${String(op ?? 'не задано')}»`);
+    if (op !== 'add') throw new EngineError(tr`правка «${who(mod)}»: кубики к броску только прибавляются, а здесь «${String(op ?? tr`не задано`)}»`);
     const count = Math.trunc(amountOf(mod));
     return { label: who(mod), ops: [{ op: 'addDie', count }] } as RollEdit & { label: string };
   }).filter(edit => Number((edit.ops![0] as unknown as { count: number }).count) !== 0);
@@ -226,7 +227,7 @@ export function rollEdits(held: Held[], claims: readonly string[], roller: Pass,
 export function rollMarks(holders: readonly Holder[], rollerId: string, againstId: string | null, tags: readonly string[], values: Record<string, unknown> = {}): string[] {
   const view = (id: string): Pass => {
     const found = holders.find(holder => holder.id === id);
-    if (!found) throw new EngineError(`бросок: листа «${id}» нет среди носителей`);
+    if (!found) throw new EngineError(tr`бросок: листа «${id}» нет среди носителей`);
     return found.view;
   };
   const names: Record<string, Bound> = { [NAMES.roller]: rollerId, [NAMES.against]: againstId };
@@ -235,7 +236,7 @@ export function rollMarks(holders: readonly Holder[], rollerId: string, againstI
     if (!raw?.expr?.trim()) return [];
     const value = resolveRef(raw, held.ref);
     const list = Array.isArray(value) ? value : [value];
-    if (list.some(one => typeof one !== 'string' || !one)) throw new EngineError(`правка «${who(held)}»: метка броска — текст, а пришло ${JSON.stringify(value)}`);
+    if (list.some(one => typeof one !== 'string' || !one)) throw new EngineError(tr`правка «${who(held)}»: метка броска — текст, а пришло ${JSON.stringify(value)}`);
     return list as string[];
   });
   return [...new Set(marks)].filter(mark => !tags.includes(mark));
@@ -244,7 +245,7 @@ export function rollMarks(holders: readonly Holder[], rollerId: string, againstI
 export function rollHeld(holders: readonly Holder[], rollerId: string, againstId: string | null, tags: readonly string[], values: Record<string, unknown> = {}): Held[] {
   const view = (id: string): Pass => {
     const found = holders.find(holder => holder.id === id);
-    if (!found) throw new EngineError(`бросок: листа «${id}» нет среди носителей`);
+    if (!found) throw new EngineError(tr`бросок: листа «${id}» нет среди носителей`);
     return found.view;
   };
   const names: Record<string, Bound> = { [NAMES.roller]: rollerId, [NAMES.against]: againstId };

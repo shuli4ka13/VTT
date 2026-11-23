@@ -20,6 +20,7 @@ import { heldBy, propsOf, withLibrary, isBook, isUnder } from '../model/owned.ts
 import { isSingle } from '../model/sheet-columns.ts';
 import { typeColumn } from '../model/inherit.ts';
 import { isBlank, orDefault } from '../model/blank.ts';
+import { tr } from '../words/tongue.ts';
 
 export interface RefContext {
   pass: Pass;
@@ -112,7 +113,7 @@ function fromArgs(key: string, ctx: RefContext): unknown {
     const decl = (ctx.paramDefs || []).find(p => p.key === key);
     if (!decl || decl.kind === 'number') return recordNamesInline(source, ctx);
     const busy = reading.get(arg) ?? new Set<string>();
-    if (busy.has(key)) throw new EngineError(`${who(ctx)}: вход «${decl.label ?? key}» ссылается сам на себя`);
+    if (busy.has(key)) throw new EngineError(tr`${who(ctx)}: вход «${decl.label ?? key}» ссылается сам на себя`);
     busy.add(key);
     reading.set(arg, busy);
     try {
@@ -122,7 +123,7 @@ function fromArgs(key: string, ctx: RefContext): unknown {
     }
   }
   throw new EngineError(
-    `${who(ctx)}: аргумент «${key}» неизвестной формы ${JSON.stringify(arg)} — умею значение или { expr }`);
+    tr`${who(ctx)}: аргумент «${key}» неизвестной формы ${JSON.stringify(arg)} — умею значение или { expr }`);
 }
 
 export function resolveRef(ref: unknown, ctx: RefContext): unknown {
@@ -136,7 +137,7 @@ export function holdsNow(condition: unknown, ctx: RefContext): boolean {
   if (condition === null || condition === undefined) return true;
   const value = resolveRef(condition, ctx);
   if (typeof value !== 'boolean') {
-    throw new EngineError(`${who(ctx)}: условие должно давать да/нет, а дало ${JSON.stringify(value)}`);
+    throw new EngineError(tr`${who(ctx)}: условие должно давать да/нет, а дало ${JSON.stringify(value)}`);
   }
   return value;
 }
@@ -145,7 +146,7 @@ export function resolveNumber(ref: unknown, ctx: RefContext, what: string): numb
   const value = resolveRef(ref, ctx);
   if (typeof value !== 'number') {
     throw new EngineError(
-      `${who(ctx)}: ${what} — не число (${describe(ref)} даёт ${value === null ? 'пусто' : typeof value})`);
+      tr`${who(ctx)}: ${what} — не число (${describe(ref)} даёт ${value === null ? tr`пусто` : typeof value})`);
   }
   return value;
 }
@@ -156,7 +157,7 @@ export function resolveOptionalNumber(ref: unknown, ctx: RefContext, what: strin
   if (value === null) return null;
   if (typeof value !== 'number') {
     throw new EngineError(
-      `${who(ctx)}: ${what} — не число (${describe(ref)} даёт ${typeof value})`);
+      tr`${who(ctx)}: ${what} — не число (${describe(ref)} даёт ${typeof value})`);
   }
   return value;
 }
@@ -165,12 +166,12 @@ const isField = (system: System, name: string): boolean => hasField(system, name
 
 function rowsOfTable(system: System, pass: Pass, name: string, column: string, owner: string, host?: string): Value[] {
   const table = system.tables?.[name];
-  if (!table) throw new EngineError(`«строки»: таблицы «${name}» нет`);
+  if (!table) throw new EngineError(tr`«строки»: таблицы «${name}» нет`);
   if (!(table.columns ?? []).some(c => c.key === column)) {
-    throw new EngineError(`«строки»: у таблицы «${table.label || name}» нет колонки «${column}»`);
+    throw new EngineError(tr`«строки»: у таблицы «${table.label || name}» нет колонки «${column}»`);
   }
   if (isBook(table)) {
-    if (!pass.compendium) throw new EngineError(`«строки»: записей «${table.label || name}» здесь не видно — книги нет`);
+    if (!pass.compendium) throw new EngineError(tr`«строки»: записей «${table.label || name}» здесь не видно — книги нет`);
     return heldBy(pass.sheet, withLibrary(system, pass.compendium))
       .filter(held => isUnder(system, held.record.table, name) && (host === undefined || held.entry.in === host))
       .map(held => {
@@ -218,7 +219,7 @@ function evaluate(expr: unknown, ctx: RefContext): unknown {
       const [column, ...rest] = name.slice(ITEM_NAME.length + 1).split('.') as [string, ...string[]];
       if (rest.length) {
         const link = ownLink(system, (ctx.paramDefs ?? []).find(param => param.kind === 'record' && asked !== name)?.from, column) ?? referencedTable(system, column);
-        if (!link) throw new EngineError(`${who(ctx)}: «${column}» у вещи не из таблицы — «${rest.join('.')}» прочитать негде`);
+        if (!link) throw new EngineError(tr`${who(ctx)}: «${column}» у вещи не из таблицы — «${rest.join('.')}» прочитать негде`);
         return walk(system, ctx.pass, link, resolve(`${ITEM_NAME}.${column}`), rest, who(ctx), scope);
       }
       const type = asked === name ? undefined : (ctx.paramDefs ?? []).find(param => param.kind === 'record')?.from;
@@ -230,7 +231,7 @@ function evaluate(expr: unknown, ctx: RefContext): unknown {
     if (onSheet) {
       const bound = ctx.sheets!.bound[onSheet.head] ?? null;
       if (onSheet.rest === null) return bound;
-      if (bound === null) throw new EngineError(`${who(ctx)}: «${onSheet.head}» не задан — «${onSheet.rest}» прочитать не у кого`);
+      if (bound === null) throw new EngineError(tr`${who(ctx)}: «${onSheet.head}» не задан — «${onSheet.rest}» прочитать не у кого`);
       const view = ctx.sheets!.view;
       const rest = onSheet.rest;
       const split = splitPath(rest);
@@ -266,13 +267,13 @@ function evaluate(expr: unknown, ctx: RefContext): unknown {
       if (ctx.stepIds?.has(split?.head ?? name)) {
         const head = split?.head ?? name;
         if (head !== name && (head in results || known[head] !== undefined || ctx.rolls?.[head] !== undefined)) {
-          throw new EngineError(`${who(ctx)}: у шага «${head}» нет итога «${name.slice(head.length + 1)}»`);
+          throw new EngineError(tr`${who(ctx)}: у шага «${head}» нет итога «${name.slice(head.length + 1)}»`);
         }
-        throw new EngineError(`${who(ctx)}: шаг «${head}» ещё не прошёл — его результата здесь нет`);
+        throw new EngineError(tr`${who(ctx)}: шаг «${head}» ещё не прошёл — его результата здесь нет`);
       }
     }
     if (ctx.sheets && !ctx.bare && !name.startsWith(`${DESK_NAME}.`)) {
-      throw new EngineError(`${who(ctx)}: «${name}» — чьё поле? Возьмите его у листа: ${Object.keys(ctx.sheets.bound).map(one => `«${saidName(one)}»`).join(', ') || '«носитель»'}, затем «${name}»`);
+      throw new EngineError(tr`${who(ctx)}: «${name}» — чьё поле? Возьмите его у листа: ${Object.keys(ctx.sheets.bound).map(one => `«${saidName(one)}»`).join(', ') || tr`«носитель»`}, затем «${name}»`);
     }
     return ctx.pass.resolve(name);
   };
@@ -307,7 +308,7 @@ function namedValue(name: string, ctx: RefContext): unknown {
   if (isBlank(value)) {
     if (decl.default !== undefined) return decl.default;
     if (decl.optional) return null;
-    throw new EngineError(`${who(ctx)}: вход «${decl.label ?? name}» никто не заполнил`);
+    throw new EngineError(tr`${who(ctx)}: вход «${decl.label ?? name}» никто не заполнил`);
   }
   if (decl.kind === 'field' && typeof value === 'object' && value !== null && 'sheet' in value && 'tag' in value) {
     const field = value as { sheet: string; tag: string };
@@ -345,7 +346,7 @@ function recordValue(name: string, ctx: RefContext): unknown {
 }
 
 function who(ctx: RefContext): string {
-  return ctx.owner || 'правило';
+  return ctx.owner || tr`правило`;
 }
 
 function describe(ref: unknown): string {
@@ -356,5 +357,5 @@ function describe(ref: unknown): string {
 
 function unknownForm(ref: unknown, ctx: RefContext): never {
   throw new EngineError(
-    `${who(ctx)}: ссылка неизвестной формы ${JSON.stringify(ref)} — умею ${FORMS.join(', ')}`);
+    tr`${who(ctx)}: ссылка неизвестной формы ${JSON.stringify(ref)} — умею ${FORMS.join(', ')}`);
 }

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { act } from '../src/core/act.ts';
 import { emptyJournal } from '../src/core/external.ts';
 import { perform } from '../src/core/perform.ts';
-import { CUT_WORDS } from '../src/core/limits.ts';
+import { cutWords } from '../src/core/limits.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const queue = (...values: number[]) => {
@@ -187,7 +187,7 @@ describe('новое ядро: сознательные изменения', () 
     expect(value(out, 'б', 'ки')).toBe(2);
     expect(out.sheets.find(s => s.id === 'б')!.effects).toEqual([{ effectId: 'месть', usesLeft: 3 }]);
     expect(value(out, 'а', 'хп')).toBe(20);
-    expect(out.log).toContain(CUT_WORDS);
+    expect(out.log).toContain(cutWords());
   });
 
   it('подписка на момент с вопросом спрашивает; с ложным условием не платит и не тратит заряд', () => {

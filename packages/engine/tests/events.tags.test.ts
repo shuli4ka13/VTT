@@ -1,6 +1,6 @@
 import { group, test, eq, ok, deepEq, throws } from './harness.ts';
 import { exchange, deliverMany } from './play.ts';
-import { CUT_WORDS } from '../src/core/limits.ts';
+import { cutWords } from '../src/core/limits.ts';
 
 const queue = (...values: number[]) => {
   const rest = [...values];
@@ -211,7 +211,7 @@ group('реакции слушают слово, а не имя эффекта',
   test('шипы против шипов: четыре ответки записаны в журнал, и видно, что цепочка оборвана', () => {
     const r = spikesAgainstSpikes(fixedSpikes);
     eq(r.reports.filter(entry => entry.report.reply).length, 4, 'четыре ответки — предел глубины');
-    ok(r.log.includes(CUT_WORDS), 'в журнале сказано, что цепочка оборвана');
+    ok(r.log.includes(cutWords()), 'в журнале сказано, что цепочка оборвана');
   });
 
   test('шипы против шипов: вторая ответка читает входы вызова «Урон», посланного первой', () => {

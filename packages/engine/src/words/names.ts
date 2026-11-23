@@ -1,3 +1,4 @@
+import { live, everySaid, sourceOf } from './tongue.ts';
 export const NAMES = {
   holder: 'holder',
   row: 'row',
@@ -25,7 +26,7 @@ export const NAMES = {
 
 export type ServiceName = keyof typeof NAMES;
 
-export const NAME_LABELS: Record<ServiceName, string> = {
+export const NAME_LABELS: Record<ServiceName, string> = live({
   holder: 'носитель',
   row: 'строка',
   item: 'вещь',
@@ -48,9 +49,14 @@ export const NAME_LABELS: Record<ServiceName, string> = {
   throughArmor: 'сквозь броню',
   yes: 'да',
   no: 'нет',
-};
+});
 
 const BY_NAME = new Map<string, ServiceName>((Object.keys(NAMES) as ServiceName[]).map(id => [NAMES[id], id]));
+
+export const everyLabel = (name: string): string[] => {
+  const id = BY_NAME.get(name);
+  return id ? everySaid(sourceOf(NAME_LABELS)[id]) : [];
+};
 
 export const nameLabel = (name: string): string | undefined => {
   const id = BY_NAME.get(name);

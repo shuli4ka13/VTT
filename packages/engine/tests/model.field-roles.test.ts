@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { authorize, FIELD_BY_GM, FIELD_BY_RULES, FIELD_UNSEEN, GROUP_BY_GM } from '../src/core/authorize.ts';
+import { authorize, fieldByGm, fieldByRules, fieldUnseen, groupByGm } from '../src/core/authorize.ts';
 import type { Room } from '../src/core/authorize.ts';
 import { perform } from '../src/core/perform.ts';
 import { sheetsFor, knows, shows } from '../src/model/roles.ts';
@@ -90,27 +90,27 @@ describe('роли поля: кто правит', () => {
 
   it('поле только ведущего игрок не правит ни вписыванием, ни сдвигом — он его не видит', () => {
     for (const want of [set('арвен', 'тайна'), shift('арвен', 'тайна')]) {
-      expect(authorize(room, 'игрок-а', want)).toBe(FIELD_UNSEEN);
+      expect(authorize(room, 'игрок-а', want)).toBe(fieldUnseen());
       expect(authorize(room, 'ведущий', want)).toBeNull();
     }
   });
 
   it('«правит ведущий» у видимого поля: игрок видит, но не правит', () => {
-    expect(authorize(room, 'игрок-а', set('арвен', 'ранг'))).toBe(FIELD_BY_GM);
-    expect(authorize(room, 'игрок-а', shift('арвен', 'ранг'))).toBe(FIELD_BY_GM);
+    expect(authorize(room, 'игрок-а', set('арвен', 'ранг'))).toBe(fieldByGm());
+    expect(authorize(room, 'игрок-а', shift('арвен', 'ранг'))).toBe(fieldByGm());
     expect(authorize(room, 'ведущий', set('арвен', 'ранг'))).toBeNull();
   });
 
   it('служебное поле и «никто не правит» руками не правит никто, даже ведущий', () => {
     for (const tag of ['счётчик', 'печать']) {
-      expect(authorize(room, 'ведущий', set('арвен', tag))).toBe(FIELD_BY_RULES);
-      expect(authorize(room, 'игрок-а', shift('арвен', tag))).toBe(FIELD_BY_RULES);
+      expect(authorize(room, 'ведущий', set('арвен', tag))).toBe(fieldByRules());
+      expect(authorize(room, 'игрок-а', shift('арвен', tag))).toBe(fieldByRules());
     }
   });
 
   it('поле владельца правит тот, кто играет листом; взявший свободный лист «на минутку» его не видит', () => {
     expect(authorize(room, 'игрок-а', set('арвен', 'заметки'))).toBeNull();
-    expect(authorize(room, 'зритель', set('гоблин', 'заметки'))).toBe(FIELD_UNSEEN);
+    expect(authorize(room, 'зритель', set('гоблин', 'заметки'))).toBe(fieldUnseen());
     expect(authorize(room, 'ведущий', set('гоблин', 'заметки'))).toBeNull();
   });
 
@@ -124,17 +124,17 @@ describe('роли поля: кто правит', () => {
   it('бросок по полю, которого игрок не видит, — отказ: итог броска выдал бы значение', () => {
     const roll = (sheetId: string, tag: string) => ({ kind: 'world' as const, op: { op: 'roll' as const, sheetId, tag } });
     expect(authorize(room, 'игрок-а', roll('арвен', 'хиты'))).toBeNull();
-    expect(authorize(room, 'игрок-а', roll('арвен', 'тайна'))).toBe(FIELD_UNSEEN);
-    expect(authorize(room, 'игрок-а', roll('арвен', 'счётчик'))).toBe(FIELD_UNSEEN);
-    expect(authorize(room, 'зритель', roll('гоблин', 'заметки'))).toBe(FIELD_UNSEEN);
+    expect(authorize(room, 'игрок-а', roll('арвен', 'тайна'))).toBe(fieldUnseen());
+    expect(authorize(room, 'игрок-а', roll('арвен', 'счётчик'))).toBe(fieldUnseen());
+    expect(authorize(room, 'зритель', roll('гоблин', 'заметки'))).toBe(fieldUnseen());
     expect(authorize(room, 'ведущий', roll('арвен', 'тайна'))).toBeNull();
-    expect(authorize(room, 'игрок-а', { kind: 'world', op: { op: 'roll', sheetId: 'арвен', tag: 'хиты', second: 'тайна' } })).toBe(FIELD_UNSEEN);
+    expect(authorize(room, 'игрок-а', { kind: 'world', op: { op: 'roll', sheetId: 'арвен', tag: 'хиты', second: 'тайна' } })).toBe(fieldUnseen());
   });
 
   it('в группу лист ставит ведущий: иначе игрок «вступил бы» к чужому листу и читал поля его группы; выйти можно самому', () => {
     const group = (sheetId: string, to: string | null) => ({ kind: 'world' as const, op: { op: 'group' as const, sheetId, group: to } });
-    expect(authorize(room, 'игрок-м', group('мирра', 'банда'))).toBe(GROUP_BY_GM);
-    expect(authorize(room, 'игрок-м', group('мирра', 'арвен'))).toBe(GROUP_BY_GM);
+    expect(authorize(room, 'игрок-м', group('мирра', 'банда'))).toBe(groupByGm());
+    expect(authorize(room, 'игрок-м', group('мирра', 'арвен'))).toBe(groupByGm());
     expect(authorize(room, 'игрок-а', group('арвен', null))).toBeNull();
     expect(authorize(room, 'игрок-а', group('мирра', null))).toMatch(/чужой лист/);
     expect(authorize(room, 'ведущий', group('мирра', 'банда'))).toBeNull();

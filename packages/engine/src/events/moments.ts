@@ -7,9 +7,10 @@ import type { Report } from '../core/log.ts';
 import type { Clock } from '../engine/clock.ts';
 import type { System, Sheet, WornEffect } from '../model/types.ts';
 import { FIELD_PREFIX } from './bus.ts';
+import { live } from '../words/tongue.ts';
 
 
-export const MOMENTS = {
+export const MOMENTS = live({
   'turn-start': 'в начале своего хода',
   'turn-end': 'в конце своего хода',
   'round-start': 'в начале раунда',
@@ -20,7 +21,7 @@ export const MOMENTS = {
   'short-rest': 'на коротком отдыхе',
   'long-rest': 'на долгом отдыхе',
   time: 'когда прошло время',
-} as const;
+} as const);
 
 export type MomentKey = keyof typeof MOMENTS;
 

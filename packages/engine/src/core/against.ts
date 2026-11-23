@@ -8,6 +8,8 @@ import type { Pass } from '../engine/calc.ts';
 import type { Die, System } from '../model/types.ts';
 import type { Path } from './path.ts';
 import { DESK_ID } from '../engine/owners.ts';
+import { tr } from '../words/tongue.ts';
+import { plural } from '../words/glossary.ts';
 
 export interface RollRecord {
   path: Path;
@@ -94,11 +96,11 @@ export interface FacedTrace {
 }
 
 export function facedText(one: FacedTrace): string {
-  if (one.stale) return `против ${one.against}: правки цели не учтены — кости уже выбраны «увидев кости»`;
-  const parts = [...one.edits, ...(one.dropped.length ? [`снято: ${one.dropped.join(', ')}`] : [])];
-  const dice = one.dice.length ? `; докинуто [${one.dice.join(', ')}]` : '';
+  if (one.stale) return tr`против ${one.against}: правки цели не учтены — кости уже выбраны «увидев кости»`;
+  const parts = [...one.edits, ...(one.dropped.length ? [tr`снято: ${one.dropped.join(', ')}`] : [])];
+  const dice = one.dice.length ? tr`; докинуто [${one.dice.join(', ')}]` : '';
   const total = one.total !== undefined ? ` → ${one.total}` : '';
-  return `против ${one.against}: ${parts.join(', ')}${dice}${total}`;
+  return tr`против ${one.against}: ${parts.join(', ')}${dice}${total}`;
 }
 
 export interface Faced {
@@ -126,12 +128,7 @@ const minus = <T>(from: readonly T[], away: readonly T[]): T[] => {
 
 const who = (held: Held): string => held.source.label || held.source.id;
 
-const diceWord = (n: number): string => {
-  const tail = n % 100;
-  if (tail % 10 === 1 && tail !== 11) return 'кость';
-  if (tail % 10 >= 2 && tail % 10 <= 4 && (tail < 12 || tail > 14)) return 'кости';
-  return 'костей';
-};
+const diceWord = (n: number): string => plural(n, tr`кость`, tr`кости`, tr`костей`);
 
 const countOf = (edit: { ops?: readonly unknown[] }): number => Number((edit.ops?.[0] as { count?: unknown } | undefined)?.count ?? 0);
 
@@ -163,7 +160,7 @@ export function retarget(record: RollRecord, opponent: string, name: string, die
       const partner = after.canceled.find(other => cancels(dictionary, key, other));
       if (!after.canceled.includes(key) || !partner) return head;
       explained.add(partner);
-      return `${head} гасит «${wordLabel(partner)}»`;
+      return tr`${head} гасит «${wordLabel(partner)}»`;
     }),
     ...after.counts.filter(edit => !before.counts.some(one => one.label === edit.label && countOf(one) === countOf(edit)))
       .map(edit => `${edit.label}: ${signedDice(countOf(edit))}`),

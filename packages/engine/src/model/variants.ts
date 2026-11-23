@@ -10,6 +10,7 @@ import { degreeWords, isRange } from './tables.ts';
 import type { System, Effect, Step } from './types.ts';
 import { typeColumn } from './inherit.ts';
 import type { Where } from './references.ts';
+import { tr } from '../words/tongue.ts';
 
 export interface Variants { words: string[]; said?: string[]; label: string }
 
@@ -46,7 +47,7 @@ export function variantsOfRef(system: System, effectId: string, steps: readonly 
     const check = steps.find(step => step.type === 'check' && step.id === head) as { degrees?: { table?: string } | { label?: string }[] } | undefined;
     const degrees = check?.degrees;
     const words = Array.isArray(degrees) ? [...new Set(degrees.map(one => one.label).filter((label): label is string => Boolean(label)))] : degreeWords(system, degrees?.table);
-    return words.length ? { words, label: `ступени «${head}»` } : null;
+    return words.length ? { words, label: tr`ступени «${head}»` } : null;
   }
   return null;
 }
@@ -73,7 +74,7 @@ function comparisons(node: Node, out: { tag: string; word: string }[] = []): { t
 function results(node: Node, out: string[] = []): string[] {
   if (node.kind === 'Text' && !node.dice) out.push(node.value);
   else if (node.kind === 'Conditional') { results(node.then, out); results(node.otherwise, out); }
-  else if (node.kind === 'Binary' && node.op === 'или') { results(node.left, out); results(node.right, out); }
+  else if (node.kind === 'Binary' && node.op === tr`или`) { results(node.left, out); results(node.right, out); }
   return out;
 }
 
@@ -93,7 +94,7 @@ const astOf = (expr: string): Node | null => {
 };
 
 const missing = (word: string, variants: Variants): string =>
-  `«${word}» — в таблице «${variants.label}» такого варианта нет; есть ${(variants.said ?? variants.words).slice(0, 8).map(one => `«${one}»`).join(', ')}${variants.words.length > 8 ? ' …' : ''}`;
+  tr`«${word}» — в таблице «${variants.label}» такого варианта нет; есть ${(variants.said ?? variants.words).slice(0, 8).map(one => `«${one}»`).join(', ')}${variants.words.length > 8 ? ' …' : ''}`;
 
 interface Chain { steps: Step[]; place: (index: number) => Place; where: (index: number) => Where }
 
@@ -132,7 +133,7 @@ export function variantProblems(system: System): { where: Where; text: string }[
       const ast = astOf(String((column.expr as { expr?: unknown } | undefined)?.expr ?? ''));
       if (!variants || !ast) continue;
       for (const word of results(ast)) {
-        if (!variants.words.includes(word)) out.push({ where: { tab: 'effects', effect: id, part: 'returns', key: column.key }, text: `итог «${column.label ?? column.key}»: ${missing(word, variants)}` });
+        if (!variants.words.includes(word)) out.push({ where: { tab: 'effects', effect: id, part: 'returns', key: column.key }, text: tr`итог «${column.label ?? column.key}»: ${missing(word, variants)}` });
       }
     }
   }
@@ -205,9 +206,9 @@ export function cellScopeProblems(system: System): { where: Where; text: string 
           for (const used of ast ? refsOf(ast) : []) {
             if (onSheet(system, used)) continue;
             const head = used.split('.')[0]!;
-            const at = `клетка «${table.label || found.table}» → «${String(row.label ?? row.value)}» → «${column}» читает «${used}»`;
-            if (table.owner) report(site.where, `${at}: у таблицы с владельцем клетка видит только лист — цель, входы и шаги эффекта ей не видны`);
-            else if (head !== ITEM_NAME && head !== CALL_TAGS && !names.some(one => one.name === head)) report(site.where, `${at}, а здесь такого имени нет`);
+            const at = tr`клетка «${table.label || found.table}» → «${String(row.label ?? row.value)}» → «${column}» читает «${used}»`;
+            if (table.owner) report(site.where, tr`${at}: у таблицы с владельцем клетка видит только лист — цель, входы и шаги эффекта ей не видны`);
+            else if (head !== ITEM_NAME && head !== CALL_TAGS && !names.some(one => one.name === head)) report(site.where, tr`${at}, а здесь такого имени нет`);
           }
         }
       }

@@ -2,6 +2,7 @@ import { newPass, findField, holderIdOf, baseOf } from '../engine/calc.ts';
 import { sharedOf } from '../events/desk.ts';
 import type { Pass } from '../engine/calc.ts';
 import type { System, Sheet, Compendium } from '../model/types.ts';
+import { tr } from '../words/tongue.ts';
 
 export class Views {
   private sharedFor: { sheets: readonly Sheet[]; shared: Sheet[] } | null = null;
@@ -20,7 +21,7 @@ export class Views {
 
   of(sheets: readonly Sheet[], id: string): Pass {
     const sheet = this.sheet(sheets, id);
-    if (!sheet) throw new Error(`взгляд на лист «${id}»: такого листа нет`);
+    if (!sheet) throw new Error(tr`взгляд на лист «${id}»: такого листа нет`);
     const shared = this.shared(sheets);
     const known = this.cache.get(sheet);
     if (known && known.shared === shared) return known.pass;

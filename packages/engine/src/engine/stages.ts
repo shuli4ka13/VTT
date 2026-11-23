@@ -1,6 +1,7 @@
 import { EngineError } from './errors.ts';
 import type { System, Stage, Param } from '../model/types.ts';
 import { fieldOf, columnOfField } from '../model/sheet-columns.ts';
+import { tr } from '../words/tongue.ts';
 
 export type Combine = 'last' | 'min' | 'max' | 'sum' | 'product';
 
@@ -27,7 +28,7 @@ export function stageOf<M extends Staged>(mod: M, stages: readonly Stage[], labe
   if (!stages.length) return '';
   const key = mod.stage ?? stages[0]!.key;
   if (!stages.some(stage => stage.key === key)) {
-    throw new EngineError(`правка «${label}» ссылается на этап «${key}», а у величины такого этапа нет`);
+    throw new EngineError(tr`правка «${label}» ссылается на этап «${key}», а у величины такого этапа нет`);
   }
   return key;
 }
@@ -36,7 +37,7 @@ export function stackStages<M extends Staged>(
   mods: readonly M[], base: unknown, label: string, value: (mod: M) => unknown, stages: readonly Stage[] = [],
 ): unknown {
   const unknown = mods.find(m => !VALUE_OPS.includes(String(m.op)));
-  if (unknown) throw new EngineError(`неизвестная операция модификатора «${unknown.op}» на мишени «${label}»`);
+  if (unknown) throw new EngineError(tr`неизвестная операция модификатора «${unknown.op}» на мишени «${label}»`);
   const plan = stages.length ? stages : [IMPLICIT];
   let result = base;
   for (const stage of plan) {

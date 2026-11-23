@@ -1,4 +1,6 @@
 import type { System, RollEditOp } from './types.ts';
+import { live } from '../words/tongue.ts';
+import { inSystemTongue } from './localize.ts';
 
 export interface EditRecipe {
   key: string;
@@ -22,7 +24,7 @@ const pair = (
   { key: down[0], label: down[1], ops: down[2], cancels: [up[0]] },
 ];
 
-export const ADVANTAGE_METHODS: AdvantageMethod[] = [
+export const ADVANTAGE_METHODS: AdvantageMethod[] = live([
   {
     id: 'rerollNew', label: 'Переброс кости и выбор нового броска', implemented: true,
     examples: [
@@ -100,11 +102,15 @@ export const ADVANTAGE_METHODS: AdvantageMethod[] = [
       ['degree_down', 'Степень ниже', [{ op: 'shiftDegree', by: -1 }]],
     ),
   },
-];
+]);
 
 export const findMethod = (id: string) => ADVANTAGE_METHODS.find(m => m.id === id) || null;
 
 export function installMethod(system: System, methodId: string): string[] {
+  return inSystemTongue(system, () => installMethodIn(system, methodId));
+}
+
+function installMethodIn(system: System, methodId: string): string[] {
   const method = findMethod(methodId);
   if (!method) return [];
   const edits = (system.roll_edits ??= {});

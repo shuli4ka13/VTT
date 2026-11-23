@@ -7,6 +7,7 @@ import { ROLL_KINDS } from '../words/dice-kinds.ts';
 import type { RollKind } from '../words/dice-kinds.ts';
 import type { System, DieConstant } from './types.ts';
 import { fieldsOf } from './sheet-columns.ts';
+import { tr } from '../words/tongue.ts';
 
 export type { RollKind };
 
@@ -219,7 +220,7 @@ export function taggedPlacesOf(system: System): TaggedPlace[] {
     walk(effect);
   }
   const first = system.initiative ? stepPlace(system, system.initiative as Record<string, unknown>) : null;
-  if (first) out.push({ ...first, tags: stringTags((system.initiative as { tags?: unknown }).tags), name: 'инициатива' });
+  if (first) out.push({ ...first, tags: stringTags((system.initiative as { tags?: unknown }).tags), name: tr`инициатива` });
   return out;
 }
 

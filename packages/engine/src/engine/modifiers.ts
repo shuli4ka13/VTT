@@ -18,6 +18,7 @@ import { toolsOf } from './refs.ts';
 import { rollHeld, rollEdits, wordApplies } from '../core/edits.ts';
 import { PLUS_OP } from '../core/dice.ts';
 import { average } from '../core/external.ts';
+import { tr } from '../words/tongue.ts';
 
 export interface ModifierSource {
   type: 'item' | 'kind' | 'effect' | 'claim';
@@ -43,13 +44,13 @@ export const editKey = (call: string, param: string): string => `${call}.${param
 const assertCall = (system: System, mod: EditModifier, owner?: string): void => {
   if (mod.call === ROLL_CALL) {
     if (mod.param in CALL_WORDS.roll.params) return;
-    throw new EngineError(`${owner ? `«${owner}»: ` : ''}у броска нет параметра «${mod.param}» — есть ${Object.keys(CALL_WORDS.roll.params).map(one => `«${one}»`).join(', ')}`);
+    throw new EngineError(tr`${owner ? `«${owner}»: ` : ''}у броска нет параметра «${mod.param}» — есть ${Object.keys(CALL_WORDS.roll.params).map(one => `«${one}»`).join(', ')}`);
   }
   const who = owner ? `«${owner}»: ` : '';
   const effect = system.effects?.[mod.call];
-  if (!effect) throw new EngineError(`${who}правка вызова «${mod.call}» — такого эффекта в системе нет`);
+  if (!effect) throw new EngineError(tr`${who}правка вызова «${mod.call}» — такого эффекта в системе нет`);
   if (amountParamOf(effect)?.key !== mod.param) {
-    throw new EngineError(`${who}правка «${effect.label || mod.call}» правит вход «${mod.param}», а величина эффекта — ${amountParamOf(effect)?.key ? `«${amountParamOf(effect)!.key}»` : 'не задана'}`);
+    throw new EngineError(tr`${who}правка «${effect.label || mod.call}» правит вход «${mod.param}», а величина эффекта — ${amountParamOf(effect)?.key ? `«${amountParamOf(effect)!.key}»` : tr`не задана`}`);
   }
 };
 
@@ -98,7 +99,7 @@ function sourcesOf(system: System, sheet: Sheet, compendium: Compendium): Modifi
   for (const entry of sheet.has || []) {
     if (!working(sheet, entry)) continue;
     const item = findRecord(compendium, entry.of);
-    if (!item) throw new EngineError(`у листа «${sheet.id}» есть «${entry.of}», которого нет в компендиуме`);
+    if (!item) throw new EngineError(tr`у листа «${sheet.id}» есть «${entry.of}», которого нет в компендиуме`);
 
     const kind = kindOfRecord(system, item);
     const cells = propsOf(item, system, entry) ?? {};
@@ -190,8 +191,8 @@ export function withValues(edit: RollEdit & { label: string }, pass: Pass): Roll
   if (!(edit.ops ?? []).some(op => counted(op) && Object.values(op).some(isFormula))) return edit;
   const ops = edit.ops.map(op => (!counted(op) ? op : Object.fromEntries(Object.entries(op).map(([key, value]) => {
     if (!isFormula(value)) return [key, value];
-    const number = Number(compile(value.expr).evaluate(pass.resolve, toolsOf(pass.system, pass, 'правка броска')));
-    if (!Number.isFinite(number)) throw new EngineError(`правка броска «${edit.label}»: «${key}» — формула «${value.expr}» дала не число`);
+    const number = Number(compile(value.expr).evaluate(pass.resolve, toolsOf(pass.system, pass, tr`правка броска`)));
+    if (!Number.isFinite(number)) throw new EngineError(tr`правка броска «${edit.label}»: «${key}» — формула «${value.expr}» дала не число`);
     return [key, number];
   })) as typeof op));
   return { ...edit, ops };
@@ -203,8 +204,8 @@ export function claimedModifiers(system: System, keys: string[]): SourcedModifie
     const edit = dictionary[key];
     if (!edit) {
       throw new EngineError(
-        `заявлена правка броска «${key}», которой нет в словаре системы; есть: ${
-          Object.keys(dictionary).join(', ') || '(пусто)'}`);
+        tr`заявлена правка броска «${key}», которой нет в словаре системы; есть: ${
+          Object.keys(dictionary).join(', ') || tr`(пусто)`}`);
     }
     return {
       kind: 'edit' as const, call: ROLL_CALL, param: 'edits', edit: key,
@@ -242,17 +243,17 @@ function resolverOf(mod: SourcedModifier, pass: Pass): (name: string) => unknown
 function conditionHolds(mod: SourcedModifier, pass: Pass): boolean {
   const condition = (mod as { if?: { expr: string } }).if;
   if (!condition) return true;
-  const result = compile(condition.expr).evaluate(resolverOf(mod, pass), toolsOf(pass.system, pass, 'условие модификатора'));
+  const result = compile(condition.expr).evaluate(resolverOf(mod, pass), toolsOf(pass.system, pass, tr`условие модификатора`));
   if (typeof result !== 'boolean') {
     throw new EngineError(
-      `условие «${condition.expr}» источника «${mod.source.label}» должно давать да или нет`);
+      tr`условие «${condition.expr}» источника «${mod.source.label}» должно давать да или нет`);
   }
   return result;
 }
 
 function valueOf(mod: SourcedModifier, pass: Pass): unknown {
   const raw = (mod as { value?: { expr: string } }).value;
-  if (!raw?.expr?.trim()) throw new EngineError(`правка «${mod.source.label}»: не задано, на сколько`);
-  return compile(raw.expr).evaluate(resolverOf(mod, pass), toolsOf(pass.system, pass, 'модификатор'));
+  if (!raw?.expr?.trim()) throw new EngineError(tr`правка «${mod.source.label}»: не задано, на сколько`);
+  return compile(raw.expr).evaluate(resolverOf(mod, pass), toolsOf(pass.system, pass, tr`модификатор`));
 }
 

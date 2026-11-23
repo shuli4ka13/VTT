@@ -1,4 +1,5 @@
 import type { Node } from './ast.ts';
+import { tr } from '../words/tongue.ts';
 
 export function dependencies(ast: Node): string[] {
   const found: string[] = [];
@@ -34,7 +35,7 @@ export function dependencies(ast: Node): string[] {
         walk(node.otherwise);
         return;
       default:
-        throw new Error(`неизвестный узел дерева: ${(node as Node).kind}`);
+        throw new Error(tr`неизвестный узел дерева: ${(node as Node).kind}`);
     }
   }
 }

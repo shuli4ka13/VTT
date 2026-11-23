@@ -5,6 +5,7 @@ import { flattenSystem, typeColumn, typeColumns } from './inherit.ts';
 import { isBlank, fixedDefault } from './blank.ts';
 import { kindWord } from '../words/kinds.ts';
 import type { Compendium, Field, Owned, Sheet, System, TableColumn } from './types.ts';
+import { tr } from '../words/tongue.ts';
 
 export { ITEM_NAME };
 
@@ -30,7 +31,7 @@ export function parseItemTag(tag: string): { key: string; column: string } | nul
 
 export function itemEntry(sheet: Sheet, key: string): Owned {
   const entry = (sheet.has ?? []).find(one => keyOf(one) === key);
-  if (!entry) throw new EngineError(`у листа «${sheet.name}» нет вещи «${key}»`);
+  if (!entry) throw new EngineError(tr`у листа «${sheet.name}» нет вещи «${key}»`);
   return entry;
 }
 
@@ -38,9 +39,9 @@ export function itemColumn(system: System, compendium: Compendium | null | undef
   const entry = itemEntry(sheet, key);
   const record = findRecord(compendium, entry.of);
   const kind = kindOfRecord(system, record);
-  if (!record || !kind) throw new EngineError(`вещи «${key}» нет в книге`);
+  if (!record || !kind) throw new EngineError(tr`вещи «${key}» нет в книге`);
   if (!(kind.columns ?? []).some(c => c.key === column)) {
-    throw new EngineError(`у типа «${kind.label || record.table}» нет колонки «${column}» — у вещи «${record.label}» её не поменять`);
+    throw new EngineError(tr`у типа «${kind.label || record.table}» нет колонки «${column}» — у вещи «${record.label}» её не поменять`);
   }
   return itemTag(key, column);
 }
@@ -83,19 +84,19 @@ export interface ItemCell { tag: string; field: Field; value: unknown; plain: un
 
 function cellOf(system: System, compendium: Compendium | null | undefined, sheet: Sheet, key: string, column: string): ItemCell | string {
   const entry = (sheet.has ?? []).find(one => keyOf(one) === key);
-  if (!entry) return `у листа «${sheet.name}» нет вещи «${key}»`;
+  if (!entry) return tr`у листа «${sheet.name}» нет вещи «${key}»`;
   const record = findRecord(compendium, entry.of);
-  if (!record?.table || !kindOfRecord(system, record)) return `вещи «${key}» нет в книге`;
+  if (!record?.table || !kindOfRecord(system, record)) return tr`вещи «${key}» нет в книге`;
   const table = record.table;
   const name = record.label || record.id;
   const spec = typeColumn(system, table, column);
-  if (!spec) return `у типа «${system.tables?.[table]?.label || table}» нет колонки «${column}» — у вещи «${name}» её не поменять`;
+  if (!spec) return tr`у типа «${system.tables?.[table]?.label || table}» нет колонки «${column}» — у вещи «${name}» её не поменять`;
   const label = spec.label || spec.key;
-  if (spec.onSheet === false) return `«${label}» у вещи «${name}» на листе не показывается — за столом её не меняют`;
+  if (spec.onSheet === false) return tr`«${label}» у вещи «${name}» на листе не показывается — за столом её не меняют`;
   const kind = spec.kind ?? 'number';
-  if (!TABLE_KINDS.has(kind)) return `«${label}» у вещи «${name}» — ${kindWord(kind)}: это правило записи, за столом его не вписывают`;
+  if (!TABLE_KINDS.has(kind)) return tr`«${label}» у вещи «${name}» — ${kindWord(kind)}: это правило записи, за столом его не вписывают`;
   const own = record.cells?.[column];
-  if (spec.expr !== undefined || isFormulaCell(own)) return `«${label}» у вещи «${name}» считается по правилу — вписать значение нельзя`;
+  if (spec.expr !== undefined || isFormulaCell(own)) return tr`«${label}» у вещи «${name}» считается по правилу — вписать значение нельзя`;
   const book = isBlank(own) ? fixedDefault(spec) ?? null : own;
   const cells = propsOf(record, system, entry) ?? {};
   const flat = flattenSystem(system, true);
@@ -105,7 +106,7 @@ function cellOf(system: System, compendium: Compendium | null | undefined, sheet
   try {
     limits = { ...(spec.min !== undefined ? { min: bound(spec.min) } : {}), ...(spec.max !== undefined ? { max: bound(spec.max) } : {}) };
   } catch (err) {
-    if (err instanceof EngineError) return `«${label}» у вещи «${name}»: граница не считается — ${err.message}`;
+    if (err instanceof EngineError) return tr`«${label}» у вещи «${name}»: граница не считается — ${err.message}`;
     throw err;
   }
   const value = storedValueOf({ ...spec, ...limits }, book);

@@ -1,4 +1,5 @@
-export const STAGE_WORDS = {
+import { live } from './tongue.ts';
+export const STAGE_WORDS = live({
   title: 'Как складываются правки',
   hint: 'по порядку этапов; внутри этапа — как сказано. Правка выбирает свой этап',
   name: 'этап',
@@ -12,4 +13,4 @@ export const STAGE_WORDS = {
   roundLabel: 'округление',
   round: [['', 'без округления'], ['down', 'округлить вниз'], ['up', 'округлить вверх'], ['near', 'до ближайшего']],
   atLeast: 'не меньше',
-} as const;
+} as const);

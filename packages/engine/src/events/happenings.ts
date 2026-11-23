@@ -1,19 +1,20 @@
 import { NAMES } from '../words/names.ts';
-export const PHASES = {
+import { tr, live } from '../words/tongue.ts';
+export const PHASES = live({
   before: { label: 'до', note: 'может изменить исход', changes: true },
   after: { label: 'после', note: 'исход уже известен', changes: false },
   done: { label: 'завершено', note: 'один раз после всех целей', changes: false },
-} as const satisfies Record<string, { label: string; note: string; changes: boolean }>;
+} as const satisfies Record<string, { label: string; note: string; changes: boolean }>);
 
 export type Phase = keyof typeof PHASES;
 
 export const SEEN = 'seen';
 
-export const SEEN_LABEL = 'кости выпали';
+export const seenLabel = (): string => tr`кости выпали`;
 
 export const ROLLED = 'rolled';
 
-export const ROLLED_LABEL = 'бросок окончен';
+export const rolledLabel = (): string => tr`бросок окончен`;
 
 export const ANY_ACTION = '*';
 

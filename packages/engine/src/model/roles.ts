@@ -1,6 +1,7 @@
 import { isDesk } from '../engine/owners.ts';
 import { fieldOf } from './sheet-columns.ts';
 import type { Field, Sheet, System } from './types.ts';
+import { live } from '../words/tongue.ts';
 
 export interface Viewer {
   gm: boolean;
@@ -9,7 +10,7 @@ export interface Viewer {
 
 export type Circle = 'all' | 'owner' | 'gm';
 
-export const CIRCLE_WORDS: Record<Circle, string> = { all: 'все', owner: 'тот, кто играет листом, и ведущий', gm: 'только ведущий' };
+export const CIRCLE_WORDS: Record<Circle, string> = live({ all: 'все', owner: 'тот, кто играет листом, и ведущий', gm: 'только ведущий' });
 
 export const circleOf = (field: Pick<Field, 'sees'> | null | undefined): Circle =>
   (field?.sees === 'gm' ? 'gm' : field?.sees === 'owner' ? 'owner' : 'all');

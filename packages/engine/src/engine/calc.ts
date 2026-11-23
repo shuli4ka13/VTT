@@ -8,6 +8,7 @@ import { wornEffects } from './effects.ts';
 import type { CollectedModifiers } from './modifiers.ts';
 import type { System, Sheet, Field, Compendium, Resolve } from '../model/types.ts';
 import { fieldsOf, fieldOf } from '../model/sheet-columns.ts';
+import { tr } from '../words/tongue.ts';
 
 export interface Pass {
   system: System;
@@ -83,7 +84,7 @@ export function newPass(system: System, sheet: Sheet, options: PassOptions = {})
     if (onDesk === COMBAT_NAME && !findField(system, COMBAT_NAME)) return options.combat?.() ?? false;
     if (onDesk) {
       if (sheet.id === DESK_ID) return pass.resolve(onDesk);
-      if (!pass.desk) throw new EngineError(`стола нет — «${onDesk}» читать неоткуда`);
+      if (!pass.desk) throw new EngineError(tr`стола нет — «${onDesk}» читать неоткуда`);
       return pass.desk.resolve(onDesk);
     }
     const field = findField(system, tag);
@@ -96,12 +97,12 @@ export function newPass(system: System, sheet: Sheet, options: PassOptions = {})
       const id = calc(system, sheet, split.head, pass);
       if (id === null || id === undefined || id === '') return null;
       const other = options.peer?.(String(id));
-      if (!other) throw new EngineError(`«${head.label}»: листа «${String(id)}» нет — «${split.path.join('.')}» прочитать не у кого`);
+      if (!other) throw new EngineError(tr`«${head.label}»: листа «${String(id)}» нет — «${split.path.join('.')}» прочитать не у кого`);
       return other.resolve(split.path.join('.'));
     }
     const table = split ? referencedTable(system, split.head) : undefined;
     if (split && table) {
-      return walk(system, pass, table, calc(system, sheet, split.head, pass), split.path, `поле «${split.head}»`);
+      return walk(system, pass, table, calc(system, sheet, split.head, pass), split.path, tr`поле «${split.head}»`);
     }
     return calc(system, sheet, tag, pass);
   };
@@ -163,7 +164,7 @@ function computeBase(field: Field, pass: Pass): unknown {
 
     default:
       throw new EngineError(
-        `поле «${field.tag}»: неизвестный способ получить значение «${(source as { kind: string }).kind}»`);
+        tr`поле «${field.tag}»: неизвестный способ получить значение «${(source as { kind: string }).kind}»`);
   }
 }
 

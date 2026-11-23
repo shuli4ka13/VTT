@@ -8,6 +8,7 @@ import type { SheetPart, Control, SystemRoll, RollField } from '@vtt/schema';
 import { isTagWord } from '../engine/roll-tags.ts';
 import { linkOf, rowByKey, staticCell } from './tables.ts';
 import { isBlank, fixedDefault } from './blank.ts';
+import { tr, live } from '../words/tongue.ts';
 
 export type { CellMark };
 
@@ -98,13 +99,13 @@ function token(system: System, table: Table, row: TableRow, name: string): strin
   const column = (table.columns ?? []).find(c => c.key === head);
   const cell = (row.cells ?? {})[head!];
   if (!column || cell === undefined || isFormulaCell(cell)) {
-    throw new EngineError(`таблица «${table.label ?? ''}»: в шаблоне «{${name}}» — у строки «${row.label ?? row.value}» нет такой ячейки`);
+    throw new EngineError(tr`таблица «${table.label ?? ''}»: в шаблоне «{${name}}» — у строки «${row.label ?? row.value}» нет такой ячейки`);
   }
-  if (!tail) return typeof cell === 'boolean' ? (cell ? 'да' : 'нет') : String(cell);
+  if (!tail) return typeof cell === 'boolean' ? (cell ? tr`да` : tr`нет`) : String(cell);
   const link = linkOf(column);
   const other = link ? system.tables?.[link] : undefined;
   const target = rowByKey(other, cell);
-  if (!target || !other) throw new EngineError(`таблица «${table.label ?? ''}»: «{${name}}» — «${String(cell)}» нет в таблице «${other?.label || column.from}»`);
+  if (!target || !other) throw new EngineError(tr`таблица «${table.label ?? ''}»: «{${name}}» — «${String(cell)}» нет в таблице «${other?.label || column.from}»`);
   return token(system, other, target, tail);
 }
 
@@ -126,12 +127,12 @@ function deep(system: System, table: Table, row: TableRow, value: unknown): unkn
 
 const STORED = ['number', 'text', 'note', 'boolean', 'choice'];
 
-const TYPE_WORDS: Record<string, string> = { number: 'число', text: 'слово', note: 'текст', boolean: 'да или нет', choice: 'вариант' };
+const TYPE_WORDS: Record<string, string> = live({ number: 'число', text: 'слово', note: 'текст', boolean: 'да или нет', choice: 'вариант' });
 
 export const NOTE_LIMIT = 5000;
 
 export const valueWord = (value: unknown): string =>
-  (typeof value === 'boolean' ? (value ? 'да' : 'нет')
+  (typeof value === 'boolean' ? (value ? tr`да` : tr`нет`)
     : Array.isArray(value) ? (value.length ? value.map(valueWord).join(', ') : '—')
       : isBlank(value) ? '—' : String(value));
 
@@ -139,15 +140,15 @@ export function misfit(field: Pick<Field, 'label' | 'value'>, value: unknown): s
   if (field.value.kind !== 'stored' || value === null || value === undefined) return null;
   const { type, many } = field.value;
   if (Array.isArray(value) !== Boolean(many)) {
-    return many ? `«${field.label}» хранит список значений` : `«${field.label}» хранит одно значение, а не список`;
+    return many ? tr`«${field.label}» хранит список значений` : tr`«${field.label}» хранит одно значение, а не список`;
   }
   const items = Array.isArray(value) ? value : [value];
   const ok = items.every(item => (type === 'number' ? typeof item === 'number'
     : type === 'boolean' ? typeof item === 'boolean'
       : type === 'text' || type === 'note' ? typeof item === 'string'
         : typeof item !== 'object'));
-  if (!ok) return `«${field.label}» хранит ${TYPE_WORDS[type] ?? type}, а пришло ${JSON.stringify(value)}`;
-  return type === 'note' && String(value).length > NOTE_LIMIT ? `«${field.label}» — не длиннее ${NOTE_LIMIT} знаков` : null;
+  if (!ok) return tr`«${field.label}» хранит ${TYPE_WORDS[type] ?? type}, а пришло ${JSON.stringify(value)}`;
+  return type === 'note' && String(value).length > NOTE_LIMIT ? tr`«${field.label}» — не длиннее ${NOTE_LIMIT} знаков` : null;
 }
 
 export function manyText(system: System, column: TableColumn, next: string): string {
@@ -155,8 +156,8 @@ export function manyText(system: System, column: TableColumn, next: string): str
   const target = (system.tables?.[link ?? '']?.columns ?? []).find(c => c.key === next);
   const list = column.label || column.key;
   const wanted = target?.label || next;
-  return `в «${list}» несколько значений — у какого из них брать «${wanted}»? `
-    + `Проверьте, есть ли нужное значение в списке: если(есть(«${list}», значение), …, 0) — и берите «${wanted}» у этого значения`;
+  return tr`в «${list}» несколько значений — у какого из них брать «${wanted}»? `
+    + tr`Проверьте, есть ли нужное значение в списке: если(есть(«${list}», значение), …, 0) — и берите «${wanted}» у этого значения`;
 }
 
 const ZERO: Record<string, unknown> = { number: 0, text: '', note: '', boolean: false, choice: '' };
@@ -173,12 +174,12 @@ function rowPath(system: System, tableId: string, row: TableRow, path: string[])
   if (!path.length) return literal(row.value);
   const [head, ...rest] = path;
   const column = (table.columns ?? []).find(c => c.key === head);
-  const where = `таблица «${table.label || tableId}», строка «${row.label ?? row.value}»`;
-  if (!column) throw new EngineError(`${where}: колонки «${head}» нет`);
+  const where = tr`таблица «${table.label || tableId}», строка «${row.label ?? row.value}»`;
+  if (!column) throw new EngineError(tr`${where}: колонки «${head}» нет`);
   if (isLive(table, column, row)) return `@${addressOf(tableId, row, column.key)}${rest.length ? `.${rest.join('.')}` : ''}`;
   const source = cellSource(column, row);
   if (source.kind === 'formula') {
-    if (rest.length) throw new EngineError(`${where}: «${column.label || head}» — формула, дальше идти некуда`);
+    if (rest.length) throw new EngineError(tr`${where}: «${column.label || head}» — формула, дальше идти некуда`);
     return `(${withRow(system, tableId, row, source.expr)})`;
   }
   const cell = source.kind === 'value' ? source.value : fixedDefault(column);
@@ -186,11 +187,11 @@ function rowPath(system: System, tableId: string, row: TableRow, path: string[])
   if (column.many && rest.length) throw new EngineError(`${where}: ${manyText(system, column, rest[0]!)}`);
   if (link && rest.length) {
     const target = rowByKey(system.tables?.[link], cell);
-    if (!target) throw new EngineError(`${where}: «${String(cell)}» нет в таблице «${system.tables?.[link]?.label || link}»`);
+    if (!target) throw new EngineError(tr`${where}: «${String(cell)}» нет в таблице «${system.tables?.[link]?.label || link}»`);
     return rowPath(system, link, target, rest);
   }
   if (column.kind === 'field') return `@${String(cell)}${rest.length ? `.${rest.join('.')}` : ''}`;
-  if (rest.length) throw new EngineError(`${where}: «${column.label || head}» — не ссылка, дальше идти некуда`);
+  if (rest.length) throw new EngineError(tr`${where}: «${column.label || head}» — не ссылка, дальше идти некуда`);
   if (Array.isArray(cell)) return `@${addressOf(tableId, row, column.key)}`;
   return literal(cell);
 }
@@ -245,7 +246,7 @@ export function rowPieces(system: System, tableId: string, row: TableRow, expr: 
     if (found[1] !== undefined) {
       const label = fieldOf(system, found[1])?.label ?? found[1];
       const picked = pickedColumn(system, tableId, row, found[1], found[2] ?? '');
-      out.push({ chip: picked ? `${label} · ${picked}` : `${label} · колонка по значению` });
+      out.push({ chip: picked ? `${label} · ${picked}` : tr`${label} · колонка по значению` });
       continue;
     }
     const match = [found[0], found[3], found[4]] as const;
@@ -288,7 +289,7 @@ function cellExpr(system: System, tableId: string, cells: Record<string, unknown
   if (!isFormulaCell(cell)) return literal(cell ?? '');
   const table = system.tables?.[tableId];
   if (seen.includes(head)) {
-    throw new EngineError(`тип «${table?.label || tableId}»: клетки считаются друг из друга по кругу: ${[...seen, head].join(' → ')}`);
+    throw new EngineError(tr`тип «${table?.label || tableId}»: клетки считаются друг из друга по кругу: ${[...seen, head].join(' → ')}`);
   }
   const keys = new Set((table?.columns ?? []).map(c => c.key));
   const inner = cell.expr.replace(NAME_REF, (whole: string, name: string, tail: string) => {
@@ -306,21 +307,21 @@ export function itemExpr(system: System, tableId: string, cells: Record<string, 
 
 function recordPath(system: System, tableId: string, cells: Record<string, unknown>, path: string[], seen: readonly string[] = [], key?: string): string {
   const table = system.tables?.[tableId];
-  const where = `тип «${table?.label || tableId}»`;
+  const where = tr`тип «${table?.label || tableId}»`;
   const [head, ...rest] = path;
-  if (!head) throw new EngineError(`${where}: «${NAME_LABELS.row}» без колонки — напишите, какую клетку записи взять`);
+  if (!head) throw new EngineError(tr`${where}: «${NAME_LABELS.row}» без колонки — напишите, какую клетку записи взять`);
   const found = (table?.columns ?? []).find(c => c.key === head);
-  if (!found) throw new EngineError(`${where}: колонки «${head}» нет`);
+  if (!found) throw new EngineError(tr`${where}: колонки «${head}» нет`);
   let spec: TableColumn = found;
   const cell = cells[head];
-  if (Array.isArray(cell)) throw new EngineError(`${where}: «${spec.label || head}» — список, одним числом его не взять`);
+  if (Array.isArray(cell)) throw new EngineError(tr`${where}: «${spec.label || head}» — список, одним числом его не взять`);
   let expr = cellExpr(system, tableId, cells, head, seen, key);
   for (const step of rest) {
     const link = linkOf(spec);
-    if (!link) throw new EngineError(`${where}: «${spec.label || spec.key}» — не ссылка, дальше «${step}» идти некуда`);
+    if (!link) throw new EngineError(tr`${where}: «${spec.label || spec.key}» — не ссылка, дальше «${step}» идти некуда`);
     expr = `table(${JSON.stringify(link)}, ${expr}, ${JSON.stringify(step)})`;
     const next: TableColumn | undefined = (system.tables?.[link]?.columns ?? []).find(c => c.key === step);
-    if (!next) throw new EngineError(`${where}: у таблицы «${link}» нет колонки «${step}»`);
+    if (!next) throw new EngineError(tr`${where}: у таблицы «${link}» нет колонки «${step}»`);
     spec = next;
   }
   return `(${expr})`;
@@ -545,7 +546,7 @@ export function sectionOf(system: System, part: SheetPart, field: Field): Pick<F
   if (isBlank(value)) return {};
   const options = column.kind === 'choice' && column.from ? system.tables?.[column.from]?.rows ?? [] : [];
   const at = options.findIndex(r => String(r.value) === String(value));
-  if (typeof value === 'boolean') return { section: value ? part.views?.[column.key]?.yes ?? 'да' : part.views?.[column.key]?.no ?? 'нет', sectionAt: value ? 1 : 0 };
+  if (typeof value === 'boolean') return { section: value ? part.views?.[column.key]?.yes ?? tr`да` : part.views?.[column.key]?.no ?? tr`нет`, sectionAt: value ? 1 : 0 };
   return at >= 0 ? { section: String(options[at]!.label ?? options[at]!.value), sectionAt: at } : { section: String(value) };
 }
 
@@ -624,11 +625,11 @@ const sorted = (value: unknown): unknown => {
 export const same = (a: unknown, b: unknown): boolean => JSON.stringify(sorted(a)) === JSON.stringify(sorted(b));
 
 
-const SINGLE_NAMES: Record<Holder, { id: string; label: string }> = {
+const SINGLE_NAMES: Record<Holder, { id: string; label: string }> = live({
   sheet: { id: 'list', label: 'Лист' },
   desk: { id: 'stol', label: 'Стол' },
   group: { id: 'gruppa', label: 'Группа' },
-};
+});
 
 export const singleTableOf = (system: System, holder: Holder = 'sheet'): string | undefined =>
   singleTables(system).find(([, table]) => holderOf(table) === holder)?.[0];

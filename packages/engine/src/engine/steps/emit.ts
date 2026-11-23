@@ -5,6 +5,7 @@ import type { EmittedEvent } from '../rule.ts';
 import type { System } from '../../model/types.ts';
 import type { StepData, StepContext, StepModule } from './index.ts';
 import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
+import { tr } from '../../words/tongue.ts';
 
 export const type = 'emit';
 const words: StepWords = STEP_WORDS.emit;
@@ -24,25 +25,25 @@ export function calls(step: StepData): string | null {
 }
 
 export function lint(step: StepData) {
-  if (!step.effect) return 'вызову нужен общий эффект — они живут среди эффектов, в группе «Общие»';
+  if (!step.effect) return tr`вызову нужен общий эффект — они живут среди эффектов, в группе «Общие»`;
   return null;
 }
 
-const NOTHING = 'не задано — шаг пропущен';
+const nothing = (): string => tr`не задано — шаг пропущен`;
 
 export function traceLine(t: any, h: any) {
   const name = typeof h?.eventLabel === 'function' ? h.eventLabel(t.event) : t.event;
   const said = (tag: string): string => (typeof h?.tagSaid === 'function' ? h.tagSaid(tag) : tag);
   const tags = t.tags?.length ? ` [${t.tags.map(said).join(', ')}]` : '';
   const mods = t.incoming !== t.amount
-    ? ` (отправлено ${t.incoming}, после правок ${t.amount})`
+    ? tr` (отправлено ${t.incoming}, после правок ${t.amount})`
     : '';
-  if (t.event === null) return `вызов: ${NOTHING}`;
-  if (t.bare) return `зовёт «${name}»${tags}`;
-  return `зовёт «${name}»${tags}: ${t.amount}${mods}`;
+  if (t.event === null) return tr`вызов: ${nothing()}`;
+  if (t.bare) return tr`зовёт «${name}»${tags}`;
+  return tr`зовёт «${name}»${tags}: ${t.amount}${mods}`;
 }
 
-const who = (ctx: StepContext): string => ctx.owner || 'правило';
+const who = (ctx: StepContext): string => ctx.owner || tr`правило`;
 
 function chosenTags(params: { key: string; kind?: string; from?: string }[], args: Record<string, unknown>): string[] {
   const out: string[] = [];
@@ -61,7 +62,7 @@ function rollArg(ref: unknown, key: string, ctx: StepContext): Record<string, un
   if (!expr.trim()) return null;
   const name = /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(expr)?.[1];
   const roll = name ? ctx.rolled(name) : null;
-  if (!roll) throw new EngineError(`${who(ctx)}: во вход «${key}» передают бросок — имя шага броска или входа-броска, а не «${expr}»`);
+  if (!roll) throw new EngineError(tr`${who(ctx)}: во вход «${key}» передают бросок — имя шага броска или входа-броска, а не «${expr}»`);
   return roll;
 }
 
@@ -82,13 +83,13 @@ const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
     const args = given;
     const main = amountParamOf(spec);
     const incoming = main && args[main.key] !== undefined ? Number(args[main.key]) : 0;
-    if (!Number.isFinite(incoming)) throw new EngineError(`«${main!.label ?? main!.key}» вызова «${spec.label ?? id}»: ждали число, пришло «${String(args[main!.key])}»`);
+    if (!Number.isFinite(incoming)) throw new EngineError(tr`«${main!.label ?? main!.key}» вызова «${spec.label ?? id}»: ждали число, пришло «${String(args[main!.key])}»`);
     const tags = [...new Set([...(spec.tags ?? []), ...chosenTags(params, args)])];
     const amountNow = main ? Math.floor(ctx.edited(id, main.key, incoming, tags, args)) : incoming;
     if (main) args[main.key] = amountNow;
     const payload: EmittedEvent = { event: id, amount: amountNow, incoming, tags };
     const out = ctx.call(id, args, payload);
-    const received = out.stopped ? String(out.stopped.reason ?? 'оборвано') : null;
+    const received = out.stopped ? String(out.stopped.reason ?? tr`оборвано`) : null;
     const note = out.stopped?.note ?? null;
     return {
       value: { ...payload, ...(out.returns ?? {}) },

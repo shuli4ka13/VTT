@@ -19,6 +19,7 @@ import type { Roll, RollResult, Spec } from '../../core/dice.ts';
 import type { Thrown } from '../../core/roll.ts';
 import type { Faced } from '../../core/against.ts';
 import type { Check, FieldThrow } from '../check.ts';
+import { tr } from '../../words/tongue.ts';
 
 export type StepData = Step & Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -122,7 +123,7 @@ export function registerStepType(mod: StepModule): StepModule {
   for (const part of ['type', 'finish']) {
     if (!mod || (mod as Record<string, unknown>)[part] === undefined) {
       throw new EngineError(
-        `тип шага «${mod && mod.type ? mod.type : '?'}» не годится в реестр: не хватает «${part}»`);
+        tr`тип шага «${mod && mod.type ? mod.type : '?'}» не годится в реестр: не хватает «${part}»`);
     }
   }
   registry.set(mod.type, mod);
@@ -138,7 +139,7 @@ export function stepModule(type: string): StepModule {
   const mod = registry.get(type);
   if (!mod) {
     throw new EngineError(
-      `неизвестный тип шага «${type}» — реестр знает: ${[...registry.keys()].join(', ')}`);
+      tr`неизвестный тип шага «${type}» — реестр знает: ${[...registry.keys()].join(', ')}`);
   }
   return mod;
 }

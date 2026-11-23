@@ -9,6 +9,7 @@ import { tagTablesOf, choiceTableOf } from './lists.ts';
 import type { System, Compendium } from './types.ts';
 import type { Where } from './references.ts';
 import { fieldsOf, forgetFields, slugOf } from './sheet-columns.ts';
+import { tr } from '../words/tongue.ts';
 
 type Loose = Record<string, unknown>;
 
@@ -175,11 +176,11 @@ const pointsAt = (system: System, cond: Loose, table: string): boolean =>
 function badCondition(system: System, cond: Loose, what: string): string | undefined {
   const tables = system.tables ?? {};
   const table = typeof cond.table === 'string' ? tables[cond.table] : undefined;
-  if (!table) return `${what} смотрит в таблицу «${String(cond.table ?? '')}», которой нет`;
+  if (!table) return tr`${what} смотрит в таблицу «${String(cond.table ?? '')}», которой нет`;
   const column = table.columns?.find(c => c.key === cond.column);
-  if (!column) return `у таблицы «${table.label || String(cond.table)}» нет колонки «${String(cond.column ?? '')}» из ${what === 'условие правки' ? 'условия правки' : 'условия шага'}`;
+  if (!column) return tr`у таблицы «${table.label || String(cond.table)}» нет колонки «${String(cond.column ?? '')}» из ${what === tr`условие правки` ? tr`условия правки` : tr`условия шага`}`;
   if (column.kind === 'choice' && column.from && !hasRow(system, column.from, cond.is)) {
-    return `${what} ждёт «${String(cond.is)}», а в «${tables[column.from]?.label || column.from}» такой строки нет`;
+    return tr`${what} ждёт «${String(cond.is)}», а в «${tables[column.from]?.label || column.from}» такой строки нет`;
   }
   return undefined;
 }
@@ -193,7 +194,7 @@ export function rowUsers(system: System, table: string, key: unknown, compendium
         if (holds((row.cells ?? {})[column.key], key)) {
           out.push({
             where: { tab: 'rules', section: 'tables', key: id },
-            text: `таблица «${other.label || id}», строка «${String(row.label ?? row.value ?? `${row.from}–${row.to}`)}»`,
+            text: tr`таблица «${other.label || id}», строка «${String(row.label ?? row.value ?? `${row.from}–${row.to}`)}»`,
           });
         }
       }
@@ -206,27 +207,27 @@ export function rowUsers(system: System, table: string, key: unknown, compendium
       const byWhere = w?.table && system.tables?.[w.table]?.columns?.some(c => c.from === table) && same(w.is, key);
       const byTags = tagTables.includes(table)
         && [...((m.tags ?? []) as unknown[]), ...((m.anyTags ?? []) as unknown[]), ...((m.notTags ?? []) as unknown[])].some(t => same(t, key));
-      if (byWhere || byTags) out.push({ where, text: 'правка значения' });
+      if (byWhere || byTags) out.push({ where, text: tr`правка значения` });
     }
   }
   for (const { where, cond } of stepConditions(system)) {
-    if (pointsAt(system, cond, table) && same(cond.is, key)) out.push({ where, text: 'условие шага' });
+    if (pointsAt(system, cond, table) && same(cond.is, key)) out.push({ where, text: tr`условие шага` });
   }
   for (const { where, args, key: arg } of choiceArgs(system, table)) {
-    if (holds(constOf(args[arg]), key)) out.push({ where, text: 'значение входа при вызове' });
+    if (holds(constOf(args[arg]), key)) out.push({ where, text: tr`значение входа при вызове` });
   }
   for (const record of recordsOf(compendium)) {
     if (!kindOfRecord(system, record)) continue;
     const props = typeColumns(system, record.table).filter(p => p.kind === 'choice' && p.from === table);
     if (props.some(prop => holds((record.cells ?? {})[prop.key], key))) {
-      out.push({ where: { tab: 'book', record: record.id }, text: `запись «${record.label || record.id}»` });
+      out.push({ where: { tab: 'book', record: record.id }, text: tr`запись «${record.label || record.id}»` });
     }
   }
   for (const field of fieldsOf(system)) {
     if (choiceTableOf(field) !== table) continue;
     const value = field.value as Loose;
     if (value.kind === 'stored' && same(value.default, key)) {
-      out.push({ where: { tab: 'sheet', field: field.tag }, text: `поле «${field.label}» — значение по умолчанию` });
+      out.push({ where: { tab: 'sheet', field: field.tag }, text: tr`поле «${field.label}» — значение по умолчанию` });
     }
   }
   return out;
@@ -243,20 +244,20 @@ export function danglingRows(system: System, compendium?: Compendium): Dangling[
         const where: Where = { tab: 'rules', section: 'tables', key: id };
         const target = column.from ? tables[column.from] : undefined;
         if (!target) {
-          out.push({ where, text: `колонка «${column.label || column.key}» ссылается на таблицу «${column.from ?? ''}», которой нет` });
+          out.push({ where, text: tr`колонка «${column.label || column.key}» ссылается на таблицу «${column.from ?? ''}», которой нет` });
           continue;
         }
         for (const row of rowsOf(table)) {
           const cell = (row.cells ?? {})[column.key];
           if (cell === undefined || cell === '' || (target.columns ?? []).some(other => other.key === cell)) continue;
-          out.push({ where, text: `в строке «${String(row.label ?? row.value)}» колонка «${column.label || column.key}» указывает на колонку, которой в «${target.label || column.from}» нет` });
+          out.push({ where, text: tr`в строке «${String(row.label ?? row.value)}» колонка «${column.label || column.key}» указывает на колонку, которой в «${target.label || column.from}» нет` });
         }
         continue;
       }
       if (column.kind !== 'choice') continue;
       const where: Where = { tab: 'rules', section: 'tables', key: id };
       if (!column.from || !tables[column.from]) {
-        out.push({ where, text: `колонка «${column.label || column.key}» ссылается на таблицу «${column.from ?? ''}», которой нет` });
+        out.push({ where, text: tr`колонка «${column.label || column.key}» ссылается на таблицу «${column.from ?? ''}», которой нет` });
         continue;
       }
       for (const row of rowsOf(table)) {
@@ -264,7 +265,7 @@ export function danglingRows(system: System, compendium?: Compendium): Dangling[
         if (!lost.length) continue;
         out.push({
           where,
-          text: `в строке «${String(row.label ?? row.value)}» колонка «${column.label || column.key}» указывает на «${lost.map(String).join('», «')}», а в «${tables[column.from]!.label || column.from}» такой строки нет`,
+          text: tr`в строке «${String(row.label ?? row.value)}» колонка «${column.label || column.key}» указывает на «${lost.map(String).join('», «')}», а в «${tables[column.from]!.label || column.from}» такой строки нет`,
         });
       }
     }
@@ -272,12 +273,12 @@ export function danglingRows(system: System, compendium?: Compendium): Dangling[
   for (const { where, modifiers } of modifierLists(system)) {
     for (const m of modifiers) {
       if (!m.where) continue;
-      const text = badCondition(system, m.where as Loose, 'условие правки');
+      const text = badCondition(system, m.where as Loose, tr`условие правки`);
       if (text) out.push({ where, text });
     }
   }
   for (const { where, cond } of stepConditions(system)) {
-    const text = badCondition(system, cond, 'условие шага');
+    const text = badCondition(system, cond, tr`условие шага`);
     if (text) out.push({ where, text });
   }
   for (const record of recordsOf(compendium)) {
@@ -288,7 +289,7 @@ export function danglingRows(system: System, compendium?: Compendium): Dangling[
       if (!lost.length) continue;
       out.push({
         where: { tab: 'book', record: record.id },
-        text: `у «${record.label || record.id}» в «${prop.label || prop.key}» стоит «${lost.map(String).join('», «')}», а в «${tables[prop.from]?.label || prop.from}» такой строки нет`,
+        text: tr`у «${record.label || record.id}» в «${prop.label || prop.key}» стоит «${lost.map(String).join('», «')}», а в «${tables[prop.from]?.label || prop.from}» такой строки нет`,
       });
     }
   }

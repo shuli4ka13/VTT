@@ -1,4 +1,5 @@
 import type { System } from '../model/types.ts';
+import { tr } from '../words/tongue.ts';
 
 export interface Limits {
   handlerDepth: number;
@@ -15,6 +16,6 @@ export const limitsOf = (system: System): Limits => {
   return { ...DEFAULT_LIMITS, ...own };
 };
 
-export const CUT_WORDS = 'цепочка ответов оборвана: дальше отвечать нельзя — предел';
+export const cutWords = (): string => tr`цепочка ответов оборвана: дальше отвечать нельзя — предел`;
 
-export const PROBES_WORDS = 'остальным реакции в этом окне не предлагаются: предел пересчётов';
+export const probesWords = (): string => tr`остальным реакции в этом окне не предлагаются: предел пересчётов`;

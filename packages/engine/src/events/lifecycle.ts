@@ -1,14 +1,15 @@
 import { wornEffects } from '../engine/effects.ts';
 import type { Compendium, System } from '../model/types.ts';
 import type { Sheet, WornEffect } from '../model/types.ts';
+import { live } from '../words/tongue.ts';
 
 export type Turn = 'attach' | 'detach';
 
 export interface Change { sheetId: string; entry: WornEffect; turn: Turn }
 
-export const HOOK_WORDS: Record<Turn, string> = { attach: 'при наложении', detach: 'при спадании' };
+export const HOOK_WORDS: Record<Turn, string> = live({ attach: 'при наложении', detach: 'при спадании' });
 
-export const HEARD_WORDS: Record<Turn, string> = { attach: 'появилось', detach: 'ушло' };
+export const HEARD_WORDS: Record<Turn, string> = live({ attach: 'появилось', detach: 'ушло' });
 
 const actingOn = (sheet: Sheet, world: { system: System; compendium?: Compendium | null }): WornEffect[] =>
   wornEffects(world.system, sheet, { strict: false, compendium: world.compendium }).map(worn => worn.entry);

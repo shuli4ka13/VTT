@@ -1,5 +1,6 @@
 import { FormulaSyntaxError } from './errors.ts';
 import { bareDiceAt, dice } from '../words/glossary.ts';
+import { tr } from '../words/tongue.ts';
 
 export type TokenType =
   | 'number' | 'text' | 'ref' | 'ident' | 'op'
@@ -58,7 +59,7 @@ export function lex(source: unknown, words?: LexWords): Token[] {
       i++;
       const from = i;
       while (i < src.length && src[i] !== ch) i++;
-      if (i >= src.length) throw new FormulaSyntaxError('не закрыта кавычка', start);
+      if (i >= src.length) throw new FormulaSyntaxError(tr`не закрыта кавычка`, start);
       const text = src.slice(from, i);
       i++;
       tokens.push({ type: 'text', value: text, text: src.slice(start, i), pos: start });
@@ -89,13 +90,13 @@ export function lex(source: unknown, words?: LexWords): Token[] {
       i++;
       const nameStart = i;
       while (i < src.length && isNamePart(src[i]!)) i++;
-      if (i === nameStart) throw new FormulaSyntaxError('после «@» ожидается имя', start);
+      if (i === nameStart) throw new FormulaSyntaxError(tr`после «@» ожидается имя`, start);
       const name = src.slice(nameStart, i);
       if (!name.endsWith('.')) {
         tokens.push({ type: 'ref', value: name, text: src.slice(start, i), pos: start });
         continue;
       }
-      if (src[i] !== '[') throw new FormulaSyntaxError('после точки ожидается имя колонки или «[» — колонка по значению', i - 1);
+      if (src[i] !== '[') throw new FormulaSyntaxError(tr`после точки ожидается имя колонки или «[» — колонка по значению`, i - 1);
       tokens.push({ type: 'ref', value: name.slice(0, -1), text: src.slice(start, i - 1), pos: start });
       tokens.push({ type: 'lbracket', value: '[', text: '[', pos: i });
       i++;
@@ -149,7 +150,7 @@ export function lex(source: unknown, words?: LexWords): Token[] {
       continue;
     }
 
-    throw new FormulaSyntaxError(`неизвестный символ «${ch}»`, i);
+    throw new FormulaSyntaxError(tr`неизвестный символ «${ch}»`, i);
   }
 
   tokens.push({ type: 'eof', value: null, text: '', pos: src.length });

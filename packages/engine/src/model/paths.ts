@@ -2,6 +2,7 @@ import { fieldOf, fieldsOf, fieldLinkOf, hasField, rowKeyOf, manyText } from './
 import { linkOf, isRange, VALUE_COLUMN } from './tables.ts';
 import type { System, TableColumn } from './types.ts';
 import { typeColumn, typeColumns } from './inherit.ts';
+import { tr } from '../words/tongue.ts';
 
 export type Walked = { ok: true; label: string } | { ok: false; text: string };
 
@@ -16,19 +17,19 @@ export function walkColumns(system: System, tableId: string, path: readonly stri
   let current = tableId;
   for (const [at, key] of path.entries()) {
     const table = system.tables?.[current];
-    if (!table) return { ok: false, text: `таблицы «${current}» нет` };
+    if (!table) return { ok: false, text: tr`таблицы «${current}» нет` };
     const column = typeColumn(system, current, key);
     const last = at === path.length - 1;
     if (!column) {
-      if (key === VALUE_COLUMN && last) { labels.push('значение'); break; }
-      return { ok: false, text: `у таблицы «${table.label || current}» нет колонки «${key}»` };
+      if (key === VALUE_COLUMN && last) { labels.push(tr`значение`); break; }
+      return { ok: false, text: tr`у таблицы «${table.label || current}» нет колонки «${key}»` };
     }
     labels.push(columnName(column));
     if (last) break;
     const link = nextTable(column);
     if (column.many) return { ok: false, text: manyText(system, column, path[at + 1]!) };
     if (!link) {
-      return { ok: false, text: `колонка «${columnName(column)}» — не из таблицы, дальше «${path.slice(at + 1).join('.')}» идти некуда` };
+      return { ok: false, text: tr`колонка «${columnName(column)}» — не из таблицы, дальше «${path.slice(at + 1).join('.')}» идти некуда` };
     }
     current = link;
   }
@@ -45,7 +46,7 @@ export function walkSheet(system: System, path: string): Walked | null {
   const table = system.tables?.[head];
   if (table && !isRange(table) && !hasField(system, head)) {
     const row = (table.rows ?? []).find(one => rowKeyOf(one) === key);
-    if (!row) return { ok: false, text: `в таблице «${table.label || head}» нет строки «${key}»` };
+    if (!row) return { ok: false, text: tr`в таблице «${table.label || head}» нет строки «${key}»` };
     const rowLabel = row.label || String(row.value ?? key);
     if (!rest.length) return { ok: true, label: rowLabel };
     const columns = walkColumns(system, head, rest);
@@ -59,9 +60,9 @@ export function walkSheet(system: System, path: string): Walked | null {
   if (viaSheet) {
     const rest = parts.slice(1).join('.');
     const target = fieldOf(system, parts[1]!);
-    return target ? { ok: true, label: `${label} → ${target.label ?? rest}` } : { ok: false, text: `у листа «${label}» нет поля «${rest}»` };
+    return target ? { ok: true, label: `${label} → ${target.label ?? rest}` } : { ok: false, text: tr`у листа «${label}» нет поля «${rest}»` };
   }
-  if (!link) return { ok: false, text: `поле «${label}» не из таблицы — дальше «${parts.slice(1).join('.')}» идти некуда` };
+  if (!link) return { ok: false, text: tr`поле «${label}» не из таблицы — дальше «${parts.slice(1).join('.')}» идти некуда` };
   const columns = walkColumns(system, link, parts.slice(1));
   return columns.ok ? { ok: true, label: `${label} → ${columns.label}` } : columns;
 }

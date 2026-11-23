@@ -29,6 +29,8 @@ import type { Clock } from '../engine/clock.ts';
 import type { TurnOp } from '../events/moments.ts';
 import type { System, Sheet, Compendium, Die, StoredValue, WornEffect, Owned, Field } from '../model/types.ts';
 import { CALL_WORDS } from '../words/calls.ts';
+import { tr } from '../words/tongue.ts';
+import { inSystemTongue } from '../model/localize.ts';
 
 export type Op =
   | { op: 'act'; intent: ActIntent }
@@ -58,6 +60,10 @@ export type Performed =
   | { kind: 'paused'; sheets: Sheet[]; clock: Clock | null; log: string[]; lines: (string[] | null)[]; entries: Entry[]; journal: Journal; fresh: number[]; question: Question };
 
 export function perform(world: PerformWorld, op: Op): Performed {
+  return inSystemTongue(world.system, () => performIn(world, op));
+}
+
+function performIn(world: PerformWorld, op: Op): Performed {
   const journal: Journal = { ...emptyJournal(), ...(world.journal ?? {}) } as Journal;
   const ext = new External(journal, { die: world.die, ...(world.newId ? { newId: world.newId } : {}) }, world.mode ?? 'real');
   const run = new Run({ system: world.system, compendium: world.compendium, clock: world.clock, sheets: world.sheets }, ext);
@@ -85,27 +91,27 @@ type Handler<K extends Op['op']> = (run: Run, op: Extract<Op, { op: K }>, root: 
 
 const sheetOf = (run: Run, id: string): Sheet => {
   const sheet = run.sheet(id);
-  if (!sheet) throw new EngineError(`в комнате нет листа «${id}»`);
+  if (!sheet) throw new EngineError(tr`в комнате нет листа «${id}»`);
   return sheet;
 };
 
 function withinLimits(run: Run, was: Sheet, next: Sheet): void {
   const sheets = run.state.sheets.map(s => (s.id === next.id ? was : s));
   const broken = newBreaches(run.system, was, next, { compendium: run.world.compendium, shared: run.views.shared(sheets) });
-  if (broken.length) throw new EngineError(`так нельзя: ${broken.map(one => one.text).join('; ')}`);
+  if (broken.length) throw new EngineError(tr`так нельзя: ${broken.map(one => one.text).join('; ')}`);
 }
 
 function bound(run: Run, sheetId: string, raw: unknown, what: string): number | null {
   if (raw === undefined || raw === null || raw === '') return null;
   const value = typeof raw === 'number' ? raw : compile(String(raw)).evaluate(run.view(sheetId).resolve);
-  if (typeof value !== 'number') throw new EngineError(`${what} — не число`);
+  if (typeof value !== 'number') throw new EngineError(tr`${what} — не число`);
   return value;
 }
 
 function storedField(run: Run, sheetId: string, tag: string): { field: Field; stored: Extract<Field['value'], { kind: 'stored' }>; holder: Sheet } {
   const field = fieldOf(run.system, tag);
-  if (!field) throw new EngineError(`система не объявляет поля «${tag}»`);
-  if (field.value.kind !== 'stored') throw new EngineError(`поле «${field.label}» считает движок по правилу — вписать в него значение нельзя`);
+  if (!field) throw new EngineError(tr`система не объявляет поля «${tag}»`);
+  if (field.value.kind !== 'stored') throw new EngineError(tr`поле «${field.label}» считает движок по правилу — вписать в него значение нельзя`);
   return { field, stored: field.value, holder: sheetOf(run, run.views.holderOf(run.state.sheets, sheetOf(run, sheetId).id, tag)) };
 }
 
@@ -122,10 +128,10 @@ function setItem(run: Run, sheet: Sheet, key: string, column: string, value: Sto
   if (wrong) throw new EngineError(wrong);
   const stored = cell.field.value;
   if (stored.kind === 'stored' && typeof value === 'number') {
-    const low = bound(run, sheet.id, stored.min, 'нижняя граница поля');
-    const high = bound(run, sheet.id, stored.max, 'верхняя граница поля');
-    if (low !== null && value < low) throw new EngineError(`«${cell.field.label}» не меньше ${low}`);
-    if (high !== null && value > high) throw new EngineError(`«${cell.field.label}» не больше ${high}`);
+    const low = bound(run, sheet.id, stored.min, tr`нижняя граница поля`);
+    const high = bound(run, sheet.id, stored.max, tr`верхняя граница поля`);
+    if (low !== null && value < low) throw new EngineError(tr`«${cell.field.label}» не меньше ${low}`);
+    if (high !== null && value > high) throw new EngineError(tr`«${cell.field.label}» не больше ${high}`);
   }
   const next = isBlank(value) || same(value, cell.plain) ? withoutItemValue(sheet, key, column) : withItemValue(sheet, key, column, value);
   withinLimits(run, sheet, next);
@@ -138,11 +144,11 @@ export interface InitiativeRoll { sheetId: string; rolls: number[]; total: numbe
 export function fightersOf(run: Run, who?: string[]): Sheet[] {
   const grouped = (sheet: Sheet) => run.state.sheets.some(other => other.group === sheet.id);
   if (!who) return run.state.sheets.filter(sheet => !isDesk(sheet) && !grouped(sheet));
-  if (new Set(who).size !== who.length) throw new EngineError('участник боя указан дважды');
+  if (new Set(who).size !== who.length) throw new EngineError(tr`участник боя указан дважды`);
   return who.map(id => {
     const sheet = sheetOf(run, id);
-    if (isDesk(sheet)) throw new EngineError('стол в бою не участвует');
-    if (grouped(sheet)) throw new EngineError(`«${sheet.name}» — группа: в бой вступают её участники`);
+    if (isDesk(sheet)) throw new EngineError(tr`стол в бою не участвует`);
+    if (grouped(sheet)) throw new EngineError(tr`«${sheet.name}» — группа: в бой вступают её участники`);
     return sheet;
   });
 }
@@ -152,7 +158,7 @@ export function initiative(run: Run, root: Path, who?: string[], phase = 'initia
   const fighters = fightersOf(run, who);
   if (!spec) return { order: fighters.map(sheet => sheet.id), rolls: [] };
   const rolls = fighters.map((sheet): InitiativeRoll => {
-    const checked = run.check(sheet.id, spec as never, root.phase(phase).at(sheet.id), 'инициатива');
+    const checked = run.check(sheet.id, spec as never, root.phase(phase).at(sheet.id), tr`инициатива`);
     run.state.write(...checked.entries);
     return { sheetId: sheet.id, rolls: checked.thrown.result.dice.rolls, total: checked.total, edits: checked.thrown.roll.edits };
   });
@@ -185,7 +191,7 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
     const { system, compendium } = run.world;
     const action = actionOf(intent.actionId, { system, compendium });
     if (!availableActions(actor, { system, compendium }).some(one => one.id === intent.actionId)) {
-      throw new EngineError(`у «${actor.name}» нет действия «${action.label}» — запись не на листе или выключена`);
+      throw new EngineError(tr`у «${actor.name}» нет действия «${action.label}» — запись не на листе или выключена`);
     }
     const asked = asksOf(intent.actionId, { system, compendium });
     const trouble = checkInputs(asked, intent.inputs, system, run.view(actor.id), intent.toIds);
@@ -209,12 +215,12 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
     const plain = verdictText({ success, degree });
     run.state.write({
       text: closed
-        ? `${sheet.name} бросает «${check.label}»: ${shown}${named}${plain}${gone}`
+        ? tr`${sheet.name} бросает «${check.label}»: ${shown}${named}${plain}${gone}`
         : thrown.roll.claim.read.kind === 'count'
-        ? `${sheet.name} бросает «${check.label}»: ${shown}${named}${addendsText(thrown.roll.addends)} — успехов: ${total}${verdict}${gone}`
+        ? tr`${sheet.name} бросает «${check.label}»: ${shown}${named}${addendsText(thrown.roll.addends)} — успехов: ${total}${verdict}${gone}`
         : check.bonus
-          ? `${sheet.name} бросает «${check.label}»: ${shown}${named}${addendsText(thrown.roll.addends)} + ${bonus} = ${total}${verdict}${gone}`
-          : `${sheet.name} бросает «${check.label}»: ${shown}${named}${addendsText(thrown.roll.addends)} = ${total}${verdict}${gone}`,
+          ? tr`${sheet.name} бросает «${check.label}»: ${shown}${named}${addendsText(thrown.roll.addends)} + ${bonus} = ${total}${verdict}${gone}`
+          : tr`${sheet.name} бросает «${check.label}»: ${shown}${named}${addendsText(thrown.roll.addends)} = ${total}${verdict}${gone}`,
     }, ...entries);
     return true;
   },
@@ -226,21 +232,21 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
     const wrong = misfit(field, value);
     if (wrong) throw new EngineError(wrong);
     if (typeof value === 'number') {
-      const low = bound(run, holder.id, stored.min, 'нижняя граница поля');
-      const high = bound(run, holder.id, stored.max, 'верхняя граница поля');
-      if (low !== null && value < low) throw new EngineError(`«${field.label}» не меньше ${low}`);
-      if (high !== null && value > high) throw new EngineError(`«${field.label}» не больше ${high}`);
+      const low = bound(run, holder.id, stored.min, tr`нижняя граница поля`);
+      const high = bound(run, holder.id, stored.max, tr`верхняя граница поля`);
+      if (low !== null && value < low) throw new EngineError(tr`«${field.label}» не меньше ${low}`);
+      if (high !== null && value > high) throw new EngineError(tr`«${field.label}» не больше ${high}`);
     }
     return putValue(run, holder, tag, value);
   },
 
   shift(run, { sheetId, tag, by }) {
-    if (parseItemTag(tag)) throw new EngineError('значению вещи прибавить и отнять нельзя — впишите его целиком');
+    if (parseItemTag(tag)) throw new EngineError(tr`значению вещи прибавить и отнять нельзя — впишите его целиком`);
     const { field, stored, holder } = storedField(run, sheetId, tag);
     const was = baseOf(run.view(holder.id), field) ?? stored.default;
-    if (stored.type !== 'number' || typeof was !== 'number' || !Number.isFinite(by)) throw new EngineError(`«${field.label}» — не число: прибавить и отнять нечего`);
-    const low = bound(run, holder.id, stored.min, 'нижняя граница поля');
-    const high = bound(run, holder.id, stored.max, 'верхняя граница поля');
+    if (stored.type !== 'number' || typeof was !== 'number' || !Number.isFinite(by)) throw new EngineError(tr`«${field.label}» — не число: прибавить и отнять нечего`);
+    const low = bound(run, holder.id, stored.min, tr`нижняя граница поля`);
+    const high = bound(run, holder.id, stored.max, tr`верхняя граница поля`);
     const value = Math.min(high ?? Infinity, Math.max(low ?? -Infinity, was + by));
     return value === was ? false : putValue(run, holder, tag, value);
   },
@@ -250,14 +256,14 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
     const { system, compendium } = run.world;
     let next: Sheet;
     if (list === 'has') {
-      if (!findRecord(compendium, id)) throw new EngineError(`в компендиуме нет записи «${id}»`);
+      if (!findRecord(compendium, id)) throw new EngineError(tr`в компендиуме нет записи «${id}»`);
       const owned = sheet.has ?? [];
       const keys = new Set(owned.map(keyOf));
-      if (host && !keys.has(host)) throw new EngineError(`у листа нет вещи «${host}» — ставить некуда`);
-      if (inst && !keys.has(inst)) throw new EngineError(`у листа нет вещи «${inst}»`);
+      if (host && !keys.has(host)) throw new EngineError(tr`у листа нет вещи «${host}» — ставить некуда`);
+      if (inst && !keys.has(inst)) throw new EngineError(tr`у листа нет вещи «${inst}»`);
       const mine = (entry: Owned): boolean => (inst ? keyOf(entry) === inst : entry.of === id);
       if (!inst && owned.filter(entry => entry.of === id).length > 1 && !(on && add)) {
-        throw new EngineError(`у листа несколько «${findRecord(compendium, id)!.label}» — укажите, какой экземпляр`);
+        throw new EngineError(tr`у листа несколько «${findRecord(compendium, id)!.label}» — укажите, какой экземпляр`);
       }
       if (!on) {
         const gone = new Set(owned.filter(mine).map(keyOf));
@@ -277,7 +283,7 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
             const byKey = new Map(owned.map(entry => [keyOf(entry), entry] as const));
             const seen = new Set<string>();
             for (let at: string | undefined = host; at && !seen.has(at); at = byKey.get(at)?.in) {
-              if (at === keyOf(fresh)) throw new EngineError('вещь не ставится сама в себя — ни прямо, ни через другую вещь');
+              if (at === keyOf(fresh)) throw new EngineError(tr`вещь не ставится сама в себя — ни прямо, ни через другую вещь`);
               seen.add(at);
             }
             fresh.in = host;
@@ -287,8 +293,8 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
       }
     } else {
       const effect = findEffect(system, id);
-      if (!effect) throw new EngineError(`система не объявляет эффекта «${id}»`);
-      if (on && (effect.activation ?? 'manual') === 'manual') throw new EngineError('активируемый эффект не вешают — его применяют действием');
+      if (!effect) throw new EngineError(tr`система не объявляет эффекта «${id}»`);
+      if (on && (effect.activation ?? 'manual') === 'manual') throw new EngineError(tr`активируемый эффект не вешают — его применяют действием`);
       const worn: WornEffect[] = [...(sheet.effects ?? [])];
       if (!on) {
         next = { ...sheet, effects: worn.filter(entry => entry.effectId !== id) };
@@ -312,8 +318,8 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
 
   kind(run, { sheetId, of }) {
     const sheet = sheetOf(run, sheetId);
-    if (of !== null && isDesk({ id: of })) throw new EngineError('тип «стол» только у стола комнаты');
-    if (of !== null && !run.system.sheets?.[of]) throw new EngineError(`система не объявляет типа листа «${of}»`);
+    if (of !== null && isDesk({ id: of })) throw new EngineError(tr`тип «стол» только у стола комнаты`);
+    if (of !== null && !run.system.sheets?.[of]) throw new EngineError(tr`система не объявляет типа листа «${of}»`);
     const { of: _was, ...rest } = sheet;
     void _was;
     const next: Sheet = of === null ? rest : { ...rest, of };
@@ -327,16 +333,16 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
     const sheets = run.state.sheets;
     if (group !== null) {
       const holder = sheets.find(entry => entry.id === group);
-      if (!holder) throw new EngineError(`в комнате нет листа «${group}»`);
-      if (group === sheetId) throw new EngineError('лист не может быть группой самому себе');
-      if (isDesk(holder)) throw new EngineError('стол и так общий для всех — группой его не назначают');
-      if (sheets.some(entry => entry.group === sheetId)) throw new EngineError(`«${sheet.name}» — группа для других листов, в группу её не поставить`);
-      if (holder.group) throw new EngineError(`«${holder.name}» сам состоит в группе — группы не вкладываются`);
+      if (!holder) throw new EngineError(tr`в комнате нет листа «${group}»`);
+      if (group === sheetId) throw new EngineError(tr`лист не может быть группой самому себе`);
+      if (isDesk(holder)) throw new EngineError(tr`стол и так общий для всех — группой его не назначают`);
+      if (sheets.some(entry => entry.group === sheetId)) throw new EngineError(tr`«${sheet.name}» — группа для других листов, в группу её не поставить`);
+      if (holder.group) throw new EngineError(tr`«${holder.name}» сам состоит в группе — группы не вкладываются`);
     }
     const { group: _was, ...rest } = sheet;
     void _was;
     const next: Sheet = group === null ? rest : { ...rest, group };
-    run.state.write({ text: group === null ? `«${sheet.name}» вышел из группы` : `«${sheet.name}» теперь в группе «${sheets.find(entry => entry.id === group)!.name}»` });
+    run.state.write({ text: group === null ? tr`«${sheet.name}» вышел из группы` : tr`«${sheet.name}» теперь в группе «${sheets.find(entry => entry.id === group)!.name}»` });
     withinLimits(run, sheet, next);
     run.state.put(next);
     return true;
@@ -349,42 +355,42 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
     let next: Clock = before;
     let events: MomentEvent[] | null = null;
     if (turn === 'start') {
-      if (order?.length && who?.length) throw new EngineError('либо бросок инициативы, либо порядок руками — не оба');
+      if (order?.length && who?.length) throw new EngineError(tr`либо бросок инициативы, либо порядок руками — не оба`);
       let line = order ?? [];
       let scores: Record<string, number> = {};
       if (line.length) {
         const unknown = line.find(id => !run.sheet(id));
-        if (unknown) throw new EngineError(`в комнате нет листа «${unknown}»`);
+        if (unknown) throw new EngineError(tr`в комнате нет листа «${unknown}»`);
       } else {
         const rolled = initiative(run, root, who?.length ? who : undefined);
         line = rolled.order;
         scores = totalsOf(rolled.rolls);
         if (rolled.rolls.length) {
-          run.state.write({ text: `Инициатива: ${rolled.order.filter(id => id in scores).map(id => `${nameOf(id)} ${scores[id]}`).join(', ')}` });
+          run.state.write({ text: tr`Инициатива: ${rolled.order.filter(id => id in scores).map(id => `${nameOf(id)} ${scores[id]}`).join(', ')}` });
         }
       }
       next = startCombat(before, line, scores);
-      run.state.write({ text: `Раунд 1. Ход: ${nameOf(String(next.active))}` });
+      run.state.write({ text: tr`Раунд 1. Ход: ${nameOf(String(next.active))}` });
     } else if (turn === 'join') {
-      if (!who?.length) throw new EngineError('кто вступает в бой — не указано');
-      if (!inCombat(before)) throw new EngineError('бой не идёт — вступать некуда');
+      if (!who?.length) throw new EngineError(tr`кто вступает в бой — не указано`);
+      if (!inCombat(before)) throw new EngineError(tr`бой не идёт — вступать некуда`);
       const already = who.find(id => before.order.includes(id));
-      if (already) throw new EngineError(`«${nameOf(already)}» уже в бою`);
+      if (already) throw new EngineError(tr`«${nameOf(already)}» уже в бою`);
       const ranked = Boolean(before.scores);
       const rolled = ranked ? initiative(run, root, who, 'join') : { order: who, rolls: [] };
       const scores = totalsOf(rolled.rolls);
       next = joinCombat(before, rolled.order, scores);
-      for (const id of who) run.state.write({ text: id in scores ? `${nameOf(id)} вступает в бой: инициатива ${scores[id]}` : `${nameOf(id)} вступает в бой` });
+      for (const id of who) run.state.write({ text: id in scores ? tr`${nameOf(id)} вступает в бой: инициатива ${scores[id]}` : tr`${nameOf(id)} вступает в бой` });
       events = [];
     } else if (turn === 'leave') {
-      if (!who?.length) throw new EngineError('кто выходит из боя — не указано');
-      if (!inCombat(before)) throw new EngineError('бой не идёт — выходить не из чего');
+      if (!who?.length) throw new EngineError(tr`кто выходит из боя — не указано`);
+      if (!inCombat(before)) throw new EngineError(tr`бой не идёт — выходить не из чего`);
       const stranger = who.find(id => !before.order.includes(id));
-      if (stranger) throw new EngineError(`«${nameOf(stranger)}» не в бою`);
-      for (const id of who) run.state.write({ text: `${nameOf(id)} выходит из боя` });
+      if (stranger) throw new EngineError(tr`«${nameOf(stranger)}» не в бою`);
+      for (const id of who) run.state.write({ text: tr`${nameOf(id)} выходит из боя` });
       if (before.order.every(id => who.includes(id))) {
         next = stopCombat(before);
-        run.state.write({ text: 'Бой окончен' });
+        run.state.write({ text: tr`Бой окончен` });
         events = momentsOfTurn('stop', before, next, [...run.state.sheets]);
       } else {
         let moved = before;
@@ -397,26 +403,26 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
         }
         next = leaveCombat(moved, who);
         if (next.active !== before.active) {
-          run.state.write({ text: next.round !== before.round ? `Раунд ${next.round}. Ход: ${nameOf(String(next.active))}` : `Ход: ${nameOf(String(next.active))}` });
+          run.state.write({ text: next.round !== before.round ? tr`Раунд ${next.round}. Ход: ${nameOf(String(next.active))}` : tr`Ход: ${nameOf(String(next.active))}` });
         }
         events = [...passed, ...who.map(sheetId => ({ moment: 'combat-leave' as const, sheetId }))];
       }
     } else if (turn === 'next') {
       next = nextTurn(before);
-      run.state.write({ text: next.round !== before.round ? `Раунд ${next.round}. Ход: ${nameOf(String(next.active))}` : `Ход: ${nameOf(String(next.active))}` });
+      run.state.write({ text: next.round !== before.round ? tr`Раунд ${next.round}. Ход: ${nameOf(String(next.active))}` : tr`Ход: ${nameOf(String(next.active))}` });
     } else if (turn === 'stop') {
       next = stopCombat(before);
-      run.state.write({ text: 'Бой окончен' });
+      run.state.write({ text: tr`Бой окончен` });
     } else if (turn === 'time') {
       const span = Math.max(0, Number(seconds ?? 0));
-      if (!span) throw new EngineError('сколько времени прошло — не указано');
+      if (!span) throw new EngineError(tr`сколько времени прошло — не указано`);
       next = passTime(before, span);
-      run.state.write({ text: `Прошло ${spanText(span)}` });
+      run.state.write({ text: tr`Прошло ${spanText(span)}` });
     } else if (turn === 'short-rest' || turn === 'long-rest') {
-      if (inCombat(before)) throw new EngineError('в бою не отдыхают — сначала закончите бой');
-      run.state.write({ text: turn === 'long-rest' ? 'Долгий отдых' : 'Короткий отдых' });
+      if (inCombat(before)) throw new EngineError(tr`в бою не отдыхают — сначала закончите бой`);
+      run.state.write({ text: turn === 'long-rest' ? tr`Долгий отдых` : tr`Короткий отдых` });
     } else {
-      run.state.write({ text: 'Сцена закрыта' });
+      run.state.write({ text: tr`Сцена закрыта` });
     }
     run.clock = next;
     const fired = events ?? momentsOfTurn(turn, before, next, [...run.state.sheets]);
@@ -430,25 +436,25 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
   },
 
   sheet(run, { name, of }, root) {
-    if (of && !sheetKindOf(run.system, { of } as Sheet)) throw new EngineError(`в системе нет типа листа «${of}»`);
+    if (of && !sheetKindOf(run.system, { of } as Sheet)) throw new EngineError(tr`в системе нет типа листа «${of}»`);
     const sheet = freshSheet(run.system, { id: run.ext.id(root.phase('id')), name, ...(of ? { of } : {}) });
     run.state.put(sheet);
-    run.state.write({ text: `Лист «${name}» заведён` });
+    run.state.write({ text: tr`Лист «${name}» заведён` });
     return false;
   },
 
   drop(run, { sheetId }, root) {
     const sheet = sheetOf(run, sheetId);
-    if (isDesk(sheet)) throw new EngineError('стол комнаты не убирается');
+    if (isDesk(sheet)) throw new EngineError(tr`стол комнаты не убирается`);
     if (inCombat(run.clock) && run.clock.order.includes(sheetId)) OPS.turn(run, { op: 'turn', turn: 'leave', who: [sheetId] }, root.phase('leave'));
     for (const other of run.state.sheets) {
       if (other.group !== sheetId) continue;
       const { group: _group, ...rest } = other;
       run.state.put(rest as Sheet);
-      run.state.write({ text: `${other.name} выходит из группы «${sheet.name}»` });
+      run.state.write({ text: tr`${other.name} выходит из группы «${sheet.name}»` });
     }
     run.state.drop(sheetId);
-    run.state.write({ text: `Лист «${sheet.name}» убран` });
+    run.state.write({ text: tr`Лист «${sheet.name}» убран` });
     return true;
   },
 };

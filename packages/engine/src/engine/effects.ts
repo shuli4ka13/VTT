@@ -7,6 +7,7 @@ import type {
   System, Sheet, Compendium, Effect, Modifier, Step,
   Activation, DurationKind, Reapply, WornEffect,
 } from '../model/types.ts';
+import { tr } from '../words/tongue.ts';
 
 const ACTIVATIONS = ['manual', 'passive'] as Activation[];
 const DURATION_KINDS = Object.keys(DURATIONS) as DurationKind[];
@@ -36,8 +37,8 @@ export function requireEffect(system: System, id: string, who: string): Effect {
   const effect = findEffect(system, id);
   if (!effect) {
     throw new EngineError(
-      `${who}: система не объявляет эффекта «${id}» — библиотека знает: ${
-        effectsOf(system).map(([key]) => key).join(', ') || '(пусто)'}`);
+      tr`${who}: система не объявляет эффекта «${id}» — библиотека знает: ${
+        effectsOf(system).map(([key]) => key).join(', ') || tr`(пусто)`}`);
   }
   return effect;
 }
@@ -68,8 +69,8 @@ export function requireCalled(system: System, id: string, who: string): Effect {
   const effect = (system.effects || {})[id];
   if (!effect) {
     throw new EngineError(
-      `${who}: система не объявляет эффект «${id}» — известны: ${
-        Object.keys(system.effects || {}).join(', ') || '(пусто)'}`);
+      tr`${who}: система не объявляет эффект «${id}» — известны: ${
+        Object.keys(system.effects || {}).join(', ') || tr`(пусто)`}`);
   }
   return effect;
 }
@@ -120,7 +121,7 @@ export function wornEffects(
     if (!effect) {
       if (!strict) continue;
       throw new EngineError(
-        `на листе «${sheet.id}» висит эффект «${entry.effectId}», которого система не объявляет`);
+        tr`на листе «${sheet.id}» висит эффект «${entry.effectId}», которого система не объявляет`);
     }
     out.push({ id: entry.effectId, effect, entry });
   }

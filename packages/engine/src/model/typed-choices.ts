@@ -3,6 +3,7 @@ import type { NameAt, NameGroup } from './names-at.ts';
 import { fieldsOf, fieldLinkOf, columnOfField, onSheet } from './sheet-columns.ts';
 import { columnChoices } from './paths.ts';
 import { listOf } from './lists.ts';
+import { tr, live } from '../words/tongue.ts';
 
 export interface Want { kind: string; from?: string; many?: boolean }
 
@@ -12,7 +13,7 @@ export const TYPED_KINDS: readonly string[] = ['sheet', 'choice', 'roll', 'dice'
 
 export const isTyped = (kind: string | undefined): boolean => TYPED_KINDS.includes(kind ?? '');
 
-const GROUP: Record<NameGroup, string> = {
+const GROUP: Record<NameGroup, string> = live({
   input: 'входы эффекта',
   loop: 'для каждого из',
   holder: 'носитель',
@@ -20,7 +21,7 @@ const GROUP: Record<NameGroup, string> = {
   step: 'шаги',
   call: 'вызов',
   constant: 'кости системы',
-};
+});
 
 const sameKind = (kind: string | undefined, want: string): boolean =>
   kind === want || (want === 'dice' && (kind === 'die' || kind === 'dice'));
@@ -66,7 +67,7 @@ export function typedChoices(system: System, names: readonly NameAt[], want: Wan
   const out: TypedChoice[] = [];
   if (want.kind === 'choice' && want.from) {
     const table = system.tables?.[want.from];
-    const group = `строка «${table?.label || want.from}»`;
+    const group = tr`строка «${table?.label || want.from}»`;
     for (const row of listOf(system, want.from) ?? []) out.push({ expr: JSON.stringify(row.value), label: row.label, group });
   }
   for (const one of names) {
@@ -79,7 +80,7 @@ export function typedChoices(system: System, names: readonly NameAt[], want: Wan
   }
   if (want.kind === 'sheet' && !want.many) {
     for (const list of names.filter(one => one.kind === 'sheet' && one.many)) {
-      out.push({ expr: `first(@${list.name})`, label: `первый из «${list.label}»`, group: GROUP[list.group] });
+      out.push({ expr: `first(@${list.name})`, label: tr`первый из «${list.label}»`, group: GROUP[list.group] });
     }
   }
   if (want.kind !== 'sheet') {

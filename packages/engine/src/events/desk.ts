@@ -3,6 +3,8 @@ import { livesOn } from '../engine/calc.ts';
 import type { Sheet, System } from '../model/types.ts';
 import { fieldsOf } from '../model/sheet-columns.ts';
 import { freshSheet } from '../model/fresh.ts';
+import { tr } from '../words/tongue.ts';
+import { inSystemTongue } from '../model/localize.ts';
 
 export { isDesk };
 
@@ -11,7 +13,7 @@ export const deskOf = (sheets: readonly Sheet[]): Sheet | null => sheets.find(is
 export const hasDesk = (system: System): boolean => fieldsOf(system).some(field => livesOn(field) === 'desk');
 
 export const blankDesk = (system: System): Sheet =>
-  ({ ...freshSheet(system, { id: DESK_ID, name: 'Стол' }), systemId: system.id } as Sheet);
+  inSystemTongue(system, () => ({ ...freshSheet(system, { id: DESK_ID, name: tr`Стол` }), systemId: system.id } as Sheet));
 
 export const deskFor = (system: System, sheets: readonly Sheet[]): Sheet | null =>
   deskOf(sheets) ?? (hasDesk(system) ? blankDesk(system) : null);

@@ -1,6 +1,7 @@
 import { EngineError } from '../engine/errors.ts';
 import type { Sheet } from '../model/types.ts';
 import type { Entry } from './log.ts';
+import { tr } from '../words/tongue.ts';
 
 interface Saved {
   sheets: readonly Sheet[];
@@ -29,7 +30,7 @@ export class State {
 
   get(id: string): Sheet {
     const sheet = this.find(id);
-    if (!sheet) throw new EngineError(`в комнате нет листа «${id}»`);
+    if (!sheet) throw new EngineError(tr`в комнате нет листа «${id}»`);
     return sheet;
   }
 
@@ -65,12 +66,12 @@ export class State {
   }
 
   commit(): void {
-    if (!this.stack.pop()) throw new Error('commit без begin');
+    if (!this.stack.pop()) throw new Error(tr`commit без begin`);
   }
 
   rollback(): void {
     const saved = this.stack.pop();
-    if (!saved) throw new Error('rollback без begin');
+    if (!saved) throw new Error(tr`rollback без begin`);
     this.sheetList = saved.sheets;
     this.memoCells = saved.memo;
     this.budget = saved.budget;

@@ -4,6 +4,7 @@ import { EngineError } from './errors.ts';
 import type { SlotRef, System } from '../model/types.ts';
 import { fieldOf } from '../model/sheet-columns.ts';
 import type { Thrown } from '../core/roll.ts';
+import { tr } from '../words/tongue.ts';
 
 export const ROLLED_NAME = NAMES.rolled;
 export const ROLL_NAME = NAMES.roll;
@@ -48,10 +49,10 @@ export interface Check {
 
 export function fieldCheck(system: System, tag: string, second?: string | null): Check & { label: string } {
   const field = fieldOf(system, tag);
-  if (!field) throw new EngineError(`система не объявляет поля «${tag}»`);
-  if (!field.roll) throw new EngineError(`по полю «${field.label}» не бросают — включите броски в конструкторе`);
+  if (!field) throw new EngineError(tr`система не объявляет поля «${tag}»`);
+  if (!field.roll) throw new EngineError(tr`по полю «${field.label}» не бросают — включите броски в конструкторе`);
   const constant = (field.roll as { die?: string }).die;
-  if (!constant) throw new EngineError(`по полю «${field.label}» бросают, но кость не выбрана`);
+  if (!constant) throw new EngineError(tr`по полю «${field.label}» бросают, но кость не выбрана`);
   const { label, count, bonus, sides, keep, degrees, under, tags } = field.roll;
   const { success, margin, total } = field.roll as { success?: SlotRef; margin?: SlotRef; total?: SlotRef };
   const threshold = (field.roll as { threshold?: SlotRef }).threshold;
@@ -59,9 +60,9 @@ export function fieldCheck(system: System, tag: string, second?: string | null):
   const pair = (field.roll as { pair?: boolean }).pair === true;
   const other = second === undefined || second === null ? null : fieldOf(system, second);
   if (second !== undefined && second !== null) {
-    if (!pair) throw new EngineError(`по полю «${field.label}» бросают одно поле — второе указать нельзя`);
+    if (!pair) throw new EngineError(tr`по полю «${field.label}» бросают одно поле — второе указать нельзя`);
     const fits = other?.roll && other.roll.tags?.[0] === tags?.[0] && (other.roll as { pair?: boolean }).pair === true && Boolean(other.roll.sides) && Boolean(sides);
-    if (!other || !fits) throw new EngineError(`поле «${other?.label ?? second}» не бросают вместе с «${field.label}» — оба должны стоять в одном броске «Правил»`);
+    if (!other || !fits) throw new EngineError(tr`поле «${other?.label ?? second}» не бросают вместе с «${field.label}» — оба должны стоять в одном броске «Правил»`);
   }
   const both = pair ? ` + ${other?.label ?? field.label}` : '';
   const joined = [...new Set([...(tags ?? []), ...(other?.roll?.tags ?? [])])];

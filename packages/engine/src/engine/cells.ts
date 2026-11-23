@@ -9,6 +9,7 @@ import { addressOf, cellSource, hasField, isLive, withRow } from '../model/sheet
 import type { System, Table } from '../model/types.ts';
 import type { Pass } from './calc.ts';
 import { fixedDefault } from '../model/blank.ts';
+import { tr } from '../words/tongue.ts';
 
 export const CELL_PREFIX = 'cell:';
 
@@ -58,7 +59,7 @@ export function readCell(
   const formula = compile(withRow(system, tableId, row, source.expr));
   if (!scope) return applyValueModifiers(formula.evaluate(pass.resolve, diceTools()), tag, pass, [columnTagOf(tableId, column)]);
   if (scope.seen.has(tag)) {
-    throw new EngineError(`клетка «${table.label || tableId}» → «${rowKeyOf(table, input)}» → «${spec.label ?? column}» читает сама себя по кругу`);
+    throw new EngineError(tr`клетка «${table.label || tableId}» → «${rowKeyOf(table, input)}» → «${spec.label ?? column}» читает сама себя по кругу`);
   }
   scope.seen.add(tag);
   try {

@@ -1,4 +1,5 @@
 import { FormulaError } from '../formula/errors.ts';
+import { tr } from '../words/tongue.ts';
 
 export class EngineError extends Error {
   constructor(message: string) {
@@ -13,8 +14,8 @@ export class UnknownTagError extends EngineError {
 
   constructor(tag: string, fromTag?: string | null) {
     super(fromTag
-      ? `система не объявляет тег «${tag}» — на него ссылается поле «${fromTag}»`
-      : `система не объявляет тег «${tag}»`);
+      ? tr`система не объявляет тег «${tag}» — на него ссылается поле «${fromTag}»`
+      : tr`система не объявляет тег «${tag}»`);
     this.tag = tag;
     this.fromTag = fromTag ?? null;
   }
@@ -24,7 +25,7 @@ export class CycleError extends EngineError {
   readonly path: string[];
 
   constructor(path: string[]) {
-    super(`циклическая зависимость формул: ${path.join(' → ')}`);
+    super(tr`циклическая зависимость формул: ${path.join(' → ')}`);
     this.path = path;
   }
 }
@@ -35,7 +36,7 @@ export class ActRefused extends EngineError {
   readonly why: string;
 
   constructor(label: string, why: string) {
-    super(`«${label}» не состоялось: ${why}`);
+    super(tr`«${label}» не состоялось: ${why}`);
     this.why = why;
   }
 }

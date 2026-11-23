@@ -2,6 +2,7 @@ import type { System, FieldOption, Field, Effect } from './types.ts';
 import { rowsOf, tableOf } from './tables.ts';
 import { fieldsOf } from './sheet-columns.ts';
 import { recordKinds } from './owned.ts';
+import { tr } from '../words/tongue.ts';
 
 export function listOf(system: System, key: string | undefined): FieldOption[] | undefined {
   if (!key) return undefined;
@@ -36,23 +37,23 @@ export function listUsers(system: System, key: string): string[] {
   const out: string[] = [];
   const from = (thing: unknown): string | undefined => (thing as { from?: string }).from;
   for (const field of fieldsOf(system)) {
-    if (choiceTableOf(field) === key) out.push(`поле «${field.label}»`);
+    if (choiceTableOf(field) === key) out.push(tr`поле «${field.label}»`);
   }
   for (const [id, effect] of Object.entries(system.effects ?? {})) {
-    if (tagTablesOf(effect).includes(key)) out.push(`эффект «${effect.label ?? id}»`);
+    if (tagTablesOf(effect).includes(key)) out.push(tr`эффект «${effect.label ?? id}»`);
     for (const param of (effect.params ?? [])) {
-      if (from(param) === key) out.push(`«${param.label ?? param.key}» у эффекта «${effect.label ?? id}»`);
+      if (from(param) === key) out.push(tr`«${param.label ?? param.key}» у эффекта «${effect.label ?? id}»`);
     }
   }
   for (const [rk, kind] of recordKinds(system)) {
     for (const prop of (kind.columns ?? [])) {
-      if (from(prop) === key) out.push(`свойство «${prop.label ?? prop.key}» у типа «${kind.label ?? rk}»`);
+      if (from(prop) === key) out.push(tr`свойство «${prop.label ?? prop.key}» у типа «${kind.label ?? rk}»`);
     }
   }
   for (const [id, table] of Object.entries(system.tables ?? {})) {
     if (table.shape === 'single' || table.shape === 'book') continue;
     for (const column of (table.columns ?? [])) {
-      if (column.from === key) out.push(`колонка «${column.label ?? column.key}» таблицы «${table.label ?? id}»`);
+      if (column.from === key) out.push(tr`колонка «${column.label ?? column.key}» таблицы «${table.label ?? id}»`);
     }
   }
   return out;

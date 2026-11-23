@@ -1,11 +1,12 @@
 import { TableError } from './errors.ts';
 import { VALUE_COLUMN, isRange, rowsOf, cellOf, tableOf } from '../model/tables.ts';
 import type { System, Table, TableRow } from '../model/types.ts';
+import { tr } from '../words/tongue.ts';
 
 const need = (system: System, name: string, forTag?: string): Table => {
   const table = tableOf(system, name);
   if (!table) {
-    throw new TableError(`система не объявляет таблицу «${name}» (нужна полю «${forTag}»)`);
+    throw new TableError(tr`система не объявляет таблицу «${name}» (нужна полю «${forTag}»)`);
   }
   return table;
 };
@@ -48,11 +49,11 @@ export function lookupCell(
   if (table.otherwise !== undefined) return table.otherwise;
   if (isRange(table)) {
     throw new TableError(
-      `значение ${input} не попадает ни в один диапазон таблицы «${tableName}» (поле «${forTag}»)`);
+      tr`значение ${input} не попадает ни в один диапазон таблицы «${tableName}» (поле «${forTag}»)`);
   }
   throw new TableError(
-    `таблица «${tableName}» не знает, что делать с «${String(input)}» — `
-    + `есть: ${rowsOf(table).map(one => String(one.value)).join(', ')} (поле «${forTag}»)`);
+    tr`таблица «${tableName}» не знает, что делать с «${String(input)}» — `
+    + tr`есть: ${rowsOf(table).map(one => String(one.value)).join(', ')} (поле «${forTag}»)`);
 }
 
 export function lookupTable(
@@ -68,7 +69,7 @@ export function lookupDegree(
   if (!isRange(table)) return lookupTable(system, tableName, input, forTag);
 
   const rows = byRange(table);
-  if (!rows.length) throw new TableError(`таблица «${tableName}» пуста — степени по ней не прочесть`);
+  if (!rows.length) throw new TableError(tr`таблица «${tableName}» пуста — степени по ней не прочесть`);
 
   const n = Number(input);
   let at = rows.findIndex(r => n >= (r.from ?? -Infinity) && n <= (r.to ?? Infinity));

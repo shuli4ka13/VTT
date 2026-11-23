@@ -1,6 +1,7 @@
 import { EngineError } from '../engine/errors.ts';
 import type { System, Effect, Table, SheetKind, Param, Binding, Modifier, TableColumn } from './types.ts';
 import { recordKinds, kindsOf } from './owned.ts';
+import { tr } from '../words/tongue.ts';
 
 type AnyKind = Table & SheetKind;
 
@@ -12,11 +13,11 @@ export function lineTrouble(id: string, basesOf: (key: string) => string | undef
   const chain: string[] = [];
   let at: string | undefined = id;
   while (at) {
-    if (chain.includes(at)) return `основы идут по кругу — ${[...chain, at].join(' → ')}`;
+    if (chain.includes(at)) return tr`основы идут по кругу — ${[...chain, at].join(' → ')}`;
     chain.push(at);
-    if (chain.length > MAX_CHAIN) return `основ больше ${MAX_CHAIN} — ${chain.join(' → ')}`;
+    if (chain.length > MAX_CHAIN) return tr`основ больше ${MAX_CHAIN} — ${chain.join(' → ')}`;
     const next = basesOf(at);
-    if (next && !exists(next)) return `основы «${next}» в системе нет`;
+    if (next && !exists(next)) return tr`основы «${next}» в системе нет`;
     at = next;
   }
   return null;
@@ -116,7 +117,7 @@ export function flattenSystem(system: System, lenient = false): System {
   const flat = <K extends Table | SheetKind>(all: Record<string, K>, mine: (key: string) => boolean): Record<string, K> => {
     const out: Record<string, K> = { ...all };
     for (const id of Object.keys(all).filter(mine)) {
-      const line = lineOf(id, key => basedOn(all[key]), key => Boolean(all[key] && mine(key)), 'тип записи', lenient);
+      const line = lineOf(id, key => basedOn(all[key]), key => Boolean(all[key] && mine(key)), tr`тип записи`, lenient);
       out[id] = line.reduce<K>((done, key) => (done ? mergeKind(done, all[key]!) : all[key]!), undefined as unknown as K);
     }
     return out;

@@ -3,10 +3,11 @@ import { readerOf } from './roll.ts';
 import { hasDie, dieSpec } from '../../core/dice-addend.ts';
 import { start, result } from '../../core/dice.ts';
 import { EngineError } from '../errors.ts';
-import { DIE_LETTER } from '../../words/glossary.ts';
+import { dieLetter } from '../../words/glossary.ts';
 import type { Die } from '../../model/types.ts';
 import type { StepModule } from './index.ts';
 import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
+import { tr } from '../../words/tongue.ts';
 
 export const type = 'roll-plus';
 const words: StepWords = STEP_WORDS['roll-plus'];
@@ -16,8 +17,8 @@ export const mayBreak = false;
 export const icon = '+';
 export const traceLine = (t: { before: number; after: number; addend?: { dice?: { sides: number; value: number }[] } }): string => {
   const dice = t.addend?.dice ?? [];
-  const what = dice.length ? ` ${dice.map(d => `${DIE_LETTER}${d.sides}: ${d.value}`).join(', ')}` : '';
-  return `прибавлено${what} — итог ${t.before} → ${t.after}`;
+  const what = dice.length ? ` ${dice.map(d => `${dieLetter()}${d.sides}: ${d.value}`).join(', ')}` : '';
+  return tr`прибавлено${what} — итог ${t.before} → ${t.after}`;
 };
 
 const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
@@ -28,11 +29,11 @@ const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
       dice.push({ sides, value });
       return value;
     };
-    if (hasDie(step) && step.value !== undefined && step.value !== null) throw new EngineError(`${ctx.label}: прибавка — число или кость, не обе`);
+    if (hasDie(step) && step.value !== undefined && step.value !== null) throw new EngineError(tr`${ctx.label}: прибавка — число или кость, не обе`);
     const value = hasDie(step)
       ? (step.minus === true ? -1 : 1) * result(start(dieSpec(ctx.system, step.die, step.count, readerOf(ctx), ctx.label), [], watched)).total
-      : ctx.using(watched).number(step.value, 'сколько прибавить');
-    return operate(ctx, 'Прибавить', { kind: 'plus', addend: { label: ctx.label, value, dice } });
+      : ctx.using(watched).number(step.value, tr`сколько прибавить`);
+    return operate(ctx, tr`Прибавить`, { kind: 'plus', addend: { label: ctx.label, value, dice } });
   },
 };
 

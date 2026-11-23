@@ -1,5 +1,6 @@
 import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
 import type { Param } from '../../model/types.ts';
+import { tr } from '../../words/tongue.ts';
 
 export const type = 'each';
 const words: StepWords = STEP_WORDS.each;
@@ -19,7 +20,7 @@ export const mayBreak = false;
 export const icon = '⟳';
 
 export const traceLine = (t: { table?: unknown }, h?: { tableLabel?: (id: string) => string }): string =>
-  (typeof t.table === 'string' ? `для каждой строки «${h?.tableLabel?.(t.table) ?? t.table}»` : 'для каждого');
+  (typeof t.table === 'string' ? tr`для каждой строки «${h?.tableLabel?.(t.table) ?? t.table}»` : tr`для каждого`);
 
 export const loopOf = (params: readonly { key: string; label?: string; item?: { key: string; label?: string } }[] | undefined, step: { of?: unknown }): { key: string; label: string } | null => {
   if (typeof step.of !== 'string' || !step.of) return null;
