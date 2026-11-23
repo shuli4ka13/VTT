@@ -27,10 +27,11 @@ export function inLang(lesson: Lesson, lang: string): Lesson {
   return out;
 }
 
-export function lazyLesson(id: string, build: Build): Lesson {
+export function lazyLesson(id: string, build: Build, langs?: readonly string[]): Lesson {
   const now = (): Lesson => inLang(lesson, useLocale.getState().lang);
   const lesson: Lesson = {
     id,
+    ...(langs ? { langs } : {}),
     get title() { return now().title; },
     get sub() { return now().sub; },
     get start() { return now().start; },
@@ -67,3 +68,5 @@ export const namesOf = (id: string, lang: string): string[] => {
   walk(names);
   return out;
 };
+
+export const offered = (lesson: Lesson, lang: string = useLocale.getState().lang): boolean => !lesson.langs || lesson.langs.includes(lang);

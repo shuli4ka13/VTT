@@ -1,0 +1,115 @@
+{
+  "name": {
+    "strike": "Strike",
+    "damage": "Damage",
+    "heal": "Heal",
+    "hp": "Hit points",
+    "actor": "Who acts",
+    "amount": "Quantity",
+    "left": "Remaining",
+    "callId": "damage"
+  },
+  "head": {
+    "change": "4 · Change «{{field}}»",
+    "call": "4 · {{name}}"
+  },
+  "title": "Called effect",
+  "sub": "“Damage” as a separate effect: “Strike” passes it the target and a number.",
+  "start": "you already have “Strike”: it takes 5 hit points off the target by itself and does not call “Damage”. You will create “Damage” separately and connect it to “Strike”.",
+  "chapter": {
+    "called": {
+      "title": "Called effect",
+      "sum": "“Damage” receives a target and a number, takes off hit points and reports how many are left."
+    },
+    "call": {
+      "title": "Call",
+      "sum": "On a success “Strike” calls “Damage”. The trial and “Problems” confirmed it."
+    },
+    "alone": {
+      "title": "On your own",
+      "sum": "You built a second effect that others call, and its call, without hints."
+    }
+  },
+  "called": {
+    "lead": "Many things deal damage: a strike, a trap, poison. We describe it once as the “Damage” effect, and other effects will call it. What is passed to “Damage” — to whom and how much — is set in its “What comes in”.",
+    "say": "Create the “Damage” effect.",
+    "add": "In the “Effect library” press the “+” button with “by button”.",
+    "type": "Type the name “Damage” and press Enter.",
+    "result": "“Damage” is created. For now it has one input — “Who acts”."
+  },
+  "amount": {
+    "say": "In “What comes in” add a number “Quantity” and mark it “Amount”: this is what is passed to “Damage” as a number.",
+    "more": "In “What comes in” press “+ another”.",
+    "name": "In “Name” type “Quantity” and press Enter.",
+    "mark": "On “Quantity” press “more” and mark “Amount”.",
+    "hint": "Without “Amount” “Damage” will not get a number that can be modified. “Amount” is hidden under “more” on the “Quantity” row.",
+    "result": "“Quantity” is the amount of “Damage”."
+  },
+  "target": {
+    "say": "Make “Strike” pass its own target to “Damage”: for the input “Who acts” in “Damage”, in “Who is it” choose “target — the one chosen at the table or the current one”.",
+    "hint": "Without this, in the “Damage” call “Who acts” will show a red “not passed”.",
+    "open": "In “What comes in” click “Who acts”: the row expands.",
+    "pick": "In “Who is it” choose “target — the one chosen at the table or the current one”.",
+    "result": "“Who acts” arrives by itself: it is the target that “Strike” is currently hitting."
+  },
+  "apply": {
+    "say": "Add a “Change”: subtract “Quantity” from “Who acts”. In “Which field” choose “Hit points”.",
+    "hint": "“Whose” should say “Who acts” and “How” should say “subtract”: that is how they already are.",
+    "add": "Press “+ change”.",
+    "field": "In “Which field” choose “Hit points”.",
+    "amount": "Click “How much” and start typing “quantity”.",
+    "group": "In the group “in this effect” choose “Quantity”.",
+    "enter": "Press Enter or “done”.",
+    "result": "“Damage” subtracts “Quantity” from hit points."
+  },
+  "returns": {
+    "lead": "“Damage” can tell whoever called it how many hit points the target has left — for example, so that “Strike” can check whether it fell.",
+    "say": "In “What the caller gets back” add a number “Remaining” — the target’s hit points after the damage.",
+    "add": "Press “+ result”.",
+    "name": "In “Name” type “Remaining” and press Enter.",
+    "kind": "In “Kind” choose “number”.",
+    "from": "In “Taken from” choose “by formula…” and click the field that appears.",
+    "fromHint": "Is the result collapsed? Click “Remaining”.",
+    "pick": "Start typing “hit points” and choose “Hit points” in the group of the “Who acts” sheet.",
+    "enter": "Press Enter or “done”.",
+    "trap": "The result is of the kind “yes or no” — choose “number”: any number of hit points can be left.",
+    "result": "“Remaining” is the target’s hit points after the damage."
+  },
+  "call": {
+    "say": "Make “Strike” call “Damage” for 5 on a success.",
+    "hint": "“Who acts” fills in by itself — it is the target. “how it works →” in the call step opens “Damage” itself.",
+    "add": "Open “Strike”. In the “success” branch choose “Damage” in the “+ step” list.",
+    "five": "In the red “Quantity” click the field and type 5.",
+    "enter": "Press Enter or “done”.",
+    "result": "On a success “Strike” calls “Damage”: 5 to the target."
+  },
+  "drop": {
+    "say": "Delete the old “Change” from the “success” branch: “Damage” now takes off the hit points.",
+    "delete": "On the “Change” step in the “success” branch press “Delete”.",
+    "confirm": "Confirm: “really remove”.",
+    "result": "“Strike” no longer has a “Change” of its own."
+  },
+  "callName": {
+    "say": "So that the steps below can read “Remaining”, give the call the name “damage”.",
+    "hint": "Is the call collapsed? In the “success” branch click the call: it expands.",
+    "open": "Under the call press “result…”.",
+    "type": "Type the name “damage” and press Enter.",
+    "result": "The call is named “{{name}}”: the steps below see its “Remaining”."
+  },
+  "trial": {
+    "say": "Check “Strike” with a trial: with the die “maximum”, “What came out” will show the line {{line}} — the damage went through “Damage”.",
+    "open": "In the “Nearby” panel press “Trial”.",
+    "die": "In “Die” choose “maximum”.",
+    "result": "The trial showed: the damage went through “Damage”."
+  },
+  "problems": {
+    "say": "Press the “No problems” button in the header (if something is found, it says “Problems” and a number). There should be no errors: if “Strike” does not pass “Damage” something it needs, the error will appear here.",
+    "result": "No problems."
+  },
+  "heal": {
+    "say": "Make a “Heal” effect that adds hit points, and call it from “Strike” on a failure.",
+    "goal": "“Heal” adds hit points to the sheet passed to it, “Strike” calls it in the “failure” branch, and “Problems” shows no errors.",
+    "hint": "the “+” button with “by button”, in “What comes in” add a number “Quantity”, in the “Change” set “How” to “add”. In “Strike” under the fork press the button with “failure” and put a call of “Heal” there.",
+    "result": "On a failure “Strike” calls “Heal”."
+  }
+}

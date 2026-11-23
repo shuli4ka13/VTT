@@ -16,7 +16,7 @@ export interface TagTemplate { value: string; label: string }
 
 const keyOf = (tag: TagValue): string => (typeof tag === 'string' ? tag : `=${tag.expr}`);
 
-const OWN = ':своя';
+const OWN = ':own';
 const COMPUTED = ':formula';
 
 export interface TagGroup { title: string; list: readonly (readonly [string, string])[] }

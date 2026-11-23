@@ -42,7 +42,7 @@ const head = (ui: ReturnType<typeof within>, create: string, label: string, key:
   if (goal.description) ui.type('Описание', goal.description);
   for (const tag of goal.tags ?? []) {
     if (tag in (useWorld.getState().system.tags ?? {})) ui.select('Метки', tag);
-    else { ui.select('Метки', ':своя'); ui.type('Метки', tag); ui.click('добавить'); }
+    else { ui.select('Метки', ':own'); ui.type('Метки', tag); ui.click('добавить'); }
   }
 };
 

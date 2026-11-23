@@ -1,0 +1,69 @@
+{
+  "name": {
+    "kind": "By template",
+    "skills": "Skills",
+    "presets": "Templates",
+    "rank": "Rank",
+    "preset": "Template"
+  },
+  "title": "Templates: editing a whole column",
+  "sub": "The “By template” sheet type fills the “Rank” column for every skill from the chosen template with a single edit.",
+  "start": "there are the “Skills” and “Templates” tables (bruiser and shooter), a “Template” field and a “By template” sheet type, with no edits yet.",
+  "chapter": {
+    "column": {
+      "title": "Editing a column",
+      "sum": "The “By template” type has an edit that targets “Rank” of every skill at once and sets it."
+    },
+    "source": {
+      "title": "Where it comes from",
+      "sum": "A skill’s “Rank” comes from the template row whose column is named like the skill. With no template chosen, the edit stays silent. No errors."
+    },
+    "alone": {
+      "title": "On your own",
+      "sum": "You added a new template, and the ranks on a sheet with it matched its row, without hints."
+    }
+  },
+  "open": {
+    "lead": "A template is a ready set of ranks: “Bruiser” is strong in melee, “Shooter” in shooting. Each template is a row in the “Templates” table, and its columns are named like the skills. So you need not enter ranks by hand, the “By template” sheet type fills the whole “Rank” column for the skills from the chosen template.",
+    "say": "Open the “By template” sheet type.",
+    "result": "The “By template” type is open."
+  },
+  "target": {
+    "say": "Add an edit and aim it at “Rank” of every skill at once.",
+    "hint": "In “What to edit” look for “Skills” → “Rank” — for every row: one such edit acts on all rows of the table.",
+    "add": "In “{{card}}” press “+ field formula”.",
+    "pick": "In “What to edit” choose “Skills” → “Rank” — for every row.",
+    "result": "The edit aims at “Skills” → “Rank” — for every row."
+  },
+  "op": {
+    "say": "Let the edit set the value instead of adding: in “How” choose “set”.",
+    "result": "The edit sets “Rank”."
+  },
+  "value": {
+    "lead": "Under the edit you can see in words what it does. Now say which number to put: the one in the chosen template’s row at the crossing with the skill’s column.",
+    "say": "In “By how much” take the template cell by row: the skill name matches the column.",
+    "hint": "The right entry is in the “this row” section: the cell of this row is offered because “Templates” has a column for every skill.",
+    "click": "Click “By how much” and start typing “template”.",
+    "pick": "In the list choose “Template” → cell of this row.",
+    "result": "A skill’s rank comes from the template column with the same name."
+  },
+  "when": {
+    "say": "In “Only if” set a condition: a template is chosen.",
+    "hint": "While there is no template, the edit is not needed: the condition “Template” is chosen says exactly that.",
+    "click": "Click “Only if” and start typing “template”.",
+    "pick": "In “common conditions” choose the condition “Template” is chosen.",
+    "enter": "Press Enter or “done”.",
+    "result": "The edit applies only if a template is chosen."
+  },
+  "problems": {
+    "say": "Press the “No problems” button in the header (if something is found, it says “Problems” and a number). There should be no errors.",
+    "result": "No problems."
+  },
+  "more": {
+    "lead": "The last task comes without hints.",
+    "goal": "“Templates” has at least three rows, each with a name and non-zero ranks; on a sheet with any template the skills’ “Rank” equals the cell of its row; “Problems” shows no errors.",
+    "say": "Add one more template with non-zero ranks to “Templates” and make sure a sheet with each template gets ranks from its row.",
+    "hint": "The “Templates” table is in “Rules” → “Tables”. Fill in the new row like “Bruiser”.",
+    "result": "The new template’s ranks come from its row."
+  }
+}

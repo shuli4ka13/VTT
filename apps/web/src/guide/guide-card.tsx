@@ -5,7 +5,7 @@ import { useGuide } from '../store/guide.ts';
 import { useFormulaBar } from '../store/formula-bar.ts';
 import { Button, Card, CardHead, Drawer, Fold, Verdict } from '../ui/primitives.tsx';
 import { TABS } from '../words.ts';
-import { LESSONS, lessonOf } from './lessons/index.ts';
+import { lessonsNow, lessonOf } from './lessons/index.ts';
 import { findAnchor, firstOf, foldOf, openedDialog } from './anchor.ts';
 import { Spot } from './spot.tsx';
 import type { Box } from './spot.tsx';
@@ -127,7 +127,11 @@ const resultOf = (step: Step, view: View): string => {
   try { return step.result?.(view) ?? say('guide:result.done'); } catch { return say('guide:result.done'); }
 };
 
-export const nextLesson = (id: string): Lesson | undefined => LESSONS[LESSONS.findIndex(one => one.id === id) + 1];
+export const nextLesson = (id: string): Lesson | undefined => {
+  const list = lessonsNow();
+  const at = list.findIndex(one => one.id === id);
+  return at < 0 ? undefined : list[at + 1];
+};
 
 function FinishCard({ id }: { id: string }) {
   const t = useT('guide');
@@ -285,7 +289,7 @@ export function GuideButton() {
         onClose={() => setOpen(false)}>
         <div className="stack">
           {note && !running ? <Verdict tone="bad">{note}</Verdict> : null}
-          {LESSONS.map(lesson => {
+          {lessonsNow().map(lesson => {
             const was = passed.includes(lesson.id);
             const from = started[lesson.id];
             const actions = from === undefined

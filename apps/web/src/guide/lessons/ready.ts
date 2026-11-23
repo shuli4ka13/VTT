@@ -1,123 +1,145 @@
-import { emptySystem } from '../../store/world.ts';
 import type { Lesson, View } from '../types.ts';
-import { tableBy, rowIs, fieldBy, effectBy, errorsOf, same } from '../find.ts';
-import { problemsClean } from '../find.ts';
+import { tableBy, rowIs, fieldBy, effectBy, errorsOf, same, problemsClean } from '../find.ts';
+import { lazyLesson, blankSeed } from '../lazy.ts';
 import { visible } from '../anchor.ts';
-
-const stats = (view: View) => tableBy(view.system, 'Характеристики');
-
-const hasRow = (view: View, row: string): boolean =>
-  (stats(view)?.[1].rows ?? []).some(one => rowIs(one, row));
 
 const foldOpen = (title: string): boolean =>
   [...document.querySelectorAll<HTMLDetailsElement>('details.fold')].some(fold => fold.open && same(fold.querySelector('.fold__title')?.textContent, title));
 
-export const ready: Lesson = {
-  id: 'ready',
-  title: 'Взять из готового',
-  sub: 'Начать с нуля и принести из образцов только нужное, а лишнее убрать.',
-  seed: { ...emptySystem(), id: 'uchebnaya', name: 'Учебная система' },
-  tab: 'sheet',
-  chapters: [
-    { title: 'Кусок листа', sum: 'На листе характеристики из образца, лишнее поле убрано, ошибок нет.' },
-    { title: 'Эффект', sum: 'Эффект «Отход» принесён вместе с тем, без чего он не работает. Ошибок нет.' },
-    { title: 'Сами', sum: 'Вы взяли кусок из другой системы и убрали из него лишнее.' },
-  ],
-  steps: [
-    {
-      id: 'take',
-      chapter: 'Кусок листа',
-      lead: 'Копия образца берёт всё целиком: расы, классы, десятки чужих эффектов. Вычистить это потом трудно. Проще начать с нуля и брать из образцов только нужные куски.',
-      tab: 'sheet',
-      panel: 'Готовое из образцов',
-      say: 'В панели «Готовое из образцов» нажмите «Характеристики к20». Это шесть характеристик с модификаторами.',
-      hint: 'Куски разложены по системам, «Характеристики к20» — первым в списке. Серый кусок уже есть в системе.',
-      at: { text: 'Характеристики к20' },
-      done: view => hasRow(view, 'харизма'),
-      result: () => 'Характеристики принесены на лист.',
-    },
-    {
-      id: 'seen',
-      chapter: 'Кусок листа',
-      tab: 'sheet',
-      panel: 'Готовое из образцов',
-      say: 'На плашке «Характеристики к20» с пометкой «добавлено» раскройте «что пришло»: там всё, что приехало с куском — таблицы, поля, кость. «отменить» вернёт систему как была, но только до следующей правки.',
-      at: { text: 'что пришло' },
-      done: view => view.tab === 'sheet' && foldOpen('что пришло'),
-      result: () => 'Видно всё, что приехало с куском.',
-    },
-    {
-      id: 'drop',
-      chapter: 'Кусок листа',
-      tab: 'sheet',
-      say: 'Уберите ненужное поле «Вдохновение».',
-      hint: 'Серая «Удалить» значит, что полем пользуются, — такое не убрать. «Вдохновение» свободно.',
-      at: [
-        { at: { text: 'Вдохновение' }, say: 'На листе щёлкните поле «Вдохновение».', done: view => { const tag = fieldBy(view.system, 'Вдохновение')?.tag; return Boolean(tag) && view.field === tag; } },
-        { at: { text: 'Удалить' }, say: 'Нажмите «Удалить».', done: () => visible({ text: 'точно убрать' }) },
-        { at: { text: 'точно убрать' }, say: 'Подтвердите: «точно убрать».' },
-      ],
-      done: view => Boolean(stats(view)) && Boolean(fieldBy(view.system, 'Класс')) && !fieldBy(view.system, 'Вдохновение'),
-      traps: [{
-        when: view => Boolean(stats(view)) && !hasRow(view, 'харизма') && errorsOf(view.system) > 0,
-        say: 'Убрана строка «харизма», а ею пользуются другие части системы — «Проблемы» покажут какие. Верните «харизму» и уберите «Вдохновение».',
-      }],
-      result: () => '«Вдохновение» убрано, остальное на месте.',
-    },
-    {
-      id: 'problems',
-      chapter: 'Кусок листа',
-      say: 'Нажмите в шапке кнопку «Проблем нет» (если что-то найдено, на ней «Проблемы» и число). После удаления ошибок быть не должно, а если что-то сломалось, там будет сказано где.',
-      at: { guide: 'problems' },
-      done: problemsClean,
-      result: () => 'Проблем нет. Чтобы закрыть список, нажмите ту же кнопку ещё раз.',
-    },
-    {
-      id: 'effect',
-      chapter: 'Эффект',
-      lead: 'Эффекты берутся так же. Эффект приносит с собой то, без чего не работает, — например, плату за действие и счётчики хода.',
-      tab: 'effects',
-      panel: 'Рядом',
-      say: 'В панели «Рядом» на вкладке «Готовое» раскройте «Отдельные эффекты» и нажмите «Отход».',
-      hint: '«Отход» — из D&D 5e, в его «Отдельных эффектах».',
-      at: [
-        { at: { text: 'Готовое', in: 'Рядом' }, say: 'Если открыта «Проба», в панели «Рядом» нажмите «Готовое».', done: () => visible({ text: 'Отдельные эффекты' }), maybe: true },
-        { at: { text: 'Отдельные эффекты' }, say: 'Раскройте «Отдельные эффекты».', done: () => visible({ text: 'Отход' }) },
-        { at: { text: 'Отход' }, say: 'Нажмите «Отход».' },
-      ],
-      done: view => Boolean(effectBy(view.system, 'Отход')),
-      result: () => 'Эффект «Отход» принесён.',
-    },
-    {
-      id: 'came',
-      chapter: 'Эффект',
-      tab: 'effects',
-      panel: 'Рядом',
-      say: 'Раскройте «что пришло»: вместе с «Отходом» приехали эффект «Стоимость: действие» и папка «Действия в бою».',
-      at: { text: 'что пришло' },
-      done: view => view.tab === 'effects' && foldOpen('что пришло'),
-      result: () => 'Видно, что приехало вместе с «Отходом».',
-    },
-    {
-      id: 'problems-effect',
-      chapter: 'Эффект',
-      say: 'Нажмите в шапке кнопку «Проблем нет» (если что-то найдено, на ней «Проблемы» и число). Ошибок быть не должно.',
-      at: { guide: 'problems' },
-      done: problemsClean,
-      result: () => 'Проблем нет.',
-    },
-    {
-      id: 'other',
-      chapter: 'Сами',
-      lead: 'Последнее задание — без подсказок, с куском из другой системы.',
-      alone: true,
-      tab: 'sheet',
-      goal: 'на листе есть «Физический урон» из куска «Счётчики здоровья и оглушения», одно из полей «Штраф за раны» и «Штраф от состояний» убрано, а в «Проблемах» нет ошибок.',
-      say: 'Принесите на лист «Счётчики здоровья и оглушения» и уберите из них одно ненужное поле.',
-      hint: 'Кусок — в «Готовом из образцов», в Shadowrun. Убрать можно «Штраф за раны» или «Штраф от состояний».',
-      done: view => Boolean(fieldBy(view.system, 'Физический урон')) && errorsOf(view.system) === 0
-        && (!fieldBy(view.system, 'Штраф за раны') || !fieldBy(view.system, 'Штраф от состояний')),
-      result: () => 'Кусок из другой системы принесён, лишнее убрано.',
-    },
-  ],
-};
+export const ready: Lesson = lazyLesson('ready', words => {
+  const { t } = words;
+  const STATS = t('lessonReady:name.stats');
+  const CHARISMA = t('lessonReady:name.charisma');
+  const INSPIRATION = t('lessonReady:name.inspiration');
+  const CLASS = t('lessonReady:name.class');
+  const DISENGAGE = t('lessonReady:name.disengage');
+  const PHYSICAL = t('lessonReady:name.physical');
+  const WOUND = t('lessonReady:name.woundMod');
+  const STATES = t('lessonReady:name.statesMod');
+  const ABILITIES = t('lessonReady:name.abilities');
+  const LOOKUP = t('sheetTab:tab.lookup');
+  const NEAR = t('effects:tab.near');
+  const DONORS = t('effects:preview.donors');
+  const EFFECTS = t('records:donors.effects');
+  const CAME = t('records:donors.came');
+  const SURE = t('ui:danger.sure');
+  const DELETE = t('common:delete');
+  const PIECE = t('lessonReady:chapter.piece.title');
+  const EFFECT = t('lessonReady:chapter.effect.title');
+  const ALONE = t('lessonReady:chapter.alone.title');
+
+  const stats = (view: View) => tableBy(view.system, STATS);
+
+  const hasRow = (view: View, row: string): boolean =>
+    (stats(view)?.[1].rows ?? []).some(one => rowIs(one, row));
+
+  return {
+    id: 'ready',
+    title: t('lessonReady:title'),
+    sub: t('lessonReady:sub'),
+    seed: blankSeed(words),
+    tab: 'sheet',
+    chapters: [
+      { title: PIECE, sum: t('lessonReady:chapter.piece.sum') },
+      { title: EFFECT, sum: t('lessonReady:chapter.effect.sum') },
+      { title: ALONE, sum: t('lessonReady:chapter.alone.sum') },
+    ],
+    steps: [
+      {
+        id: 'take',
+        chapter: PIECE,
+        lead: t('lessonReady:take.lead'),
+        tab: 'sheet',
+        panel: LOOKUP,
+        say: t('lessonReady:take.say'),
+        hint: t('lessonReady:take.hint'),
+        at: { text: ABILITIES },
+        done: view => hasRow(view, CHARISMA),
+        result: () => t('lessonReady:take.result'),
+      },
+      {
+        id: 'seen',
+        chapter: PIECE,
+        tab: 'sheet',
+        panel: LOOKUP,
+        say: t('lessonReady:seen.say'),
+        at: { text: CAME },
+        done: view => view.tab === 'sheet' && foldOpen(CAME),
+        result: () => t('lessonReady:seen.result'),
+      },
+      {
+        id: 'drop',
+        chapter: PIECE,
+        tab: 'sheet',
+        say: t('lessonReady:drop.say'),
+        hint: t('lessonReady:drop.hint'),
+        at: [
+          { at: { text: INSPIRATION }, say: t('lessonReady:drop.field'), done: view => { const tag = fieldBy(view.system, INSPIRATION)?.tag; return Boolean(tag) && view.field === tag; } },
+          { at: { text: DELETE }, say: t('lessonReady:drop.delete'), done: () => visible({ text: SURE }) },
+          { at: { text: SURE }, say: t('lessonReady:drop.confirm') },
+        ],
+        done: view => Boolean(stats(view)) && Boolean(fieldBy(view.system, CLASS)) && !fieldBy(view.system, INSPIRATION),
+        traps: [{
+          when: view => Boolean(stats(view)) && !hasRow(view, CHARISMA) && errorsOf(view.system) > 0,
+          say: t('lessonReady:drop.trap'),
+        }],
+        result: () => t('lessonReady:drop.result'),
+      },
+      {
+        id: 'problems',
+        chapter: PIECE,
+        say: t('lessonReady:problems.say'),
+        at: { guide: 'problems' },
+        done: problemsClean,
+        result: () => t('lessonReady:problems.result'),
+      },
+      {
+        id: 'effect',
+        chapter: EFFECT,
+        lead: t('lessonReady:effect.lead'),
+        tab: 'effects',
+        panel: NEAR,
+        say: t('lessonReady:effect.say'),
+        hint: t('lessonReady:effect.hint'),
+        at: [
+          { at: { text: DONORS, in: NEAR }, say: t('lessonReady:effect.ready'), done: () => visible({ text: EFFECTS }), maybe: true },
+          { at: { text: EFFECTS }, say: t('lessonReady:effect.open'), done: () => visible({ text: DISENGAGE }) },
+          { at: { text: DISENGAGE }, say: t('lessonReady:effect.press') },
+        ],
+        done: view => Boolean(effectBy(view.system, DISENGAGE)),
+        result: () => t('lessonReady:effect.result'),
+      },
+      {
+        id: 'came',
+        chapter: EFFECT,
+        tab: 'effects',
+        panel: NEAR,
+        say: t('lessonReady:came.say'),
+        at: { text: CAME },
+        done: view => view.tab === 'effects' && foldOpen(CAME),
+        result: () => t('lessonReady:came.result'),
+      },
+      {
+        id: 'problems-effect',
+        chapter: EFFECT,
+        say: t('lessonReady:problemsEffect.say'),
+        at: { guide: 'problems' },
+        done: problemsClean,
+        result: () => t('lessonReady:problemsEffect.result'),
+      },
+      {
+        id: 'other',
+        chapter: ALONE,
+        lead: t('lessonReady:other.lead'),
+        alone: true,
+        tab: 'sheet',
+        goal: t('lessonReady:other.goal'),
+        say: t('lessonReady:other.say'),
+        hint: t('lessonReady:other.hint'),
+        done: view => Boolean(fieldBy(view.system, PHYSICAL)) && errorsOf(view.system) === 0
+          && (!fieldBy(view.system, WOUND) || !fieldBy(view.system, STATES)),
+        result: () => t('lessonReady:other.result'),
+      },
+    ],
+  };
+}, ['ru']);

@@ -16,6 +16,7 @@ type Pick = Parameters<WorldState['pick']>[0];
 
 export interface Explained {
   kind: string;
+  plain?: true;
   title: string;
   facts: [string, string][];
   from: string[];
@@ -136,7 +137,7 @@ export function explainName(
 
   if (earlier.some(step => step.id === head) && !params.some(p => p.key === head)) {
     return {
-      kind: t('phrases:lookup.kind.stepResult'), title: outputLabel(rest, earlier), facts: [], users: [], shown: [],
+      kind: t('phrases:lookup.kind.stepResult'), plain: true, title: outputLabel(rest, earlier), facts: [], users: [], shown: [],
       from: [t('phrases:lookup.from.stepResult')],
     };
   }
@@ -280,7 +281,7 @@ export function explainName(
   }
 
   return {
-    kind: t('phrases:lookup.kind.notFound'), title: name, facts: [], users: [], shown: [],
+    kind: t('phrases:lookup.kind.notFound'), plain: true, title: name, facts: [], users: [], shown: [],
     from: [t('phrases:lookup.from.notFound')],
   };
 }

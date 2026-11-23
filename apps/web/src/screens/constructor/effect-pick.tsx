@@ -3,8 +3,8 @@ import { Select } from '../../ui/primitives.tsx';
 import { grouped } from './effects/roles.ts';
 import { useT } from '../../i18n/author.ts';
 
-const FROM_INPUT = ':вход:';
-const NEW_INPUT = ':новый';
+const FROM_INPUT = ':input:';
+const NEW_INPUT = ':new';
 
 export const effectNameOf = (value: unknown): string => (typeof value === 'string' ? value : '');
 

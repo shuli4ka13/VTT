@@ -242,6 +242,16 @@ describe('язык урока — язык учебной системы', () =>
     useLocale.getState().setLang('ru');
   });
 
+  it('урок о готовом из образцов на английском не начинается: образцы русские', async () => {
+    const { useGuide, useLocale } = await withLocale();
+    useLocale.getState().setLang('en');
+    expect(await useGuide.getState().start('ready')).toBe(false);
+    expect(useGuide.getState().lesson).toBeNull();
+    useLocale.getState().setLang('ru');
+    expect(await useGuide.getState().start('ready')).toBe(true);
+    expect(await useGuide.getState().exit()).toBe(true);
+  });
+
   it('смена языка посреди урока выводит из урока: настоящая система возвращается, прогресс сохранён', async () => {
     const { useWorld, useGuide, useLocale, readSaved } = await withLocale();
     expect(await useGuide.getState().start('combat')).toBe(true);

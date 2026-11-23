@@ -1,0 +1,128 @@
+{
+  "name": {
+    "stats": "Abilities",
+    "skills": "Skills",
+    "modifier": "Modifier",
+    "ability": "Ability",
+    "total": "Total",
+    "save": "Save",
+    "strength": "strength",
+    "dexterity": "dexterity",
+    "athletics": "athletics",
+    "combat": "Combat",
+    "armor": "Armor class"
+  },
+  "title": "Tables",
+  "sub": "Abilities and skills as tables right on the sheet, a column formula, and armor class from dexterity.",
+  "start": "on the sheet, the “Combat” block has “Hit points” and “Armor class”, there is a “Check die” and a “Strike” effect that takes 5 hit points off the target by itself. There are no tables yet.",
+  "formulaHint": "The formula opens in the bar at the top of the screen. Do not type the whole name — start typing it and pick it from the suggestions. “done” or Enter saves.",
+  "kindsFirst": "Above the sheet press “blocks and sheet types”.",
+  "opened": "If the table is closed: in the “blocks and sheet types” view expand the block “{{name}}” and click “{{name}}” with the colon after it — the table opens above the sheet.",
+  "chapter": {
+    "onSheet": {
+      "title": "A table on the sheet",
+      "sum": "The sheet has an “Abilities” table: strength and dexterity, the player enters “Value”, “Modifier” is calculated."
+    },
+    "hero": {
+      "title": "The hero sheet",
+      "sum": "The abilities show on the sheet, armor class is calculated from dexterity, no errors."
+    },
+    "skills": {
+      "title": "Skills",
+      "sum": "A “Skills” table: athletics has the ability “strength”, “Total” is the strength modifier plus “Value”."
+    },
+    "alone": {
+      "title": "On your own",
+      "sum": "You added a column with a formula without hints."
+    }
+  },
+  "block": {
+    "lead": "A table is like a spreadsheet: rows and columns. A hero's abilities are a table: the rows “strength” and “dexterity”, the columns “Value” and “Modifier”. Let us create it right on the sheet.",
+    "say": "Create an “Abilities” block on the sheet.",
+    "add": "In “Sheets” press “+ block”.",
+    "name": "Type the name “Abilities” and press Enter.",
+    "result": "The “Abilities” block is on the sheet."
+  },
+  "table": {
+    "say": "Create an “Abilities” table in the block.",
+    "add": "In the “Abilities” block press “+ table”.",
+    "name": "The table opens above the sheet. Type its name “Abilities” and press Enter.",
+    "result": "The “Abilities” table is in the block. The “Value” column is already there — the player enters it."
+  },
+  "rows": {
+    "say": "Add the rows “strength” and “dexterity”.",
+    "first": "In the empty row type “strength” and press Enter.",
+    "add": "Press “+ row”.",
+    "second": "In the new row type “dexterity” and press Enter.",
+    "result": "Rows: strength and dexterity."
+  },
+  "modifier": {
+    "lead": "A column formula is calculated for each row separately: “Value” in it is the value of the same row — strength for strength, dexterity for dexterity.",
+    "say": "Add a “Modifier” column: (value - 10) / 2, rounded down.",
+    "plus": "In the table header press “+”.",
+    "name": "Type the name “Modifier” and press Enter.",
+    "floor": "Click “Formula for all rows” and type “floor((”.",
+    "value": "Start typing “value” and pick “Value” in the list.",
+    "rest": "Finish with “- 10) / 2)”.",
+    "enter": "Press Enter or “done”.",
+    "trap": "There is an error in the formula: a bracket is not closed or there is an extra sign. It should come out as: floor((Value - 10) / 2).",
+    "result": "The modifier is calculated in every row: for strength from the strength value, for dexterity from the dexterity value."
+  },
+  "sample": {
+    "say": "Press “sheet sample”: strength and dexterity each have an input for “Value” and a calculated “Modifier”.",
+    "result": "The sheet sample is open: strength and dexterity show “Value” and “Modifier”."
+  },
+  "armor": {
+    "lead": "A sheet field can take a number from any cell of a table — for example, the dexterity modifier.",
+    "say": "Make armor class grow with dexterity: 10 plus the dexterity modifier.",
+    "ten": "In the “Armor class” field click “Formula for all sheets” and type “10 + ”.",
+    "pick": "Start typing “modifier” and pick the “Modifier” of “dexterity” in the list.",
+    "enter": "Press Enter or “done”.",
+    "result": "Armor class: 10 + the dexterity modifier."
+  },
+  "problems": {
+    "say": "Press the “No problems” button in the header (if something is found, it says “Problems” and a number). There should be no errors.",
+    "result": "No problems."
+  },
+  "skills": {
+    "lead": "A skill rests on an ability: athletics on strength. Let us make skills a table on the sheet too.",
+    "say": "Create a “Skills” block on the sheet with a “Skills” table and an “athletics” row.",
+    "blockName": "Type the name “Skills” and press Enter.",
+    "add": "In the “Skills” block press “+ table”.",
+    "tableName": "Type the table name “Skills” and press Enter.",
+    "row": "In the empty row type “athletics” and press Enter.",
+    "result": "The “Skills” table is on the sheet, with the row “athletics”. The skill's “Value” is entered by the player — these are the points invested."
+  },
+  "link": {
+    "say": "Add an “Ability” column to “Skills” that is chosen from the “Abilities” table.",
+    "plus": "In the header of the “Skills” table press “+”.",
+    "name": "Type the name “Ability” and press Enter.",
+    "type": "In “Type” choose “from a table”.",
+    "from": "In the “From table” field choose “Abilities”.",
+    "trap": "No table is set — there is nothing to choose from. In the “From table” field choose “Abilities”.",
+    "result": "“Ability” is chosen from the “Abilities” table."
+  },
+  "pick": {
+    "say": "In the “athletics” row, in the “Ability” column, choose “strength”.",
+    "hint": "You choose this as the rules author — for every hero athletics will come from strength.",
+    "result": "Athletics has the ability “strength”."
+  },
+  "through": {
+    "lead": "Through the “Ability” column a skill formula reaches a number in another table: for athletics, the strength modifier.",
+    "say": "Add a “Total” column to “Skills”: the ability modifier plus “Value”.",
+    "name": "Type the name “Total” and press Enter.",
+    "start": "Click “Formula for all rows” and start typing “modifier”.",
+    "pick": "In the list choose the “Modifier” of the “Ability” column.",
+    "plus": "Add “ + ” and start typing “value”.",
+    "value": "Pick “Value” in the list.",
+    "enter": "Press Enter or “done”.",
+    "result": "For athletics “Total” is the strength modifier plus the invested points."
+  },
+  "save": {
+    "say": "Add a “Save” column to the “Abilities” table, equal to the modifier.",
+    "goal": "the “Abilities” table has a “Save” column that in every row equals the “Modifier” of the same row, and “Problems” shows no errors.",
+    "hint": "Open the table: expand the “Abilities” block and click “Abilities” with the colon after it. Then “+” in its header, in the formula start typing “modifier” and pick “Modifier”.",
+    "trap": "“Save” ended up as a separate sheet field, but it must be a column of the “Abilities” table. Delete the field and add a column with “+” in the table header.",
+    "result": "“Save” = the modifier."
+  }
+}

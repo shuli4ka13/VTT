@@ -1,0 +1,86 @@
+{
+  "name": {
+    "wet": "Wet",
+    "burning": "Burning",
+    "luck": "Luck",
+    "cold": "Cold",
+    "frost": "Frost",
+    "warmUp": "Warm up",
+    "tag": "douses fire",
+    "guard": "defense"
+  },
+  "title": "Tags and reactions",
+  "sub": "A tag on an effect, a trigger for an effect that appeared with a tag, and tags to except on a roll.",
+  "start": "the effects “Wet”, “Burning”, “Luck”, “Cold”, “Frost” and “Warm up” are set up, still empty: no tags and no triggers.",
+  "open": "In the “Effect library” open “{{name}}”.",
+  "chapter": {
+    "link": {
+      "title": "Tag and reaction",
+      "sum": "“Wet” carries the tag “douses fire”, and “Burning” removes itself when an effect with that tag lands on the sheet."
+    },
+    "dice": {
+      "title": "Dice",
+      "sum": "“Luck” adds to a roll, except rolls with the tag “defense”. No errors."
+    },
+    "alone": {
+      "title": "On your own",
+      "sum": "You built the removal of all effects by a tag without hints."
+    }
+  },
+  "tag": {
+    "lead": "A tag is a word on an effect. Other effects recognize their own by it: “Burning” should go out when “Wet” lands on the sheet. For that “Wet” needs a tag.",
+    "say": "Give “Wet” the tag “douses fire”.",
+    "props": "If the properties are not visible, press “properties” next to the effect name.",
+    "field": "In the “Tags” field click “+ tag…” and choose “new tag…”.",
+    "input": "Type “douses fire” and press “add”.",
+    "result": "“Wet” carries the tag “douses fire”."
+  },
+  "when": {
+    "say": "Subscribe “Burning” to the appearance of an effect with the tag “douses fire”.",
+    "add": "Press “+ trigger”.",
+    "what": "In “What happened” choose “effect appeared on the sheet”.",
+    "which": "In “Which” choose the entry with the tag “douses fire”.",
+    "hint": "There is no entry with the tag “douses fire” in “Which” until some effect carries that tag — go back to the previous step.",
+    "result": "“Burning” hears an effect with the tag “douses fire” appear."
+  },
+  "who": {
+    "say": "In “Whom it concerns” choose “the sheet it happened to” — the holder: so that “Burning” goes out only on the sheet “Wet” landed on.",
+    "hint": "Without this the trigger fires on every sheet in the room where “Burning” hangs.",
+    "trap": "The condition is set, but it has no “holder”. In “Whom it concerns” choose “the sheet it happened to” — the holder.",
+    "result": "The trigger concerns only the holder's sheet."
+  },
+  "remove": {
+    "say": "Add a step to the trigger that removes “Burning”.",
+    "hint": "The trigger's steps are under it, in “does:”. “+ change” → “state” → in “What we do” choose “remove”.",
+    "change": "Under the trigger press “+ change”.",
+    "state": "Choose “state”.",
+    "do": "In “What we do” choose “remove”.",
+    "which": "In the step's “Which” choose “Burning”.",
+    "from": "In “From whom” choose “the sheet it happened to”.",
+    "result": "When an effect with the tag “douses fire” lands on a sheet, “Burning” is removed."
+  },
+  "seen": {
+    "lead": "The “dice rolled” trigger hears every roll. “Luck” should help everywhere except defense: such rolls are cut off by a tag.",
+    "say": "Subscribe “Luck” to “dice rolled”, except rolls with the tag “defense”.",
+    "what": "In “What happened” choose “dice rolled”.",
+    "more": "Under “Which rolls” press “+ or / except”.",
+    "except": "In “Except” click “+ except tag…” and choose “defense”.",
+    "result": "“Luck” hears all rolls except defense."
+  },
+  "plus": {
+    "say": "Under the trigger press “+ add”: one will be added to a fitting roll.",
+    "hint": "“+ add” appears only on a “dice rolled” trigger.",
+    "result": "“Luck” adds to the roll."
+  },
+  "problems": {
+    "say": "Press the “No problems” button in the header (if something is found, it says “Problems” and a number). There should be no errors.",
+    "result": "No problems."
+  },
+  "clear": {
+    "lead": "The last task comes without hints.",
+    "goal": "“Cold” and “Frost” share one tag, “Warm up” removes everything with that tag, and “Problems” shows no errors.",
+    "say": "Let the effect “Warm up” remove “Cold” and “Frost” from the holder at once: give them one tag and remove all effects with that tag.",
+    "hint": "The tag is in the properties of “Cold” and “Frost”. In “Warm up”: “+ change” → “state” → “remove” → “Remove” → “all effects with a tag”.",
+    "result": "“Warm up” removes everything that carries the shared tag."
+  }
+}

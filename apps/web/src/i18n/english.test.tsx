@@ -38,7 +38,7 @@ const visible = (): string[] => {
   return out;
 };
 
-const UI_OF_OTHERS = ['не выбрано'];
+const UI_OF_OTHERS: string[] = [];
 
 const russian = (except: readonly string[] = []): string[] =>
   visible().filter(text => RUSSIAN.test(text) && ![...UI_OF_OTHERS, ...except].some(part => text.includes(part)));
@@ -52,7 +52,7 @@ const latin = (): System => ({
   blocks: [{ key: 'Base', parts: [{ table: 'sheet' }] }],
 } as unknown as System);
 
-const SHELL_OF_OTHERS = ['Лист', 'Правила', 'Эффекты', 'Записи', 'Вещи и умения', 'Обучение', 'уроки по конструктору', 'предупреждения', 'Проблемы:'];
+const SHELL_OF_OTHERS: string[] = [];
 
 describe('пилотные экраны на английском: русских букв в видимом тексте нет', () => {
   beforeEach(() => {

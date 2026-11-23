@@ -4,6 +4,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { render, cleanup, act, fireEvent, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
+import { useState } from 'react';
 import { world as W } from '@vtt/schema';
 import type { System, Step as EffectStep } from '@vtt/schema';
 import { useWorld, emptySystem } from '../store/world.ts';
@@ -25,7 +26,7 @@ import { errorsOf } from './find.ts';
 import { bring } from '../store/fresh.ts';
 import { PIECES, bringPiece, SAMPLE_SYSTEMS } from '@vtt/engine/samples';
 import type { View, Lesson, Anchor, Step as LessonStep } from './types.ts';
-import { inLang, namesOf } from './lazy.ts';
+import { inLang, namesOf, offered } from './lazy.ts';
 import { i18n } from '../i18n/author.ts';
 import base from './seeds/base.json' with { type: 'json' };
 import { foldedSystem } from '../testing/folded.ts';
@@ -39,9 +40,17 @@ function Probe() {
   return null;
 }
 
+let redraw: () => void = () => {};
+
+function Whole() {
+  const [, setTick] = useState(0);
+  redraw = () => setTick(tick => tick + 1);
+  return <><SystemBar /><ConstructorScreen /><GuideLayer /><Probe /></>;
+}
+
 const mount = () => render(
   <MemoryRouter>
-    <SystemBar /><ConstructorScreen /><GuideLayer /><Probe />
+    <Whole />
   </MemoryRouter>,
 );
 
@@ -70,24 +79,27 @@ const press = (el: HTMLElement) => {
 };
 const anchorsOf = (at: Anchor | Anchor[] | undefined): Anchor[] => (at === undefined ? [] : Array.isArray(at) ? at : [at]);
 
-const mixedAnchor = (english: Anchor | undefined, russian: Anchor, data: ReadonlySet<string>): Anchor => {
+const withNames = (text: string, names: readonly (readonly [string, string])[]): string =>
+  names.reduce((out, [english, russian]) => out.split(english).join(russian), text);
+
+const mixedAnchor = (english: Anchor | undefined, russian: Anchor, names: readonly (readonly [string, string])[]): Anchor => {
   if (!english || !('text' in russian) || !('text' in english)) return english ?? russian;
   return {
-    text: data.has(russian.text) ? russian.text : english.text,
-    ...(russian.in !== undefined ? { in: data.has(russian.in) ? russian.in : english.in ?? russian.in } : {}),
+    text: withNames(english.text, names),
+    ...(russian.in !== undefined ? { in: withNames(english.in ?? russian.in, names) } : {}),
   };
 };
 
 const englishAnchor = async (lesson: Lesson, stepIndex: number, at: number, move: { at: Anchor | Anchor[] }): Promise<void> => {
   const english = inLang(lesson, 'en');
-  if (english === lesson) return;
+  if (english === lesson || !offered(lesson, 'en')) return;
   const theirs = anchorsOf(movesOf(english.steps[stepIndex]!)[at]?.at);
-  const data = new Set(namesOf(lesson.id, 'ru'));
-  const mixed = anchorsOf(move.at).map((anchor, k) => mixedAnchor(theirs[k], anchor, data));
-  await act(async () => { setTongue('en'); await i18n.changeLanguage('en'); });
-  openAll();
+  const ours = namesOf(lesson.id, 'ru');
+  const names = namesOf(lesson.id, 'en').map((name, k) => [name, ours[k] ?? name] as const).sort((a, b) => b[0].length - a[0].length);
+  const mixed = anchorsOf(move.at).map((anchor, k) => mixedAnchor(theirs[k], anchor, names));
+  await act(async () => { setTongue('en'); await i18n.changeLanguage('en'); redraw(); });
   const found = firstOf(mixed);
-  await act(async () => { setTongue('ru'); await i18n.changeLanguage('ru'); });
+  await act(async () => { setTongue('ru'); await i18n.changeLanguage('ru'); redraw(); });
   expect(found, `${lesson.id}/${english.steps[stepIndex]!.id}: ход ${at + 1}, на английском экране нет якоря ${JSON.stringify(mixed)}`).not.toBeNull();
 };
 
@@ -420,7 +432,7 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
     tag: [
       () => pick({ activeEffectId: 'syrost' }),
       () => { const el = findAnchor({ text: 'свойства' }); if (el) press(el); },
-      () => { pickCombo(findAnchor({ field: 'Метки' })!.querySelector<HTMLElement>('[role="combobox"]')!, ':своя'); },
+      () => { pickCombo(findAnchor({ field: 'Метки' })!.querySelector<HTMLElement>('[role="combobox"]')!, ':own'); },
       () => edit(d => { d.effects.syrost!.tags = ['gasit_ogon']; d.tags = { ...d.tags, gasit_ogon: { label: 'гасит огонь' } }; }),
     ],
     when: [

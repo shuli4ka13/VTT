@@ -124,7 +124,7 @@ describe('эффекты пресетов собираются в констру
     ui.select(ui.cell('Если не передали', 8), 'empty');
     ui.select(document.querySelector<HTMLElement>('.add-cost [role="combobox"]')!, 'cost_attack');
     let cost = stepCard(/^1 · /);
-    within(cost).select('Какой эффект', ':вход:cena');
+    within(cost).select('Какой эффект', ':input:cena');
     cost = stepCard(/^1 · /);
     within(cost).formula(within(cost).arg('Лист'), '@deystvuyuschiy');
     within(cost).formula(within(cost).arg('Источник'), '@deystvuyuschiy');
@@ -165,7 +165,7 @@ describe('эффекты пресетов собираются в констру
     card = stepCard(/^6 · /);
     within(card).click('состояние');
     card = stepCard(/^6 · /);
-    within(card).select('Какое', ':вход:status');
+    within(card).select('Какое', ':input:status');
     within(card).formula('На кого', '@цель');
     card = stepCard(/^6 · /);
     within(card).formula('Запомнит: Кто наложил', '@deystvuyuschiy');
@@ -410,7 +410,7 @@ describe('эффекты пресетов собираются в констру
     let held = stepCard(/^3 · /);
     within(held).click('состояние');
     held = stepCard(/^3 · /);
-    within(held).select('Какое', ':вход:status');
+    within(held).select('Какое', ':input:status');
     within(held).formula('На кого', '@цель');
     held = stepCard(/^3 · /);
     within(held).formula('Запомнит: Кто наложил', '@deystvuyuschiy');

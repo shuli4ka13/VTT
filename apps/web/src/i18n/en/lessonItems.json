@@ -1,0 +1,81 @@
+{
+  "name": {
+    "strike": "Strike",
+    "hp": "Hit points",
+    "ac": "Armor class",
+    "weapon": "Weapon",
+    "armor": "Armor",
+    "weaponDamage": "Weapon damage"
+  },
+  "title": "Items with effects",
+  "sub": "A “Weapon” type: a property, a “Strike” button for the owner and a modifier to armor class.",
+  "start": "there is “Strike”: it is granted to all sheets and takes off 5 hit points by itself. There is no “Weapon” item type yet.",
+  "chapter": {
+    "kind": {
+      "title": "Item type",
+      "sum": "There is a “Weapon” type, and “Strike” expects “Weapon damage” and is given by an item."
+    },
+    "button": {
+      "title": "Button and modifier",
+      "sum": "A weapon gives its owner “Strike” with its own damage and +1 to armor class."
+    },
+    "alone": {
+      "title": "On your own",
+      "sum": "You created an item type with a modifier without hints."
+    }
+  },
+  "kind": {
+    "lead": "An item type is a common shape for all items of one kind. “Weapon” will have a property that the book author fills in for every sword, a “Strike” button for the owner, and +1 to armor class while the weapon is with them.",
+    "say": "Create the item type “Weapon”.",
+    "add": "In the “books” panel press “+ type”.",
+    "name": "Type the name “Weapon” and press Enter.",
+    "hint": "“What it is” must say “item” — it already does.",
+    "result": "The “Weapon” type is created."
+  },
+  "param": {
+    "say": "Make “Strike” take off as many hit points as “Weapon damage”.",
+    "hint": "Until the button step, “Problems” will say that nobody passes “Weapon damage” — that is as it should be.",
+    "more": "Open “Strike” and in “What comes in” press “+ another”.",
+    "moreHint": "Can’t see “Strike”? It is in the “No block” group — expand it.",
+    "name": "In “Name” type “Weapon damage” and press Enter.",
+    "expand": "In the “success” branch click the collapsed fourth step, “Change”: it expands.",
+    "number": "In the expanded step click the number in “How much”: it opens as a bar at the top and is selected.",
+    "pick": "Start typing “damage” — the number will be replaced — and in the “from the record” group choose “Weapon damage”.",
+    "enter": "Press Enter or “done”.",
+    "trap": "The name has something extra, for example “New input”. Erase it so that it is exactly “Weapon damage”.",
+    "result": "“Strike” takes off as much as “Weapon damage”."
+  },
+  "given": {
+    "say": "So that a weapon gives “Strike”, not everyone, on the “Sheet” tab in the “What it gives all sheets” section remove “Strike” with the cross.",
+    "kinds": "Above the sheet press “blocks and sheet types”.",
+    "all": "In “Sheets” press “all blocks”: the section is shown only on it.",
+    "remove": "In “What it gives all sheets” remove “Strike” with the cross.",
+    "result": "“Strike” is no longer on everyone: an item will give it."
+  },
+  "button": {
+    "say": "Make “Weapon” give its owner the “Strike” button.",
+    "hint": "The “Calls the effect” list has no effects that hang on the sheet — only buttons and callable effects.",
+    "add": "Open “Weapon” and in “Buttons on the sheet” press “+ button”.",
+    "effect": "In “Calls the effect” choose “Strike”.",
+    "result": "The “Strike” button is there. “Weapon” got the property “Weapon damage” by itself: its value on a sword goes into “Strike”."
+  },
+  "modifier": {
+    "lead": "Under the button you can see what “Weapon” fills “Strike” with: “Weapon damage” is a sword's property. Who strikes and whom, the button does not ask: it is whoever pressed it, and the targets chosen at the table.",
+    "say": "Make a weapon give +1 to armor class while its owner has it.",
+    "add": "In “What every item of this type modifies” press “+ edits a field”.",
+    "target": "In “What to edit” choose “Armor class”.",
+    "amount": "Click “By how much” and type 1.",
+    "result": "While the owner has the weapon, armor class is +1."
+  },
+  "problems": {
+    "say": "Press the “No problems” button in the header (if something is found, it says “Problems” and a number). There should be no errors.",
+    "result": "No problems."
+  },
+  "armor": {
+    "lead": "The sword itself is created by the book author once the system is published: main screen → “Book author” → “Create a record” → “Weapon”. The book does not see the training copy. The last task has no hints.",
+    "say": "Create the item type “Armor” that edits “Armor class”.",
+    "goal": "there is an item type “Armor” with an edit of “Armor class”, and “Problems” shows no errors.",
+    "hint": "In the “books” panel press “+ into” under the “Gear” block: a new type is added. On the new type press “+ edits a field”.",
+    "result": "“Armor” edits armor class."
+  }
+}

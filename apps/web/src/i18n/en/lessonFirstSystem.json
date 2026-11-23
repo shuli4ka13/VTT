@@ -1,0 +1,152 @@
+{
+  "name": {
+    "block": "Combat",
+    "hp": "Hit points",
+    "ac": "Armor class",
+    "die": "Check die",
+    "strike": "Strike",
+    "targets": "Targets",
+    "target": "Target",
+    "actor": "Who acts",
+    "heal": "Healing"
+  },
+  "title": "First system from scratch",
+  "sub": "A sheet with hit points and armor class, a die, and a “Strike” that hits a target.",
+  "chapter": {
+    "sheet": {
+      "title": "Sheet",
+      "sum": "The sheet has a “Combat” block: “Hit points” 10, not below 0, and “Armor class” 12."
+    },
+    "dieStrike": {
+      "title": "Die and strike",
+      "sum": "There is a “Check die” d20 and a “Strike” effect on every sheet."
+    },
+    "checkDamage": {
+      "title": "Check and damage",
+      "sum": "“Strike” rolls the die against the target's armor class and on success takes off 5 hit points. No errors, the trial showed it."
+    },
+    "alone": {
+      "title": "On your own",
+      "sum": "You built the effect without hints."
+    }
+  },
+  "block": {
+    "lead": "A system is the rules of your game. In this lesson we will build a hero with hit points and armor class and a “Strike”: on a hit it takes 5 hit points off the target. The lesson runs on a practice copy — your system does not change.",
+    "say": "Create a “Combat” block on the sheet.",
+    "open": "Above the sheet press “blocks and sheet types”.",
+    "add": "In “Sheets” press “+ block”.",
+    "name": "Type the name “Combat” and press Enter.",
+    "result": "The “Combat” block is on the sheet."
+  },
+  "hp": {
+    "say": "Add a “Hit points” field to the “Combat” block.",
+    "add": "In the “Combat” block press “+ field”.",
+    "addHint": "Can't see the “+ field” button? Click the block name “Combat” — it expands.",
+    "name": "Type the name “Hit points” and press Enter.",
+    "result": "“Hit points” are in the “Combat” block."
+  },
+  "hpStart": {
+    "say": "So that a new hero starts with 10 hit points, open “more” on the “Hit points” field and type 10 into “In a new sheet”.",
+    "hint": "Did the “Hit points” field close? Click “Hit points” in the “Combat” block.",
+    "result": "Hit points: 10 in a new sheet."
+  },
+  "hpMin": {
+    "say": "So that hit points do not go negative, in the same place type 0 into “Not below”.",
+    "hint": "“Not below” is a formula field: after you click, typing goes into the formula bar at the top of the screen. Enter or “done” saves.",
+    "click": "Click “Not below” and type 0.",
+    "enter": "Press Enter or “done”.",
+    "result": "Hit points: 10 in a new sheet, not below 0."
+  },
+  "ac": {
+    "say": "Add an “Armor class” field to the “Combat” block, 12 in a new sheet.",
+    "add": "In the “Combat” block press “+ field”.",
+    "addHint": "Can't see the “+ field” button? Click the block name “Combat”.",
+    "name": "Type the name “Armor class” and press Enter.",
+    "start": "Open “more” and type 12 into “In a new sheet”.",
+    "startHint": "Did the “Armor class” field close? Click “Armor class” in the “Combat” block.",
+    "result": "Armor class: 12 in a new sheet."
+  },
+  "die": {
+    "say": "Create a d20 die for checks.",
+    "hint": "Create the die before the check: a new check takes the first die of the system.",
+    "add": "In the “Rolls” section, under “Dice”, expand “+ die” and choose “one die — d20”.",
+    "name": "Type the name “Check die”. Leave the 20 sides as they are.",
+    "result": "“Check die” is a d20."
+  },
+  "strike": {
+    "lead": "An effect is what a hero can do: a strike, healing, a spell. An effect with a button appears for the hero at the table as a button.",
+    "say": "Create a “Strike” effect.",
+    "add": "In the “Effect library” press “+ button”.",
+    "name": "Type the name “Strike” and press Enter.",
+    "result": "The “Strike” effect is created. For now it has one input — “Who acts”."
+  },
+  "everyone": {
+    "say": "So that every hero has “Strike”, on the “Sheet” tab, in the “What it gives all sheets” section, add “Strike”.",
+    "open": "Above the sheet press “blocks and sheet types”.",
+    "all": "In “Sheets” press “all blocks”: the section is shown only on it.",
+    "pick": "In “What it gives all sheets” choose “Strike”.",
+    "result": "The “Strike” button is on every hero."
+  },
+  "targets": {
+    "lead": "An effect is like a function: everything it needs arrives through inputs, and every input has a kind. A number is damage or a bonus, yes / no is a flag, a “table row” is a row of a reference table, a “sheet” is one hero, a “list of sheets” is any number of heroes. Who to hit is decided at the table, so “Strike” needs a list input.",
+    "say": "Add a “Targets” input of the “list of sheets” kind to “Strike”.",
+    "more": "In “What comes in” press “+ another”.",
+    "kind": "In “Name” type “Targets”, in “Kind” choose “list of sheets”.",
+    "each": "In “Each” type “Target”.",
+    "eachHint": "One sheet from the list is called by the “Each” field in the steps — name it “Target”.",
+    "result": "“Strike” has two inputs: “Who acts” is a sheet, “Targets” is a list of sheets, each of them a “Target”."
+  },
+  "each": {
+    "lead": "Now a divider: the steps above it run once, the steps below it run for each target in turn.",
+    "say": "In the “Step” palette press “+ for each in the list”.",
+    "hint": "The divider will take the “Targets” list by itself.",
+    "result": "The “For each of” divider stands with the “Targets” list: everything below runs for each target."
+  },
+  "check": {
+    "lead": "A roll and a check are two steps: first someone rolls the die, then the result is compared with a number. Here the number is the target's armor class: rolled at least that — a hit.",
+    "say": "Make a roll and a check: “Check die” against the target's armor class.",
+    "roll": "In the “Step” palette press “+ roll”. A roll appears: “Who acts” rolls “Check die”.",
+    "check": "Now press “+ check”. It will compare this roll with 10.",
+    "formula": "In the “Check” line click the number to the right of the sign: the formula opens as a line at the top, and the number 10 is selected in it.",
+    "formulaHint": "The threshold is what stands to the right of the sign. Don't type field names — choose them in the suggestions when you start typing.",
+    "type": "Start typing “armor” — the number will be replaced — and in the group named after “Target” choose “Armor class”.",
+    "enter": "Press Enter or “done”.",
+    "result": "A die roll and a check: the result against the target's armor class."
+  },
+  "branch": {
+    "say": "On the check step press “+ by result”. A “success” fork appears: its steps run only on a hit.",
+    "hint": "Don't take “+ change” from the palette: that step would run on any roll.",
+    "trap": "“Change” stands without a fork — damage will happen on any roll. Delete it and press “+ by result” on the check.",
+    "result": "The “success” fork is in place."
+  },
+  "damage": {
+    "say": "Make damage: on success the target loses 5 hit points.",
+    "step": "In the “success” branch choose “change” in the “+ step” list.",
+    "target": "In “Whose” choose “Target”, in “Which field” — “Hit points”.",
+    "targetHint": "At first “Whose” says “Who acts” — that is the hero himself. A strike needs “Target”.",
+    "amount": "Click “How much” and type 5.",
+    "enter": "Press Enter or “done”.",
+    "trapOutside": "“Change” stands outside the fork — damage will happen on any roll. Move it into the “success” branch.",
+    "trapActor": "“Whose” says “Who acts” — the strike wounds the hero himself. Choose “Target”.",
+    "trapField": "The damage does not go to “Hit points”. In “Which field” choose “Hit points”.",
+    "result": "On success the target loses {{n}} hit points."
+  },
+  "problems": {
+    "say": "Press the “No problems” button in the header (if something is found, it says “Problems” and a number). There should be no errors.",
+    "hint": "If there is an error, “Open” next to it leads to the place.",
+    "result": "No problems. To close the list, press the same button again."
+  },
+  "trial": {
+    "say": "Check “Strike” with a trial: with the die on “maximum”, the line B · Hit points: 10 → 5 will appear in “What came out”. The trial does not change the system.",
+    "open": "In the “Nearby” panel press “Trial”.",
+    "die": "In “Die” choose “maximum”.",
+    "result": "The trial showed: B loses 5 hit points."
+  },
+  "heal": {
+    "lead": "Next the system gets published, the book author creates items, and at the table heroes press “Strike”. The last task comes without hints.",
+    "say": "Make a “Healing” effect: it adds 3 hit points to whoever acts.",
+    "hint": "“+ button”, then “+ change”: “Whose” — “Who acts”, “Which field” — “Hit points”, “How” — “add”, “How much” — 3.",
+    "goal": "the “Healing” effect has a change: the “Hit points” of whoever acts go up by 3, and “Problems” shows no errors.",
+    "result": "“Healing”: +3 hit points to its own sheet."
+  }
+}

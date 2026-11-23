@@ -1,0 +1,77 @@
+{
+  "name": {
+    "spell": "Spell",
+    "cast": "Cast",
+    "stop": "Dismiss",
+    "upkeep": "Upkeep",
+    "terms": "Durations",
+    "holds": "Lasts",
+    "instant": "Instant"
+  },
+  "title": "Buttons on a record type",
+  "sub": "The “Spell” type: a “Cast” button, a “Dismiss” button only for lasting spells, the “Upkeep” anchor.",
+  "start": "there is a “Durations” table (instant and concentration), a “Spell” type with a “Duration” property, and the effects “Cast” (it applies “Spell is active”), “Dismiss” and “Upkeep”. The type has no buttons yet.",
+  "chapter": {
+    "buttons": {
+      "title": "Buttons",
+      "sum": "“Spell” has two buttons: “Cast” takes the record's “Duration”, “Dismiss” shows only if the duration lasts."
+    },
+    "anchor": {
+      "title": "Anchor",
+      "sum": "“Cast” is tied to the “Upkeep” anchor, a separate anchor for each casting: remove the anchor and the spell ends. No errors."
+    },
+    "alone": {
+      "title": "On your own",
+      "sum": "You checked the button's condition on a new duration without hints."
+    }
+  },
+  "open": {
+    "lead": "Spells have a “Duration”: instant or concentration. The rows of the “Durations” table know whether a duration lasts (“Lasts” yes or no). The spell's buttons should read this from the record, not from the author's head.",
+    "say": "Open the “Spell” type.",
+    "result": "The “Spell” type is open: it has a “Duration” property."
+  },
+  "cast": {
+    "say": "Add a button that calls “Cast” and takes the “Duration” from the record.",
+    "hint": "“Calls the effect” lists no effects that hang on the sheet — only buttons. “Duration” fills in by itself: the property has the same name as the input.",
+    "add": "In “Buttons on the sheet”, press “+ button”.",
+    "pick": "In “Calls the effect”, choose “Cast”.",
+    "result": "The “Cast” button takes the “Duration” from the record."
+  },
+  "stop": {
+    "say": "Add a second button that calls “Dismiss”.",
+    "add": "Press “+ button” once more.",
+    "pick": "In the new button, in “Calls the effect”, choose “Dismiss”.",
+    "result": "The spell has two buttons."
+  },
+  "if": {
+    "say": "Show “Dismiss” only for records whose duration lasts.",
+    "more": "On the second button, press “more”.",
+    "type": "Click “Only if” and start typing “duration”.",
+    "pick": "In the list, pick the line that goes from “Duration” to “Lasts”.",
+    "enter": "Press Enter or “done”.",
+    "result": "“Dismiss” appears only on records with a lasting duration."
+  },
+  "bond": {
+    "lead": "While the spell lasts, the “Upkeep” anchor hangs on the caster. You do not place it with a step: the tie to an anchor places it itself when “Cast” applies something. Remove the anchor and everything this casting applied ends; something applied without a tie would stay hanging.",
+    "say": "Tie “Cast” to the “Upkeep” anchor.",
+    "open": "In the “Effect library”, open “Cast”.",
+    "props": "If you cannot see the properties, press “properties” next to the effect name.",
+    "add": "In the properties, press “tie to an anchor” (the button starts with a plus). “Upkeep” will appear in “Anchor”.",
+    "result": "“Cast” is tied to the “Upkeep” anchor."
+  },
+  "many": {
+    "say": "In “How many anchors”, choose “its own for each action”: a new casting does not release the previous one.",
+    "result": "Each casting has its own anchor."
+  },
+  "problems": {
+    "say": "In the header, press the “No problems” button (if something is found, it says “Problems” and a number). There must be no errors.",
+    "result": "No problems."
+  },
+  "term": {
+    "lead": "The last task is without hints.",
+    "goal": "the “Durations” table has at least two durations with “Lasts” set to yes; “Dismiss” shows for each such duration and not for “Instant”; there are no errors in “Problems”.",
+    "say": "Add one more duration to the “Durations” table with “Lasts” set to yes, and check that “Dismiss” shows for it and not for “Instant”.",
+    "hint": "The “Durations” table is under “Rules” → “Tables”. Fill in the new row like “Concentration”.",
+    "result": "“Dismiss” shows for the new duration and not for “Instant”."
+  }
+}

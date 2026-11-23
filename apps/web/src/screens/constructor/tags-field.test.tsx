@@ -43,7 +43,7 @@ describe('одно поле меток', () => {
     expect(document.querySelector('.tag-unknown')!.closest('.chip')!.textContent).toContain('выдумана');
     const options = comboOptions(add()).map(o => o.label);
     expect(options).toContain('новая метка…');
-    pickCombo(add(), ':своя');
+    pickCombo(add(), ':own');
     fireEvent.change(screen.getByPlaceholderText('как назвать метку'), { target: { value: 'новая' } });
     fireEvent.click(screen.getByText('добавить'));
     expect(got).toEqual(['атака', 'выдумана', 'novaya']);

@@ -56,6 +56,7 @@ export interface Step {
 
 export interface Lesson {
   id: string;
+  langs?: readonly string[];
   title: string;
   sub: string;
   start?: string;

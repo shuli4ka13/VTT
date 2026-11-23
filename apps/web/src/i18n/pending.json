@@ -1,13 +1,1 @@
-[
-  "guide/lessons/first-system.ts",
-  "guide/lessons/items.ts",
-  "guide/lessons/links.ts",
-  "guide/lessons/ready.ts",
-  "guide/lessons/spells.ts",
-  "guide/lessons/tables.ts",
-  "guide/lessons/tags.ts",
-  "guide/lessons/templates.ts",
-  "screens/constructor/effect-pick.tsx",
-  "screens/constructor/lookup-panel.tsx",
-  "screens/constructor/tags-field.tsx"
-]
+[]

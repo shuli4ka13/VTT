@@ -10,6 +10,7 @@ import { useSession } from './session.ts';
 import { settle, markClean, rememberVersion } from './autosave.ts';
 import { getSystem, createSystem } from '../api/client.ts';
 import { lessonOf } from '../guide/lessons/index.ts';
+import { offered } from '../guide/lazy.ts';
 import { dataT, t } from '../i18n/author.ts';
 import { mainLang } from '@vtt/engine';
 import { useLocale } from './locale.ts';
@@ -127,7 +128,7 @@ export const useGuide = create<GuideState>()(persist((set, get) => ({
 
   start: async (id, again = false) => {
     const lesson = lessonOf(id);
-    if (!lesson) return false;
+    if (!lesson || !offered(lesson)) return false;
     if (!await settle()) {
       set({ note: t('guide:note.notSaved') });
       return false;

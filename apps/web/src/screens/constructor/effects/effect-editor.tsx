@@ -275,7 +275,7 @@ function Hooks({ id, effect, system, edit }: {
               {word}
             </WhileWhenRow>
             <div className="stack when-body">
-              <Chain id={id} placeAt={index => ({ part: turn, index })} effect={carrier} system={system} edit={editCarrier} title={t('whileWhen.does')} lined empty={t('whileWhen.hookEmpty')} />
+              <Chain id={id} placeAt={index => ({ part: turn, index })} effect={carrier} foldName={`${effect.label ?? ''} · ${turn}`} system={system} edit={editCarrier} title={t('whileWhen.does')} lined empty={t('whileWhen.hookEmpty')} />
             </div>
           </div>
         );
@@ -333,14 +333,14 @@ function Handlers({ id, effect, system, edit }: {
             <div className="stack when-body">
               <Chain
                 id={id} placeAt={step => ({ part: 'handler', handler: index, index: step })}
-                effect={carrier} system={system} edit={editCarrier}
+                effect={carrier} foldName={`${effect.label ?? ''} · on ${index + 1}`} system={system} edit={editCarrier}
                 title={t('whileWhen.does')}
                 lined
                 empty={t('whileWhen.handlerEmpty')}
                 onEdgeUp={indices => moveLane(indices, 'cost')}
                 onRoll={handler.on === 'seen'}
                 startAt={groupSteps(carrier.cost ?? []).filter(card => card.kind !== 'flow').length}
-                lead={<SelfTrack id={id} at={step => ({ part: 'handler-cost', handler: index, index: step })} effect={carrier} system={system} edit={editCarrier} onMoveLane={moveLane} {...(handler.confirm ? { onAddCost: (cost: string) => editCarrier(draft => { (draft.cost ??= []).push(payStep(system, draft, cost)); }) } : {})} />}
+                lead={<SelfTrack id={id} at={step => ({ part: 'handler-cost', handler: index, index: step })} effect={carrier} foldName={`${effect.label ?? ''} · on ${index + 1}`} system={system} edit={editCarrier} onMoveLane={moveLane} {...(handler.confirm ? { onAddCost: (cost: string) => editCarrier(draft => { (draft.cost ??= []).push(payStep(system, draft, cost)); }) } : {})} />}
                 {...(handler.confirm && !handler.cost?.length ? { onAddCost: (cost: string) => editCarrier(draft => { (draft.cost ??= []).push(payStep(system, draft, cost)); }) } : {})}
               />
             </div>
@@ -429,7 +429,7 @@ function Lifetime({ effect, system, edit }: {
   );
 }
 
-function SelfTrack({ id, at, effect, system, edit, onMoveLane, onAddCost }: {
+function SelfTrack({ id, at, effect, system, edit, onMoveLane, onAddCost, foldName }: {
   id: string;
   at: (index: number) => Place;
   effect: Effect;
@@ -437,6 +437,7 @@ function SelfTrack({ id, at, effect, system, edit, onMoveLane, onAddCost }: {
   edit: (change: (draft: Effect) => void) => void;
   onMoveLane: (indices: number[], to: Lane) => void;
   onAddCost?: (id: string) => void;
+  foldName?: string;
 }) {
   const track = effect.cost ?? [];
   if (!track.length) return null;
@@ -451,7 +452,7 @@ function SelfTrack({ id, at, effect, system, edit, onMoveLane, onAddCost }: {
 
   return (
     <>
-      <Chain id={id} placeAt={at} effect={carrier} system={system} edit={editTrack} lane="cost" onEdgeDown={indices => onMoveLane(indices, 'steps')} bare />
+      <Chain id={id} placeAt={at} effect={carrier} {...(foldName ? { foldName } : {})} system={system} edit={editTrack} lane="cost" onEdgeDown={indices => onMoveLane(indices, 'steps')} bare />
       <PayDivider system={system} except={id} {...(onAddCost ? { onAdd: onAddCost } : {})} />
     </>
   );

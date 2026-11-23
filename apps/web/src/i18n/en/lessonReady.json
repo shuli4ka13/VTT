@@ -1,0 +1,79 @@
+{
+  "name": {
+    "abilities": "d20 Abilities",
+    "stats": "Abilities",
+    "charisma": "charisma",
+    "inspiration": "Inspiration",
+    "class": "class",
+    "disengage": "Disengage",
+    "costAction": "Cost: action",
+    "combatFolder": "Combat actions",
+    "physical": "Physical damage",
+    "woundMod": "Wound penalty",
+    "statesMod": "Condition penalty",
+    "tracks": "Health and stun tracks"
+  },
+  "title": "Take from the ready-made",
+  "sub": "Start from scratch and bring over only what you need from the samples, then remove the extra.",
+  "chapter": {
+    "piece": {
+      "title": "A piece of the sheet",
+      "sum": "The sheet has the abilities from a sample, the extra field is removed, no errors."
+    },
+    "effect": {
+      "title": "Effect",
+      "sum": "The “Disengage” effect is brought over together with what it cannot work without. No errors."
+    },
+    "alone": {
+      "title": "On your own",
+      "sum": "You took a piece from another system and removed the extra from it."
+    }
+  },
+  "take": {
+    "lead": "A copy of a sample takes everything: races, classes, dozens of other people's effects. Cleaning that up later is hard. It is easier to start from scratch and take only the pieces you need from the samples.",
+    "say": "In the “Ready-made from samples” panel press the first piece in the list. It is six abilities with modifiers.",
+    "hint": "Pieces are laid out by system, and the abilities piece is first in the list. A grey piece is already in the system.",
+    "result": "The abilities are brought onto the sheet."
+  },
+  "seen": {
+    "say": "On the plaque of the abilities piece marked “added” open “what came in”: everything that came with the piece is there — tables, fields, a die. “undo” returns the system as it was, but only until the next edit.",
+    "result": "You can see everything that came with the piece."
+  },
+  "drop": {
+    "say": "Remove the unneeded “Inspiration” field.",
+    "hint": "A grey “Delete” means the field is in use — it cannot be removed. “Inspiration” is free.",
+    "field": "On the sheet click the “Inspiration” field.",
+    "delete": "Press “Delete”.",
+    "confirm": "Confirm: “really remove”.",
+    "trap": "The “charisma” row is removed, and other parts of the system use it — “Problems” will show which. Put “charisma” back and remove “Inspiration”.",
+    "result": "“Inspiration” is removed, the rest is in place."
+  },
+  "problems": {
+    "say": "Press the “No problems” button in the header (if something is found, it says “Problems” and a number). After the removal there should be no errors, and if something broke, it will say where.",
+    "result": "No problems. To close the list, press the same button again."
+  },
+  "effect": {
+    "lead": "Effects are taken the same way. An effect brings with it what it cannot work without — for example, the cost of the action and the turn counters.",
+    "say": "In the “Nearby” panel on the “Ready-made” tab open “Individual effects” and press “Disengage”.",
+    "hint": "“Disengage” is from D&D 5e, in its “Individual effects”.",
+    "ready": "If “Trial” is open, press “Ready-made” in the “Nearby” panel.",
+    "open": "Open “Individual effects”.",
+    "press": "Press “Disengage”.",
+    "result": "The “Disengage” effect is brought over."
+  },
+  "came": {
+    "say": "Open “what came in”: together with “Disengage” came the “Cost: action” effect and the “Combat actions” folder.",
+    "result": "You can see what came together with “Disengage”."
+  },
+  "problemsEffect": {
+    "say": "Press the “No problems” button in the header (if something is found, it says “Problems” and a number). There should be no errors.",
+    "result": "No problems."
+  },
+  "other": {
+    "lead": "The last task is without hints, with a piece from another system.",
+    "goal": "the sheet has “Physical damage” from the piece “Health and stun tracks”, one of the fields “Wound penalty” and “Condition penalty” is removed, and “Problems” shows no errors.",
+    "say": "Bring “Health and stun tracks” to the sheet and remove one unneeded field from them.",
+    "hint": "The piece is in “Ready-made from samples”, under Shadowrun. You can remove “Wound penalty” or “Condition penalty”.",
+    "result": "A piece from another system is brought, the extra is removed."
+  }
+}

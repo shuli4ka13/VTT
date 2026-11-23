@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { world as W } from '@vtt/schema';
 import { spokenIn, mainLang } from '@vtt/engine';
 import { LESSONS } from './lessons/index.ts';
-import { areaOf, inLang, namesOf } from './lazy.ts';
+import { areaOf, inLang, namesOf, offered } from './lazy.ts';
 import { errorsOf } from './find.ts';
 import type { Anchor, Lesson, Step } from './types.ts';
 
@@ -56,13 +56,15 @@ const within = (phrase: string, pool: readonly string[]): boolean => {
   return pool.some(text => whole.test(text.toLowerCase()));
 };
 
-const translated = LESSONS.filter(lesson => inLang(lesson, 'en') !== lesson);
+const translated = LESSONS.filter(lesson => inLang(lesson, 'en') !== lesson && offered(lesson, 'en'));
 
 const ALLOWED: Record<string, readonly string[]> = {};
 
 describe('уроки на английском', () => {
-  it('переведённые уроки есть', () => {
-    expect(translated.length).toBeGreaterThan(0);
+  it('все уроки строятся под язык; на английском не предлагается только урок о готовом из русских образцов', () => {
+    expect(LESSONS.filter(lesson => inLang(lesson, 'en') === lesson).map(lesson => lesson.id)).toEqual([]);
+    expect(LESSONS.filter(lesson => !offered(lesson, 'en')).map(lesson => lesson.id)).toEqual(['ready']);
+    expect(LESSONS.filter(lesson => !offered(lesson, 'ru'))).toEqual([]);
   });
 
   for (const lesson of translated) {

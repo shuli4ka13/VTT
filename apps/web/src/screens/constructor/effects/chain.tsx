@@ -46,7 +46,7 @@ function negationOf(text: string): { negated: boolean; inner: string } {
   } catch { return { negated: false, inner: text.trim() }; }
 }
 
-export function Chain({ id, placeAt, effect, system, edit, title: titleProp, empty: emptyProp, lane = 'steps', onEdgeUp, onEdgeDown, bare = false, lined = false, startAt = 0, lead, onAddCost, onRoll = false }: {
+export function Chain({ id, placeAt, effect, system, edit, title: titleProp, empty: emptyProp, lane = 'steps', foldName, onEdgeUp, onEdgeDown, bare = false, lined = false, startAt = 0, lead, onAddCost, onRoll = false }: {
   id: string;
   placeAt: (index: number) => Place;
   effect: Effect;
@@ -55,6 +55,7 @@ export function Chain({ id, placeAt, effect, system, edit, title: titleProp, emp
   title?: string;
   empty?: string;
   lane?: Lane;
+  foldName?: string;
   onEdgeUp?: (indices: number[]) => void;
   onEdgeDown?: (indices: number[]) => void;
   bare?: boolean;
@@ -125,10 +126,10 @@ export function Chain({ id, placeAt, effect, system, edit, title: titleProp, emp
   const toggleFold = useOpened(st => st.toggle);
   const setOpen = useOpened(st => st.setOpen);
   const foldKey = (group: (typeof cards)[number]) =>
-    `step|${effect.label ?? ''}|${lane}|${String(group.step.id ?? group.indices[0])}`;
+    `step|${foldName ?? effect.label ?? ''}|${lane}|${String(group.step.id ?? group.indices[0])}`;
   const keys = cards.filter(card => card.kind !== 'flow').map(foldKey);
   const signature = keys.join('\n');
-  const name = effect.label ?? '';
+  const name = foldName ?? effect.label ?? '';
   const seen = useRef<{ name: string; keys: string[]; shapes: { key: string; shape: string }[] } | null>(null);
   const shapes = cards.filter(card => card.kind !== 'flow').map(card => ({ key: foldKey(card), shape: JSON.stringify(card.step) }));
   useEffect(() => {

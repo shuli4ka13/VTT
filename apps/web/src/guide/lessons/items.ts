@@ -1,165 +1,183 @@
 import type { System } from '@vtt/schema';
 import type { Lesson, View } from '../types.ts';
-import { effectBy, tableBy, fieldBy, stepsOf, is, numberOf, same, errorsOf, FORMULA_DONE, barOpen, barText } from '../find.ts';
-import { problemsClean } from '../find.ts';
+import { effectBy, tableBy, fieldBy, stepsOf, is, numberOf, same, errorsOf, FORMULA_DONE, barOpen, barText, problemsClean } from '../find.ts';
 import { visible } from '../anchor.ts';
+import { lazyLesson, seedIn } from '../lazy.ts';
 import base from '../seeds/base.json' with { type: 'json' };
-import { soleLang } from '@vtt/engine';
 
-const strike = (view: View) => effectBy(view.system, 'Удар');
-const weaponParam = (view: View) => (strike(view)?.[1].params ?? []).find(param => same(param.label, 'Урон оружия'));
-const bookKind = (view: View, label: string) => {
-  const found = tableBy(view.system, label);
-  return found && found[1].shape === 'book' ? found : undefined;
-};
-const paramUsed = (view: View): boolean => {
-  const param = weaponParam(view);
-  return Boolean(param && param.kind === 'number' && stepsOf(strike(view)?.[1]).some(step => step.type === 'apply' && is(step.value, `@${param.key}`)));
-};
-const weapon = (view: View) => bookKind(view, 'Оружие');
-const editsArmor = (view: View, label: string, by?: number): boolean => {
-  const ac = fieldBy(view.system, 'Класс брони')?.tag;
-  return Boolean(ac && (bookKind(view, label)?.[1].modifiers ?? []).some(modifier => {
-    const loose = modifier as unknown as { op?: string; value?: unknown };
-    return modifier.kind === 'value' && is(modifier.target, ac) && (by === undefined || ((!loose.op || loose.op === 'add') && numberOf(loose.value) === by));
-  }));
-};
+export const items: Lesson = lazyLesson('items', words => {
+  const { t } = words;
+  const STRIKE = t('lessonItems:name.strike');
+  const HP = t('lessonItems:name.hp');
+  const AC = t('lessonItems:name.ac');
+  const WEAPON = t('lessonItems:name.weapon');
+  const ARMOR = t('lessonItems:name.armor');
+  const WEAPON_DAMAGE = t('lessonItems:name.weaponDamage');
+  const KIND = t('lessonItems:chapter.kind.title');
+  const BUTTON = t('lessonItems:chapter.button.title');
+  const ALONE = t('lessonItems:chapter.alone.title');
+  const BOOKS = t('records:list.head');
+  const LIBRARY = t('effects:tab.library');
+  const SHEETS = t('rolls:character.title');
+  const ALL_BLOCKS = t('rolls:character.allBlocks');
+  const GRANTS = t('rolls:character.grantsTitle');
+  const AMOUNT = t('stepCards:change.amount.label');
 
-export const items: Lesson = {
-  id: 'items',
-  title: 'Вещи с эффектами',
-  sub: 'Тип «Оружие»: свойство, кнопка «Удар» у владельца и правка класса брони.',
-  start: 'есть «Удар»: он выдан всем листам и сам отнимает 5 хитов. Типа вещи «Оружие» ещё нет.',
-  seed: soleLang(base as unknown as System, 'ru'),
-  tab: 'records',
-  chapters: [
-    { title: 'Тип вещи', sum: 'Есть тип «Оружие», а «Удар» ждёт «Урон оружия» и даётся вещью.' },
-    { title: 'Кнопка и правка', sum: 'Оружие даёт владельцу «Удар» со своим уроном и +1 к классу брони.' },
-    { title: 'Сами', sum: 'Вы завели тип вещи с правкой без подсказок.' },
-  ],
-  steps: [
-    {
-      id: 'kind',
-      chapter: 'Тип вещи',
-      lead: 'Тип вещи — общая форма для всех вещей одного рода. У «Оружия» будут свойство, которое автор книги заполнит у каждого меча, кнопка «Удар» для владельца и +1 к классу брони, пока оружие у него.',
-      tab: 'records',
-      panel: 'книги',
-      say: 'Заведите тип вещи «Оружие».',
-      at: [
-        { at: { text: '+ тип' }, say: 'В панели «книги» нажмите «+ тип».', done: view => Object.values(view.system.tables ?? {}).some(table => table.shape === 'book') },
-        { at: { input: 'как зовётся тип' }, say: 'Впишите название «Оружие» и нажмите Enter.' },
-      ],
-      hint: 'В «Чем является» должно стоять «вещь» — оно и стоит.',
-      done: view => Boolean(weapon(view)) && (weapon(view)?.[1].use ?? 'item') === 'item',
-      result: () => 'Тип «Оружие» заведён.',
-    },
-    {
-      id: 'param',
-      chapter: 'Тип вещи',
-      tab: 'effects',
-      panel: 'Библиотека эффектов',
-      say: 'Сделайте, чтобы «Удар» снимал столько хитов, сколько «Урон оружия».',
-      hint: 'До шага с кнопкой «Проблемы» будут говорить, что «Урон оружия» никто не передаёт, — так и должно быть.',
-      at: [
-        { at: { text: '+ ещё одно' }, say: 'Откройте «Удар» и в «Что приходит» нажмите «+ ещё одно».', hint: '«Удара» не видно? Он в группе «Без блока» — раскройте её.', done: view => (strike(view)?.[1].params ?? []).length > 2 },
-        { at: { text: 'Название' }, say: 'В «Название» впишите «Урон оружия» и нажмите Enter.', done: view => Boolean(weaponParam(view)) },
-        {
-          at: { text: '4 · Изменить «Хиты»' },
-          say: 'В ветке «успех» щёлкните свёрнутый шаг «4 · Изменить»: он раскроется.',
-          done: () => visible({ text: 'Сколько' }),
-        },
-        {
-          at: { text: 'Сколько' },
-          say: 'В раскрытом шаге щёлкните число в «Сколько»: оно откроется строкой наверху и будет выделено.',
-          done: view => barOpen(view) || paramUsed(view),
-        },
-        {
-          at: { text: 'Сколько' },
-          say: 'Начните набирать «урон» — число заменится — и в группе «из записи» выберите «Урон оружия».',
-          done: view => is(barText(view), `@${weaponParam(view)?.key ?? ''}`) || paramUsed(view),
-        },
-        { at: [FORMULA_DONE, { text: 'Сколько' }], say: 'Нажмите Enter или «готово».' },
-      ],
-      via: { text: 'Удар', in: 'Библиотека эффектов' },
-      done: paramUsed,
-      traps: [{
-        when: view => !weaponParam(view)
-          && (strike(view)?.[1].params ?? []).some(param => (param.label ?? '').toLowerCase().includes('урон оружия')),
-        say: 'В названии осталось лишнее, например «Новый вход». Сотрите его, чтобы было ровно «Урон оружия».',
-      }],
-      result: () => '«Удар» снимает столько, сколько «Урон оружия».',
-    },
-    {
-      id: 'given',
-      chapter: 'Тип вещи',
-      tab: 'sheet',
-      say: 'Чтобы «Удар» давало оружие, а не все подряд, на вкладке «Лист» в разделе «Что даёт всем листам» уберите «Удар» крестиком.',
-      at: [
-        { at: { text: 'блоки и типы листов' }, say: 'Над листом нажмите «блоки и типы листов».', done: () => visible({ text: 'все блоки', in: 'Листы' }), maybe: true },
-        { at: { text: 'все блоки', in: 'Листы' }, say: 'В «Листы» нажмите «все блоки»: раздел показан только на ней.', done: () => visible({ field: 'Что даёт всем листам' }), maybe: true },
-        { at: { field: 'Что даёт всем листам' }, say: 'В «Что даёт всем листам» уберите «Удар» крестиком.' },
-      ],
-      done: view => {
-        const found = strike(view);
-        return Boolean(found && !(view.system.grants ?? []).includes(found[0]));
+  const strike = (view: View) => effectBy(view.system, STRIKE);
+  const weaponParam = (view: View) => (strike(view)?.[1].params ?? []).find(param => same(param.label, WEAPON_DAMAGE));
+  const bookKind = (view: View, label: string) => {
+    const found = tableBy(view.system, label);
+    return found && found[1].shape === 'book' ? found : undefined;
+  };
+  const paramUsed = (view: View): boolean => {
+    const param = weaponParam(view);
+    return Boolean(param && param.kind === 'number' && stepsOf(strike(view)?.[1]).some(step => step.type === 'apply' && is(step.value, `@${param.key}`)));
+  };
+  const weapon = (view: View) => bookKind(view, WEAPON);
+  const editsArmor = (view: View, label: string, by?: number): boolean => {
+    const ac = fieldBy(view.system, AC)?.tag;
+    return Boolean(ac && (bookKind(view, label)?.[1].modifiers ?? []).some(modifier => {
+      const loose = modifier as unknown as { op?: string; value?: unknown };
+      return modifier.kind === 'value' && is(modifier.target, ac) && (by === undefined || ((!loose.op || loose.op === 'add') && numberOf(loose.value) === by));
+    }));
+  };
+
+  return {
+    id: 'items',
+    title: t('lessonItems:title'),
+    sub: t('lessonItems:sub'),
+    start: t('lessonItems:start'),
+    seed: seedIn(base as unknown as System, words),
+    tab: 'records',
+    chapters: [
+      { title: KIND, sum: t('lessonItems:chapter.kind.sum') },
+      { title: BUTTON, sum: t('lessonItems:chapter.button.sum') },
+      { title: ALONE, sum: t('lessonItems:chapter.alone.sum') },
+    ],
+    steps: [
+      {
+        id: 'kind',
+        chapter: KIND,
+        lead: t('lessonItems:kind.lead'),
+        tab: 'records',
+        panel: BOOKS,
+        say: t('lessonItems:kind.say'),
+        at: [
+          { at: { text: t('records:list.addKind') }, say: t('lessonItems:kind.add'), done: view => Object.values(view.system.tables ?? {}).some(table => table.shape === 'book') },
+          { at: { input: t('common:name.kind') }, say: t('lessonItems:kind.name') },
+        ],
+        hint: t('lessonItems:kind.hint'),
+        done: view => Boolean(weapon(view)) && (weapon(view)?.[1].use ?? 'item') === 'item',
+        result: () => t('lessonItems:kind.result'),
       },
-      result: () => '«Удар» больше не у всех: его даст вещь.',
-    },
-    {
-      id: 'button',
-      chapter: 'Кнопка и правка',
-      tab: 'records',
-      panel: 'книги',
-      say: 'Сделайте, чтобы «Оружие» давало владельцу кнопку «Удар».',
-      hint: 'В списке «Вызывает эффект» нет эффектов, которые висят на листе, — только кнопки и вызываемые эффекты.',
-      at: [
-        { at: { text: '+ кнопка' }, say: 'Откройте «Оружие» и в «Кнопки на листе» нажмите «+ кнопка».', done: view => (weapon(view)?.[1].bindings ?? []).length > 0 },
-        { at: { text: 'Вызывает эффект' }, say: 'В «Вызывает эффект» выберите «Удар».' },
-      ],
-      via: { text: 'Оружие', in: 'книги' },
-      done: view => {
-        const found = strike(view);
-        const param = weaponParam(view);
-        const kind = weapon(view)?.[1];
-        return Boolean(found && param && kind
-          && (kind.bindings ?? []).some(binding => binding.effect === found[0])
-          && (kind.columns ?? []).some(column => column.key === param.key));
+      {
+        id: 'param',
+        chapter: KIND,
+        tab: 'effects',
+        panel: LIBRARY,
+        say: t('lessonItems:param.say'),
+        hint: t('lessonItems:param.hint'),
+        at: [
+          { at: { text: t('params:add.more') }, say: t('lessonItems:param.more'), hint: t('lessonItems:param.moreHint'), done: view => (strike(view)?.[1].params ?? []).length > 2 },
+          { at: { text: t('params:field.name') }, say: t('lessonItems:param.name'), done: view => Boolean(weaponParam(view)) },
+          {
+            at: { text: `4 · ${t('readback:step.set')} «${HP}»` },
+            say: t('lessonItems:param.expand'),
+            done: () => visible({ text: AMOUNT }),
+          },
+          {
+            at: { text: AMOUNT },
+            say: t('lessonItems:param.number'),
+            done: view => barOpen(view) || paramUsed(view),
+          },
+          {
+            at: { text: AMOUNT },
+            say: t('lessonItems:param.pick'),
+            done: view => is(barText(view), `@${weaponParam(view)?.key ?? ''}`) || paramUsed(view),
+          },
+          { at: [FORMULA_DONE, { text: AMOUNT }], say: t('lessonItems:param.enter') },
+        ],
+        via: { text: STRIKE, in: LIBRARY },
+        done: paramUsed,
+        traps: [{
+          when: view => !weaponParam(view)
+            && (strike(view)?.[1].params ?? []).some(param => (param.label ?? '').toLowerCase().includes(WEAPON_DAMAGE.toLowerCase())),
+          say: t('lessonItems:param.trap'),
+        }],
+        result: () => t('lessonItems:param.result'),
       },
-      result: () => 'Кнопка «Удар» есть. У «Оружия» само появилось свойство «Урон оружия»: его значение у меча уйдёт в «Удар».',
-    },
-    {
-      id: 'modifier',
-      chapter: 'Кнопка и правка',
-      lead: 'Под кнопкой видно, чем «Оружие» заполняет «Удар»: «Урон оружия» — свойство меча. Кто бьёт и кого, кнопка не спрашивает: это тот, кто нажал, и цели, выбранные за столом.',
-      tab: 'records',
-      say: 'Сделайте, чтобы оружие давало +1 к классу брони, пока оно у владельца.',
-      at: [
-        { at: { text: '+ правит поле' }, say: 'В «Что правит каждая вещь этого типа» нажмите «+ правит поле».', done: view => (weapon(view)?.[1].modifiers ?? []).length > 0 },
-        { at: { text: 'Что правим' }, say: 'В «Что правим» выберите «Класс брони».', done: view => Boolean(editsArmor(view, 'Оружие')) },
-        { at: { text: 'На сколько' }, say: 'Щёлкните «На сколько» и впишите 1.' },
-      ],
-      done: view => editsArmor(view, 'Оружие', 1),
-      result: () => 'Пока оружие у владельца, класс брони +1.',
-    },
-    {
-      id: 'problems',
-      chapter: 'Кнопка и правка',
-      say: 'Нажмите в шапке кнопку «Проблем нет» (если что-то найдено, на ней «Проблемы» и число). Ошибок быть не должно.',
-      at: { guide: 'problems' },
-      done: problemsClean,
-      result: () => 'Проблем нет.',
-    },
-    {
-      id: 'armor',
-      chapter: 'Сами',
-      lead: 'Сам меч заводит автор книги, когда система опубликована: главная → «Автор книги» → «Завести запись» → «Оружие». Учебную копию книга не видит. Последнее задание — без подсказок.',
-      alone: true,
-      tab: 'records',
-      say: 'Заведите тип вещи «Броня», который правит «Класс брони».',
-      goal: 'есть тип вещи «Броня», у которого есть правка «Класса брони», а в «Проблемах» нет ошибок.',
-      hint: 'В панели «книги» нажмите «+ в» под блоком «Снаряжение»: добавится новый тип. У нового типа нажмите «+ правит поле».',
-      done: view => editsArmor(view, 'Броня') && errorsOf(view.system) === 0,
-      result: () => '«Броня» правит класс брони.',
-    },
-  ],
-};
+      {
+        id: 'given',
+        chapter: KIND,
+        tab: 'sheet',
+        say: t('lessonItems:given.say'),
+        at: [
+          { at: { text: t('sheetTab:tab.viewKinds') }, say: t('lessonItems:given.kinds'), done: () => visible({ text: ALL_BLOCKS, in: SHEETS }), maybe: true },
+          { at: { text: ALL_BLOCKS, in: SHEETS }, say: t('lessonItems:given.all'), done: () => visible({ field: GRANTS }), maybe: true },
+          { at: { field: GRANTS }, say: t('lessonItems:given.remove') },
+        ],
+        done: view => {
+          const found = strike(view);
+          return Boolean(found && !(view.system.grants ?? []).includes(found[0]));
+        },
+        result: () => t('lessonItems:given.result'),
+      },
+      {
+        id: 'button',
+        chapter: BUTTON,
+        tab: 'records',
+        panel: BOOKS,
+        say: t('lessonItems:button.say'),
+        hint: t('lessonItems:button.hint'),
+        at: [
+          { at: { text: t('records:kind.buttons.add') }, say: t('lessonItems:button.add'), done: view => (weapon(view)?.[1].bindings ?? []).length > 0 },
+          { at: { text: t('records:button.effect') }, say: t('lessonItems:button.effect') },
+        ],
+        via: { text: WEAPON, in: BOOKS },
+        done: view => {
+          const found = strike(view);
+          const param = weaponParam(view);
+          const kind = weapon(view)?.[1];
+          return Boolean(found && param && kind
+            && (kind.bindings ?? []).some(binding => binding.effect === found[0])
+            && (kind.columns ?? []).some(column => column.key === param.key));
+        },
+        result: () => t('lessonItems:button.result'),
+      },
+      {
+        id: 'modifier',
+        chapter: BUTTON,
+        lead: t('lessonItems:modifier.lead'),
+        tab: 'records',
+        say: t('lessonItems:modifier.say'),
+        at: [
+          { at: { text: t('fields:mod.addField') }, say: t('lessonItems:modifier.add'), done: view => (weapon(view)?.[1].modifiers ?? []).length > 0 },
+          { at: { text: t('fields:mod.target') }, say: t('lessonItems:modifier.target'), done: view => Boolean(editsArmor(view, WEAPON)) },
+          { at: { text: t('fields:mod.amount') }, say: t('lessonItems:modifier.amount') },
+        ],
+        done: view => editsArmor(view, WEAPON, 1),
+        result: () => t('lessonItems:modifier.result'),
+      },
+      {
+        id: 'problems',
+        chapter: BUTTON,
+        say: t('lessonItems:problems.say'),
+        at: { guide: 'problems' },
+        done: problemsClean,
+        result: () => t('lessonItems:problems.result'),
+      },
+      {
+        id: 'armor',
+        chapter: ALONE,
+        lead: t('lessonItems:armor.lead'),
+        alone: true,
+        tab: 'records',
+        say: t('lessonItems:armor.say'),
+        goal: t('lessonItems:armor.goal'),
+        hint: t('lessonItems:armor.hint'),
+        done: view => editsArmor(view, ARMOR) && errorsOf(view.system) === 0,
+        result: () => t('lessonItems:armor.result'),
+      },
+    ],
+  };
+});
