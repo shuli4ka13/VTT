@@ -3,7 +3,7 @@ export { editPalette, paletteKeyOf } from '../engine/roll-edits.ts';
 export { outcomeWords, tagWords } from '../engine/roll-tags.ts';
 export { ADVANTAGE_METHODS, installMethod, recipesToInstall } from '../model/advantage-methods.ts';
 export { writeTableCall } from '../model/amounts.ts';
-export { blockLabel, blockNames, blockOf, fieldsByBlock, labelBlock, NO_BLOCK, sheetBlockNames } from '../model/blocks.ts';
+export { blockLabel, blockNames, blockOf, fieldsByBlock, labelBlock, NO_BLOCK, noBlockLabel, sheetBlockNames } from '../model/blocks.ts';
 export { blockParts, bringIn, closure } from '../model/bring.ts';
 export type { Brought, Part, PartKind } from '../model/bring.ts';
 export { rolesOf } from '../model/buttons.ts';

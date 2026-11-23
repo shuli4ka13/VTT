@@ -11,6 +11,7 @@ export const MODEL: Record<string, string> = {
   "{0}: одно значение на всё действие, а пришло по целям": "{0}: one value for the whole action, but one per target came",
   "не заполнено: {0} — для каждой цели": "not filled in: {0} — for each target",
   "{0}: «{1}» — не цель этого действия": "{0}: “{1}” is not a target of this action",
+  "Без блока": "No block",
   "«Иначе» без «Если» выше": "“Else” without an “If” above",
   "«Иначе» после «Иначе» без условия — сюда не дойдёт": "“Else” after “Else” without a condition — it will never get here",
   "конец блока без «Если»": "end of block without an “If”",

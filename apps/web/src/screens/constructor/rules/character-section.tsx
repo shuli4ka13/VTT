@@ -1,6 +1,6 @@
 import { SheetKindEditor } from '../records-tab.tsx';
 import { newGroup } from '../groups.ts';
-import { NO_BLOCK, blockLabel, labelBlock, sheetKinds, hasDesk, DESK_ID, fieldsOf, withColumn, singleTableOf, isSingle } from '@vtt/engine';
+import { noBlockLabel, blockLabel, labelBlock, sheetKinds, hasDesk, DESK_ID, fieldsOf, withColumn, singleTableOf, isSingle } from '@vtt/engine';
 import type { Field as FieldModel, Holder } from '@vtt/engine';
 import type { ReactNode } from 'react';
 import { TableColumnCard } from './tables-section.tsx';
@@ -244,7 +244,7 @@ export function CharacterSection({ system, editSystem, docked }: {
       {branch(tree, 0)}
       {loose.length ? (
         <div className="stack stack--tight">
-          <span className="faint">{NO_BLOCK}</span>
+          <span className="faint">{noBlockLabel()}</span>
           <div className="inline inline--tight">
             {loose.map(item => (
               <span key={`${item.table}.${item.column}`} className="inline inline--tight">

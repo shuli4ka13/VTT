@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Select, Input, Button } from '../../ui/primitives.tsx';
 import { useWorld, freeId } from '../../store/world.ts';
-import { blockNames, blockLabel, labelBlock, NO_BLOCK, fieldsOf, kindsOf } from '@vtt/engine';
+import { blockNames, blockLabel, labelBlock, NO_BLOCK, noBlockLabel, fieldsOf, kindsOf } from '@vtt/engine';
 import { groupChain } from './groups.ts';
 import type { System } from '@vtt/schema';
 import { useT } from '../../i18n/author.ts';
@@ -69,7 +69,7 @@ export function BlockPick({ system, value, onChange, of }: {
     <div className="inline inline--tight">
       <Select
         value={value ?? ''}
-        options={[['', `— ${NO_BLOCK.toLowerCase()} —`],
+        options={[['', `— ${noBlockLabel().toLowerCase()} —`],
           ...names.map(name => [name, `${'· '.repeat(depthOf(system, name))}${blockLabel(system, name)}`] as const)] as never}
         onChange={next => onChange(next || undefined)}
       />

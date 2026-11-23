@@ -2,14 +2,17 @@ import type { System, Field } from './types.ts';
 import { fieldsOf } from './sheet-columns.ts';
 import { kindsOf, kindOf } from './owned.ts';
 import { basedOn } from './inherit.ts';
+import { tr } from '../words/tongue.ts';
 
 
 export const NO_BLOCK = 'Без блока';
 
 export const sheetBlockNames = (system: System): string[] => (system.blocks ?? []).map(block => block.key);
 
+export const noBlockLabel = (): string => tr`Без блока`;
+
 export const blockLabel = (system: System, key: string): string =>
-  (system.blocks ?? []).find(block => block.key === key)?.label ?? system.groups?.[key]?.label ?? key;
+  (system.blocks ?? []).find(block => block.key === key)?.label ?? system.groups?.[key]?.label ?? (key === NO_BLOCK ? noBlockLabel() : key);
 
 export function labelBlock(system: System, key: string, label: string): void {
   const said = label && label !== key ? label : undefined;

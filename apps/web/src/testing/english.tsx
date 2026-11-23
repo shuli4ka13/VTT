@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, cleanup, act, fireEvent } from '@testing-library/react';
 import { latinOf } from '@vtt/engine';
-import { SAMPLE_WORLDS } from '@vtt/engine/samples';
+import { SAMPLE_WORLDS, PIECES } from '@vtt/engine/samples';
 import type { SampleWorld } from '@vtt/engine/samples';
 import { viewsOf, load, reveal, QUICK } from './round-trip.tsx';
 import type { View } from './round-trip.tsx';
@@ -36,16 +36,39 @@ export function englishWorld(world: SampleWorld): SampleWorld {
   return out;
 }
 
+
 const TRIM = /^[\s«»"'“”.,:;!?()…·•—–\-+/%№*→←↑↓]+|[\s«»"'“”.,:;!?(…·•—–\-+/%№*→←↑↓]+$/gu;
 
+const NAMED = new Set(['label', 'name', 'title', 'plural', 'question', 'yes', 'no', 'hint', 'description', 'note', 'asLabel']);
+
+function sampleWords(): Set<string> {
+  const out = new Set<string>();
+  const walk = (node: unknown, key?: string): void => {
+    if (Array.isArray(node)) node.forEach(item => walk(item, key));
+    else if (node && typeof node === 'object') Object.entries(node).forEach(([name, value]) => walk(value, name));
+    else if (typeof node === 'string' && key && (NAMED.has(key) || key === 'said') && RUSSIAN.test(node)) {
+      for (const part of node.split(/[A-Za-z0-9_@{}[\]<>=|#$^~`\\]+/u)) {
+        const text = part.replace(/\s+/g, ' ').replace(TRIM, '');
+        if (text) out.add(text);
+      }
+    }
+  };
+  walk(SAMPLE_WORLDS);
+  walk(PIECES);
+  return out;
+}
+
+let samples: Set<string> | null = null;
+
 export function russianIn(pieces: readonly string[]): string[] {
+  samples ??= sampleWords();
   const out = new Set<string>();
   for (const full of pieces) {
     const piece = full.split('\u0001')[0] ?? '';
     if (!RUSSIAN.test(piece)) continue;
     for (const part of piece.split(/[A-Za-z0-9_@{}[\]<>=|#$^~`\\]+/u)) {
       const text = part.replace(/\s+/g, ' ').replace(TRIM, '');
-      if (RUSSIAN.test(text)) out.add(text);
+      if (RUSSIAN.test(text) && !samples.has(text)) out.add(text);
     }
   }
   return [...out];
