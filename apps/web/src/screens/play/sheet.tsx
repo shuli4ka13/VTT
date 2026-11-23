@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { useRoom } from '../../store/room.ts';
 import { tableSocket } from '../../api/socket.ts';
 import { useReader } from '../../engine/use-calc.ts';
-import { maySheet, mayField } from '../../engine/rights.ts';
+import { maySheet, mayField, seesField } from '../../engine/rights.ts';
 import { Columns, List, ListItem } from '../../ui/layout.tsx';
 import { Card, CardHead, DangerButton, Empty, Fold, Chip, Input, Button, Field, Select } from '../../ui/primitives.tsx';
 import { SheetView } from '../../sheet/sheet-view.tsx';
@@ -92,7 +92,8 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
   const shared = useMemo(() => sharedOf(room.system as System, room.sheets), [room.system, room.sheets]);
   const system = room.system as System;
   const scope = isDesk ? 'desk' : asGroup ? 'group' : 'sheet';
-  const fields = useMemo(() => fieldsFor(system, scope), [system, scope]);
+  const every = useMemo(() => fieldsFor(system, scope), [system, scope]);
+  const fields = useMemo(() => every.filter(field => seesField(room, me, sheet.id, field)), [every, room, me, sheet.id]);
   const reader = useReader(system, sheet, room.compendium, isDesk || asGroup ? null : shared, isDesk ? 'desk' : undefined);
   const kinds = sheetKinds(room.system as System);
   const kind = sheetKindOf(room.system as System, sheet);
@@ -146,7 +147,7 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
           ) : null}
         </div>
       ) : null}
-      {!isDesk && !asGroup && hasGroups && editable ? (
+      {!isDesk && !asGroup && hasGroups && mine?.role === 'gm' ? (
         <Field label="Группа">
           <Select
             value={sheet.group ?? ''}
@@ -178,6 +179,7 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
         badge={isDesk ? 'стол' : kind?.label ?? 'лист'}
         onChange={editable ? (tag, value) => tableSocket.setValue(room.id, sheet.id, tag, value) : undefined}
         onShift={editable ? (tag, by) => tableSocket.shiftValue(room.id, sheet.id, tag, by) : undefined}
+        mayEdit={tag => mayField(room, me, sheet.id, tag)}
         onRoll={tag => {
           const rolled = fieldsOf(system).find(field => field.tag === tag);
           const pair = rolled?.roll?.pair === true && second !== '' ? second : undefined;

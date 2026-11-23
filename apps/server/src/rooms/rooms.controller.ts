@@ -72,13 +72,13 @@ export class RoomsController {
   async join(@Param('id') id: string, @Headers('authorization') header?: string) {
     const { userId } = await this.auth.whoIs(bearer(header));
     await this.roomsService.join(userId, id);
-    return seenBy(await this.roomsService.state(id), await this.roomsService.isGm(id, userId));
+    return seenBy(await this.roomsService.state(id), this.roomsService.sight(id, userId));
   }
 
   @Get('rooms/:id')
   async state(@Param('id') id: string, @Headers('authorization') header?: string) {
     const { userId } = await this.auth.whoIs(bearer(header));
-    return seenBy(await this.roomsService.state(id), await this.roomsService.isGm(id, userId));
+    return seenBy(await this.roomsService.state(id), this.roomsService.sight(id, userId));
   }
 
   @Get('rooms/:id/journal')
@@ -91,27 +91,27 @@ export class RoomsController {
   @UsePipes(new ZodValidationPipe(api.actIntent))
   async act(@Body() intent: ActIntent, @Headers('authorization') header?: string) {
     const { userId } = await this.auth.whoIs(bearer(header));
-    return seenBy(await this.roomsService.act(userId, intent), await this.roomsService.isGm(intent.roomId, userId));
+    return seenBy(await this.roomsService.act(userId, intent), this.roomsService.sight(intent.roomId, userId));
   }
 
   @Post('rooms/:id/turn')
   @UsePipes(new ZodValidationPipe(api.turnIntent))
   async turn(@Body() intent: TurnIntent, @Headers('authorization') header?: string) {
     const { userId } = await this.auth.whoIs(bearer(header));
-    return seenBy(await this.roomsService.turn(userId, intent), await this.roomsService.isGm(intent.roomId, userId));
+    return seenBy(await this.roomsService.turn(userId, intent), this.roomsService.sight(intent.roomId, userId));
   }
 
   @Post('rooms/:id/answer')
   @UsePipes(new ZodValidationPipe(api.answerIntent))
   async answer(@Body() intent: AnswerIntent, @Headers('authorization') header?: string) {
     const { userId } = await this.auth.whoIs(bearer(header));
-    return seenBy(await this.roomsService.answer(userId, intent), await this.roomsService.isGm(intent.roomId, userId));
+    return seenBy(await this.roomsService.answer(userId, intent), this.roomsService.sight(intent.roomId, userId));
   }
 
   @Post('rooms/:id/cancel')
   @UsePipes(new ZodValidationPipe(api.cancelIntent))
   async cancel(@Body() intent: CancelIntent, @Headers('authorization') header?: string) {
     const { userId } = await this.auth.whoIs(bearer(header));
-    return seenBy(await this.roomsService.cancel(userId, intent), await this.roomsService.isGm(intent.roomId, userId));
+    return seenBy(await this.roomsService.cancel(userId, intent), this.roomsService.sight(intent.roomId, userId));
   }
 }

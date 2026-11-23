@@ -17,6 +17,9 @@ import { isBlank } from './blank.ts';
 import { STEP_WORDS, slotShown, type SlotGate } from '../words/steps.ts';
 import { ROLL_CALL, CALL_WORDS } from '../words/calls.ts';
 import { KIND_LABEL } from '../words/kinds.ts';
+import { circleOf, narrower, CIRCLE_WORDS } from './roles.ts';
+import { healthSteps } from './health.ts';
+import { deskField } from '../engine/owners.ts';
 import { modifierLists } from './integrity.ts';
 import { calledOf, chainsOfEffect, isPipeline } from '../engine/effects.ts';
 import { basedOn, paramsOf, flattenSystem } from './inherit.ts';
@@ -34,7 +37,7 @@ import {
   type Where, type Reference, type RefKind, type Declared, type Listener,
   LISTEN, contractsOf, HOLDER, DESK_NAME, holderNameOf, tiedToHolder,
 } from './references.ts';
-import { fieldsOf, fieldOf, fieldProblems, onSheet, isSingle, holderOf, rowKeyOf, hasField, rollEntryOf, ROW, isFormulaCell, misfit, isNoteField } from './sheet-columns.ts';
+import { fieldsOf, fieldOf, fieldProblems, onSheet, isSingle, holderOf, rowKeyOf, hasField, rollEntryOf, ROW, isFormulaCell, misfit, isNoteField, cellSource } from './sheet-columns.ts';
 import { newPass, calc } from '../engine/calc.ts';
 import { CycleError } from '../engine/errors.ts';
 import { hasDesk } from '../events/desk.ts';
@@ -481,6 +484,120 @@ function noteProblems(system: System, refs: readonly Reference[]): Problem[] {
     const text = `«${field.label}» — ${KIND_LABEL.note}: формулы и шаги его не читают и не меняют`;
     if (!out.some(p => sameWhere(p.where, ref.from) && p.text === text)) out.push({ where: ref.from, level: 'error', text });
   }
+  return out;
+}
+
+const SEES_WORDS: Record<string, string> = { owner: 'тот, кто играет листом, и ведущий', gm: 'только ведущий', none: 'никто' };
+
+function fieldOfName(system: System, name: string): ReturnType<typeof fieldOf> {
+  const bare = name.startsWith(`${HOLDER}.`) ? name.slice(HOLDER.length + 1) : deskField(name) ?? name;
+  return fieldOf(system, bare) ?? fieldOf(system, bare.split('.')[0]!);
+}
+
+function depsOf(...sources: unknown[]): string[] {
+  const out: string[] = [];
+  for (const source of sources) {
+    const expr = typeof source === 'string' ? source : source && typeof source === 'object' && 'expr' in source ? String((source as { expr: unknown }).expr) : '';
+    if (!expr.trim() || /^-?\d+(\.\d+)?$/.test(expr.trim())) continue;
+    try { out.push(...compile(expr).deps); } catch { continue; }
+  }
+  return out;
+}
+
+function roleProblems(system: System): Problem[] {
+  const out: Problem[] = [];
+  for (const [id, table] of Object.entries(system.tables ?? {})) {
+    for (const column of table.columns ?? []) {
+      if (!column.sees && !column.edits) continue;
+      const where = fieldWhere(system, id, column.key);
+      const name = `«${column.label || column.key}»`;
+      if (!onSheet(table)) {
+        out.push({ where, level: 'warn', text: `${name}: «кто видит» и «кто правит» действуют только у полей листа, группы и стола — здесь они ни на что не влияют` });
+        continue;
+      }
+      const stored = isSingle(table) ? column.expr === undefined : (table.rows ?? []).some(row => cellSource(column, row).kind === 'input');
+      if (column.edits && !stored) out.push({ where, level: 'warn', text: `${name} считается по формуле — «кто правит» на него не действует` });
+      if (stored && column.sees === 'none' && column.edits !== 'none') out.push({ where, level: 'warn', text: `${name} не видит никто, а править его может ${column.edits === 'gm' ? 'ведущий' : 'игрок'} — править невидимое нельзя: поставьте «никто не правит» или откройте поле` });
+      if (stored && column.sees === 'gm' && !column.edits) out.push({ where, level: 'warn', text: `${name} видит только ведущий, а править его может игрок — игрок его не увидит: поставьте «правит ведущий» или откройте поле` });
+      if (column.sees === 'owner' && holderOf(table) === 'desk') out.push({ where, level: 'warn', text: `${name} — поле стола: листом-столом никто не играет, поэтому видеть его будет только ведущий` });
+    }
+  }
+  const told = new Set<string>();
+  const check = (field: NonNullable<ReturnType<typeof fieldOf>>, names: readonly string[], where: Where, what: string) => {
+    for (const name of names) {
+      const source = fieldOfName(system, name);
+      if (!source || source.tag === field.tag || !narrower(circleOf(source), circleOf(field))) continue;
+      const key = `${field.tag}|${source.tag}|${what}`;
+      if (told.has(key)) continue;
+      told.add(key);
+      out.push({
+        where, level: 'error',
+        text: `«${field.label}» ${what} «${source.label}», а его видит ${SEES_WORDS[source.sees ?? ''] ?? CIRCLE_WORDS[circleOf(source)]}: у остальных «${field.label}» не посчитается — сузьте его или откройте «${source.label}»`,
+      });
+    }
+  };
+  for (const field of fieldsOf(system)) {
+    const where = fieldWhere(system, field.home, field.cell?.column ?? field.tag);
+    const value = field.value;
+    check(field, depsOf(value.kind === 'formula' ? value.expr : value.start), where, 'считается из поля');
+    check(field, depsOf(value.min, value.max), where, 'берёт границу из поля');
+    const roll = field.roll;
+    if (roll) check(field, depsOf(roll.bonus, roll.count, roll.sides, roll.keep, roll.threshold, roll.success, roll.margin, roll.total), where, 'бросается с полем');
+  }
+  const lists = [
+    ...modifierLists(system),
+    ...Object.keys(system.sheets ?? {}).map(kind => ({ where: { tab: 'sheet' as const }, modifiers: (system.sheets![kind]!.modifiers ?? []) as unknown as Record<string, unknown>[] })),
+  ];
+  for (const { where, modifiers } of lists) {
+    for (const modifier of modifiers) {
+      if (modifier.kind !== 'value' || typeof modifier.target !== 'string') continue;
+      const field = fieldOf(system, modifier.target);
+      if (field) check(field, depsOf(modifier.value, modifier.if), where, 'правится по полю');
+    }
+  }
+  return out;
+}
+
+function healthProblems(system: System): Problem[] {
+  const health = system.health;
+  if (!health) return [];
+  const out: Problem[] = [];
+  const where: Where = { tab: 'rules', section: 'vitals' };
+  const bad = (text: string, level: Level = 'error') => { out.push({ where, level, text: `здоровье: ${text}` }); };
+  for (const [tag, what] of [[health.value, 'здоровье'], [health.max, 'предел здоровья']] as const) {
+    const field = fieldOf(system, tag);
+    if (!field) { bad(`поля «${tag}» (${what}) в системе нет — выберите другое`); continue; }
+    if (field.lives === 'desk') bad(`«${field.label}» — поле стола, а ${what} у каждого листа своё`);
+    if (field.value.kind === 'stored' && (field.value.type !== 'number' || field.value.many)) bad(`«${field.label}» — не число: ${what} считается числом`);
+  }
+  const steps = health.steps;
+  if (!steps) return out;
+  const table = system.tables?.[steps.table];
+  if (!table) { bad(`таблицы ступеней «${steps.table}» в системе нет`); return out; }
+  const name = `«${table.label || steps.table}»`;
+  if (onSheet(table) || isBook(table)) { bad(`ступени берутся из справочной таблицы, а ${name} — таблица листа или тип записей`); return out; }
+  const column = (key: string | undefined) => (table.columns ?? []).find(one => one.key === key);
+  const from = column(steps.from);
+  if (!from) bad(`в таблице ${name} нет колонки доли «${steps.from}»`);
+  else if ((from.kind ?? 'number') !== 'number') bad(`колонка доли «${from.label || from.key}» в ${name} — не число`);
+  const state = steps.state ? column(steps.state) : undefined;
+  if (steps.state && !state) bad(`в таблице ${name} нет колонки состояния «${steps.state}»`);
+  else if (state && state.kind !== 'effect') bad(`колонка состояния «${state.label || state.key}» в ${name} должна быть вида «${KIND_LABEL.effect}»`);
+  if (out.length) return out;
+  const rows = healthSteps(system);
+  for (const one of rows) {
+    if (!one.state && one.from === null) bad(`ступень «${one.step.label}» не сработает никогда: у неё нет ни состояния, ни доли`, 'warn');
+  }
+  const shares = rows.filter(one => !one.state && one.from !== null);
+  if (!shares.some(one => one.from! <= 0)) bad('ни одна ступень по доле не начинается с нуля — при малом здоровье ступени не будет: добавьте строку «от 0»', 'warn');
+  shares.forEach((one, at) => {
+    const above = shares.slice(0, at).find(other => other.from! <= one.from!);
+    if (above) bad(`ступень «${one.step.label}» (от ${one.from}) стоит ниже ступени «${above.step.label}» (от ${above.from}) и не покажется: расставьте доли от большей к меньшей`, 'warn');
+  });
+  const firstShare = rows.findIndex(one => !one.state && one.from !== null);
+  rows.forEach((one, at) => {
+    if (one.state && firstShare >= 0 && at > firstShare) bad(`ступень-состояние «${one.step.label}» стоит ниже ступеней по доле и может не показаться: поднимите её наверх`, 'warn');
+  });
   return out;
 }
 
@@ -1645,7 +1762,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   out.push(...rowNameProblems(system));
   out.push(...labelTwinProblems(system));
   out.push(...tableFieldProblems(system));
-  out.push(...startProblems(system), ...sampleProblems(system), ...noteProblems(system, named));
+  out.push(...startProblems(system), ...sampleProblems(system), ...noteProblems(system, named), ...roleProblems(system), ...healthProblems(system));
   for (const found of [...variantProblems(system), ...cellScopeProblems(system)]) {
     if (!out.some(p => sameWhere(p.where, found.where) && p.text === found.text)) out.push({ where: found.where, level: 'error', text: found.text });
   }
@@ -1669,7 +1786,7 @@ export const errorsOf = (problems: Problem[]): Problem[] => problems.filter(p =>
 
 const SECTION_WORDS: Record<string, string> = {
   grants: 'действуют на всех', initiative: 'инициатива', roll_edits: 'правки броска',
-  tables: 'таблицы', constants: 'кости', groups: 'блоки',
+  tables: 'таблицы', constants: 'кости', groups: 'блоки', vitals: 'здоровье',
 };
 
 const quoted = (label: string | undefined, key: string): string => `«${label || key}»`;

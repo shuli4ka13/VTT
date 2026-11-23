@@ -1,6 +1,7 @@
 import { breakReasonWord } from '../engine/steps/index.ts';
 import type { System } from '../model/types.ts';
 import { fieldOf } from '../model/sheet-columns.ts';
+import { isSecret } from '../model/roles.ts';
 
 interface Stopped { type: string; reason?: string; note?: string }
 
@@ -15,8 +16,9 @@ export function refusalWords(
   const short = before && before.type === 'check' && before.success === false && typeof before.of === 'string'
     ? before as { of: string; value?: number } : undefined;
   if (short) {
-    const label = fieldOf(system, short.of)?.label ?? short.of;
-    return `не хватает «${label}» (сейчас ${short.value})`;
+    const field = fieldOf(system, short.of);
+    const label = field?.label ?? short.of;
+    return isSecret(field) ? `не хватает «${label}»` : `не хватает «${label}» (сейчас ${short.value})`;
   }
   return breakReasonWord(stopped.type, String(stopped.reason ?? ''));
 }

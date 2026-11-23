@@ -5,7 +5,8 @@ import { effectLabelOf } from './actions.ts';
 import { breakReasonWord, registry as stepRegistry, splitsTargets } from '../engine/steps/index.ts';
 import { outcomeWords, rollTitle as titleOf } from '../engine/roll-tags.ts';
 import type { System, Sheet } from '../model/types.ts';
-import { hasField, valueWord } from '../model/sheet-columns.ts';
+import { hasField, valueWord, fieldOf } from '../model/sheet-columns.ts';
+import { isSecret } from '../model/roles.ts';
 import { walkSheet } from '../model/paths.ts';
 import { typeColumn } from '../model/inherit.ts';
 import { labelsAt } from '../model/names-at.ts';
@@ -57,7 +58,8 @@ export function previewLines(system: System, effectId: string, trace: Record<str
     const words = outcomeWords(system, (one.tags as string[] | undefined) ?? []);
     const forced = one.forced != null ? ` (${forcedWords(Number(one.forced), Boolean(one.success))})` : '';
     const named = typeof one.versusTag === 'string' ? `${tagLabel(system, one.versusTag, system.effects?.[effectId]?.params) ?? one.versusTag} ` : '';
-    lines.push(`против ${named}${one.versus}: ${one.success ? words.success : words.fail}${forced}`);
+    const against = typeof one.versusTag === 'string' && isSecret(fieldOf(system, one.versusTag)) ? named.trim() : `${named}${one.versus}`;
+    lines.push(`против ${against}: ${one.success ? words.success : words.fail}${forced}`);
   }
   return lines;
 }
@@ -82,7 +84,7 @@ export function describeParts(
       ? `${nameOf(entry.fromId)} отвечает «${label}» по ${nameOf(entry.toId)}`
       : `${nameOf(entry.fromId)} применяет «${label}» по ${nameOf(entry.toId)}`;
 
-  const changes = (entry.report.changes ?? []) as { tag: string; from: unknown; to: unknown }[];
+  const changes = ((entry.report.changes ?? []) as { tag: string; from: unknown; to: unknown }[]).filter(c => !isSecret(fieldOf(system, c.tag)));
   const shown = changes.map(c => `${labelOf(c.tag)}: ${valueWord(c.from)} → ${valueWord(c.to)}`);
   function labelOf(tag: string): string {
     const item = parseItemTag(tag);
@@ -188,15 +190,18 @@ export function describeParts(
       const tags = (trace.tags as string[] | undefined) ?? [];
       const title = tags.length ? rollTitle(system, tags, 'Проверка') : refLabel(step?.value) ?? 'Проверка';
       const faced = Array.isArray(trace.faced) ? (trace.faced as FacedTrace[]).map(facedText) : [];
-      return [...faced, `${title}: ${trace.total} против ${versus}: ${trace.versus} — ${verdict}`].join(' · ');
+      const secret = typeof trace.versusTag === 'string' && isSecret(fieldOf(system, trace.versusTag));
+      const closed = typeof trace.of === 'string' && isSecret(fieldOf(system, trace.of));
+      return [...faced, `${title}${closed ? '' : `: ${trace.total}`} против ${versus}${secret ? '' : `: ${trace.versus}`} — ${verdict}`].join(' · ');
     }
     return null;
   };
   const eventLabel = (id: string) => system.effects?.[id]?.label ?? id;
   const idle = (trace: Record<string, unknown>): boolean =>
     (trace.type === 'apply' && trace.from === trace.to) || stepRegistry.get(String(trace.type))?.idle?.(trace, system) === true;
+  const secret = (trace: Record<string, unknown>): boolean => typeof trace.target === 'string' && isSecret(fieldOf(system, trace.target));
   const calculation = (entry.report.trace ?? []).flatMap((trace: Record<string, unknown>) => {
-    if (trace.skipped || idle(trace)) return [];
+    if (trace.skipped || idle(trace) || secret(trace)) return [];
     const named = trace.within && !rolled(trace) ? null : namedTrace(trace);
     if (named) return [named];
     const line = stepRegistry.get(String(trace.type))?.traceLine;

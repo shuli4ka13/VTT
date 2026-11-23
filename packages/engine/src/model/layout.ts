@@ -16,6 +16,11 @@ export function renameLayoutColumn(system: System, table: string, from: string, 
       return [b === undefined ? (a === from ? to : a) : `${a}.${b === from ? to : b}`, view];
     }));
   }
+  const steps = system.health?.steps;
+  if (steps?.table === table) {
+    if (steps.from === from) steps.from = to;
+    if (steps.state === from) steps.state = to;
+  }
 }
 
 export function renameLayoutRow(system: System, table: string, from: unknown, to: unknown): void {
@@ -34,6 +39,7 @@ export function renameLayoutRow(system: System, table: string, from: unknown, to
 
 export function renameLayoutTable(system: System, from: string, to: string): void {
   for (const part of parts(system)) if (part.table === from) part.table = to;
+  if (system.health?.steps?.table === from) system.health.steps.table = to;
   for (const block of system.blocks ?? []) if (block.kinds) block.kinds = block.kinds.map(kind => (kind === from ? to : kind));
 }
 
@@ -55,7 +61,11 @@ export function tidySample(system: System): void {
   if (kept.length) system.sample = Object.fromEntries(kept); else delete system.sample;
 }
 
-export function retagSample(system: System, retag: (tag: string) => string): void {
+export function retagFields(system: System, retag: (tag: string) => string): void {
+  if (system.health) {
+    system.health.value = retag(system.health.value);
+    system.health.max = retag(system.health.max);
+  }
   if (!system.sample) return;
   system.sample = Object.fromEntries(Object.entries(system.sample).map(([tag, value]) => [retag(tag), value]));
 }

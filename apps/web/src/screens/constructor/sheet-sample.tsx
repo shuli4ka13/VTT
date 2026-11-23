@@ -150,6 +150,7 @@ export function SheetSample({ system, picked, onPick, onPickBlock, onPickRow }: 
         reader={reader}
         only={only}
         badge="образец"
+        marks
         pages={{ at: at ?? null, onAt: name => pick({ ...OPEN_PAGE, activePage: name }), all: true }}
         lists={lists}
         edit={{

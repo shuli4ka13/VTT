@@ -139,6 +139,8 @@ export const column = columnValue.extend({
   optional: z.boolean().optional(),
   stages: z.array(stage).optional(),
   bound: z.enum(['from', 'to']).optional(),
+  sees: z.enum(['owner', 'gm', 'none']).optional(),
+  edits: z.enum(['gm', 'none']).optional(),
 }).strict();
 
 export const sheetPart = z.object({
@@ -427,6 +429,11 @@ export const system = z.object({
   }).strict().optional(),
 
   initiative: z.lazy(() => rollSpec.extend({ ties: z.array(z.string().min(1)).optional() })).optional(),
+  health: z.object({
+    value: z.string().min(1),
+    max: z.string().min(1),
+    steps: z.object({ table: z.string().min(1), from: z.string(), state: z.string().min(1).optional() }).strict().optional(),
+  }).strict().optional(),
   limits: z.object({
     handlerDepth: z.number().int().positive().optional(),
     budget: z.number().int().positive().optional(),

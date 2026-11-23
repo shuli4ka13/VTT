@@ -1,5 +1,5 @@
-import { authorize } from '@vtt/engine';
-import type { Room, TurnOp } from '@vtt/engine';
+import { authorize, shows, holderOf } from '@vtt/engine';
+import type { Room, TurnOp, Viewer, Field } from '@vtt/engine';
 import type { RoomState, System } from '@vtt/schema';
 
 const roomOf = (room: RoomState): Room => ({
@@ -23,3 +23,15 @@ export const mayField = (room: RoomState, userId: string, sheetId: string, tag: 
 
 export const mayAllowItems = (room: RoomState, userId: string, whoId: string): boolean =>
   authorize(roomOf(room), userId, { kind: 'items', userId: whoId }) === null;
+
+export const viewerOf = (room: RoomState, userId: string): Viewer => {
+  const me = room.members.find(member => member.userId === userId);
+  return { gm: me?.role === 'gm', sheetId: me?.sheetId ?? null };
+};
+
+export const seesField = (room: RoomState, userId: string, sheetId: string, field: Field): boolean => {
+  const table = (room.system as System).tables?.[field.home];
+  const holder = holderOf(table) === 'group' ? room.sheets.find(sheet => sheet.id === sheetId)?.group ?? sheetId : sheetId;
+  return shows(room.sheets, viewerOf(room, userId), { id: holder }, field);
+};
+

@@ -83,6 +83,7 @@
 }
 
 .field--wide, .sheet-pick--wide { grid-column: 1 / -1; }
+.field__mark { margin-left: var(--s-2); padding: 0 var(--s-2); border: 1px solid var(--border); border-radius: var(--r-full); font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--text-faint); white-space: nowrap; }
 .note-text { white-space: pre-wrap; overflow-wrap: anywhere; font-size: var(--fs-3); line-height: 1.4; }
 
 .field--needed .input,

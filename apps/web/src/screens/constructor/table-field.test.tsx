@@ -5,6 +5,7 @@ import { ColumnSheetFields } from './table-field.tsx';
 import { FormulaBar } from '../../ui/formula-bar.tsx';
 import { useFormulaBar } from '../../store/formula-bar.ts';
 import { useWorld } from '../../store/world.ts';
+import { pickCombo, comboOptions } from '../../testing/cards.ts';
 import type { System } from '@vtt/schema';
 
 const system = {
@@ -98,3 +99,42 @@ describe('поле вида «текст» в настройках поля', ()
     expect(hits()).not.toHaveProperty('default');
   });
 });
+
+describe('кто видит и кто правит поле', () => {
+  beforeEach(() => {
+    useFormulaBar.getState().dismiss();
+    useWorld.setState(state => ({ ...state, system, compendium: { records: [] } }));
+  });
+  afterEach(cleanup);
+  const pick = (label: string, option: string) => pickCombo(screen.getByLabelText(label), option);
+
+  it('по умолчанию ключей нет; выбор пишет настройку, возврат к «все» и «игрок» её снимает', () => {
+    render(<Live />);
+    expect(hits()).not.toHaveProperty('sees');
+    pick('кто видит', 'только ведущий');
+    pick('кто правит', 'только ведущий');
+    expect(hits()).toMatchObject({ sees: 'gm', edits: 'gm' });
+    pick('кто видит', 'все');
+    pick('кто правит', 'игрок');
+    expect(hits()).not.toHaveProperty('sees');
+    expect(hits()).not.toHaveProperty('edits');
+  });
+
+  it('«никто не видит» сразу ставит «никто не правит», и другого выбора правки нет', () => {
+    render(<Live />);
+    pick('кто видит', 'никто — служебное');
+    expect(hits()).toMatchObject({ sees: 'none', edits: 'none' });
+    expect(comboOptions(screen.getByLabelText('кто правит')).map(option => option.label)).toEqual(['никто — только правила']);
+  });
+
+  it('у посчитанного поля настройки «Правит» нет', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: { ...system, tables: { лист: { shape: 'single', columns: [system.tables!['лист']!.columns![0]!, { key: 'хиты', label: 'Хиты', expr: { expr: '@хиты_макс' } }] } } } as unknown as System,
+    }));
+    render(<Live />);
+    expect(screen.getByLabelText('кто видит')).toBeTruthy();
+    expect(screen.queryByLabelText('кто правит')).toBeNull();
+  });
+});
+

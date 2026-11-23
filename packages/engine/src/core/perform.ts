@@ -14,6 +14,7 @@ import { fieldOf, misfit, same } from '../model/sheet-columns.ts';
 import { itemCell, parseItemTag, withItemValue, withoutItemValue } from '../model/item-ref.ts';
 import { isBlank } from '../model/blank.ts';
 import { freshSheet } from '../model/fresh.ts';
+import { isSecret } from '../model/roles.ts';
 import { DESK_ID, isDesk } from '../engine/owners.ts';
 import { External, Pause, emptyJournal } from './external.ts';
 import { Path } from './path.ts';
@@ -204,8 +205,12 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
     const gone = CALL_WORDS.roll.canceled(thrown.roll.canceled ?? []);
     const shown = rolled.dice.kept != null && rolled.dice.rolls.length > 1
       ? `[${rolled.dice.rolls.join(', ')}] → ${rolled.dice.kept}` : `[${rolled.dice.rolls.join(', ')}]`;
+    const closed = [tag, ...(second ? [second] : [])].some(name => isSecret(fieldOf(run.system, name)));
+    const plain = verdictText({ success, degree });
     run.state.write({
-      text: thrown.roll.claim.read.kind === 'count'
+      text: closed
+        ? `${sheet.name} бросает «${check.label}»: ${shown}${named}${plain}${gone}`
+        : thrown.roll.claim.read.kind === 'count'
         ? `${sheet.name} бросает «${check.label}»: ${shown}${named}${addendsText(thrown.roll.addends)} — успехов: ${total}${verdict}${gone}`
         : check.bonus
           ? `${sheet.name} бросает «${check.label}»: ${shown}${named}${addendsText(thrown.roll.addends)} + ${bonus} = ${total}${verdict}${gone}`

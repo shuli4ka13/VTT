@@ -312,28 +312,32 @@
             "label": "Без сил",
             "expr": {
               "expr": "@hp_max > 0 и @hp_current <= 0"
-            }
+            },
+            "sees": "none"
           },
           {
             "key": "up",
             "label": "На ногах",
             "expr": {
               "expr": "не @down"
-            }
+            },
+            "sees": "none"
           },
           {
             "key": "is_dead",
             "label": "Три провала",
             "expr": {
               "expr": "@death_fail >= 3"
-            }
+            },
+            "sees": "none"
           },
           {
             "key": "is_stable",
             "label": "Три успеха",
             "expr": {
               "expr": "@death_ok >= 3"
-            }
+            },
+            "sees": "none"
           },
           {
             "key": "attacks_per_action",
@@ -437,7 +441,62 @@
           {
             "key": "notes",
             "label": "Заметки",
-            "kind": "note"
+            "kind": "note",
+            "sees": "owner"
+          }
+        ]
+      },
+      "health_steps": {
+        "label": "Ступени здоровья",
+        "key": "word",
+        "columns": [
+          {
+            "key": "from",
+            "label": "От доли, %",
+            "kind": "number"
+          },
+          {
+            "key": "state",
+            "label": "При состоянии",
+            "kind": "effect"
+          }
+        ],
+        "rows": [
+          {
+            "value": "мёртв",
+            "cells": {
+              "state": "dead"
+            }
+          },
+          {
+            "value": "при смерти",
+            "cells": {
+              "state": "dying"
+            }
+          },
+          {
+            "value": "без сознания",
+            "cells": {
+              "state": "unconscious"
+            }
+          },
+          {
+            "value": "цел",
+            "cells": {
+              "from": 100
+            }
+          },
+          {
+            "value": "ранен",
+            "cells": {
+              "from": 50
+            }
+          },
+          {
+            "value": "тяжело ранен",
+            "cells": {
+              "from": 0
+            }
           }
         ]
       },
@@ -1506,7 +1565,9 @@
             "kind": "choice",
             "from": "taken",
             "default": "как есть",
-            "title": "{label}"
+            "title": "{label}",
+            "sees": "none",
+            "edits": "none"
           }
         ],
         "rows": [
@@ -3371,6 +3432,15 @@
     "grid": {
       "step": 5,
       "unit": "фт"
+    },
+    "health": {
+      "value": "hp_current",
+      "max": "hp_max",
+      "steps": {
+        "table": "health_steps",
+        "from": "from",
+        "state": "state"
+      }
     },
     "initiative": {
       "die": "lead_die",

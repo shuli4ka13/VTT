@@ -40,4 +40,6 @@ export interface Field {
   lives?: 'group' | 'desk';
   home: string;
   cell?: CellMark;
+  sees?: 'owner' | 'gm' | 'none';
+  edits?: 'gm' | 'none';
 }

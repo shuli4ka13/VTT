@@ -8,9 +8,10 @@ import type { Sheet, System, StoredValue, FieldOption } from '@vtt/schema';
 import { MOST_STEPS, NOTE_LIMIT, isNoteField, optionsOf } from '@vtt/engine';
 import type { Field as FieldModel } from '@vtt/engine';
 
-export function FieldCell({ field, system, sheet, reader, onChange, onShift, onRoll, bare }: {
+export function FieldCell({ field, system, sheet, reader, onChange, onShift, onRoll, bare, mark }: {
   field: FieldModel;
   bare?: boolean;
+  mark?: string;
   system: System;
   sheet: Sheet;
   reader: Reader;
@@ -18,7 +19,8 @@ export function FieldCell({ field, system, sheet, reader, onChange, onShift, onR
   onShift?: (tag: string, by: number) => void;
   onRoll?: (tag: string) => void;
 }) {
-  const label: ReactNode = bare ? <span className="sr-only">{field.label}</span> : field.hint ? <span title={field.hint}>{field.label}</span> : field.label;
+  const named: ReactNode = bare ? <span className="sr-only">{field.label}</span> : field.hint ? <span title={field.hint}>{field.label}</span> : field.label;
+  const label: ReactNode = mark ? <>{named}<span className="field__mark">{mark}</span></> : named;
   const roll = field.roll && onRoll
     ? (
       <Button size="sm" title={field.roll.label ?? `Проверка: ${field.label}`} onClick={() => onRoll(field.tag)}>

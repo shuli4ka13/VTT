@@ -1,5 +1,5 @@
-import { expectAction, costRefusal, availableActions, isDesk, isGroup, fieldsFor, sheetKinds, distanceOf, distanceWords, fieldsOf, claimWords, baseValue } from '@vtt/engine';
-import { mayAnswer, mayAllowItems } from '../../engine/rights.ts';
+import { expectAction, costRefusal, availableActions, isDesk, isGroup, fieldsFor, sheetKinds, distanceOf, distanceWords, fieldsOf, claimWords, baseValue, isService, isSecret, circleOf, isNoteField } from '@vtt/engine';
+import { mayAnswer, mayAllowItems, mayField, seesField } from '../../engine/rights.ts';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRoom } from '../../store/room.ts';
 import { tableSocket } from '../../api/socket.ts';
@@ -35,6 +35,8 @@ function RoomTable({ room }: { room: RoomState }) {
   const [tab, setTab] = useState<'table' | 'log'>('table');
   const [acted, setActed] = useState(false);
   const elsewhere = (message: string | null) => { setActed(false); setError(message); };
+  const viewerId = useSession(s => s.userId);
+  const gm = room.members.some(member => member.userId === viewerId && member.role === 'gm');
 
   const sender = room.sheets.find(s => s.id === from) ?? null;
   const targets = room.sheets.filter(s => to.includes(s.id));
@@ -98,6 +100,7 @@ function RoomTable({ room }: { room: RoomState }) {
                         <option value="">— ничего —</option>
                         {fieldsOf(room.system)
                           .filter(f => f.lives !== 'desk' && f.value.kind === 'stored' && f.value.type === 'number')
+                          .filter(f => !isService(f) && (gm || !isSecret(f)))
                           .map(f => <option key={f.tag} value={f.tag}>{f.label}</option>)}
                       </select>
                     </>
@@ -302,13 +305,16 @@ function DeskPanel({ room, desk }: { room: RoomState; desk: Sheet }) {
     <Card>
       <CardHead title="Стол" actions={<span className="faint">{gm ? 'общий для всех — правите вы' : 'общий для всех — правит ведущий'}</span>} />
       <div className="row">
-        {fieldsFor(system, 'desk').map(field => (
-          <FieldCell
-            key={field.tag} field={field} system={system} sheet={desk} reader={reader}
-            onChange={gm ? (tag, value) => tableSocket.setValue(room.id, desk.id, tag, value) : undefined}
-            onShift={gm ? (tag, by) => tableSocket.shiftValue(room.id, desk.id, tag, by) : undefined}
-          />
-        ))}
+        {fieldsFor(system, 'desk').filter(field => seesField(room, userId, desk.id, field)).map(field => {
+          const open = gm && mayField(room, userId, desk.id, field.tag);
+          return (
+            <FieldCell
+              key={field.tag} field={field} system={system} sheet={desk} reader={reader}
+              onChange={open ? (tag, value) => tableSocket.setValue(room.id, desk.id, tag, value) : undefined}
+              onShift={open ? (tag, by) => tableSocket.shiftValue(room.id, desk.id, tag, by) : undefined}
+            />
+          );
+        })}
       </div>
     </Card>
   );
@@ -422,17 +428,18 @@ function Actions({ room, sender, targets, places, refused, onError, onClear, onS
   const said = useRef<HTMLDivElement>(null);
   useEffect(() => { if (refused) said.current?.scrollIntoView?.({ block: 'nearest' }); }, [refused]);
   const aimed = JSON.stringify(targets.map(sheet => sheet.id));
+  const myId = useSession(s => s.userId);
+  const leading = room.members.some(m => m.userId === myId && m.role === 'gm');
+  const blind = useMemo(() => !leading && fieldsOf(room.system as System).some(field => circleOf(field) === 'gm' && !isNoteField(field)), [leading, room.system]);
   const unpaid = useMemo(() => {
     const out = new Map<string, string>();
-    if (!sender) return out;
+    if (!sender || blind) return out;
     for (const action of actionsOf(room, sender)) {
       const why = unpaidWhy(room, sender.id, JSON.parse(aimed) as string[], action.id);
       if (why) out.set(action.id, why);
     }
     return out;
-  }, [room, sender, aimed]);
-  const myId = useSession(s => s.userId);
-  const leading = room.members.some(m => m.userId === myId && m.role === 'gm');
+  }, [room, sender, aimed, blind]);
   const secret = useRoom(s => s.secret) && leading;
   const setSecret = useRoom(s => s.setSecret);
   const claimable = claimWords(room.system as System);
@@ -465,9 +472,9 @@ function Actions({ room, sender, targets, places, refused, onError, onClear, onS
       label={action.label}
       disabled={Boolean(room.pending)}
       blocked={unpaid.get(action.id) ?? null}
-      refuse={request => unpaidWhy(room, sender.id, targets.map(sheet => sheet.id), request.actionId, request.inputs)}
+      refuse={request => (blind ? null : unpaidWhy(room, sender.id, targets.map(sheet => sheet.id), request.actionId, request.inputs))}
       expect={request => {
-        if (!sender) return null;
+        if (!sender || blind) return null;
         const chosen = targets.map(sheet => sheet.id);
         const found = expectAction(
           { system: room.system as never, compendium: room.compendium as never, clock: room.clock ?? null },

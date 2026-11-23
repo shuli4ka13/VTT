@@ -1,7 +1,7 @@
 import { ColumnSheetFields } from '../table-field.tsx';
 import type { CellValue } from '@vtt/schema';
 import { rowNames } from '../row-names.ts';
-import { renameLayoutColumn, renameLayoutTable, retagSample, kindsFor, kindWord, isFormulaCell, onSheet, isSingle, holderOf, fieldsOf, withColumn, forgetFields, rowPieces, listUsers, isRange, tableKeyOf as keyOf, choiceTables, rowTables, numberTables, rowUsers, renameRow, renameRowInBook } from '@vtt/engine';
+import { renameLayoutColumn, renameLayoutTable, retagFields, kindsFor, kindWord, isFormulaCell, onSheet, isSingle, holderOf, fieldsOf, withColumn, forgetFields, rowPieces, listUsers, isRange, tableKeyOf as keyOf, choiceTables, rowTables, numberTables, rowUsers, renameRow, renameRowInBook } from '@vtt/engine';
 import type { RowPiece, TableColumn, Holder } from '@vtt/engine';
 export { rowNames } from '../row-names.ts';
 import { Card, CardHead, Input, NumInput, Button, DangerButton, Fold, Select, Verdict, Empty, Field, Chip, TextArea } from '../../../ui/primitives.tsx';
@@ -91,7 +91,7 @@ export function moveTable(draft: System, from: string, to: string): void {
   if (from === to || !draft.tables?.[from]) return;
   draft.tables = Object.fromEntries(Object.entries(draft.tables).map(([key, table]) => [key === from ? to : key, table]));
   renameLayoutTable(draft, from, to);
-  retagSample(draft, tag => (tag.startsWith(`${from}.`) ? `${to}.${tag.slice(from.length + 1)}` : tag));
+  retagFields(draft, tag => (tag.startsWith(`${from}.`) ? `${to}.${tag.slice(from.length + 1)}` : tag));
   forgetFields(draft);
 }
 
@@ -344,7 +344,7 @@ export function renameColumn(draft: System, tableId: string, key: string, label:
   if (fresh !== key) {
     renameLayoutColumn(draft, tableId, key, fresh);
     const single = isSingle(draft.tables?.[tableId]);
-    retagSample(draft, tag => {
+    retagFields(draft, tag => {
       if (single) return tag === key ? fresh : tag;
       const [table, row, own, ...rest] = tag.split('.');
       return table === tableId && row && own === key && !rest.length ? `${table}.${row}.${fresh}` : tag;

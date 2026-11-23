@@ -10,7 +10,7 @@ import type { Field as FieldModel } from '@vtt/engine';
 import { SheetGrid } from './sheet-grid.tsx';
 import type { GridEdit } from './sheet-grid.tsx';
 
-export function SheetView({ system, sheet, reader, onChange, onShift, onRoll, badge, only, fields, onPick, picked, onPickBlock, onPickRow, pages, lists, edit }: {
+export function SheetView({ system, sheet, reader, onChange, onShift, mayEdit, marks, onRoll, badge, only, fields, onPick, picked, onPickBlock, onPickRow, pages, lists, edit }: {
   edit?: GridEdit;
   pages?: { at: string | null; onAt: (name: string) => void; all?: boolean };
   lists?: Partial<Record<SheetList, ReactNode>>;
@@ -22,6 +22,8 @@ export function SheetView({ system, sheet, reader, onChange, onShift, onRoll, ba
   reader: Reader;
   onChange?: (tag: string, value: StoredValue) => void;
   onShift?: (tag: string, by: number) => void;
+  mayEdit?: (tag: string) => boolean;
+  marks?: boolean;
   onRoll?: (tag: string) => void;
   badge?: string;
   only?: string[];
@@ -39,6 +41,7 @@ export function SheetView({ system, sheet, reader, onChange, onShift, onRoll, ba
   const shown = listed.length ? [...byFields, ...listed].sort(([a], [b]) => rank(a) - rank(b)) : byFields;
 
   const cell = (field: FieldModel, bare = false) => {
+    const open = !mayEdit || mayEdit(field.tag);
     const view = (
       <FieldCell
         key={field.tag}
@@ -46,10 +49,11 @@ export function SheetView({ system, sheet, reader, onChange, onShift, onRoll, ba
         system={system}
         sheet={sheet}
         reader={reader}
-        onChange={onChange}
-        onShift={onShift}
+        onChange={open ? onChange : undefined}
+        onShift={open ? onShift : undefined}
         onRoll={onRoll}
         bare={bare}
+        {...(marks && field.sees ? { mark: SEES_MARKS[field.sees] } : {})}
       />
     );
     return onPick ? (
@@ -116,6 +120,8 @@ export function SheetView({ system, sheet, reader, onChange, onShift, onRoll, ba
     </div>
   );
 }
+
+const SEES_MARKS: Record<string, string> = { owner: 'владелец и ведущий', gm: 'только ведущий', none: 'служебное' };
 
 interface Piece { table: string | null; fields: FieldModel[] }
 

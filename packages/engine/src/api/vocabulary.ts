@@ -15,7 +15,9 @@ export { armsOf, balance, endOf, flowOf, inBlock, lazyPlan, sees } from '../mode
 export { appliedOf, implicitOf } from '../model/implicit.ts';
 export { flattenSystem, paramsOf, typeColumn, typeColumns } from '../model/inherit.ts';
 export { renameRow, renameRowInBook, rowUsers } from '../model/integrity.ts';
-export { renameLayoutColumn, renameLayoutTable, retagSample, tidyLayout, tidySample } from '../model/layout.ts';
+export { renameLayoutColumn, renameLayoutTable, retagFields, tidyLayout, tidySample } from '../model/layout.ts';
+export { healthOf, healthSpec, healthSteps, shareOf } from '../model/health.ts';
+export type { Health, HealthSpec, HealthStep } from '../model/health.ts';
 export { amountParamOf, choiceTableOf, listOf, listUsers, optionsOf, tagsOf, tagTablesOf } from '../model/lists.ts';
 export { choiceTablesAt, labelsAt, labelsOf, namesAt, resultsOf, sheetNamesAt } from '../model/names-at.ts';
 export type { NameAt, Place as NamePlace } from '../model/names-at.ts';

@@ -2,6 +2,7 @@ import { effectLabelOf } from './actions.ts';
 import { isShared, isDesk } from './desk.ts';
 import { MOMENT_PREFIX } from './bus.ts';
 import { fieldOf as columnField, valueWord } from '../model/sheet-columns.ts';
+import { isSecret } from '../model/roles.ts';
 import type { Report } from '../core/log.ts';
 import type { Clock } from '../engine/clock.ts';
 import type { System, Sheet, WornEffect } from '../model/types.ts';
@@ -87,6 +88,7 @@ export const describeMoment = (
   const who = sheets.find(s => s.id === entry.sheetId)?.name ?? entry.sheetId;
   const what = entry.report.label || effectLabelOf(world.system, entry.report.effect);
   const changes = (entry.report.changes as { tag: string; from: unknown; to: unknown }[])
+    .filter(change => !isSecret(columnField(world.system, change.tag)))
     .map(change => {
       const field = columnField(world.system, change.tag);
       return `${field?.label ?? change.tag}: ${valueWord(change.from)} → ${valueWord(change.to)}`;

@@ -366,6 +366,11 @@ function boundsOf(column: Pick<TableColumn, 'min' | 'max'>): { min?: number | st
   };
 }
 
+const rolesOf = (column: TableColumn): Pick<Field, 'sees' | 'edits'> => ({
+  ...(column.sees ? { sees: column.sees } : {}),
+  ...(column.edits ? { edits: column.edits } : {}),
+});
+
 const livesOf = (table: Table): { lives?: 'group' | 'desk' } => {
   const holder = holderOf(table);
   return holder === 'group' || holder === 'desk' ? { lives: holder } : {};
@@ -430,6 +435,7 @@ function singleFields(system: System, tableId: string, table: Table): Field[] {
       value: column.expr !== undefined ? { kind: 'formula', expr: column.expr.expr, ...boundsOf(column) } : valueOf(column, column.default),
       ...livesOf(table),
       home: tableId,
+      ...rolesOf(column),
     };
   });
 }
@@ -462,6 +468,7 @@ function rowFields(system: System, tableId: string, table: Table): Field[] {
         ...livesOf(table),
         home: tableId,
         cell: { table: tableId, row: rowKeyOf(row), column: column.key },
+        ...rolesOf(column),
       });
     }
   }

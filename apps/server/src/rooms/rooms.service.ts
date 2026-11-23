@@ -1,4 +1,5 @@
 import { seenBy } from './visibility.ts';
+import type { Sight } from './visibility.ts';
 import { Injectable, Inject, NotFoundException, ForbiddenException, BadRequestException, HttpException } from '@nestjs/common';
 import { eq, asc, desc } from 'drizzle-orm';
 import { DB, RAW, CLOCK, IDS, DIE } from '../common/tokens.ts';
@@ -11,7 +12,7 @@ import type {
   RoomState, RoomSummary, RoomDelta, JournalEntry, ActIntent, TurnIntent, AnswerIntent, CancelIntent, ClockState, PendingState,
   Sheet, System, Compendium, StoredValue, LogEntry, Place, Places,
 } from '@vtt/schema';
-import { flattenSystem, perform, authorize, emptyJournal, deskOf, hasDesk, blankDesk, DESK_ID, idleClock, EngineError, ASK_ONE_WORDS, ASK_DESK_TITLE } from '@vtt/engine';
+import { flattenSystem, perform, authorize, emptyJournal, deskOf, hasDesk, blankDesk, DESK_ID, idleClock, EngineError, ASK_ONE_WORDS, ASK_DESK_TITLE, knows, findField } from '@vtt/engine';
 import type { Op, Performed, Want, Journal, Question } from '@vtt/engine';
 
 export type Role = 'gm' | 'player';
@@ -70,12 +71,33 @@ export class RoomsService {
       const room = this.requireRoom(roomId);
       this.allow(room, userId, { kind: 'close' });
       this.store.close(roomId);
+      this.worlds.delete(roomId);
       for (const listener of this.closers) listener(roomId);
     });
   }
 
+  private readonly worlds = new Map<string, { system: string; compendium: string; world: { system: System; compendium: Compendium } }>();
+
   private worldOf(room: RoomRow): { system: System; compendium: Compendium } {
-    return { system: flattenSystem(JSON.parse(room.system) as System), compendium: JSON.parse(room.compendium) as Compendium };
+    const known = this.worlds.get(room.id);
+    if (known && known.system === room.system && known.compendium === room.compendium) return known.world;
+    const world = { system: flattenSystem(JSON.parse(room.system) as System), compendium: JSON.parse(room.compendium) as Compendium };
+    this.worlds.set(room.id, { system: room.system, compendium: room.compendium, world });
+    return world;
+  }
+
+  sights(roomId: string): (userId: string) => Sight {
+    const { system } = this.worldOf(this.requireRoom(roomId));
+    const members = this.store.members(roomId);
+    const sheets = this.store.sheets(roomId);
+    return userId => {
+      const me = members.find(member => member.userId === userId);
+      return { gm: me?.role === 'gm', sheetId: me?.sheetId ?? null, system, sheets };
+    };
+  }
+
+  sight(roomId: string, userId: string): Sight {
+    return this.sights(roomId)(userId);
   }
 
   async create(userId: string, worldId: string, title: string): Promise<RoomSummary> {
@@ -123,14 +145,20 @@ export class RoomsService {
     const me = this.store.members(roomId).find(member => member.userId === userId);
     if (!me) throw new ForbiddenException('журнал стола видят его участники');
     const rows = await this.db.select().from(roomJournal).where(eq(roomJournal.roomId, roomId)).orderBy(asc(roomJournal.seq));
-    const gm = me.role === 'gm';
+    const sight = this.sight(roomId, userId);
+    const { gm } = sight;
+    const closed = (input: { sheetId?: unknown; tag?: unknown }): boolean => {
+      if (gm || typeof input?.tag !== 'string' || typeof input.sheetId !== 'string') return false;
+      return !knows(sight.sheets, sight, { id: input.sheetId }, findField(sight.system, input.tag));
+    };
     return rows.map(row => {
-      const input = JSON.parse(row.input) as { hidden?: boolean };
+      const input = JSON.parse(row.input) as { hidden?: boolean; sheetId?: unknown; tag?: unknown };
       const result = JSON.parse(row.result) as RoomDelta;
       const secret = !gm && (Boolean(input?.hidden) || (result.log ?? []).some(entry => entry.hidden) || Boolean(result.pending?.hidden));
+      const shown = (row.op === 'set' || row.op === 'shift') && closed(input) ? { sheetId: input.sheetId, tag: input.tag } : input;
       return {
         seq: row.seq, at: row.at, userId: row.userId, op: row.op,
-        input: secret ? { hidden: true } : input, dice: secret ? [] : JSON.parse(row.dice), result: seenBy(result, !secret),
+        input: secret ? { hidden: true } : shown, dice: secret ? [] : JSON.parse(row.dice), result: seenBy(result, sight),
       };
     });
   }
@@ -283,10 +311,6 @@ export class RoomsService {
         };
       })
       .sort((a, b) => Number(mine.has(b.id)) - Number(mine.has(a.id)));
-  }
-
-  async isGm(roomId: string, userId: string): Promise<boolean> {
-    return this.store.members(roomId).some(member => member.userId === userId && member.role === 'gm');
   }
 
   private world(roomId: string, userId: string, name: string, input: unknown, op: Op, hidden: boolean): Promise<RoomDelta> {

@@ -276,3 +276,65 @@ describe('сумка: значения вещи', () => {
     expect(screen.getByText('Значения')).toBeTruthy();
   });
 });
+
+describe('роли полей на листе за столом', () => {
+  const sets: unknown[][] = [];
+  const original = tableSocket.setValue.bind(tableSocket);
+  const withRoles = (members: unknown[], values: Record<string, unknown>): RoomState => ({
+    id: 'к', title: 'Стол', members,
+    system: {
+      id: 'x', name: 'x', effects: {},
+      tables: {
+        лист: { shape: 'single', owner: 'sheet', label: 'Лист', columns: [
+          { key: 'хиты', label: 'Хиты', kind: 'number', default: 10 },
+          { key: 'тайна', label: 'Тайна ведущего', kind: 'number', sees: 'gm', edits: 'gm' },
+          { key: 'заметки', label: 'Заметки', kind: 'note', sees: 'owner' },
+          { key: 'ранг', label: 'Ранг', kind: 'number', edits: 'gm' },
+          { key: 'счётчик', label: 'Счётчик правил', kind: 'number', sees: 'none', edits: 'none' },
+        ] },
+        прочее: { shape: 'single', owner: 'sheet', label: 'Прочее', columns: [{ key: 'флаг', label: 'Служебный флаг', sees: 'none', expr: { expr: '1' } }] },
+      },
+      blocks: [
+        { name: 'Основа', parts: [{ table: 'лист' }] },
+        { name: 'Служебное', parts: [{ table: 'прочее' }] },
+      ],
+    },
+    compendium: { records: [] },
+    sheets: [{ id: 'а', systemId: 'x', name: 'Арвен', values, effects: [], has: [] }],
+  } as unknown as RoomState);
+  const GM = { userId: 'g', name: 'Ведущий', role: 'gm' };
+  const as = (userId: string, members: unknown[], values: Record<string, unknown>) => {
+    useSession.setState(state => ({ ...state, userId }));
+    useRoom.setState(state => ({ ...state, room: withRoles(members, values), mySheetId: 'а', log: [], error: null }));
+    renderOpen(<SheetScreen />);
+  };
+  const labels = () => [...document.querySelectorAll('.sheet .field__label')].map(node => node.textContent);
+  beforeEach(() => {
+    sets.length = 0;
+    tableSocket.setValue = (...args: unknown[]) => { sets.push(args); };
+  });
+  afterEach(() => { cleanup(); tableSocket.setValue = original; useSession.setState(state => ({ ...state, userId: '' })); });
+
+  it('ведущий видит всё, кроме служебного, и блок из одних служебных полей с листа пропал', () => {
+    as('g', [GM], { тайна: 41, заметки: 'долг', счётчик: 3 });
+    expect(labels()).toEqual(['Хиты', 'Тайна ведущего', 'Заметки', 'Ранг']);
+    expect(screen.queryByText('Служебное')).toBeNull();
+  });
+
+  it('тот, кто играет листом, видит своё поле владельца, но не поле ведущего; «правит ведущий» показано без ввода', () => {
+    as('p', [GM, { userId: 'p', name: 'Аня', role: 'player', sheetId: 'а' }], { заметки: 'долг', ранг: 2 });
+    expect(labels()).toEqual(['Хиты', 'Заметки', 'Ранг']);
+    expect((screen.getByLabelText('Заметки') as HTMLTextAreaElement).tagName).toBe('TEXTAREA');
+    const rank = screen.getByText('Ранг').closest('.field')!;
+    expect(rank.querySelector('input')).toBeNull();
+    expect(rank.textContent).toContain('2');
+    fireEvent.change(screen.getByText('Хиты').closest('.field')!.querySelector('input')!, { target: { value: '7' } });
+    expect(sets.at(-1)).toEqual(['к', 'а', 'хиты', 7]);
+  });
+
+  it('сосед по столу, который листом не играет, поля владельца не видит', () => {
+    as('q', [GM, { userId: 'q', name: 'Боря', role: 'player' }], {});
+    expect(labels()).toEqual(['Хиты', 'Ранг']);
+  });
+});
+

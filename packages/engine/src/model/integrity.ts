@@ -1,5 +1,5 @@
 import { emittedChoices } from './payments.ts';
-import { renameLayoutRow, retagSample } from './layout.ts';
+import { renameLayoutRow, retagFields } from './layout.ts';
 import { rowsOf } from './tables.ts';
 import { recordsOf, recordKinds, kindsOf, kindOfRecord } from './owned.ts';
 import { typeColumns } from './inherit.ts';
@@ -344,7 +344,7 @@ export function renameRow(system: System, table: string, from: unknown, to: unkn
     }
   }
   const head = `${table}.${slugOf(from)}.`;
-  retagSample(system, tag => (tag.startsWith(head) ? `${table}.${slugOf(to)}.${tag.slice(head.length)}` : tag));
+  retagFields(system, tag => (tag.startsWith(head) ? `${table}.${slugOf(to)}.${tag.slice(head.length)}` : tag));
   forgetFields(system);
 }
 

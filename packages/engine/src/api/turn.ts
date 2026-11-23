@@ -1,6 +1,8 @@
 export { act } from '../core/act.ts';
-export { authorize } from '../core/authorize.ts';
+export { authorize, FIELD_BY_GM, FIELD_BY_RULES, FIELD_UNSEEN, GROUP_BY_GM } from '../core/authorize.ts';
 export type { Member, Room, Want } from '../core/authorize.ts';
+export { circleOf, handEdited, isSecret, isService, knows, sheetsFor, shows } from '../model/roles.ts';
+export type { Circle, Viewer } from '../model/roles.ts';
 export { emptyJournal } from '../core/external.ts';
 export type { Journal, Question } from '../core/external.ts';
 export { DEFAULT_LIMITS } from '../core/limits.ts';

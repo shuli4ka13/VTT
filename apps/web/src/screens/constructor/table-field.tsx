@@ -26,6 +26,14 @@ export function readyForSheet(draft: System, tableId: string): void {
 
 const parseStart = (text: string): number | string => (/^-?\d+(\.\d+)?$/.test(text) ? Number(text) : text);
 
+const SEES_OPTIONS: (readonly [string, string])[] = [
+  ['', 'все'], ['owner', 'тот, кто играет листом, и ведущий'], ['gm', 'только ведущий'], ['none', 'никто — служебное'],
+];
+
+const EDITS_OPTIONS: (readonly [string, string])[] = [
+  ['', 'игрок'], ['gm', 'только ведущий'], ['none', 'никто — только правила'],
+];
+
 export function ColumnSheetFields({ tableId, column, system }: { tableId: string; column: Column; system: System }) {
   const editColumn = useWorld(s => s.editColumn);
   const table = system.tables![tableId]!;
@@ -42,6 +50,23 @@ export function ColumnSheetFields({ tableId, column, system }: { tableId: string
   return (
     <>
       <div className="inline inline--tight"><Chip>{stored ? 'вводит игрок' : 'считается'}</Chip></div>
+      <div className="row">
+        <Field label="Видит">
+          <Select<string> label="кто видит" value={column.sees ?? ''}
+            options={SEES_OPTIONS}
+            onChange={next => edit(draft => {
+              if (next) draft.sees = next as NonNullable<Column['sees']>; else delete draft.sees;
+              if (next === 'none' && stored) draft.edits = 'none';
+            })} />
+        </Field>
+        {stored ? (
+          <Field label="Правит">
+            <Select<string> label="кто правит" value={column.sees === 'none' ? 'none' : column.edits ?? ''}
+              options={column.sees === 'none' ? EDITS_OPTIONS.filter(([key]) => key === 'none') : EDITS_OPTIONS}
+              onChange={next => edit(draft => { if (next) draft.edits = next as NonNullable<Column['edits']>; else delete draft.edits; })} />
+          </Field>
+        ) : null}
+      </div>
       <div className="row">
         {stored && !column.many ? (
           <div className="start-field">

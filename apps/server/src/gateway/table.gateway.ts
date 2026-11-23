@@ -7,7 +7,7 @@ import { AuthService } from '../auth/auth.service.ts';
 import { api } from '@vtt/schema';
 import type { ServerMessage } from '@vtt/schema';
 
-interface Guest { socket: WebSocket; roomId: string; userId: string; gm: boolean }
+interface Guest { socket: WebSocket; roomId: string; userId: string }
 
 @Injectable()
 @WebSocketGateway({ path: '/ws' })
@@ -46,7 +46,6 @@ export class TableGateway {
     for (const guest of this.guests) {
       if (guest.socket === socket) this.guests.delete(guest);
     }
-    const gm = await this.roomsService.isGm(roomId, userId);
     socket.once('close', () => {
       for (const guest of this.guests) {
         if (guest.socket === socket) this.guests.delete(guest);
@@ -55,8 +54,8 @@ export class TableGateway {
     });
 
     await this.roomsService.enter(roomId, state => {
-      this.guests.add({ socket, roomId, userId, gm });
-      this.send(socket, { type: 'room:state', state: seenBy(state, gm) });
+      this.guests.add({ socket, roomId, userId });
+      this.send(socket, { type: 'room:state', state: seenBy(state, this.roomsService.sight(roomId, userId)) });
     });
     this.announceMembers(roomId);
   }
@@ -205,6 +204,7 @@ export class TableGateway {
     try {
       await this.roomsService.claimSheet(guest.userId, roomId, sheetId);
       await this.announceMembers(roomId);
+      await this.refresh(roomId, guest.userId);
     } catch (err) {
       this.fail(socket, (err as Error).message);
     }
@@ -294,6 +294,7 @@ export class TableGateway {
     const { roomId, sheetId, group } = parsed.data;
     try {
       await this.roomsService.setSheetGroup(guest.userId, roomId, sheetId, group);
+      await this.refresh(roomId);
     } catch (err) {
       this.fail(socket, (err as Error).message);
     }
@@ -318,11 +319,22 @@ export class TableGateway {
   }
 
   broadcast(roomId: string, message: ServerMessage): void {
+    const sightOf = message.type === 'room:delta' || message.type === 'room:state' ? this.roomsService.sights(roomId) : null;
     for (const guest of this.guests) {
       if (guest.roomId !== roomId) continue;
-      this.send(guest.socket, message.type === 'room:delta' ? { ...message, delta: seenBy(message.delta, guest.gm) }
-        : message.type === 'room:state' ? { ...message, state: seenBy(message.state, guest.gm) } : message);
+      this.send(guest.socket, message.type === 'room:delta' ? { ...message, delta: seenBy(message.delta, sightOf!(guest.userId)) }
+        : message.type === 'room:state' ? { ...message, state: seenBy(message.state, sightOf!(guest.userId)) } : message);
     }
+  }
+
+  private refresh(roomId: string, onlyUserId?: string): Promise<void> {
+    return this.roomsService.enter(roomId, state => {
+      const sightOf = this.roomsService.sights(roomId);
+      for (const guest of this.guests) {
+        if (guest.roomId !== roomId || (onlyUserId && guest.userId !== onlyUserId)) continue;
+        this.send(guest.socket, { type: 'room:state', state: seenBy(state, sightOf(guest.userId)) });
+      }
+    });
   }
 
   private async announceMembers(roomId: string) {
