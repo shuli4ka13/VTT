@@ -531,7 +531,7 @@
             }
           },
           {
-            "value": "spryatat___nayti",
+            "value": "spryatat_nayti",
             "label": "Спрятать / найти",
             "cells": {
               "stat": "int",
@@ -619,7 +619,7 @@
             }
           },
           {
-            "value": "pilotirovanie__vozduh",
+            "value": "pilotirovanie_vozduh",
             "label": "Пилотирование: воздух",
             "cells": {
               "stat": "ref",
@@ -627,7 +627,7 @@
             }
           },
           {
-            "value": "pilotirovanie__more",
+            "value": "pilotirovanie_more",
             "label": "Пилотирование: море",
             "cells": {
               "stat": "ref",
@@ -1932,7 +1932,7 @@
         ]
       },
       {
-        "key": "Navyki___vnimanie",
+        "key": "Navyki_vnimanie",
         "label": "Навыки — внимание",
         "parts": [
           {
@@ -1954,7 +1954,7 @@
         "parent": "Navyki"
       },
       {
-        "key": "Navyki___telo",
+        "key": "Navyki_telo",
         "label": "Навыки — тело",
         "parts": [
           {
@@ -1977,7 +1977,7 @@
         "parent": "Navyki"
       },
       {
-        "key": "Navyki___upravlenie",
+        "key": "Navyki_upravlenie",
         "label": "Навыки — управление",
         "parts": [
           {
@@ -1998,7 +1998,7 @@
         "parent": "Navyki"
       },
       {
-        "key": "Navyki___obrazovanie",
+        "key": "Navyki_obrazovanie",
         "label": "Навыки — образование",
         "parts": [
           {
@@ -2031,7 +2031,7 @@
         "parent": "Navyki"
       },
       {
-        "key": "Navyki___boy",
+        "key": "Navyki_boy",
         "label": "Навыки — бой",
         "parts": [
           {
@@ -2052,7 +2052,7 @@
         "parent": "Navyki"
       },
       {
-        "key": "Navyki___vystuplenie",
+        "key": "Navyki_vystuplenie",
         "label": "Навыки — выступление",
         "parts": [
           {
@@ -2071,7 +2071,7 @@
         "parent": "Navyki"
       },
       {
-        "key": "Navyki___strelba",
+        "key": "Navyki_strelba",
         "label": "Навыки — стрельба",
         "parts": [
           {
@@ -2093,7 +2093,7 @@
         "parent": "Navyki"
       },
       {
-        "key": "Navyki___obschenie",
+        "key": "Navyki_obschenie",
         "label": "Навыки — общение",
         "parts": [
           {
@@ -2119,7 +2119,7 @@
         "parent": "Navyki"
       },
       {
-        "key": "Navyki___tehnika",
+        "key": "Navyki_tehnika",
         "label": "Навыки — техника",
         "parts": [
           {

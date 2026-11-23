@@ -35,14 +35,14 @@ group('тогл крита пишет данные, а не код', () => {
   });
 
   const damageOf = (system: System, effect: string): Record<string, unknown> =>
-    system.effects[effect]!.steps!.find(s => s.id === 'урон' || s.id === 'урон_всего') as Record<string, unknown>;
+    system.effects[effect]!.steps!.find(s => s.id === 'uron' || s.id === 'uron_vsego') as Record<string, unknown>;
   const timesIn = (system: System, effect: string): string => String((damageOf(system, effect).times as { expr?: unknown } | undefined)?.expr ?? '');
 
   test('«кости вдвое» вешает удвоение на каждое число после проверки действующего', () => {
     const system = dnd();
     setCrit(system, 'off');
     setCrit(system, 'double');
-    eq(timesIn(system, 'strike'), '@dice * @бросок.исход.dice_mul');
+    eq(timesIn(system, 'strike'), '@dice * @brosok.ishod.dice_mul');
     ok(!JSON.stringify(system.effects.spell_save!.steps).includes('atMax'),
       'урон Огненного шара бросается до спасбросков — удвоения нет, это не атака');
     eq(errorsOf(lintSystem(system)).length, 0);
@@ -51,7 +51,7 @@ group('тогл крита пишет данные, а не код', () => {
   test('«кости вдвое» поверх множителя из таблицы исходов не удваивает ещё раз', () => {
     const system = dnd();
     const before = timesIn(system, 'strike');
-    ok(before.includes('@бросок.исход.dice_mul'));
+    ok(before.includes('@brosok.ishod.dice_mul'));
     eq(critOf(system), 'double');
     setCrit(system, 'double');
     eq(timesIn(system, 'strike'), before);
@@ -124,7 +124,7 @@ group('тогл брони переписывает общий эффект ур
     const hpBefore = Number(to!.values.hp);
     const out = exchange({
       system, compendium: world.compendium as Compendium, die: () => 3, sheets,
-      actionId: 'heavy-pistol:0', fromId: from!.id, toId: to!.id, inputs: { distance: 5, spend_luck: 0, aim: 'по телу' },
+      actionId: 'heavy-pistol:0', fromId: from!.id, toId: to!.id, inputs: { distance: 5, spend_luck: 0, aim: 'po_telu' },
     });
     const after = out.sheets.find(s => s.id === to!.id)!;
     eq(Number(after.values.hp), hpBefore, 'по порогу малый урон не прошёл');
@@ -142,8 +142,8 @@ group('крит вдвое не ломает бросок урона с «ост
     const system = dh();
     setCrit(system, 'double');
     const hero = formulas(system).find(text => text.includes('@damage_die'))!;
-    ok(hero.includes('"keep":{"expr":"@действующий.proficiency"}'), hero);
-    ok(hero.includes('"count":{"expr":"@действующий.proficiency + @extra_die"}'), hero);
+    ok(hero.includes('"keep":{"expr":"@deystvuyuschiy.proficiency"}'), hero);
+    ok(hero.includes('"count":{"expr":"@deystvuyuschiy.proficiency + @extra_die"}'), hero);
     ok(/"times":/.test(hero), hero);
   });
 

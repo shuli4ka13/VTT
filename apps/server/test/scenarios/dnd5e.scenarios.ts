@@ -139,7 +139,7 @@ export const scenarios: Scenario[] = [
     world: 'dnd5e',
     sheets: {
       arven: {
-        values: { inspiration: 0, class_name: 'варвар', 'resources.rages.max': 3, 'resources.rages.left': 3 },
+        values: { inspiration: 0, class_name: 'varvar', 'resources.rages.max': 3, 'resources.rages.left': 3 },
         has: [{ of: 'shield_item' }, { of: 'longsword' }, { of: 'feature_rage' }],
       },
       orc: fat(40),
@@ -223,7 +223,7 @@ export const scenarios: Scenario[] = [
     world: 'dnd5e',
     sheets: {
       arven: arvenPlain,
-      mirra: { values: { class_name: 'бард', level: 10, 'resources.bardic.max': 3, 'resources.bardic.left': 3 }, has: [{ of: 'feature_bardic' }] },
+      mirra: { values: { class_name: 'bard', level: 10, 'resources.bardic.max': 3, 'resources.bardic.left': 3 }, has: [{ of: 'feature_bardic' }] },
       orc: fat(40),
     },
     dice: [4, 5, 6],
@@ -278,8 +278,8 @@ export const scenarios: Scenario[] = [
     steps: [
       { turn: 'start', order: ['sil', 'orc'] },
       { act: 'rapier:0', from: 'sil', to: 'orc' },
-      { act: 'feature_sneak:0', from: 'sil', to: 'orc', inputs: { damage_type: 'колющий' } },
-      { act: 'feature_sneak:0', from: 'sil', to: 'orc', inputs: { damage_type: 'колющий' }, refused: 'раз за ход' },
+      { act: 'feature_sneak:0', from: 'sil', to: 'orc', inputs: { damage_type: 'kolyuschiy' } },
+      { act: 'feature_sneak:0', from: 'sil', to: 'orc', inputs: { damage_type: 'kolyuschiy' }, refused: 'раз за ход' },
     ],
     expect: { values: { orc: { hp_current: 22 } } },
   },
@@ -289,7 +289,7 @@ export const scenarios: Scenario[] = [
     world: 'dnd5e',
     sheets: {
       arven: {
-        values: { class_name: 'паладин', 'resources.lay_on_hands.max': 25, 'resources.lay_on_hands.left': 25 },
+        values: { class_name: 'paladin', 'resources.lay_on_hands.max': 25, 'resources.lay_on_hands.left': 25 },
         has: [{ of: 'feature_lay_hands' }],
       },
       doran: { values: { hp_current: 30 } },
@@ -301,7 +301,7 @@ export const scenarios: Scenario[] = [
       { act: 'feature_lay_hands:0', from: 'arven', to: 'doran', inputs: { amount: 5 }, refused: 'бонусное действие на этом ходу уже потрачено' },
     ],
     expect: {
-      values: { doran: { hp_current: 35 }, arven: { 'resources.lay_on_hands.left': 20, 'turn.бонусное.left': 0, 'turn.действие.left': 1 } },
+      values: { doran: { hp_current: 35 }, arven: { 'resources.lay_on_hands.left': 20, 'turn.bonusnoe.left': 0, 'turn.deystvie.left': 1 } },
       log: ['зовёт «Лечение»: 5', 'Хиты 30 → 35 (+5)'],
     },
   },

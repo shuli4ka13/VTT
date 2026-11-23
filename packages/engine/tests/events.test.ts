@@ -26,7 +26,7 @@ group('кубики', () => {
 });
 
 const savingBy = target => ({ ...system, effects: { ...system.effects, save: { ...system.effects.save, steps: system.effects.save.steps.map(step =>
-  (step.id === 'save_бросок' ? { ...step, bonus: { expr: '@цель.dex_save' } } : step)) } } });
+  (step.id === 'save_brosok' ? { ...step, bonus: { expr: '@aim.dex_save' } } : step)) } } });
 
 const hit = (actionId, from, to, die, sys = system, book = compendium) => {
   const targets = Array.isArray(to) ? to : [to];
@@ -53,15 +53,15 @@ group('вызов действия', () => {
       const blessedSys = { ...system, effects: { ...system.effects,
         blessed: {
           label: 'Благословение', activation: 'passive', duration: { kind: 'permanent' },
-          modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', tags: ['атака'], op: 'add', value: { expr: '4' }, if: { expr: '@roller == @holder' } }],
+          modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', tags: ['ataka'], op: 'add', value: { expr: '4' }, if: { expr: '@roller == @holder' } }],
         } } };
       const sheet = { ...arven, effects: [{ effectId: 'blessed' }] };
 
       const plain = hit('longsword-item:0', arven, mirra, queue(10, 5));
       const boosted = hit('longsword-item:0', sheet, mirra, queue(10, 5), blessedSys);
 
-      eq(plain.stepOf('hit_бросок').total, 16, 'кость 10 плюс свой бонус атаки 6');
-      eq(boosted.stepOf('hit_бросок').total, 20, 'та же кость, но плюс 4 от эффекта');
+      eq(plain.stepOf('hit_brosok').total, 16, 'кость 10 плюс свой бонус атаки 6');
+      eq(boosted.stepOf('hit_brosok').total, 20, 'та же кость, но плюс 4 от эффекта');
     });
 
     test('записи лежат в компендиуме, а автоматизация — в системе', () => {
@@ -146,7 +146,7 @@ group('вызов действия', () => {
       const shakenSys = { ...system, effects: { ...system.effects,
         shaken: {
           label: 'Потрясён', activation: 'passive', duration: { kind: 'permanent' },
-          modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['спасбросок'], edit: 'disadvantage', if: { expr: '@roller == @holder' } }],
+          modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['spasbrosok'], edit: 'disadvantage', if: { expr: '@roller == @holder' } }],
         } } };
       const sheet = { ...arven, effects: [{ effectId: 'shaken' }] };
       const { reportOf } = hit('poison-spray:0', mirra, sheet, queue(19, 5, 3, 4), { ...savingBy(), effects: { ...savingBy().effects, shaken: shakenSys.effects.shaken } });
@@ -184,21 +184,21 @@ group('вызов действия', () => {
 const PARAMETRIC = {
   label: 'Параметрический удар', activation: 'manual',
   params: [
-    { key: 'действующий', kind: 'sheet' },
-    { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } },
+    { key: 'deystvuyuschiy', kind: 'sheet' },
+    { key: 'aims', kind: 'sheet', many: true, item: { key: 'aim' } },
     { key: 'bonus', label: 'Бонус проверки', kind: 'number' },
     { key: 'versus', label: 'Против чего', kind: 'number', optional: true },
     { key: 'damage_dice', label: 'Кость урона', kind: 'dice' },
     { key: 'damage_bonus', label: 'Бонус урона', kind: 'number' },
   ],
   steps: [
-    { type: 'each', of: 'цели' },
-    { id: 'hit_бросок', type: 'roll', die: 'lead_die', bonus: { expr: '@bonus' }, tags: ['атака'],
-      by: { expr: '@действующий' } },
-    { id: 'hit', type: 'check', value: { expr: '@hit_бросок' }, versus: { expr: '@versus or @цель.ac' } },
+    { type: 'each', of: 'aims' },
+    { id: 'hit_brosok', type: 'roll', die: 'lead_die', bonus: { expr: '@bonus' }, tags: ['ataka'],
+      by: { expr: '@deystvuyuschiy' } },
+    { id: 'hit', type: 'check', value: { expr: '@hit_brosok' }, versus: { expr: '@versus or @aim.ac' } },
     { type: 'branch', if: { expr: 'not @hit.success' } }, { type: 'stop' }, { type: 'end' },
     { id: 'dmg', type: 'roll', die: { expr: '@damage_dice' }, bonus: { expr: '@damage_bonus' } },
-    { type: 'apply', target: { expr: '@цель.hp_current' }, direction: 'subtract',
+    { type: 'apply', target: { expr: '@aim.hp_current' }, direction: 'subtract',
       value: { expr: '@dmg' } },
   ],
 };
@@ -224,7 +224,7 @@ group('в параметрах эффекта живут выражения, а 
   test('бонус проверки — выражение, а не один тег', () => {
     const book = withStrike({ bonus: { expr: '@holder.attack_bonus + 2' }, damage_bonus: { expr: '@holder.str_mod' } });
     const { stepOf } = hit('custom:0', arven, mirra, queue(10, 4), paramSys, book);
-    eq(stepOf('hit_бросок').total, 18, 'кость 10 плюс бонус атаки 6 плюс двойка из выражения');
+    eq(stepOf('hit_brosok').total, 18, 'кость 10 плюс бонус атаки 6 плюс двойка из выражения');
   });
 
   test('бонус урона задаётся выражением', () => {

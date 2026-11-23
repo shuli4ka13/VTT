@@ -181,7 +181,7 @@ describe('сквозной прогон стенда', () => {
     expect(res.body.log.length).toBeGreaterThanOrEqual(1);
     const journal = res.body.log.map((l: { text: string }) => l.text).join(' · ');
     expect(journal).toContain('Арвен');
-    expect(journal).toContain('(атака):');
+    expect(journal).toContain('(Атака):');
     expect(journal).toContain('зовёт «Урон»');
     expect(journal).toContain('применено:');
   });
@@ -323,7 +323,7 @@ describe('сквозной прогон стенда', () => {
     expect(paused.body.pending).toBeTruthy();
     expect(paused.body.pending.sheetId).toBe(arven.id);
     expect(paused.body.pending.options.map((o: { id: string }) => o.id)).toEqual(['inspire']);
-    expect(paused.body.pending.preview.join(' ')).toContain('Бросок (атака)');
+    expect(paused.body.pending.preview.join(' ')).toContain('Бросок (Атака)');
 
     const denied = await swing().expect(400);
     expect(denied.body.message).toContain('ждёт ответа');

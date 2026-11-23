@@ -107,7 +107,7 @@ group('две системы одними слотами', () => {
       let at = 0;
       return exchange({
         system: cyberpunk, compendium: cpCompendium, die: () => rolls[at++] ?? 1,
-        sheets, actionId: 'heavy-pistol:0', fromId: 'silver', toId: 'raze', inputs: { aim: 'по телу', ...inputs },
+        sheets, actionId: 'heavy-pistol:0', fromId: 'silver', toId: 'raze', inputs: { aim: 'po_telu', ...inputs },
       });
     };
 
@@ -115,10 +115,10 @@ group('две системы одними слотами', () => {
       const out = shoot([4, 3, 3, 3], { distance: 30, spend_luck: 2 });
       const shared = out.reports.find(entry => entry.report.kind === 'effect' && entry.toId === entry.fromId)!.report;
       const main = out.reports.find(entry => entry.report.kind === 'effect' && entry.toId !== entry.fromId)!.report;
-      const dv = main.trace.find(line => line.step === 'сложность') as { result: number };
+      const dv = main.trace.find(line => line.step === 'slozhnost') as { result: number };
       eq(dv.result, 25, '30 метров — сложность 25');
 
-      const hit = shared.trace.find(line => line.step === 'попадание_бросок') as { bonus: number; total: number };
+      const hit = shared.trace.find(line => line.step === 'popadanie_brosok') as { bonus: number; total: number };
       eq(hit.bonus, 16, 'навык с рефлексами 14 плюс два очка удачи');
       eq(hit.total, 20, 'кость 4 плюс 16');
 

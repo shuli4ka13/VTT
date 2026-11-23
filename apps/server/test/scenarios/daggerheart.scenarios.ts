@@ -55,7 +55,7 @@ export const scenarios: Scenario[] = [
     rule: 'SRD Core Mechanics, Experiences: потратить 1 Надежду — прибавить +2 опыта к броску. Бран (проворство +2): 9+2+2+2=15 против 14 — успех; Надежда 2−1=1, на кости Надежда выше — +1 → 2.',
     world: 'daggerheart',
     dice: [9, 2],
-    steps: [{ act: 'act:0', from: 'bran', to: 'bran', inputs: { trait: 'проворство', 'опыт': 2, 'сложность': 14 } }],
+    steps: [{ act: 'act:0', from: 'bran', to: 'bran', inputs: { trait: 'provorstvo', opyt: 2, slozhnost: 14 } }],
     expect: { values: { bran: { hope: 2 }, 'desk': { fear: 0 } }, log: ['15 против'] },
   },
   {
@@ -64,7 +64,7 @@ export const scenarios: Scenario[] = [
     world: 'daggerheart',
     sheets: { bran: { values: { hope: 0 } } },
     dice: [],
-    steps: [{ act: 'act:0', from: 'bran', to: 'bran', inputs: { trait: 'проворство', 'опыт': 2, 'сложность': 14 }, refused: 'на опыт нужна Надежда' }],
+    steps: [{ act: 'act:0', from: 'bran', to: 'bran', inputs: { trait: 'provorstvo', opyt: 2, slozhnost: 14 }, refused: 'на опыт нужна Надежда' }],
     expect: { values: { bran: { hope: 0 }, 'desk': { fear: 0 } } },
   },
   {
@@ -73,7 +73,7 @@ export const scenarios: Scenario[] = [
     world: 'daggerheart',
     sheets: { bran: { values: { hope: 6, stress: 3 } } },
     dice: [6, 6],
-    steps: [{ act: 'act:0', from: 'bran', to: 'bran', inputs: { trait: 'сила', 'опыт': 0, 'сложность': 30 } }],
+    steps: [{ act: 'act:0', from: 'bran', to: 'bran', inputs: { trait: 'sila', opyt: 0, slozhnost: 30 } }],
     expect: { values: { bran: { hope: 6, stress: 2 }, 'desk': { fear: 0 } } },
   },
   {
@@ -183,7 +183,7 @@ export const scenarios: Scenario[] = [
     dice: [3, 2],
     steps: [
       { act: 'gm_short:0', from: 'desk', to: 'desk' },
-      { act: 'gm_long:0', from: 'desk', to: 'desk', inputs: { 'героев': 3 } },
+      { act: 'gm_long:0', from: 'desk', to: 'desk', inputs: { geroev: 3 } },
     ],
     expect: { values: { 'desk': { fear: 8 } } },
   },

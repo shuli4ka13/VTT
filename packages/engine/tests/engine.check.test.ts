@@ -13,8 +13,8 @@ const seven = () => 7;
 
 group('проверка — одна на всё: шаг, бросок с листа, инициатива', () => {
   test('бросок поля — проверка, где прибавка — само поле', () => {
-    const check = fieldCheck(system, 'abilities.ловкость.mod');
-    eq(check.bonus?.expr, '@abilities.ловкость.mod');
+    const check = fieldCheck(system, 'abilities.dexterity.mod');
+    eq(check.bonus?.expr, '@abilities.dexterity.mod');
     const out = rollCheck(system, arven, check, { compendium, die: seven, owner: check.label });
     eq(out.total, 7 + out.bonus);
   });
@@ -26,12 +26,12 @@ group('проверка — одна на всё: шаг, бросок с лис
   });
 
   test('бросок с костью, которой нет в «Костях», — ошибка линта', () => {
-    const bare = { ...system, rolls: { ...system.rolls, проверка: { ...system.rolls!.проверка!, die: 'нет_такой' } } } as System;
+    const bare = { ...system, rolls: { ...system.rolls, proverka: { ...system.rolls!.proverka!, die: 'нет_такой' } } } as System;
     ok(lintSystem(bare).some(p => p.level === 'error' && p.text.includes('кости «нет_такой» нет в «Костях»')));
   });
 
   test('одно поле — в одном броске', () => {
-    const twice = { ...system, rolls: { ...system.rolls, ещё: { die: system.rolls!.проверка!.die, fields: [{ table: 'abilities', column: 'mod' }] } } } as System;
+    const twice = { ...system, rolls: { ...system.rolls, ещё: { die: system.rolls!.proverka!.die, fields: [{ table: 'abilities', column: 'mod' }] } } } as System;
     ok(lintSystem(twice).some(p => p.level === 'error' && p.text.includes('бросают двумя бросками')));
   });
 });

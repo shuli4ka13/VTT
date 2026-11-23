@@ -12,7 +12,7 @@ const roll = (effects: string[], stacks = false): string => {
   const faces = [15, 4];
   let at = 0;
   const sheet = { ...arven, has: [], effects: effects.map(effectId => ({ effectId })) } as unknown as Sheet;
-  const out = perform({ system, compendium: world.compendium as Compendium, clock: null, sheets: [sheet], die: () => faces[at++ % faces.length]! }, { op: 'roll', sheetId: 'arven', tag: 'abilities.сила.mod' } as never);
+  const out = perform({ system, compendium: world.compendium as Compendium, clock: null, sheets: [sheet], die: () => faces[at++ % faces.length]! }, { op: 'roll', sheetId: 'arven', tag: 'abilities.strength.mod' } as never);
   if (out.kind !== 'done') throw new Error(out.kind);
   return out.log.join('\n');
 };
@@ -35,7 +35,7 @@ group('журнал броска говорит, какие слова пога�
     const faces = [15, 4];
     let at = 0;
     const sheet = { ...arven, effects: [{ effectId: 'helped' }, { effectId: 'poisoned' }] } as unknown as Sheet;
-    const out = perform({ system, compendium: world.compendium as Compendium, clock: null, sheets: [sheet], die: () => faces[at++ % faces.length]! }, { op: 'roll', sheetId: 'arven', tag: 'abilities.сила.mod' } as never);
+    const out = perform({ system, compendium: world.compendium as Compendium, clock: null, sheets: [sheet], die: () => faces[at++ % faces.length]! }, { op: 'roll', sheetId: 'arven', tag: 'abilities.strength.mod' } as never);
     eq(out.kind, 'paused');
     if (out.kind !== 'paused') return;
     eq(out.question.window, 'seen');

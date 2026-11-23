@@ -36,7 +36,7 @@ const strike = (sheets: Sheet[], actionId: string, dice: number[], answer?: (q: 
   });
 
 const damage = (played: ReturnType<typeof exchange>): any =>
-  played.reports.flatMap(x => x.report.trace).find(t => t.step === 'урон');
+  played.reports.flatMap(x => x.report.trace).find(t => t.step === 'uron');
 const offers = (q: Question) => q.offers.map(o => o.id);
 
 const withLuck = (sheets: Sheet[]): Sheet[] => sheets.map(sh => (sh.id === 'arven'
@@ -56,7 +56,7 @@ group('урон — бросок с хозяином: кости оружия', 
   test('урон несёт метки оружия, дальности и свойств и хозяина', () => {
     const t = damage(strike(sheetsWith(['greatsword']), 'greatsword:0', [10, 4, 5]));
     eq(t.by, 'arven');
-    for (const tag of ['урон', 'оружие', 'ближний', 'тяжёлое', 'двуручное']) ok(t.tags.includes(tag), tag);
+    for (const tag of ['uron', 'oruzhie', 'blizhniy', 'tyazheloe', 'dvuruchnoe']) ok(t.tags.includes(tag), tag);
   });
 });
 
@@ -117,14 +117,14 @@ group('«Свирепый атакующий»', () => {
 
   test('второй урон оружием в тот же ход — плата не проходит, вопроса нет', () => {
     const first = strike(sheets(), 'greatsword:0', [10, 2, 3, 5, 6], only('savage_attacker'), true);
-    eq(first.sheets.find(x => x.id === 'arven')!.values['turn.свирепый.left'], 0);
+    eq(first.sheets.find(x => x.id === 'arven')!.values['turn.svirepyy.left'], 0);
     const second = strike(first.sheets, 'greatsword:0', [10, 2, 3], decline, true);
     eq(seen(second).filter(o => o.includes('savage_attacker')).length, 0);
     deepEq(damage(second).rolls, [2, 3]);
   });
 
   test('«Скрытая атака» — не кости оружия, вопроса «Свирепого» нет', () => {
-    const r = strike(sheetsWith(['feature_sneak', 'feat_savage']), 'feature_sneak:0', [3, 4, 5], decline, true, { damage_type: 'колющий' });
+    const r = strike(sheetsWith(['feature_sneak', 'feat_savage']), 'feature_sneak:0', [3, 4, 5], decline, true, { damage_type: 'kolyuschiy' });
     eq(seen(r).filter(o => o.includes('savage_attacker')).length, 0);
   });
 });
@@ -136,22 +136,22 @@ group('D&D: слово правки, заявленное к удару, лож�
 
   test('«Преимущество» — две кости у атаки, урон одной костью', () => {
     const log = swing(['advantage'], [15, 1, 1]);
-    ok(/Бросок \(атака\): \[15, 1\] → 15 \(Преимущество\)/.test(log), log);
+    ok(/Бросок \(Атака\): \[15, 1\] → 15 \(Преимущество\)/.test(log), log);
     ok(/урон[^\]]*\): \[1\] \+/.test(log), log);
   });
 
   test('«Бой большим оружием» — 1 на кости урона становится 3, кость атаки не трогает', () => {
     const log = swing(['great_weapon'], [15, 1]);
-    ok(/Бросок \(атака\): \[15\] \+/.test(log), log);
+    ok(/Бросок \(Атака\): \[15\] \+/.test(log), log);
     ok(/\[3\] \(Бой большим оружием\)/.test(log), log);
-    ok(/Бросок \(атака\): \[2\] \+/.test(swing(['great_weapon'], [2, 1])));
+    ok(/Бросок \(Атака\): \[2\] \+/.test(swing(['great_weapon'], [2, 1])));
   });
 
   test('«Надёжный талант» — проверка навыка 3 → 10, удар не трогает: кость урона к8 остаётся 1', () => {
     const check = (claims: string[]) => {
       let journal = emptyJournal();
       for (let round = 0; round < 8; round++) {
-        const out = perform({ system, compendium, clock: null, sheets: sheetsWith(['longsword']), die: () => 3, journal }, { op: 'roll', sheetId: 'arven', tag: 'skills.атлетика.total', claims });
+        const out = perform({ system, compendium, clock: null, sheets: sheetsWith(['longsword']), die: () => 3, journal }, { op: 'roll', sheetId: 'arven', tag: 'skills.atletika.total', claims });
         if (out.kind === 'done') return out.log.join(' · ');
         journal = { ...out.journal, answers: { ...out.journal.answers, [out.question.key]: [] } };
       }

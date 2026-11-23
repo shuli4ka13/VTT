@@ -25,7 +25,7 @@ const shotTotal = (sheets: Sheet[]): number => {
 
 const clickTotal = (sheets: Sheet[]): number => {
   const out = perform({ system, compendium: world.compendium, clock: null, sheets, die: () => 7 } as never,
-    { op: 'roll', sheetId: 'silver', tag: 'skills.пистолеты.total' } as never);
+    { op: 'roll', sheetId: 'silver', tag: 'skills.pistolety.total' } as never);
   if (out.kind !== 'done') throw new Error('бросок спросил');
   const line = out.log.join('\n').match(/бросает[^\n]*= (-?\d+)(?:\n|$)/);
   if (!line) throw new Error('бросок не найден в журнале');

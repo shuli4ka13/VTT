@@ -18,14 +18,14 @@ const fresh = (edit: (system: System) => void): string[] => {
 group('справочная путей', () => {
   test('поле, адрес в таблице и путь за полем-ссылкой читаются словами', () => {
     const { system } = dnd();
-    deepEq(walkSheet(system as System, 'abilities.ловкость.mod'), { ok: true, label: 'Модификатор: Ловкость' });
+    deepEq(walkSheet(system as System, 'abilities.dexterity.mod'), { ok: true, label: 'Модификатор: Ловкость' });
     deepEq(walkSheet(system as System, 'class_name.spell_ability.mod'), { ok: true, label: 'Класс → Заклинательная характеристика → Модификатор' });
     deepEq(walkSheet(system as System, 'нет_такого'), null);
   });
 
   test('опечатка в строке или колонке — ошибка словами, не пусто', () => {
     const { system } = dnd();
-    deepEq(walkSheet(system as System, 'abilities.ловкость.modd'), { ok: false, text: 'у таблицы «Характеристики» нет колонки «modd»' });
+    deepEq(walkSheet(system as System, 'abilities.dexterity.modd'), { ok: false, text: 'у таблицы «Характеристики» нет колонки «modd»' });
     deepEq(walkSheet(system as System, 'abilities.ловкостьь.mod'), { ok: false, text: 'в таблице «Характеристики» нет строки «ловкостьь»' });
     eq((walkSheet(system as System, 'class_name.spell_ability.modd') as { text: string }).text, 'у таблицы «Характеристики» нет колонки «modd»');
   });
@@ -41,40 +41,40 @@ group('проверка ловит опечатки в путях', () => {
   test('образец чист', () => eq(errors(dnd().system as System).join('\n'), ''));
 
   test('колонка и строка поля-таблицы — в правке, шаге и колонке листа', () => {
-    ok(fresh(s => { s.effects.unarmored_monk!.modifiers![0]!.value = { expr: '10 + @abilities.мудрость.modd' } as never; }).includes('у таблицы «Характеристики» нет колонки «modd»'));
-    ok(fresh(s => { (s.effects.hide!.steps![0] as { bonus: unknown }).bonus = { expr: '@действующий.skills.скрытность.totall' }; }).includes('у таблицы «Навыки» нет колонки «totall»'));
-    ok(fresh(s => { s.tables!['лист']!.columns![9]!.expr = { expr: '@abilities.ловкостьь.mod' } as never; }).includes('в таблице «Характеристики» нет строки «ловкостьь»'));
-    ok(fresh(s => { s.tables!['лист']!.columns![35]!.expr = { expr: '@class_name.spell_ability.modd or 0' } as never; }).includes('у таблицы «Характеристики» нет колонки «modd»'));
+    ok(fresh(s => { s.effects.unarmored_monk!.modifiers![0]!.value = { expr: '10 + @abilities.wisdom.modd' } as never; }).includes('у таблицы «Характеристики» нет колонки «modd»'));
+    ok(fresh(s => { (s.effects.hide!.steps![0] as { bonus: unknown }).bonus = { expr: '@deystvuyuschiy.skills.skrytnost.totall' }; }).includes('у таблицы «Навыки» нет колонки «totall»'));
+    ok(fresh(s => { s.tables!['list_2']!.columns![9]!.expr = { expr: '@abilities.ловкостьь.mod' } as never; }).includes('в таблице «Характеристики» нет строки «ловкостьь»'));
+    ok(fresh(s => { s.tables!['list_2']!.columns![35]!.expr = { expr: '@class_name.spell_ability.modd or 0' } as never; }).includes('у таблицы «Характеристики» нет колонки «modd»'));
   });
 
   test('литерал во входе-выборе сверяется со строками таблицы', () => {
     const found = fresh(s => {
       const step = s.effects.turn_undead!.steps!.find(one => (one as { effect?: string }).effect === 'saving_throw') as { args: Record<string, { expr: string }> };
-      step.args['характеристика'] = { expr: '"мудростьь"' };
+      step.args['harakteristika'] = { expr: '"мудростьь"' };
     });
     ok(found.includes('во вход «Чем спасается» вызова «Спасбросок» передано «мудростьь» — в таблице «Характеристики» такой строки нет'), found.join('\n'));
   });
 
   test('опечатка в имени строки цикла называет настоящее имя', () => {
     const found = fresh(s => { (s.effects.resources_rest!.on![0]!.steps![1] as { if: unknown }).if = { expr: '@holder.ресурсы.short' }; });
-    ok(found.some(text => text.startsWith('у листа нет поля «ресурсы»; здесь есть «ресурс»')), found.join('\n'));
+    ok(found.some(text => text.startsWith('у листа нет поля «ресурсы»; здесь есть «resurs»')), found.join('\n'));
   });
 });
 
 group('имена места знают колонки строк', () => {
   test('строка цикла и вход-выбор — с колонками таблицы', () => {
     const { system } = dnd();
-    const loop = namesAt(system as System, 'resources_rest', { part: 'handler', handler: 0, index: 2 }).find(one => one.name === 'ресурс');
+    const loop = namesAt(system as System, 'resources_rest', { part: 'handler', handler: 0, index: 2 }).find(one => one.name === 'resurs');
     ok(loop?.children?.some(child => child.path === '.left' && child.label === 'Осталось'));
-    const choice = namesAt(system as System, 'turn_spend', { part: 'steps', index: 1 }).find(one => one.name === 'что');
+    const choice = namesAt(system as System, 'turn_spend', { part: 'steps', index: 1 }).find(one => one.name === 'chto');
     ok(choice?.children?.some(child => child.path === '.left'));
   });
 
   test('затравка по метке подписана вызванным эффектом', () => {
     const { system } = dnd();
-    const heard = namesAt(system as System, 'shield', { part: 'handler-if', handler: 0 }).find(one => one.name === 'бросок');
+    const heard = namesAt(system as System, 'shield', { part: 'handler-if', handler: 0 }).find(one => one.name === 'brosok');
     eq(heard?.label, 'Бросок атаки');
-    ok(heard?.children?.some(child => child.path === '.исход.hit' && child.kind === 'boolean'));
+    ok(heard?.children?.some(child => child.path === '.ishod.hit' && child.kind === 'boolean'));
   });
 });
 
@@ -82,7 +82,7 @@ group('расчёт не молчит об опечатке в адресе', ()
   test('неизвестная колонка — ошибка, а не пусто', () => {
     const world = dnd();
     const system = world.system as System;
-    system.tables!['лист']!.columns![9]!.expr = { expr: '@abilities.ловкость.modd' } as never;
+    system.tables!['list_2']!.columns![9]!.expr = { expr: '@abilities.dexterity.modd' } as never;
     const sheet = world.sheets[0]!;
     let said = '';
     try { calc(system, sheet, 'initiative', newPass(system, sheet)); } catch (err) { said = (err as Error).message; }

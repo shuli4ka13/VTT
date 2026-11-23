@@ -11,8 +11,8 @@ const sr = PLAYABLE_WORLDS.find(w => (w.system as System).id === 'shadowrun6')!;
 const system = sr.system as System;
 const CASES = Number(process.env.SR_BOOK ?? 0);
 
-const RANGES: Range[] = ['вплотную', 'близкая', 'средняя', 'дальняя', 'экстремальная'];
-const MODE_NAME: Record<Mode, string> = { 'ОВ': 'одиночный выстрел', 'КО': 'короткая очередь', 'ДО': 'длинная очередь', 'НО': 'непрерывный огонь' };
+const RANGES: Range[] = ['vplotnuyu', 'blizkaya', 'srednyaya', 'dalnyaya', 'ekstremalnaya'];
+const MODE_NAME: Record<Mode, string> = { 'ОВ': 'odinochnyy_vystrel', 'КО': 'korotkaya_ochered', 'ДО': 'dlinnaya_ochered', 'НО': 'nepreryvnyy_ogon' };
 
 function rng(seed: number): () => number {
   let s = seed >>> 0 || 1;
@@ -38,9 +38,9 @@ function generate(random: () => number): Case {
 const sheetOf = (id: string, f: Fighter, gun?: Weapon): Sheet => ({
   id, systemId: 'shadowrun6', of: 'runner', name: id,
   values: {
-    metatype: 'человек', body: f.body, agility: f.agility, reaction: f.reaction, strength: 3, willpower: f.willpower, logic: 3,
+    metatype: 'chelovek', body: f.body, agility: f.agility, reaction: f.reaction, strength: 3, willpower: f.willpower, logic: 3,
     intuition: f.intuition, charisma: 3, edge: f.edge, edge_left: 0, edge_gained: 0, armor_worn: f.armor, physical: f.physical, stun: f.stun,
-    'skills.стрельба.rank': f.skill,
+    'skills.strelba.rank': f.skill,
   },
   has: gun ? [{ of: 'испытательный_ствол', values: { ammo: gun.ammo } }] : [], effects: [],
 }) as unknown as Sheet;
@@ -48,8 +48,8 @@ const sheetOf = (id: string, f: Fighter, gun?: Weapon): Sheet => ({
 const recordOf = (w: Weapon) => ({
   id: 'испытательный_ствол', table: 'firearm', label: 'Испытательный ствол',
   cells: {
-    dv: w.dv, damage_kind: w.stun ? 'оглушающий' : 'физический', skill: 'стрельба', class: 'тяжёлый пистолет',
-    modes: w.modes.map(m => MODE_NAME[m]), ammo_max: 30, reload: 'обойма',
+    dv: w.dv, damage_kind: w.stun ? 'оглушающий' : 'физический', skill: 'strelba', class: 'tyazhelyy_pistolet',
+    modes: w.modes.map(m => MODE_NAME[m]), ammo_max: 30, reload: 'oboyma',
     ...Object.fromEntries(RANGES.flatMap((r, i) => (w.ar[r] === null ? [] : [[`ar${i + 1}`, w.ar[r]]]))),
   },
 });
@@ -64,7 +64,7 @@ function engine(one: Case, random: () => number): Seen | { error: string } {
   try {
     out = exchange({
       system, compendium, die: () => 1 + Math.floor(random() * 6), sheets: [a, d], actionId: 'испытательный_ствол:0', fromId: 'стрелок', toId: 'цель',
-      inputs: { дистанция: one.range, режим: MODE_NAME[one.mode] },
+      inputs: { distanciya_2: one.range, rezhim: MODE_NAME[one.mode] },
     });
   } catch (err) {
     const text = (err as Error).message;
@@ -86,12 +86,12 @@ function engine(one: Case, random: () => number): Seen | { error: string } {
   const damage = (Number(target.values.physical ?? 0) - one.defender.physical) + (Number(target.values.stun ?? 0) - one.defender.stun);
   void atBefore;
   return {
-    refused: false, ar: Number(trace.find(t => t.step === 'атк')?.total ?? NaN), hit: Boolean(trace.find(t => t.step === 'сопротивление_бросок')),
+    refused: false, ar: Number(trace.find(t => t.step === 'atk')?.total ?? NaN), hit: Boolean(trace.find(t => t.step === 'soprotivlenie_brosok')),
     damage, physical, stun, prone: target.effects.some(e => e.effectId === 'prone'),
     edgeTo: edgeA > 0 ? 'attacker' : edgeD > 0 ? 'defender' : null,
     ammoLeft: Number(after('стрелок').has.find(h => h.of === 'испытательный_ствол')?.values?.ammo ?? NaN),
     glitch: out.log.some(line => line.startsWith('стрелок применяет «Сбой»') || line.startsWith('стрелок применяет «Критический сбой»')),
-    dice: { attack: rolls('атака_бросок'), defense: rolls('защита'), resist: rolls('сопротивление_бросок') },
+    dice: { attack: rolls('ataka_brosok'), defense: rolls('zaschita'), resist: rolls('soprotivlenie_brosok') },
   };
 }
 

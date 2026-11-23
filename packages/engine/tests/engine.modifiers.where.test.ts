@@ -40,8 +40,8 @@ group('правка по свойству метки — один факт вм�
   test('перевели тип в другую природу — ярость перестала его резать, эффекты не трогали', () => {
     const [обычно] = удар('longsword', false);
     const [переведён] = удар('longsword', true, system => {
-      const row = system.tables!.damage_types!.rows!.find(r => r.value === 'рубящий')!;
-      row.cells = { ...row.cells, nature: 'прочий' };
+      const row = system.tables!.damage_types!.rows!.find(r => r.value === 'rubyaschiy')!;
+      row.cells = { ...row.cells, nature: 'prochiy' };
     });
     eq(переведён, обычно);
   });
@@ -63,7 +63,7 @@ group('источник урона — отдельный словарь, а н�
 
   test('«магический» больше не тип урона, а строка «Источника урона»', () => {
     const system = PLAYABLE_WORLDS[0]!.system as System;
-    eq(system.tables!.damage_types!.rows!.some(r => r.value === 'магический'), false);
-    eq(system.tables!.damage_source!.rows!.some(r => r.value === 'магический'), true);
+    eq(system.tables!.damage_types!.rows!.some(r => r.value === 'magicheskiy'), false);
+    eq(system.tables!.damage_source!.rows!.some(r => r.value === 'magicheskiy'), true);
   });
 });

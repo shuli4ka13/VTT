@@ -98,12 +98,12 @@ group('D&D: прогрессия класса — своя таблица с п�
   const rage = (sheet: Sheet) => calc(dnd.system, sheet, 'rage_damage', newPass(dnd.system, sheet, { compendium: dnd.compendium }));
 
   test('у варвара урон ярости растёт по промежуткам, у воина его нет', () => {
-    deepEq([1, 8, 9, 15, 16, 20].map(level => rage(as('варвар', level))), [2, 2, 3, 3, 4, 4]);
-    eq(rage(as('воин', 20)), 0);
+    deepEq([1, 8, 9, 15, 16, 20].map(level => rage(as('varvar', level))), [2, 2, 3, 3, 4, 4]);
+    eq(rage(as('voin', 20)), 0);
   });
 
   test('настроить можно не больше трёх чудесных вещей', () => {
-    const field = dnd.system.tables!['лист']!.columns!.find(c => c.key === 'attuned')!;
+    const field = dnd.system.tables!['list_2']!.columns!.find(c => c.key === 'attuned')!;
     eq(field.max, 3);
   });
 });

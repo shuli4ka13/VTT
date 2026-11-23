@@ -14,10 +14,10 @@ const read = (sheet: Sheet, tag: string): unknown => calc(system, sheet, tag, ne
 const mine = (out: { sheets: Sheet[] }): Sheet => out.sheets.find(sheet => sheet.id === 'новичок')!;
 
 describe('D&D: новый лист', () => {
-  const made = mine(perform(world([]), { op: 'sheet', name: 'Новичок', of: 'персонаж' }));
+  const made = mine(perform(world([]), { op: 'sheet', name: 'Новичок', of: 'personazh' }));
 
   it('характеристики — 10, модификаторы — ноль', () => {
-    for (const ability of ['сила', 'ловкость', 'телосложение', 'интеллект', 'мудрость', 'харизма']) {
+    for (const ability of ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma']) {
       expect(read(made, `abilities.${ability}.score`), ability).toBe(10);
       expect(read(made, `abilities.${ability}.mod`), ability).toBe(0);
     }
@@ -31,7 +31,7 @@ describe('D&D: новый лист', () => {
     expect(read(made, 'up')).toBe(true);
   });
 
-  const chosen = perform(world([made]), { op: 'set', sheetId: 'новичок', tag: 'class_name', value: 'воин' });
+  const chosen = perform(world([made]), { op: 'set', sheetId: 'новичок', tag: 'class_name', value: 'voin' });
   const classed = mine(chosen);
   const max = Number(read(classed, 'hp_max'));
 

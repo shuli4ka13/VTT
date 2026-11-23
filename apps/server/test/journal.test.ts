@@ -124,8 +124,8 @@ describe('журнал стола: намерение + кости = тот же
     const me = first.userId;
     const hero = first.sheets[0].id;
     const script = [
-      { op: 'roll', userId: me, input: { sheetId: hero, tag: 'ловкость', second: 'сила', versus: 10 } },
-      { op: 'roll', userId: me, input: { sheetId: hero, tag: 'воля', versus: 7 } },
+      { op: 'roll', userId: me, input: { sheetId: hero, tag: 'dexterity', second: 'strength', versus: 10 } },
+      { op: 'roll', userId: me, input: { sheetId: hero, tag: 'will', versus: 7 } },
     ];
     for (const step of script) {
       let delta = await play(first.rooms, first.roomId, step);
@@ -133,8 +133,8 @@ describe('журнал стола: намерение + кости = тот же
     }
     const written = await first.journal();
     expect(written.map(entry => entry.input)).toEqual([
-      { sheetId: hero, tag: 'ловкость', second: 'сила', versus: 10 },
-      { sheetId: hero, tag: 'воля', versus: 7 },
+      { sheetId: hero, tag: 'dexterity', second: 'strength', versus: 10 },
+      { sheetId: hero, tag: 'will', versus: 7 },
     ]);
     expect(written.every(entry => entry.dice.length === 2)).toBe(true);
 

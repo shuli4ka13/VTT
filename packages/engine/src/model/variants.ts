@@ -11,13 +11,15 @@ import type { System, Effect, Step } from './types.ts';
 import { typeColumn } from './inherit.ts';
 import type { Where } from './references.ts';
 
-export interface Variants { words: string[]; label: string }
+export interface Variants { words: string[]; said?: string[]; label: string }
 
 export function tableVariants(system: System, key: string | undefined): Variants | null {
   const table = key ? system.tables?.[key] : undefined;
   if (!table || isRange(table) || table.otherwise !== undefined || table.shape === 'single' || table.shape === 'book') return null;
-  const words = (listOf(system, key) ?? []).map(option => String(option.value));
-  return words.length ? { words, label: table.label || key! } : null;
+  const options = listOf(system, key) ?? [];
+  const words = options.map(option => String(option.value));
+  const said = options.map(option => String((option as { label?: string }).label ?? option.value));
+  return words.length ? { words, said, label: table.label || key! } : null;
 }
 
 
@@ -91,7 +93,7 @@ const astOf = (expr: string): Node | null => {
 };
 
 const missing = (word: string, variants: Variants): string =>
-  `«${word}» — в таблице «${variants.label}» такого варианта нет; есть ${variants.words.slice(0, 8).map(one => `«${one}»`).join(', ')}${variants.words.length > 8 ? ' …' : ''}`;
+  `«${word}» — в таблице «${variants.label}» такого варианта нет; есть ${(variants.said ?? variants.words).slice(0, 8).map(one => `«${one}»`).join(', ')}${variants.words.length > 8 ? ' …' : ''}`;
 
 interface Chain { steps: Step[]; place: (index: number) => Place; where: (index: number) => Where }
 

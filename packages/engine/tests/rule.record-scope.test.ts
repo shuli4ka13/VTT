@@ -20,7 +20,7 @@ const firstBonus = (system: System): number => {
     system, compendium: dnd.compendium as Compendium, die: () => 10, sheets,
     actionId: 'longsword:0', fromId: 'arven', toId: 'goblin',
   });
-  const rolled = out.reports.flatMap(entry => entry.report.trace).find(t => (t as { step?: string; within?: string }).step === 'бросок' && (t as { within?: string }).within === 'attack_roll') as { bonus: number };
+  const rolled = out.reports.flatMap(entry => entry.report.trace).find(t => (t as { step?: string; within?: string }).step === 'brosok' && (t as { within?: string }).within === 'attack_roll') as { bonus: number };
   return rolled.bonus;
 };
 
@@ -46,7 +46,7 @@ group('формула входа в кнопке записи видит сво�
 
   test('в шагах самого эффекта свойства записи по имени не видны — только через вход', () => {
     const system = withStrikeArgs({}, [
-      { id: 'hit_бросок', type: 'roll', die: 'lead_die', bonus: { expr: '@wield.attack' }, tags: ['атака'], by: { expr: '@действующий' } },
+      { id: 'hit_brosok', type: 'roll', die: 'lead_die', bonus: { expr: '@wield.attack' }, tags: ['ataka'], by: { expr: '@deystvuyuschiy' } },
     ]);
     throws(() => firstBonus(system));
   });
@@ -58,13 +58,13 @@ group('D&D: критическое попадание — всегда попа�
     (system.effects.attack_roll!.steps![1] as { versus: unknown }).versus = { expr: '40' };
     const sheets = (JSON.parse(JSON.stringify(dnd.sheets)) as Sheet[]).map(sheet => (sheet.id === 'arven' ? { ...sheet, values: { ...sheet.values, crit_from: 19 } } : sheet));
     const out = exchange({ system, compendium: dnd.compendium as Compendium, die: () => 19, sheets, actionId: 'longsword:0', fromId: 'arven', toId: 'goblin' });
-    const checked = out.reports.flatMap(entry => entry.report.trace).find(t => (t as { step?: string; within?: string }).step === 'проверка' && (t as { within?: string }).within === 'attack_roll') as { success: boolean };
+    const checked = out.reports.flatMap(entry => entry.report.trace).find(t => (t as { step?: string; within?: string }).step === 'proverka' && (t as { within?: string }).within === 'attack_roll') as { success: boolean };
     eq(checked.success, true);
   });
   test('итог «исход» — промах, попадание или крит; крит от порога персонажа', () => {
     const outcome = (die: number): number => {
       const system = JSON.parse(JSON.stringify(dnd.system)) as System;
-      system.effects.strike!.steps!.splice(2, 0, { id: 'исход', type: 'roll', fixed: { expr: 'if(@бросок.исход == "крит", 3, if(@бросок.исход == "попадание", 2, 1))' } } as never);
+      system.effects.strike!.steps!.splice(2, 0, { id: 'исход', type: 'roll', fixed: { expr: 'if(@brosok.ishod == "krit", 3, if(@brosok.ishod == "popadanie", 2, 1))' } } as never);
       eq(errorsOf(lintSystem(system)).length, 0);
       const out = exchange({ system, compendium: dnd.compendium as Compendium, die: () => die, sheets: dnd.sheets as Sheet[], actionId: 'longsword:0', fromId: 'arven', toId: 'goblin' });
       return (out.reports.flatMap(entry => entry.report.trace).find(t => (t as { step?: string }).step === 'исход') as { total: number }).total;
@@ -76,7 +76,7 @@ group('D&D: критическое попадание — всегда попа�
   test('колонка таблицы через итог-выбор: «попадание — исход — множитель костей» 0 / 1 / 2', () => {
     const factor = (die: number): number => {
       const system = JSON.parse(JSON.stringify(dnd.system)) as System;
-      system.effects.strike!.steps!.splice(2, 0, { id: 'множитель', type: 'roll', fixed: { expr: '@бросок.исход.dice_mul' } } as never);
+      system.effects.strike!.steps!.splice(2, 0, { id: 'множитель', type: 'roll', fixed: { expr: '@brosok.ishod.dice_mul' } } as never);
       eq(errorsOf(lintSystem(system)).length, 0);
       const out = exchange({ system, compendium: dnd.compendium as Compendium, die: () => die, sheets: dnd.sheets as Sheet[], actionId: 'longsword:0', fromId: 'arven', toId: 'goblin' });
       return (out.reports.flatMap(entry => entry.report.trace).find(t => (t as { step?: string }).step === 'множитель') as { total: number }).total;

@@ -34,16 +34,16 @@ describe('D&D: отдых восполняет строки таблиц, а н�
 
 describe('D&D: начало хода — «В начале хода» каждой строки «За ход»', () => {
   const start = (effects: string[]) => fireMoments([{ moment: 'turn-start', sheetId: 'arven' }],
-    [sheetOf('arven', { 'turn.действие.left': 0, 'turn.бонусное.left': 0, 'turn.реакция.left': 0, 'turn.атаки.left': 3 }, effects)], world(1) as never)
+    [sheetOf('arven', { 'turn.deystvie.left': 0, 'turn.bonusnoe.left': 0, 'turn.reaction.left': 0, 'turn.ataki.left': 3 }, effects)], world(1) as never)
     .sheets.find(s => s.id === 'arven')!.values;
 
   it('одно действие, по одному бонусному и реакции, атак — ноль', () => {
     const values = start([]);
-    expect([values['turn.действие.left'], values['turn.бонусное.left'], values['turn.реакция.left'], values['turn.атаки.left']]).toEqual([1, 1, 1, 0]);
+    expect([values['turn.deystvie.left'], values['turn.bonusnoe.left'], values['turn.reaction.left'], values['turn.ataki.left']]).toEqual([1, 1, 1, 0]);
   });
 
   it('«Ускорен» — два действия', () => {
-    expect(start(['hasted'])['turn.действие.left']).toBe(2);
+    expect(start(['hasted'])['turn.deystvie.left']).toBe(2);
   });
 });
 
@@ -103,14 +103,14 @@ describe('D&D: плата реакции вложена в три вызова �
   }).questions.flatMap(question => question.offers.map(offer => offer.label));
 
   it('реакция есть — «Щит» предлагают', () => {
-    expect(attacked({ 'turn.реакция.left': 1 }).join(', ')).toMatch(/Щит/);
+    expect(attacked({ 'turn.reaction.left': 1 }).join(', ')).toMatch(/Щит/);
   });
 
   it('реакция потрачена — ни «Щита», ни «Адского возмездия»', () => {
-    expect(attacked({ 'turn.реакция.left': 0 })).toEqual([]);
+    expect(attacked({ 'turn.reaction.left': 0 })).toEqual([]);
   });
 
   it('ячеек 1-го круга нет — «Щит» не предлагают', () => {
-    expect(attacked({ 'turn.реакция.left': 1, 'slots.1.left': 0 }).join(', ')).not.toMatch(/Щит/);
+    expect(attacked({ 'turn.reaction.left': 1, 'slots.1.left': 0 }).join(', ')).not.toMatch(/Щит/);
   });
 });

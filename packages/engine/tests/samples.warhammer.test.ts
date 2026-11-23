@@ -8,16 +8,16 @@ import type { Sheet } from '../src/model/types.ts';
 const world = LITE_WORLDS.find(one => one.system.id === 'imperium-maledictum')!;
 const system = flattenSystem(world.system);
 
-const hero = (target: number): Sheet => ({ id: 'г', systemId: system.id, name: 'Г', values: { 'характеристики.сила.значение': target }, has: [], effects: [] } as unknown as Sheet);
+const hero = (target: number): Sheet => ({ id: 'г', systemId: system.id, name: 'Г', values: { 'harakteristiki.strength.znachenie': target }, has: [], effects: [] } as unknown as Sheet);
 
 const test = (target: number, rolled: number, claims?: string[]): string => {
   const out = perform({ system, compendium: world.compendium, clock: null, sheets: [hero(target)], die: () => rolled } as never,
-    { op: 'roll', sheetId: 'г', tag: 'характеристики.сила.итог', ...(claims ? { claims } : {}) } as never);
+    { op: 'roll', sheetId: 'г', tag: 'harakteristiki.strength.total', ...(claims ? { claims } : {}) } as never);
   if (out.kind !== 'done') throw new Error('бросок спросил');
   return out.log.join('\n');
 };
 
-const wounds = (sheets: Sheet[], id: string): number => Number((sheets.find(one => one.id === id)!.values as Record<string, unknown>)['раны'] ?? 0);
+const wounds = (sheets: Sheet[], id: string): number => Number((sheets.find(one => one.id === id)!.values as Record<string, unknown>)['rany'] ?? 0);
 
 describe('Imperium Maledictum: проверка к100', () => {
   it('степени — десятки цели минус десятки выпавшего (с. 187, 189, 190)', () => {
@@ -40,110 +40,110 @@ describe('Imperium Maledictum: проверка к100', () => {
 
   it('Преимущество переставляет цифры в пользу, Помеха — против (с. 189)', () => {
     expect(test(30, 72)).toContain('провал');
-    expect(test(30, 72, ['преимущество'])).toContain('успех');
-    expect(test(30, 27, ['преимущество'])).toContain('успех');
-    expect(test(30, 27, ['помеха'])).toContain('провал');
+    expect(test(30, 72, ['preimuschestvo'])).toContain('успех');
+    expect(test(30, 27, ['preimuschestvo'])).toContain('успех');
+    expect(test(30, 27, ['pomeha'])).toContain('провал');
   });
 
   it('Преимущество и Помеха гасят друг друга: цифры не переставляются (с. 189)', () => {
-    expect(test(30, 72, ['преимущество', 'помеха'])).toContain('провал');
-    expect(test(30, 27, ['преимущество', 'помеха'])).toContain('успех');
+    expect(test(30, 72, ['preimuschestvo', 'pomeha'])).toContain('провал');
+    expect(test(30, 27, ['preimuschestvo', 'pomeha'])).toContain('успех');
   });
 });
 
 describe('Imperium Maledictum: сложность словом перед броском с листа (с. 188)', () => {
   it('сложность правит цель до броска, степени считаются от новой цели', () => {
     expect(test(45, 50)).toContain('не больше 45: провал · степеней: -1');
-    expect(test(45, 50, ['простая'])).toContain('не больше 65: успех · степеней: 1');
-    expect(test(45, 40, ['трудная'])).toContain('не больше 35: провал · степеней: -1');
-    expect(test(45, 12, ['очень_тяжёлая'])).toContain('не больше 15: успех · степеней: 0');
-    expect(test(20, 75, ['очень_лёгкая'])).toContain('не больше 80: успех · степеней: 1');
+    expect(test(45, 50, ['prostaya'])).toContain('не больше 65: успех · степеней: 1');
+    expect(test(45, 40, ['trudnaya'])).toContain('не больше 35: провал · степеней: -1');
+    expect(test(45, 12, ['ochen_tyazhelaya'])).toContain('не больше 15: успех · степеней: 0');
+    expect(test(20, 75, ['ochen_legkaya'])).toContain('не больше 80: успех · степеней: 1');
   });
 
   it('сложность и Преимущество складываются', () => {
-    expect(test(45, 82, ['трудная', 'преимущество'])).toContain('не больше 35: успех · степеней: 1');
+    expect(test(45, 82, ['trudnaya', 'preimuschestvo'])).toContain('не больше 35: успех · степеней: 1');
   });
 });
 
 describe('Imperium Maledictum: выстрел и первая помощь', () => {
   const shot = (rolled: number) => exchange({
     system, compendium: world.compendium, die: () => rolled, sheets: world.sheets,
-    actionId: 'lasgun:0', fromId: 'ваал', toId: 'культист',
+    actionId: 'lasgun:0', fromId: 'vaal', toId: 'kultist',
   } as never);
 
   it('урон оружия плюс степени, минус броня места по цифре единиц (с. 211–212)', () => {
-    expect(wounds(shot(13).sheets, 'культист')).toBe(9);
-    expect(wounds(shot(27).sheets, 'культист')).toBe(7);
-    expect(wounds(shot(55).sheets, 'культист')).toBe(0);
+    expect(wounds(shot(13).sheets, 'kultist')).toBe(9);
+    expect(wounds(shot(27).sheets, 'kultist')).toBe(7);
+    expect(wounds(shot(55).sheets, 'kultist')).toBe(0);
   });
 
   it('раны не копятся выше максимума: бонус Силы + 2 × бонус Выносливости + бонус Воли (с. 214)', () => {
     const once = shot(1).sheets;
-    const twice = exchange({ system, compendium: world.compendium, die: () => 13, sheets: shot(13).sheets, actionId: 'lasgun:0', fromId: 'ваал', toId: 'культист' } as never).sheets;
-    expect(wounds(once, 'культист')).toBe(6);
-    expect(wounds(twice, 'культист')).toBe(11);
+    const twice = exchange({ system, compendium: world.compendium, die: () => 13, sheets: shot(13).sheets, actionId: 'lasgun:0', fromId: 'vaal', toId: 'kultist' } as never).sheets;
+    expect(wounds(once, 'kultist')).toBe(6);
+    expect(wounds(twice, 'kultist')).toBe(11);
   });
 
   it('первая помощь: Медицина +20, снимает степени плюс бонус Интеллекта (с. 219)', () => {
     const hurt = shot(13).sheets;
     const heal = (rolled: number) => exchange({
       system, compendium: world.compendium, die: () => rolled, sheets: hurt,
-      actionId: 'first_aid:0', fromId: 'ваал', toId: 'культист', inputs: { сложность: 20 },
+      actionId: 'first_aid:0', fromId: 'vaal', toId: 'kultist', inputs: { slozhnost: 20 },
     } as never);
-    expect(wounds(heal(21).sheets, 'культист')).toBe(4);
-    expect(wounds(heal(77).sheets, 'культист')).toBe(9);
+    expect(wounds(heal(21).sheets, 'kultist')).toBe(4);
+    expect(wounds(heal(77).sheets, 'kultist')).toBe(9);
   });
 });
 
 describe('Imperium Maledictum: удар в ближнем бою (с. 190, 211)', () => {
   const queue = (...values: number[]) => () => values.shift() ?? 1;
 
-  const strike = (dice: number[], defender: Record<string, number> = {}, how = 'ближний_бой', answer?: string) => {
-    const sheets = world.sheets.map(one => one.id === 'культист'
+  const strike = (dice: number[], defender: Record<string, number> = {}, how = 'blizhniy_boy', answer?: string) => {
+    const sheets = world.sheets.map(one => one.id === 'kultist'
       ? { ...one, values: { ...(one.values as Record<string, unknown>), ...defender } }
       : one) as Sheet[];
     return exchange({
       system, compendium: world.compendium, die: queue(...dice), sheets,
-      actionId: 'sword:0', fromId: 'ваал', toId: 'культист', inputs: { чем: how },
+      actionId: 'sword:0', fromId: 'vaal', toId: 'kultist', inputs: { chem: how },
       ...(answer ? { answer: () => [answer] } : {}),
     } as never);
   };
 
   it('победа по степеням: Меч 2 + бонус Силы 4 + разница степеней 4 − броня тела 1 = 9 ран', () => {
     const out = strike([27, 52]);
-    expect(wounds(out.sheets, 'культист')).toBe(9);
-    expect(wounds(out.sheets, 'ваал')).toBe(0);
+    expect(wounds(out.sheets, 'kultist')).toBe(9);
+    expect(wounds(out.sheets, 'vaal')).toBe(0);
   });
 
   it('победа защитника: у бьющего −1 степень, у защитника +1 — ран нет, ответного урона нет', () => {
     const out = strike([55, 21]);
-    expect(wounds(out.sheets, 'культист')).toBe(0);
-    expect(wounds(out.sheets, 'ваал')).toBe(0);
+    expect(wounds(out.sheets, 'kultist')).toBe(0);
+    expect(wounds(out.sheets, 'vaal')).toBe(0);
   });
 
   it('равные степени, выше навык бьющего (45 против 30): 2 + 4 + 0 − броня тела 1 = 5 ран', () => {
     const out = strike([38, 25]);
-    expect(wounds(out.sheets, 'культист')).toBe(5);
+    expect(wounds(out.sheets, 'kultist')).toBe(5);
   });
 
   it('равные степени, выше навык защитника (50 против 45): удар не прошёл', () => {
-    const out = strike([38, 45], { 'характеристики.ближний_бой.значение': 50 });
-    expect(wounds(out.sheets, 'культист')).toBe(0);
+    const out = strike([38, 45], { 'harakteristiki.blizhniy_boy.znachenie': 50 });
+    expect(wounds(out.sheets, 'kultist')).toBe(0);
     expect(out.log.join('\n')).not.toContain('ничья');
   });
 
   it('защита Рефлексами (ловкость 30): те же кости дают тот же урон, 9 ран', () => {
-    const out = strike([27, 52], {}, 'рефлексы');
-    expect(wounds(out.sheets, 'культист')).toBe(9);
+    const out = strike([27, 52], {}, 'refleksy');
+    expect(wounds(out.sheets, 'kultist')).toBe(9);
   });
 
   it('полная ничья (степени и навык равны, по 45): решает ведущий — «Защитник»: ран нет; «Бьющий»: удар прошёл', () => {
-    const tie = { 'характеристики.ближний_бой.значение': 45 };
-    const lost = strike([38, 38], tie, 'ближний_бой', 'no');
+    const tie = { 'harakteristiki.blizhniy_boy.znachenie': 45 };
+    const lost = strike([38, 38], tie, 'blizhniy_boy', 'no');
     expect(lost.questions.map(one => `${one.sheetId}: ${one.label}`)).toEqual(['desk: Ничья. Кто победил?']);
-    expect(wounds(lost.sheets, 'культист')).toBe(0);
-    const won = strike([38, 38], tie, 'ближний_бой', 'yes');
-    expect(wounds(won.sheets, 'культист')).toBe(5);
+    expect(wounds(lost.sheets, 'kultist')).toBe(0);
+    const won = strike([38, 38], tie, 'blizhniy_boy', 'yes');
+    expect(wounds(won.sheets, 'kultist')).toBe(5);
     expect(won.log.join('\n')).toContain('«Ничья. Кто победил?»: Бьющий');
   });
 });

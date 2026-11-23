@@ -24,7 +24,7 @@ const one = (n: number) => Array(n).fill(1) as number[];
 
 const SPELLS = ['spell_fireball', 'spell_mana_bolt', 'spell_heal', 'spell_increase_attribute', 'spell_stabilize'].map(of => ({ of }));
 const mage = (values: Record<string, unknown> = {}, has: Sheet['has'] = []) => ({
-  ...sheetOf('razor', { magic: 6, awakened: 'маг', tradition: 'герметизм', logic: 5, willpower: 4, 'skills.колдовство.rank': 6, 'skills.воплощение.rank': 4, ...values }, [...SPELLS, { of: 'mg_summon' }, ...has]),
+  ...sheetOf('razor', { magic: 6, awakened: 'mag', tradition: 'germetizm', logic: 5, willpower: 4, 'skills.koldovstvo.rank': 6, 'skills.voploschenie.rank': 4, ...values }, [...SPELLS, { of: 'mg_summon' }, ...has]),
   id: 'mage', name: 'Маг' } as Sheet);
 const act = (from: Sheet, to: Sheet[], actionId: string, die: () => number, inputs?: Record<string, string | number>) =>
   exchange({ system, compendium, die, sheets: [from, ...to], actionId, fromId: from.id, toIds: to.map(s => s.id), ...(inputs ? { inputs } : {}) });
@@ -48,17 +48,17 @@ group('Shadowrun 6: долг этапа 3 механикой', () => {
   });
 
   test('Киберразъём 4: ВМ 7, СЭ 6, в ВР +2 кубика инициативы (стр. 284)', () => {
-    const jack = sheetOf('razor', { matrix_mode: 'горячая ВР' }, [{ of: 'cyberjack', values: { rating: 4 } }]);
+    const jack = sheetOf('razor', { matrix_mode: 'goryachaya_VR' }, [{ of: 'cyberjack', values: { rating: 4 } }]);
     deepEq([computed(jack, 'm_dp'), computed(jack, 'm_firewall'), computed(jack, 'init_dice')], [7, 6, 5]);
   });
 
   test('Улучшение навыка: не больше ×1,5 (вверх) и +4 (стр. 157)', () => {
-    const skill = (rank: number, level: number) => computed(sheetOf('razor', { 'skills.стрельба.rank': rank }, [{ of: 'adept_improved_skill', values: { skill: 'стрельба', level } }]), 'skills.стрельба.rank');
+    const skill = (rank: number, level: number) => computed(sheetOf('razor', { 'skills.strelba.rank': rank }, [{ of: 'adept_improved_skill', values: { skill: 'strelba', level } }]), 'skills.strelba.rank');
     deepEq([skill(3, 3), skill(6, 6), skill(1, 3)], [5, 9, 2]);
   });
 
   test('Выжженный: в Матрице Преимущество не тратить (стр. 76)', () => {
-    eq(computed(sheetOf('razor', { matrix_mode: 'ДР' }, [{ of: 'burned_out' }]), 'edge_no_spend'), 1);
+    eq(computed(sheetOf('razor', { matrix_mode: 'DR' }, [{ of: 'burned_out' }]), 'edge_no_spend'), 1);
     eq(computed(sheetOf('razor', {}, [{ of: 'burned_out' }]), 'edge_no_spend'), 0);
   });
 
@@ -70,7 +70,7 @@ group('Shadowrun 6: долг этапа 3 механикой', () => {
 
   test('Дрожь в руках: при защите от выстрела трату Преимущества предлагают (стр. 76)', () => {
     const offers = (has: Sheet['has']) => exchange({ system, compendium, die: () => 3, sheets: [sheetOf('silk', { edge_left: 0 }), sheetOf('razor', { edge_left: 3 }, has)], actionId: 'colt_l36:0', fromId: 'silk', toId: 'razor',
-      inputs: { дистанция: 'близкая' } as never, answer: () => [] }).questions.length;
+      inputs: { distanciya_2: 'blizkaya' } as never, answer: () => [] }).questions.length;
     eq(offers([{ of: 'shaky_hands' }]), offers([]));
     ok(offers([]) > 0);
   });
@@ -79,7 +79,7 @@ group('Shadowrun 6: долг этапа 3 механикой', () => {
     const baton = sheetOf('lone_star', { edge_left: 2 }, [{ of: 'shaky_hands' }]);
     let message = '';
     let sheets: Sheet[] = [];
-    try { sheets = exchange({ system, compendium, die: () => 1, sheets: [baton, sheetOf('humanis')], actionId: 'stun_baton:0', fromId: 'lone_star', toId: 'humanis', inputs: { приём: 'Вырубить ударом' } as never }).sheets; } catch (error) { message = (error as Error).message; }
+    try { sheets = exchange({ system, compendium, die: () => 1, sheets: [baton, sheetOf('humanis')], actionId: 'stun_baton:0', fromId: 'lone_star', toId: 'humanis', inputs: { priem: 'Vyrubit_udarom' } as never }).sheets; } catch (error) { message = (error as Error).message; }
     ok(message.includes('Дрожь в руках'), message);
     eq(sheets.length, 0);
   });
@@ -92,7 +92,7 @@ group('Shadowrun 6: долг этапа 3 механикой', () => {
 
 group('Shadowrun 6: заклинания', () => {
   test('герметист: ЗА заклинаний = Магия + Логика, истощение — Воля + Логика', () => {
-    deepEq([computed(mage(), 'spell_ar'), computed(mage(), 'drain_pool'), computed(mage(), 'skills.колдовство.pool')], [11, 9, 12]);
+    deepEq([computed(mage(), 'spell_ar'), computed(mage(), 'drain_pool'), computed(mage(), 'skills.koldovstvo.pool')], [11, 9, 12]);
   });
 
   test('Огненный шар с насыщением 1: ⌈Магия/2⌉ + чистые + 1, Горение = чистые; СИ 8 > Магии — истощение физическое (стр. 131–133)', () => {
@@ -114,19 +114,19 @@ group('Shadowrun 6: заклинания', () => {
 
   test('истощение не лечится: Исцеление не опускает оглушающий ниже ячеек истощения (стр. 127)', () => {
     const hurt = mage({ stun: 4, drain_stun: 3 });
-    const out = exchange({ system, compendium, die: tape(...six(6), ...one(6), ...six(9)), sheets: [hurt], actionId: 'spell_heal:0', fromId: 'mage', toIds: ['mage'], inputs: { heal_kind: 'оглушающий' } });
+    const out = exchange({ system, compendium, die: tape(...six(6), ...one(6), ...six(9)), sheets: [hurt], actionId: 'spell_heal:0', fromId: 'mage', toIds: ['mage'], inputs: { heal_kind: 'oglushayuschiy' } });
     eq(after(out, 'mage').values.stun, 3);
   });
 
   test('Исцеление: порог 5 − Сущность, 1 ячейка за чистый успех (стр. 136)', () => {
-    const out = act(mage(), [sheetOf('humanis', { physical: 6 })], 'spell_heal:0', tape(...six(3), ...one(9), ...six(9)), { heal_kind: 'физический' });
+    const out = act(mage(), [sheetOf('humanis', { physical: 6 })], 'spell_heal:0', tape(...six(3), ...one(9), ...six(9)), { heal_kind: 'fizicheskiy' });
     eq(after(out, 'humanis').values.physical, 6 - 3);
   });
 
   test('Исцеление мёртвого: урон остаётся (стр. 121)', () => {
     const dead = sheetOf('humanis', { physical: 40 });
     eq(computed(dead, 'is_dead'), true);
-    const out = act(mage(), [dead], 'spell_heal:0', tape(...six(3), ...one(9), ...six(9)), { heal_kind: 'физический' });
+    const out = act(mage(), [dead], 'spell_heal:0', tape(...six(3), ...one(9), ...six(9)), { heal_kind: 'fizicheskiy' });
     eq(after(out, 'humanis').values.physical, 40);
   });
 
@@ -145,16 +145,16 @@ group('Shadowrun 6: заклинания', () => {
 
   test('призыв духа (стр. 66): адепт не призывает, маг и мистический адепт — да', () => {
     const spirit = { id: 'sp', systemId: sr.sheets[0]!.systemId, of: 'spirit', name: 'Дух', values: {}, has: [], effects: [] } as unknown as Sheet;
-    const summon = (kind: string) => refusal(() => act(mage({ awakened: kind, tradition: 'шаманизм', charisma: 5, willpower: 5 }), [spirit], 'mg_summon:0', () => 1, { kind: 'воздуха', force: 3 }));
-    ok(summon('адепт').includes('призывают только'));
-    ok(!summon('маг').includes('призывают только'));
-    ok(!summon('мистический адепт').includes('призывают только'));
+    const summon = (kind: string) => refusal(() => act(mage({ awakened: kind, tradition: 'shamanizm', charisma: 5, willpower: 5 }), [spirit], 'mg_summon:0', () => 1, { kind: 'vozduha', force: 3 }));
+    ok(summon('adept').includes('призывают только'));
+    ok(!summon('mag').includes('призывают только'));
+    ok(!summon('misticheskiy_adept').includes('призывают только'));
   });
 
   test('Магия духа = Мощь при 7 и выше (стр. 147–148): предел 6 её не режет', () => {
     const spirit = { id: 'sp', systemId: sr.sheets[0]!.systemId, of: 'spirit', name: 'Дух', values: {}, has: [], effects: [] } as unknown as Sheet;
     let used = 0;
-    const out = act(mage({ magic: 7, initiate_grade: 1, tradition: 'шаманизм', charisma: 6, willpower: 6, 'skills.воплощение.rank': 6 }), [spirit], 'mg_summon:0', () => (used++ < 14 ? 6 : 1), { kind: 'воздуха', force: 7 });
+    const out = act(mage({ magic: 7, initiate_grade: 1, tradition: 'shamanizm', charisma: 6, willpower: 6, 'skills.voploschenie.rank': 6 }), [spirit], 'mg_summon:0', () => (used++ < 14 ? 6 : 1), { kind: 'vozduha', force: 7 });
     eq(computed(after(out, 'sp'), 'magic'), 7);
   });
 
@@ -190,7 +190,7 @@ group('Shadowrun 6: заклинания', () => {
 group('Shadowrun 6: духи', () => {
   test('призыв духа воздуха Мощи 4: услуги = чистые, характеристики Мощь + смещение, защита (Мо × 2) − 2, инициатива (Мо × 2) + 4 (стр. 147–148)', () => {
     const spirit = { id: 'sp', systemId: sr.sheets[0]!.systemId, of: 'spirit', name: 'Дух', values: {}, has: [], effects: [] } as unknown as Sheet;
-    const out = act(mage({ tradition: 'шаманизм', charisma: 5, willpower: 5 }), [spirit], 'mg_summon:0', tape(6, 6, 6, 5, ...one(6), 1, 1, 6, 6, ...one(4), ...six(10)), { kind: 'воздуха', force: 4 });
+    const out = act(mage({ tradition: 'shamanizm', charisma: 5, willpower: 5 }), [spirit], 'mg_summon:0', tape(6, 6, 6, 5, ...one(6), 1, 1, 6, 6, ...one(4), ...six(10)), { kind: 'vozduha', force: 4 });
     const sp = after(out, 'sp');
     deepEq([sp.values.services, computed(sp, 'agility'), computed(sp, 'reaction'), computed(sp, 'defense_rating'), computed(sp, 'initiative'), computed(sp, 'physical_max')], [2, 7, 8, 6, 12, 10]);
     eq(after(out, 'mage').values.spirits_force, 4);
@@ -198,13 +198,13 @@ group('Shadowrun 6: духи', () => {
 
   test('суммарная Мощь духов не больше Магии × 3 (стр. 146)', () => {
     const spirit = { id: 'sp', systemId: sr.sheets[0]!.systemId, of: 'spirit', name: 'Дух', values: {}, has: [], effects: [] } as unknown as Sheet;
-    ok(refusal(() => act(mage({ spirits_force: 16 }), [spirit], 'mg_summon:0', () => 1, { kind: 'воздуха', force: 4 })).includes('Магии × 3'));
+    ok(refusal(() => act(mage({ spirits_force: 16 }), [spirit], 'mg_summon:0', () => 1, { kind: 'vozduha', force: 4 })).includes('Магии × 3'));
   });
 });
 
 group('Shadowrun 6: навыки духа одной правкой по колонке', () => {
   test('дух воздуха Мощи 4 — свои навыки на Мощь, чужие — ноль', () => {
-    const spirit = { id: 'дух', of: 'spirit', systemId: system.id, name: 'Дух', values: { spirit_force: 4, spirit_kind: 'воздуха' }, has: [], effects: [] } as unknown as Sheet;
-    deepEq([computed(spirit, 'skills.астрал.rank'), computed(spirit, 'skills.колдовство.rank')], [4, 0]);
+    const spirit = { id: 'дух', of: 'spirit', systemId: system.id, name: 'Дух', values: { spirit_force: 4, spirit_kind: 'vozduha' }, has: [], effects: [] } as unknown as Sheet;
+    deepEq([computed(spirit, 'skills.astral.rank'), computed(spirit, 'skills.koldovstvo.rank')], [4, 0]);
   });
 });

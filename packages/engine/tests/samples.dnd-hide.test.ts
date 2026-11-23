@@ -35,7 +35,7 @@ describe('Засада D&D: один бросок Скрытности прот�
     const out = play(world, world.sheets, '+hide', 'arven', ['goblin', 'ogre', 'orc'], [6]);
     const hidden = (id: string) => out.sheets.find(s => s.id === id)!.effects?.filter(e => e.effectId === 'hidden') ?? [];
     expect(out.log.filter(line => line.includes('Бросок')).length).toBe(1);
-    expect(hidden('ogre').map(e => e.args)).toEqual([{ кого: 'arven' }]);
+    expect(hidden('ogre').map(e => e.args)).toEqual([{ whom: 'arven' }]);
     expect(hidden('goblin')).toEqual([]);
     expect(hidden('orc')).toEqual([]);
     expect(hidden('arven')).toEqual([]);
@@ -60,7 +60,7 @@ describe('Засада D&D: один бросок Скрытности прот�
     sheets = play(world, sheets, '+hide', 'mirra', ['ogre'], [15]).sheets;
     sheets = play(world, sheets, '+hide', 'arven', ['ogre'], [6]).sheets;
     const ogre = sheets.find(s => s.id === 'ogre')!;
-    expect(ogre.effects!.filter(e => e.effectId === 'hidden').map(e => e.args)).toEqual([{ кого: 'arven' }, { кого: 'mirra' }]);
+    expect(ogre.effects!.filter(e => e.effectId === 'hidden').map(e => e.args)).toEqual([{ whom: 'arven' }, { whom: 'mirra' }]);
     const arven = sheets.find(s => s.id === 'arven')!;
     expect(play(world, sheets, attackOf(world, arven), 'arven', ['ogre'], [3, 17, 4, 4, 4, 4]).log.join(' ')).toMatch(/Преимуществ/);
   });
@@ -81,13 +81,13 @@ describe('Засада D&D: один бросок Скрытности прот�
   it('два испуга от разных заклинателей — спасся от одного, снялся только он', () => {
     const world = dnd();
     const sheets = world.sheets.map(s => (s.id === 'goblin'
-      ? { ...s, effects: [...(s.effects ?? []), { effectId: 'frightened', args: { запомнено: 10 } }, { effectId: 'frightened', args: { запомнено: 25 } }] }
+      ? { ...s, effects: [...(s.effects ?? []), { effectId: 'frightened', args: { zapomneno: 10 } }, { effectId: 'frightened', args: { zapomneno: 25 } }] }
       : s));
     const clock: Clock = { round: 1, order: ['goblin', 'arven'], active: 'goblin' };
     const dice = [15, 15, 15, 15];
     const out = perform({ system: world.system, compendium: world.compendium, clock, sheets, die: () => dice.shift() ?? 15 } as never, { op: 'turn', turn: 'next' } as never) as unknown as { sheets: Sheet[]; log: string[] };
     const left = out.sheets.find(s => s.id === 'goblin')!.effects!.filter(e => e.effectId === 'frightened');
-    expect(left.map(e => e.args)).toEqual([{ запомнено: 25 }]);
+    expect(left.map(e => e.args)).toEqual([{ zapomneno: 25 }]);
   });
 });
 

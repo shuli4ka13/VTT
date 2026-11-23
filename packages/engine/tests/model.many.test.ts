@@ -20,8 +20,8 @@ group('ссылка «несколько значений» — многие к�
   test('у кинжала три свойства, и каждое занимает свою строку таблицы', () => {
     const мир = clone(PLAYABLE_WORLDS[0]!);
     const кинжал = мир.compendium.records!.find(i => i.id === 'dagger')!;
-    eq(JSON.stringify(кинжал.cells!.properties), JSON.stringify(['лёгкое', 'фехтовальное', 'метательное']));
-    const кто = rowUsers(мир.system as System, 'weapon_properties', 'метательное', мир.compendium as Compendium);
+    eq(JSON.stringify(кинжал.cells!.properties), JSON.stringify(['legkoe', 'fehtovalnoe', 'metatelnoe']));
+    const кто = rowUsers(мир.system as System, 'weapon_properties', 'metatelnoe', мир.compendium as Compendium);
     ok(кто.some(u => u.text.includes('Кинжал')), кто.map(u => u.text).join(' | '));
   });
 
@@ -29,19 +29,19 @@ group('ссылка «несколько значений» — многие к�
     const мир = clone(PLAYABLE_WORLDS[0]!);
     const system = мир.system as System;
     const книга = мир.compendium as Compendium;
-    renameRow(system, 'weapon_properties', 'метательное', 'бросковое');
-    renameRowInBook(system, книга, 'weapon_properties', 'метательное', 'бросковое');
+    renameRow(system, 'weapon_properties', 'metatelnoe', 'бросковое');
+    renameRowInBook(system, книга, 'weapon_properties', 'metatelnoe', 'бросковое');
     const кинжал = книга.records!.find(i => i.id === 'dagger')!;
-    eq(JSON.stringify(кинжал.cells!.properties), JSON.stringify(['лёгкое', 'фехтовальное', 'бросковое']));
+    eq(JSON.stringify(кинжал.cells!.properties), JSON.stringify(['legkoe', 'fehtovalnoe', 'бросковое']));
     eq(danglingRows(system, книга).length, 0);
   });
 
   test('одно пропавшее значение в списке — ошибка словами, с его именем', () => {
     const мир = clone(PLAYABLE_WORLDS[0]!);
     const system = мир.system as System;
-    system.tables!.weapon_properties!.rows = system.tables!.weapon_properties!.rows!.filter(r => r.value !== 'лёгкое');
+    system.tables!.weapon_properties!.rows = system.tables!.weapon_properties!.rows!.filter(r => r.value !== 'legkoe');
     const висят = danglingRows(system, мир.compendium as Compendium).map(d => d.text);
-    ok(висят.some(t => t.includes('Кинжал') && t.includes('лёгкое')), висят.slice(0, 3).join('\n'));
+    ok(висят.some(t => t.includes('Кинжал') && t.includes('legkoe')), висят.slice(0, 3).join('\n'));
   });
 });
 

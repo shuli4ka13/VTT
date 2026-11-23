@@ -18,7 +18,7 @@ const shieldWorld: any = {
     ...system.effects,
     shield: {
       label: 'Щит', activation: 'passive',
-      on: [{ on: 'before:атака', confirm: true, if: { expr: '@цель == @holder and @hit.success' }, steps: [{ type: 'status', mode: 'apply', effect: 'shield_up', to: { expr: '@holder' } }] }],
+      on: [{ on: 'before:ataka', confirm: true, if: { expr: '@aim == @holder and @hit.success' }, steps: [{ type: 'status', mode: 'apply', effect: 'shield_up', to: { expr: '@holder' } }] }],
     },
     shield_up: {
       label: 'Под щитом', activation: 'passive', duration: { kind: 'turns', max: 1 },
@@ -112,12 +112,12 @@ group('подписка на исходящее: вампиризм и метк�
       ...system.effects,
       vampiric: {
         label: 'Вампиризм', activation: 'passive', duration: { kind: 'permanent' },
-        on: [{ on: 'after:damage', if: { expr: '@источник == @holder' }, steps: [{ type: 'apply', target: { expr: '@holder.hp_current' }, direction: 'add',
+        on: [{ on: 'after:damage', if: { expr: '@istochnik == @holder' }, steps: [{ type: 'apply', target: { expr: '@holder.hp_current' }, direction: 'add',
           value: { expr: 'floor(@amount / 2)' } }] }],
       },
       brand: {
         label: 'Метка охотника', activation: 'passive', duration: { kind: 'permanent' },
-        on: [{ on: 'after:fire_bolt', if: { expr: '@действующий == @holder and @hit.success' }, steps: [{ type: 'status', mode: 'apply', effect: 'poisoned', to: { expr: '@цель' } }] }],
+        on: [{ on: 'after:fire_bolt', if: { expr: '@deystvuyuschiy == @holder and @hit.success' }, steps: [{ type: 'status', mode: 'apply', effect: 'poisoned', to: { expr: '@aim' } }] }],
       },
     },
   };
@@ -200,7 +200,7 @@ group('реакция после разрешения: «на меня поде�
       ...system.effects,
       rebuke: {
         label: 'Возмездие', activation: 'passive',
-        on: [{ on: 'after:strike', confirm: true, if: { expr: '@цель == @holder and @hit.success' }, steps: [{ type: 'apply', target: { expr: '@действующий.hp_current' }, direction: 'subtract', value: { expr: '3' } }] }],
+        on: [{ on: 'after:strike', confirm: true, if: { expr: '@aim == @holder and @hit.success' }, steps: [{ type: 'apply', target: { expr: '@deystvuyuschiy.hp_current' }, direction: 'subtract', value: { expr: '3' } }] }],
       },
     },
   };
@@ -234,7 +234,7 @@ group('триггер до разрешения: срабатывает молч
       ...system.effects,
       brace: {
         label: 'Стойка', activation: 'passive',
-        on: [{ on: 'before:strike', if: { expr: '@цель == @holder' }, steps: [{ type: 'status', mode: 'apply', effect: 'wall', to: { expr: '@holder' } }] }],
+        on: [{ on: 'before:strike', if: { expr: '@aim == @holder' }, steps: [{ type: 'status', mode: 'apply', effect: 'wall', to: { expr: '@holder' } }] }],
       },
       wall: {
         label: 'Стена', activation: 'passive', duration: { kind: 'turns', max: 1 },

@@ -1,8 +1,8 @@
 import type { Scenario } from './run.ts';
 
-const shot = (from: string, to: string, distance: number, extra: { luck?: number; aim?: 'по телу' | 'по голове'; item?: string } = {}) => ({
+const shot = (from: string, to: string, distance: number, extra: { luck?: number; aim?: 'po_telu' | 'po_golove'; item?: string } = {}) => ({
   act: `${extra.item ?? 'heavy-pistol'}:0`, from, to,
-  inputs: { distance, spend_luck: extra.luck ?? 0, aim: extra.aim ?? 'по телу' },
+  inputs: { distance, spend_luck: extra.luck ?? 0, aim: extra.aim ?? 'po_telu' },
 });
 
 const SRC = 'Cyberpunk RED, основная книга, глава «Бой»';
@@ -91,7 +91,7 @@ export const scenarios: Scenario[] = [
     rule: `${SRC}, прицельный выстрел в голову: броня головы работает, прошедший урон удваивается. Дистанция 10 м (15); Сильвер 14 + 9 − 8 (штраф за прицельный выстрел в голову) = 15 — попал. Урон 6+5+4 = 15 − SP головы 11 = 4, вдвое 8: хиты 40 → 32, шлем 11 → 10, броня тела не тронута.`,
     world: 'cyberpunk',
     dice: [9, 6, 5, 4],
-    steps: [shot('silver', 'raze', 10, { aim: 'по голове' })],
+    steps: [shot('silver', 'raze', 10, { aim: 'po_golove' })],
     expect: { values: { raze: { hp: 32, sp_head: 10, sp_body: 11 } } },
   },
   {
@@ -99,7 +99,7 @@ export const scenarios: Scenario[] = [
     rule: `${SRC}, прицельный выстрел (в голову): −8 к броску атаки. Дистанция 10 м (15); Сильвер 14 + 8 − 8 = 14 — промах (хиты Рейза 40). Без штрафа 22 — попал.`,
     world: 'cyberpunk',
     dice: [8],
-    steps: [shot('silver', 'raze', 10, { aim: 'по голове' })],
+    steps: [shot('silver', 'raze', 10, { aim: 'po_golove' })],
     expect: { values: { raze: { hp: 40, sp_head: 11 } } },
   },
   {

@@ -101,7 +101,7 @@ group('«Проблемы»: метку, которую ждёт правка б
   test('список «метки, которые несут броски» берёт и метки формулой: свойства оружия и дальность в D&D', () => {
     const world = SAMPLE_WORLDS.find(one => one.system.name === 'D&D 5e')!;
     const kinds = rollGroupsOf(flattenSystem(world.system)).kinds.map(kind => kind.value);
-    ok(kinds.includes('двуручное') && kinds.includes('ближний'), kinds.join(', '));
+    ok(kinds.includes('dvuruchnoe') && kinds.includes('blizhniy'), kinds.join(', '));
   });
 
   test('правка «метка броску» у типа листа «стол» ставит метку — замечания нет', () => {

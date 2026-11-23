@@ -2007,7 +2007,7 @@
             }
           },
           {
-            "value": "protiv_celi__kotoroy_meshaet_sluh",
+            "value": "protiv_celi_kotoroy_meshaet_sluh",
             "label": "против цели, которой мешает слух"
           },
           {
@@ -4642,7 +4642,7 @@
         ],
         "rows": [
           {
-            "value": "Logika___VM",
+            "value": "Logika_VM",
             "label": "Логика + ВМ",
             "cells": {
               "persona": {
@@ -4654,7 +4654,7 @@
             }
           },
           {
-            "value": "Volya___SE",
+            "value": "Volya_SE",
             "label": "Воля + СЭ",
             "cells": {
               "persona": {
@@ -4666,7 +4666,7 @@
             }
           },
           {
-            "value": "Volya___U",
+            "value": "Volya_U",
             "label": "Воля + У",
             "cells": {
               "persona": {
@@ -4678,7 +4678,7 @@
             }
           },
           {
-            "value": "Logika___SE",
+            "value": "Logika_SE",
             "label": "Логика + СЭ",
             "cells": {
               "persona": {
@@ -4690,7 +4690,7 @@
             }
           },
           {
-            "value": "Intuiciya___SE",
+            "value": "Intuiciya_SE",
             "label": "Интуиция + СЭ",
             "cells": {
               "persona": {
@@ -4702,7 +4702,7 @@
             }
           },
           {
-            "value": "VM___SE",
+            "value": "VM_SE",
             "label": "ВМ + СЭ",
             "cells": {
               "persona": {
@@ -4714,7 +4714,7 @@
             }
           },
           {
-            "value": "Harizma___VM",
+            "value": "Harizma_VM",
             "label": "Харизма + ВМ",
             "cells": {
               "persona": {
@@ -4726,7 +4726,7 @@
             }
           },
           {
-            "value": "Intuiciya___VM",
+            "value": "Intuiciya_VM",
             "label": "Интуиция + ВМ",
             "cells": {
               "persona": {
@@ -4738,7 +4738,7 @@
             }
           },
           {
-            "value": "VM___reyting",
+            "value": "VM_reyting",
             "label": "ВМ + рейтинг",
             "cells": {
               "persona": {
@@ -4750,7 +4750,7 @@
             }
           },
           {
-            "value": "Volya___P",
+            "value": "Volya_P",
             "label": "Воля + П",
             "cells": {
               "persona": {
@@ -4762,7 +4762,7 @@
             }
           },
           {
-            "value": "Volya___VM",
+            "value": "Volya_VM",
             "label": "Воля + ВМ",
             "cells": {
               "persona": {
@@ -4793,7 +4793,7 @@
             }
           },
           {
-            "value": "Reyting___SE",
+            "value": "Reyting_SE",
             "label": "Рейтинг + СЭ",
             "cells": {
               "persona": {
@@ -4854,7 +4854,7 @@
             "value": "vzryvnoy",
             "label": "взрывной",
             "cells": {
-              "defense": "Logika___SE",
+              "defense": "Logika_SE",
               "text": "Урон Матрицы = рейтинг сервера, цель залипает.",
               "dmg": {
                 "expr": "@deystvuyuschiy.host_rating"
@@ -4866,7 +4866,7 @@
             "value": "vyslezhivayuschiy",
             "label": "выслеживающий",
             "cells": {
-              "defense": "Volya___U",
+              "defense": "Volya_U",
               "text": "Раскрывает физическое местоположение цели."
             }
           },
@@ -4874,7 +4874,7 @@
             "value": "dozornyy",
             "label": "дозорный",
             "cells": {
-              "defense": "Volya___U",
+              "defense": "Volya_U",
               "text": "Внимание в Матрице раз в минуту (рейтинг × 2), урона нет."
             }
           },
@@ -4882,7 +4882,7 @@
             "value": "edkiy",
             "label": "едкий",
             "cells": {
-              "defense": "Volya___SE",
+              "defense": "Volya_SE",
               "text": "Сетевой экран цели −1 за чистый успех.",
               "cut": "SE"
             }
@@ -4891,7 +4891,7 @@
             "value": "iskryaschiy",
             "label": "искрящий",
             "cells": {
-              "defense": "Intuiciya___SE",
+              "defense": "Intuiciya_SE",
               "text": "Биоотдача: рейтинг сервера + чистые успехи.",
               "dmg": 0,
               "bio": {
@@ -4903,7 +4903,7 @@
             "value": "lipnuschiy",
             "label": "липнущий",
             "cells": {
-              "defense": "Logika___SE",
+              "defense": "Logika_SE",
               "text": "Залипание.",
               "lock": true
             }
@@ -4912,7 +4912,7 @@
             "value": "podavlyayuschiy",
             "label": "подавляющий",
             "cells": {
-              "defense": "Volya___P",
+              "defense": "Volya_P",
               "text": "Проникновение цели −1 за чистый успех.",
               "cut": "P"
             }
@@ -4921,7 +4921,7 @@
             "value": "probivayuschiy",
             "label": "пробивающий",
             "cells": {
-              "defense": "Volya___SE",
+              "defense": "Volya_SE",
               "text": "Цель перезагружает устройство на следующем ходу, если не залипла."
             }
           },
@@ -4929,7 +4929,7 @@
             "value": "proyavlyayuschiy",
             "label": "проявляющий",
             "cells": {
-              "defense": "Volya___U",
+              "defense": "Volya_U",
               "text": "Ускользание цели −1 за чистый успех.",
               "cut": "U"
             }
@@ -4938,7 +4938,7 @@
             "value": "skovyvayuschiy",
             "label": "сковывающий",
             "cells": {
-              "defense": "Volya___VM",
+              "defense": "Volya_VM",
               "text": "Вычислительная мощность цели −1 за чистый успех; при 0 — никаких действий в Матрице.",
               "cut": "VM"
             }
@@ -4947,7 +4947,7 @@
             "value": "sokrushayuschiy",
             "label": "сокрушающий",
             "cells": {
-              "defense": "Intuiciya___SE",
+              "defense": "Intuiciya_SE",
               "text": "Останавливает одну случайную программу до перезагрузки."
             }
           },
@@ -4955,7 +4955,7 @@
             "value": "ubivayuschiy",
             "label": "убивающий",
             "cells": {
-              "defense": "Intuiciya___SE",
+              "defense": "Intuiciya_SE",
               "text": "Урон Матрицы: чистые успехи + рейтинг сервера.",
               "dmg": {
                 "expr": "@deystvuyuschiy.host_rating + @otpor_itog.chistye"
@@ -4966,7 +4966,7 @@
             "value": "chernyy",
             "label": "чёрный",
             "cells": {
-              "defense": "Intuiciya___SE",
+              "defense": "Intuiciya_SE",
               "text": "Рейтинг сервера + чистые успехи урона и в Матрице, и биоотдачей.",
               "dmg": {
                 "expr": "@deystvuyuschiy.host_rating + @otpor_itog.chistye"
@@ -5268,7 +5268,7 @@
         ],
         "rows": [
           {
-            "value": "Volya___Intuiciya",
+            "value": "Volya_Intuiciya",
             "label": "Воля + Интуиция",
             "cells": {
               "pool": {
@@ -5278,7 +5278,7 @@
             }
           },
           {
-            "value": "Reakciya___Volya",
+            "value": "Reakciya_Volya",
             "label": "Реакция + Воля",
             "cells": {
               "pool": {
@@ -5288,7 +5288,7 @@
             }
           },
           {
-            "value": "Telo___Volya",
+            "value": "Telo_Volya",
             "label": "Тело + Воля",
             "cells": {
               "pool": {
@@ -5298,7 +5298,7 @@
             }
           },
           {
-            "value": "Logika___Volya",
+            "value": "Logika_Volya",
             "label": "Логика + Воля",
             "cells": {
               "pool": {
@@ -5318,7 +5318,7 @@
             }
           },
           {
-            "value": "Intuiciya___Logika",
+            "value": "Intuiciya_Logika",
             "label": "Интуиция + Логика",
             "cells": {
               "pool": {
@@ -5338,7 +5338,7 @@
             }
           },
           {
-            "value": "Telo___Sila",
+            "value": "Telo_Sila",
             "label": "Тело + Сила",
             "cells": {
               "pool": {
@@ -5348,7 +5348,7 @@
             }
           },
           {
-            "value": "Volya___vybrannaya_harakteristika",
+            "value": "Volya_vybrannaya_harakteristika",
             "label": "Воля + выбранная характеристика",
             "cells": {
               "pool": {
@@ -5396,7 +5396,7 @@
             }
           },
           {
-            "value": "Mosch_istochnika___2",
+            "value": "Mosch_istochnika_2",
             "label": "Мощь источника × 2",
             "cells": {
               "versus": {
@@ -6108,7 +6108,7 @@
             }
           },
           {
-            "value": "k_5__uspehov",
+            "value": "k_5_uspehov",
             "label": "5+ успехов",
             "cells": {
               "text": "Наличие и местоположение дельта-имплантов, генных и нанотехнологических модификаций; точный диагноз болезни или токсинов; является ли цель техномантом или монадой."
@@ -12597,7 +12597,7 @@
                 "expr": "@list.magic"
               },
               "lasting": true,
-              "tag": "сопротивление истощению"
+              "tag": "soprotivlenie_istoscheniyu"
             }
           },
           {
@@ -12610,7 +12610,7 @@
               "limit": {
                 "expr": "@list.resonance"
               },
-              "tag": "угасание"
+              "tag": "ugasanie"
             }
           },
           {
@@ -12623,7 +12623,7 @@
               "limit": {
                 "expr": "@list.resonance"
               },
-              "tag": "угасание"
+              "tag": "ugasanie"
             }
           }
         ]

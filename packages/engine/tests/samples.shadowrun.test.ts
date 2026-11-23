@@ -22,22 +22,22 @@ const dice = (...runs: [number, number][]) => {
   return () => tape.shift() ?? 1;
 };
 
-const shoot = (from: Sheet, to: Sheet, action: string, die: () => number, дистанция = 'близкая') => exchange({
-  system, compendium, die, sheets: [from, to], actionId: action, fromId: from.id, toId: to.id, inputs: { дистанция },
+const shoot = (from: Sheet, to: Sheet, action: string, die: () => number, distanciya_2 = 'blizkaya') => exchange({
+  system, compendium, die, sheets: [from, to], actionId: action, fromId: from.id, toId: to.id, inputs: { distanciya_2 },
 });
 const after = (out: ReturnType<typeof exchange>, id: string) => out.sheets.find(s => s.id === id)!;
 
 group('Shadowrun 6: наборы и значения по книге', () => {
   test('навык с листа — набор «навык + характеристика», успехи на 5–6', () => {
-    const check = fieldCheck(system, 'skills.стрельба.pool');
+    const check = fieldCheck(system, 'skills.strelba.pool');
     const out = rollCheck(system, sheetOf('razor'), check, { compendium, die: dice([4, 6], [7, 2]), owner: check.label });
     eq(out.rolled.rolls.length, 11, 'Стрельба 6 + Проворство 5');
     eq(out.total, 4);
   });
 
   test('без изучения: Атлетика — характеристика − 1, Взлом — нельзя', () => {
-    eq(computed(sheetOf('silk'), 'skills.атлетика.pool'), 2);
-    eq(computed(sheetOf('silk'), 'skills.взлом.pool'), 0);
+    eq(computed(sheetOf('silk'), 'skills.atletika.pool'), 2);
+    eq(computed(sheetOf('silk'), 'skills.vzlom.pool'), 0);
   });
 
   test('значение защиты = Тело + броня; тролль +1 за подкожные наросты; шлем сверху', () => {
@@ -67,7 +67,7 @@ group('Shadowrun 6: атака', () => {
     const out = shoot(razor, sheetOf('humanis'), 'predator_vi:0', dice([11, 1], [4, 1]));
     eq(after(out, 'razor').values.edge_left, 1, 'АТК 10 против ЗЩТ 2');
     let refused = '';
-    try { shoot(sheetOf('razor'), sheetOf('humanis'), 'predator_vi:0', dice(), 'дальняя'); } catch (err) { refused = (err as Error).message; }
+    try { shoot(sheetOf('razor'), sheetOf('humanis'), 'predator_vi:0', dice(), 'dalnyaya'); } catch (err) { refused = (err as Error).message; }
     ok(refused.includes('на этой дистанции оружие не бьёт'), 'действие не состоялось, ничего не потрачено');
   });
 
@@ -77,7 +77,7 @@ group('Shadowrun 6: Преимущество и действия', () => {
   const desk = { id: 'desk', systemId: 'shadowrun6', name: 'Стол', values: {}, has: [], effects: [] } as unknown as Sheet;
   const hit = (from: Sheet, to: Sheet, action: string, die: () => number, inputs: Record<string, unknown>, battle = false) => exchange({
     system, compendium, die, sheets: [from, to, desk], ...(battle ? { clock: fight(from.id, to.id) } : {}), actionId: action, fromId: from.id, toId: to.id,
-    inputs: { ...(/^(stun_baton|katana|sap|combat_knife):/.test(action) ? {} : { дистанция: 'близкая' }), ...inputs } as never,
+    inputs: { ...(/^(stun_baton|katana|sap|combat_knife):/.test(action) ? {} : { distanciya_2: 'blizkaya' }), ...inputs } as never,
   });
 
   test('не больше 2 очков Преимущества за раунд', () => {
@@ -91,7 +91,7 @@ group('Shadowrun 6: Преимущество и действия', () => {
 
   test('«Вырубить ударом» за 2 очка: урон больше Воли — счётчик оглушения полон', () => {
     const out = hit(sheetOf('lone_star', { edge_left: 2 }), sheetOf('humanis'), 'stun_baton:0', dice([7, 6], [4, 1], [2, 1]),
-      { приём: 'Вырубить ударом' });
+      { priem: 'Vyrubit_udarom' });
     eq(after(out, 'lone_star').values.edge_left, 1, 'заплатил 2, получил 1 за АТК 6 против ЗЩТ 2');
     eq(after(out, 'humanis').values.stun, 9);
     ok(wears(after(out, 'humanis'), 'unconscious'));
@@ -199,11 +199,11 @@ group('Shadowrun 6: существа и пешки — книга, шаг 8', ()
   test('поддержание заклинаний (стр. 132, 222): пешка и существо — −2 кубика за заклинание, как у бегущего', () => {
     const roll = (sheet: Sheet, sustaining: number) => {
       const held = { ...sheet, effects: [...sheet.effects, ...Array.from({ length: sustaining }, () => ({ effectId: 'sustaining' }))] } as Sheet;
-      const out = perform({ system, compendium, clock: null, sheets: [held], die: () => 6 }, { op: 'roll', sheetId: held.id, tag: 'skills.стрельба.pool' } as never);
+      const out = perform({ system, compendium, clock: null, sheets: [held], die: () => 6 }, { op: 'roll', sheetId: held.id, tag: 'skills.strelba.pool' } as never);
       if (out.kind !== 'done') throw new Error(out.kind);
       return (/\[([^\]]*)\]/.exec(out.log.join('\n'))?.[1] ?? '').split(',').filter(Boolean).length;
     };
-    for (const sheet of [sheetOf('fiveeyes', { 'skills.стрельба.rank': 3, edge_left: 0 }), creature('volk', { 'skills.стрельба.rank': 3, edge_left: 0 })]) eq(roll(sheet, 0) - roll(sheet, 1), 2);
+    for (const sheet of [sheetOf('fiveeyes', { 'skills.strelba.rank': 3, edge_left: 0 }), creature('volk', { 'skills.strelba.rank': 3, edge_left: 0 })]) eq(roll(sheet, 0) - roll(sheet, 1), 2);
   });
 
   test('командир отряда (стр. 203): профессиональный рейтинг добавляется к счётчику', () => {
@@ -221,7 +221,7 @@ group('Shadowrun 6: существа и пешки — книга, шаг 8', ()
     };
     const stunned = finishing(sheetOf('lone_star'), 'stun_baton:0', {});
     ok(wears(stunned, 'unconscious') && !wears(stunned, 'bleeding'), JSON.stringify(stunned.effects));
-    const shot = finishing(sheetOf('razor', { agility: 1, 'skills.стрельба.rank': 1 }), 'predator_vi:0', { дистанция: 'близкая' });
+    const shot = finishing(sheetOf('razor', { agility: 1, 'skills.strelba.rank': 1 }), 'predator_vi:0', { distanciya_2: 'blizkaya' });
     ok(wears(shot, 'bleeding') && !wears(shot, 'unconscious'), JSON.stringify(shot.effects));
   });
 });
@@ -231,7 +231,7 @@ group('Shadowrun 6: отряд пешек', () => {
     const sheets = [sheetOf('razor'), sheetOf('fiveeyes'), sheetOf('fiveeyes_2'), sheetOf('fiveeyes_squad')];
     const out = exchange({
       system, compendium, die: dice([11, 6], [6, 1], [2, 1]), sheets, actionId: 'predator_vi:0', fromId: 'razor', toId: 'fiveeyes',
-      inputs: { дистанция: 'близкая' },
+      inputs: { distanciya_2: 'blizkaya' },
     });
     eq(after(out, 'fiveeyes_squad').values.physical, 3 + 11);
     const second = after(out, 'fiveeyes_2');
@@ -270,38 +270,38 @@ group('Shadowrun 6: оружие, патроны, модификации, взр
   const refusal = (run: () => unknown) => { try { run(); return ''; } catch (err) { return (err as Error).message; } };
 
   test('короткая очередь тратит 2 патрона и даёт СУ +1; газоотвод гасит штраф −2', () => {
-    const out = fire('hammer', 'humanis', 'ak_97:0', { дистанция: 'близкая', режим: 'короткая очередь' });
+    const out = fire('hammer', 'humanis', 'ak_97:0', { distanciya_2: 'blizkaya', rezhim: 'korotkaya_ochered' });
     eq(item(after(out, 'hammer'), 'ak_97')?.values?.ammo, 36, 'боезапас 38 − 2');
-    eq(step(out, 'атк'), 11, 'АК-97 на близкой 11, штраф КО погашен газоотводом');
-    eq(step(out, 'ур'), 6, 'СУ 5 + 1 за очередь');
+    eq(step(out, 'atk'), 11, 'АК-97 на близкой 11, штраф КО погашен газоотводом');
+    eq(step(out, 'ur'), 6, 'СУ 5 + 1 за очередь');
   });
 
   test('режим — только из разрешённых; с короткой очередью можно одиночный', () => {
-    ok(refusal(() => fire('silk', 'humanis', 'colt_l36:0', { дистанция: 'близкая', режим: 'длинная очередь' })).includes('нет такого режима'));
-    const single = fire('silk', 'humanis', 'colt_l36:0', { дистанция: 'близкая', режим: 'одиночный выстрел' });
+    ok(refusal(() => fire('silk', 'humanis', 'colt_l36:0', { distanciya_2: 'blizkaya', rezhim: 'dlinnaya_ochered' })).includes('нет такого режима'));
+    const single = fire('silk', 'humanis', 'colt_l36:0', { distanciya_2: 'blizkaya', rezhim: 'odinochnyy_vystrel' });
     eq(item(after(single, 'silk'), 'colt_l36')?.values?.ammo, 10, 'боезапас 11 − 1');
   });
 
   test('лазерный прицел +1; ПБОП: ЗА +2, СУ −1; смартган со смартлинком +2, с лазером не складывается', () => {
-    eq(step(fire('silk', 'humanis', 'colt_l36:0', { дистанция: 'близкая', режим: 'одиночный выстрел' }), 'атк'), 9, 'Кольт 8 + лазер 1');
-    const razor = fire('razor', 'humanis', 'predator_vi:0', { дистанция: 'близкая', режим: 'короткая очередь' });
-    eq(step(razor, 'атк'), 10 - 2 + 2 + 2, 'Предатор 10, КО −2, встроенный смартган +2, ПБОП +2');
-    eq(step(razor, 'ур'), 3 + 1 - 1);
+    eq(step(fire('silk', 'humanis', 'colt_l36:0', { distanciya_2: 'blizkaya', rezhim: 'odinochnyy_vystrel' }), 'atk'), 9, 'Кольт 8 + лазер 1');
+    const razor = fire('razor', 'humanis', 'predator_vi:0', { distanciya_2: 'blizkaya', rezhim: 'korotkaya_ochered' });
+    eq(step(razor, 'atk'), 10 - 2 + 2 + 2, 'Предатор 10, КО −2, встроенный смартган +2, ПБОП +2');
+    eq(step(razor, 'ur'), 3 + 1 - 1);
   });
 
   test('патронов нет — действие не состоялось; «Перезарядить» — до боезапаса', () => {
     const empty = kit.silk!();
     item(empty, 'colt_l36')!.values = { ammo: 0 };
-    ok(refusal(() => exchange({ system, compendium, die: () => 1, sheets: [empty, sheetOf('humanis')], actionId: 'colt_l36:0', fromId: 'silk', toId: 'humanis', inputs: { дистанция: 'близкая', режим: 'одиночный выстрел' } as never })).includes('патронов нет'));
+    ok(refusal(() => exchange({ system, compendium, die: () => 1, sheets: [empty, sheetOf('humanis')], actionId: 'colt_l36:0', fromId: 'silk', toId: 'humanis', inputs: { distanciya_2: 'blizkaya', rezhim: 'odinochnyy_vystrel' } as never })).includes('патронов нет'));
     const reloaded = exchange({ system, compendium, die: () => 1, sheets: [empty], actionId: 'colt_l36:1', fromId: 'silk', toIds: [] });
     eq(item(after(reloaded, 'silk'), 'colt_l36')?.values?.ammo, 11);
   });
 
-  test('граната: у каждой цели своё кольцо, урон по кольцу, сопротивление Телом; гранат на одну меньше', () => {
+  test('граната: у каждой цели своё kolco, урон по кольцу, сопротивление Телом; гранат на одну меньше', () => {
     const out = exchange({
       system, compendium, die: () => 1, sheets: [sheetOf('razor'), sheetOf('humanis'), sheetOf('mafia')],
       actionId: 'grenade_frag:0', fromId: 'razor', toIds: ['humanis', 'mafia'],
-      inputs: { дистанция: 'близкая', кольцо: { humanis: 'эпицентр', mafia: 'близко' } } as never,
+      inputs: { distanciya_2: 'blizkaya', kolco: { humanis: 'epicentr', mafia: 'blizko' } } as never,
     });
     const frag = compendium.records.find(r => r.id === 'grenade_frag')!.cells as Record<string, number>;
     eq(after(out, 'humanis').values.physical, frag.dv_e);
@@ -314,7 +314,7 @@ group('Shadowrun 6: оружие, патроны, модификации, взр
     const out = exchange({
       system, compendium, die: () => 1, sheets: [sapper, sheetOf('humanis'), sheetOf('mafia'), sheetOf('silk')],
       actionId: 'explosive_pack:0', fromId: 'razor', toIds: ['humanis', 'mafia', 'silk'],
-      inputs: { кольцо: { humanis: 'эпицентр', mafia: 'вплотную', silk: 'близко' } } as never,
+      inputs: { kolco: { humanis: 'epicentr', mafia: 'vplotnuyu', silk: 'blizko' } } as never,
     });
     eq(after(out, 'humanis').values.physical, 9);
     eq(after(out, 'mafia').values.physical, 4);
@@ -326,7 +326,7 @@ group('Shadowrun 6: оружие, патроны, модификации, взр
     const out = exchange({
       system, compendium, die: () => 1, sheets: [gunner, sheetOf('humanis'), sheetOf('mafia')],
       actionId: 'striker:0', fromId: 'razor', toIds: ['humanis', 'mafia'],
-      inputs: { дистанция: 'средняя', кольцо: { humanis: 'эпицентр', mafia: 'близко' } } as never,
+      inputs: { distanciya_2: 'srednyaya', kolco: { humanis: 'epicentr', mafia: 'blizko' } } as never,
     });
     const rocket = compendium.records.find(r => r.id === 'rocket_frag')!.cells as Record<string, number>;
     eq(after(out, 'humanis').values.physical, rocket.dv_e);
@@ -363,14 +363,14 @@ group('Shadowrun 6: состояния (стр. 52–54)', () => {
 
   test('Ослепление II: −6 кубиков к проверкам зрением по заявке, без заявки — как было', () => {
     const blind = wearing('razor', { effectId: 'blinded', args: { level: 2 } });
-    const base = dicePool(roll(sheetOf('razor', { edge_left: 0 }), 'skills.внимание.pool', ['зрение']));
-    eq(dicePool(roll(blind, 'skills.внимание.pool', ['зрение'])), base - 6);
-    eq(dicePool(roll(blind, 'skills.внимание.pool')), base);
+    const base = dicePool(roll(sheetOf('razor', { edge_left: 0 }), 'skills.vnimanie.pool', ['zrenie']));
+    eq(dicePool(roll(blind, 'skills.vnimanie.pool', ['zrenie'])), base - 6);
+    eq(dicePool(roll(blind, 'skills.vnimanie.pool')), base);
   });
 
   test('Ослепление, повешенное без уровня, — уровень по умолчанию: −3 кубика по заявке «зрение»', () => {
-    const base = dicePool(roll(sheetOf('razor', { edge_left: 0 }), 'skills.внимание.pool', ['зрение']));
-    eq(dicePool(roll(wearing('razor', { effectId: 'blinded' }), 'skills.внимание.pool', ['зрение'])), base - 3);
+    const base = dicePool(roll(sheetOf('razor', { edge_left: 0 }), 'skills.vnimanie.pool', ['zrenie']));
+    eq(dicePool(roll(wearing('razor', { effectId: 'blinded' }), 'skills.vnimanie.pool', ['zrenie'])), base - 3);
   });
 
   test('Утомление II: −4 ко всем наборам; Электрошок: инициатива −2', () => {
@@ -389,7 +389,7 @@ group('Shadowrun 6: состояния (стр. 52–54)', () => {
     probe.effects.зр_проба = {
       label: 'Проба зрения', params: [{ key: 'действующий', label: 'Кто', kind: 'sheet', role: 'actor' }],
       steps: [
-        { id: 'бросок', type: 'roll', die: 'pool', count: { expr: '5' }, tags: ['зрение'], by: { expr: '@действующий' } },
+        { id: 'бросок', type: 'roll', die: 'pool', count: { expr: '5' }, tags: ['zrenie'], by: { expr: '@действующий' } },
         { id: 'итог', type: 'check', value: { expr: '@бросок' }, versus: { expr: '0' } },
       ],
     };
@@ -423,18 +423,18 @@ group('Shadowrun 6: состояния (стр. 52–54)', () => {
     const lying = wearing('humanis', { effectId: 'prone' });
     const defense = (range: string) => {
       const out = shoot(sheetOf('razor'), lying, 'predator_vi:0', () => 1, range);
-      return out.reports.flatMap(r => r.report.trace as { step: unknown; rolls?: number[] }[]).find(one => one.step === 'защита')?.rolls?.length;
+      return out.reports.flatMap(r => r.report.trace as { step: unknown; rolls?: number[] }[]).find(one => one.step === 'zaschita')?.rolls?.length;
     };
     const base = computed(lying, 'defense_pool');
-    eq(defense('средняя'), base + 2);
-    eq(defense('вплотную'), base - 2);
+    eq(defense('srednyaya'), base + 2);
+    eq(defense('vplotnuyu'), base - 2);
   });
 
   test('Укрытие IV: −2 кубика к атаке; в бою атака из укрытия просит ещё простое действие', () => {
     const hidden = wearing('razor', { effectId: 'cover', args: { level: 4 } });
     const out = shoot(hidden, sheetOf('humanis'), 'predator_vi:0', () => 1);
-    const pool = out.reports.flatMap(r => r.report.trace as { step: unknown; rolls?: number[] }[]).find(one => one.step === 'атака_бросок')?.rolls?.length;
-    eq(pool, computed(sheetOf('razor'), 'skills.стрельба.pool') - 2);
+    const pool = out.reports.flatMap(r => r.report.trace as { step: unknown; rolls?: number[] }[]).find(one => one.step === 'ataka_brosok')?.rolls?.length;
+    eq(pool, computed(sheetOf('razor'), 'skills.strelba.pool') - 2);
     eq(computed(hidden, 'defense_rating'), computed(sheetOf('razor'), 'defense_rating') + 4);
   });
 });

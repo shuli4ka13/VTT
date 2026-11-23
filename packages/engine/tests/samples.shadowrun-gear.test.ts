@@ -12,7 +12,7 @@ const compendium = sr.compendium as Compendium;
 
 const runner = (values: Record<string, unknown>, has: Sheet['has'] = []): Sheet => ({
   id: 'бег', systemId: 'shadowrun6', of: 'runner', name: 'Бегущий',
-  values: { metatype: 'человек', body: 3, agility: 3, reaction: 3, strength: 3, willpower: 3, logic: 3, intuition: 3, charisma: 3, edge: 3, edge_left: 0, ...values },
+  values: { metatype: 'chelovek', body: 3, agility: 3, reaction: 3, strength: 3, willpower: 3, logic: 3, intuition: 3, charisma: 3, edge: 3, edge_left: 0, ...values },
   has, effects: [],
 }) as unknown as Sheet;
 const at = (sheet: Sheet, tag: string) => calc(system, sheet, tag, newPass(system, sheet, { compendium }));
@@ -20,16 +20,16 @@ const tape = (...faces: number[]) => { const rest = [...faces]; return () => res
 const traceOf = (out: ReturnType<typeof exchange>, step: string) =>
   out.reports.flatMap(r => (r.report.trace ?? []) as { step: unknown; total?: number }[]).find(t => t.step === step)?.total;
 const fire = (has: Sheet['has'], inputs: Record<string, string>, values: Record<string, unknown> = {}) => exchange({
-  system, compendium, die: tape(), sheets: [runner({ agility: 4, 'skills.стрельба.rank': 5, ...values }, has), { ...runner({}), id: 'цель' } as Sheet],
-  actionId: 'predator_vi:0', fromId: 'бег', toIds: ['цель'], inputs: { дистанция: 'близкая', ...inputs },
+  system, compendium, die: tape(), sheets: [runner({ agility: 4, 'skills.strelba.rank': 5, ...values }, has), { ...runner({}), id: 'цель' } as Sheet],
+  actionId: 'predator_vi:0', fromId: 'бег', toIds: ['цель'], inputs: { distanciya_2: 'blizkaya', ...inputs },
 });
 
 group('Shadowrun 6, глава «Снаряжение и импланты»: ситуации книжника (стр. 39, 108–109, 244–293)', () => {
   test('SR-GEAR-1 (стр. 282): сорт импланта множит Сущность — киберглаза 3 дельта 0,15, б/у 0,33', () => {
     const essence = (grade: string) => at(runner({}, [{ of: 'cybereyes', values: { rating: 3, grade } }]), 'essence') as number;
-    eq(Math.round((6 - essence('дельта')) * 100) / 100, 0.15);
-    eq(Math.round((6 - essence('б/у')) * 100) / 100, 0.33);
-    eq(Math.round((6 - essence('стандарт')) * 100) / 100, 0.3);
+    eq(Math.round((6 - essence('delta_2')) * 100) / 100, 0.15);
+    eq(Math.round((6 - essence('b_u')) * 100) / 100, 0.33);
+    eq(Math.round((6 - essence('standart')) * 100) / 100, 0.3);
   });
 
   test('SR-GEAR-2 (стр. 39): Сущность ниже целого — минус уровень Магии; ровно 5,0 — тоже минус один', () => {
@@ -45,24 +45,24 @@ group('Shadowrun 6, глава «Снаряжение и импланты»: с�
 
   test('SR-GEAR-6 (стр. 109, 260): газоотвод гасит штраф КО до 0 и ДО до −2; СУ не меняет', () => {
     const vented = [{ of: 'predator_vi', id: 'ствол' }, { of: 'gas_vent', in: 'ствол' }] as Sheet['has'];
-    eq(traceOf(fire([{ of: 'predator_vi' }], { режим: 'короткая очередь' }), 'атк'), 8);
-    eq(traceOf(fire(vented, { режим: 'короткая очередь' }), 'атк'), 10);
-    eq(traceOf(fire(vented, { режим: 'длинная очередь' }), 'атк'), 8);
-    eq(traceOf(fire(vented, { режим: 'длинная очередь' }), 'ур'), 3 + 2);
+    eq(traceOf(fire([{ of: 'predator_vi' }], { rezhim: 'korotkaya_ochered' }), 'atk'), 8);
+    eq(traceOf(fire(vented, { rezhim: 'korotkaya_ochered' }), 'atk'), 10);
+    eq(traceOf(fire(vented, { rezhim: 'dlinnaya_ochered' }), 'atk'), 8);
+    eq(traceOf(fire(vented, { rezhim: 'dlinnaya_ochered' }), 'ur'), 3 + 2);
   });
 
   test('SR-GEAR-7 (стр. 261–262): ПБОП — ЗА +2, СУ −1', () => {
     const apds = [{ of: 'predator_vi', id: 'ствол' }, { of: 'ammo_apds', in: 'ствол' }] as Sheet['has'];
-    eq(traceOf(fire(apds, {}), 'атк'), 12);
-    eq(traceOf(fire(apds, {}), 'ур'), 2);
+    eq(traceOf(fire(apds, {}), 'atk'), 12);
+    eq(traceOf(fire(apds, {}), 'ur'), 2);
   });
 
   test('SR-GEAR-8 (стр. 259–260, 285): лазерный прицел и смартган со смартлинком не складываются', () => {
     const laser = (wireless: boolean) => [{ of: 'colt_l36', id: 'ствол' }, { of: 'laser_sight', in: 'ствол', ...(wireless ? { values: { wireless: true } } : {}) }] as Sheet['has'];
     const colt = (has: Sheet['has'], values: Record<string, unknown> = {}) => traceOf(exchange({
-      system, compendium, die: tape(), sheets: [runner({ agility: 4, 'skills.стрельба.rank': 5, ...values }, has), { ...runner({}), id: 'цель' } as Sheet],
-      actionId: 'colt_l36:0', fromId: 'бег', toIds: ['цель'], inputs: { дистанция: 'близкая' },
-    }), 'атк');
+      system, compendium, die: tape(), sheets: [runner({ agility: 4, 'skills.strelba.rank': 5, ...values }, has), { ...runner({}), id: 'цель' } as Sheet],
+      actionId: 'colt_l36:0', fromId: 'бег', toIds: ['цель'], inputs: { distanciya_2: 'blizkaya' },
+    }), 'atk');
     const base = colt([{ of: 'colt_l36' }])!;
     eq(colt(laser(false)), base + 1);
     eq(colt(laser(true)), base + 2);
@@ -76,10 +76,10 @@ group('Shadowrun 6, глава «Снаряжение и импланты»: с�
       const bare = { ...runner({ body: 3 }), id: 'цель' } as Sheet;
       const dice = (sheet: Sheet) => {
         const out = exchange({
-          system, compendium, die: () => 6, sheets: [runner({ agility: 4, 'skills.стрельба.rank': 5, 'skills.ближний_бой.rank': 5 }, [{ of: damage === 'физический' ? 'predator_vi' : 'stun_baton' }]), sheet],
-          actionId: damage === 'физический' ? 'predator_vi:0' : 'stun_baton:0', fromId: 'бег', toIds: ['цель'], inputs: damage === 'физический' ? { дистанция: 'близкая' } : {},
+          system, compendium, die: () => 6, sheets: [runner({ agility: 4, 'skills.strelba.rank': 5, 'skills.blizhniy_boy.rank': 5 }, [{ of: damage === 'физический' ? 'predator_vi' : 'stun_baton' }]), sheet],
+          actionId: damage === 'физический' ? 'predator_vi:0' : 'stun_baton:0', fromId: 'бег', toIds: ['цель'], inputs: damage === 'физический' ? { distanciya_2: 'blizkaya' } : {},
         });
-        return out.reports.flatMap(r => (r.report.trace ?? []) as { step: unknown; rolls?: number[] }[]).find(entry => entry.step === 'сопротивление_бросок')?.rolls?.length as number;
+        return out.reports.flatMap(r => (r.report.trace ?? []) as { step: unknown; rolls?: number[] }[]).find(entry => entry.step === 'soprotivlenie_brosok')?.rolls?.length as number;
       };
       return dice(target) - dice(bare);
     };
@@ -91,10 +91,10 @@ group('Shadowrun 6, глава «Снаряжение и импланты»: с�
     const soakDice = (wet: boolean, baton: string) => {
       const target = { ...runner({ body: 8, reaction: 1, intuition: 1 }), id: 'цель', effects: wet ? [{ effectId: 'wet' }] : [] } as Sheet;
       const out = exchange({
-        system, compendium, die: () => 6, sheets: [runner({ 'skills.ближний_бой.rank': 5, agility: 5 }, [{ of: baton }]), target],
+        system, compendium, die: () => 6, sheets: [runner({ 'skills.blizhniy_boy.rank': 5, agility: 5 }, [{ of: baton }]), target],
         actionId: `${baton}:0`, fromId: 'бег', toIds: ['цель'], inputs: {},
       });
-      return out.reports.flatMap(r => (r.report.trace ?? []) as { step: unknown; rolls?: number[] }[]).find(entry => entry.step === 'сопротивление_бросок')?.rolls?.length as number;
+      return out.reports.flatMap(r => (r.report.trace ?? []) as { step: unknown; rolls?: number[] }[]).find(entry => entry.step === 'soprotivlenie_brosok')?.rolls?.length as number;
     };
     eq(soakDice(false, 'stun_baton') - soakDice(true, 'stun_baton'), 6);
     eq(soakDice(false, 'sap') - soakDice(true, 'sap'), 0);
@@ -102,8 +102,8 @@ group('Shadowrun 6, глава «Снаряжение и импланты»: с�
 
   test('SR-GEAR-reflex (стр. 293): Датчик рефлексов добавляет 1 к рангу навыка, набор растёт на 1', () => {
     const rank = (ranked: number, withSensor: boolean) => {
-      const sheet = runner({ agility: 3, 'skills.стрельба.rank': ranked }, withSensor ? [{ of: 'reflex_recorder', values: { skill: 'стрельба' } }] : []);
-      return [at(sheet, 'skills.стрельба.rank'), at(sheet, 'skills.стрельба.pool')];
+      const sheet = runner({ agility: 3, 'skills.strelba.rank': ranked }, withSensor ? [{ of: 'reflex_recorder', values: { skill: 'strelba' } }] : []);
+      return [at(sheet, 'skills.strelba.rank'), at(sheet, 'skills.strelba.pool')];
     };
     deepEq(rank(3, true), [4, 7]);
     deepEq(rank(3, false), [3, 6]);
@@ -119,20 +119,20 @@ group('Shadowrun 6, глава «Снаряжение и импланты»: с�
     sheets: [runner({}, [{ of: 'tox_probe' }]), victim], actionId: 'tox_probe:0', fromId: 'бег', toIds: ['цель'],
   });
   const resistDice = (out: ReturnType<typeof exchange>) =>
-    out.reports.flatMap(r => (r.report.trace ?? []) as { step: unknown; rolls?: number[] }[]).find(entry => entry.step === 'стойкость')?.rolls?.length as number;
+    out.reports.flatMap(r => (r.report.trace ?? []) as { step: unknown; rolls?: number[] }[]).find(entry => entry.step === 'stoykost')?.rolls?.length as number;
 
   test('SR-DRUG-respirator (стр. 280): респиратор 3 даёт +3 кубика против вдыхаемого, против инъекционного — нет', () => {
     const wearer = (vector: string, mask: boolean) => resistDice(poisoned(vector, { ...runner({}, mask ? [{ of: 'surv_respirator', values: { rating: 3 } }] : []), id: 'цель' } as Sheet, () => 2));
-    eq(wearer('вдыхаемый', true) - wearer('вдыхаемый', false), 3);
-    eq(wearer('инъекционный', true) - wearer('инъекционный', false), 0);
+    eq(wearer('vdyhaemyy', true) - wearer('vdyhaemyy', false), 3);
+    eq(wearer('inekcionnyy', true) - wearer('inekcionnyy', false), 0);
   });
 
   test('SR-DRUG-over (стр. 122): сила 12 против 12 успехов — эффектов нет, против 11 — Неподвижность и Ошеломление', () => {
     const victim = () => ({ ...runner({ body: 6, willpower: 6 }), id: 'цель' }) as Sheet;
     const tapeOf = (hits: number) => { const faces = [...Array(hits).fill(6), ...Array(12 - hits).fill(1)] as number[]; return () => faces.shift() ?? 1; };
-    const clean = poisoned('инъекционный', victim(), tapeOf(12)).sheets.find(s => s.id === 'цель')!;
+    const clean = poisoned('inekcionnyy', victim(), tapeOf(12)).sheets.find(s => s.id === 'цель')!;
     eq(clean.effects.some(e => e.effectId === 'immobilized' || e.effectId === 'dazed'), false);
-    const hit = poisoned('инъекционный', victim(), tapeOf(11)).sheets.find(s => s.id === 'цель')!;
+    const hit = poisoned('inekcionnyy', victim(), tapeOf(11)).sheets.find(s => s.id === 'цель')!;
     eq(['immobilized', 'dazed'].every(id => hit.effects.some(e => e.effectId === id)), true);
   });
 
@@ -157,7 +157,7 @@ group('Shadowrun 6, глава «Снаряжение и импланты»: с�
 
   test('SR-DRUG-nitro (стр. 125): Нитро — Внимание +2; отходняк — 9 оглушающего и −2 кубика всем проверкам, включая сопротивление, на срок эффекта', () => {
     const fresh = runner({});
-    eq(at(withEffect(fresh, 'dg_nitro', { dur: 30 }), 'skills.внимание.pool'), (at(fresh, 'skills.внимание.pool') as number) + 2);
+    eq(at(withEffect(fresh, 'dg_nitro', { dur: 30 }), 'skills.vnimanie.pool'), (at(fresh, 'skills.vnimanie.pool') as number) + 2);
     const crashed = dropEffect(withEffect(fresh, 'dg_nitro', { dur: 30 }), 'dg_nitro');
     eq(crashed.values.stun, 9);
     eq(crashed.effects.find(e => e.effectId === 'dg_nitro_crash')?.args?.dur, 30);
@@ -166,10 +166,10 @@ group('Shadowrun 6, глава «Снаряжение и импланты»: с�
       if (out.kind !== 'done') throw new Error(out.kind);
       return (/\[([^\]]*)\]/.exec(out.log.join('\n'))?.[1] ?? '').split(',').filter(Boolean).length;
     };
-    eq(dice(fresh, 'skills.внимание.pool') - dice(crashed, 'skills.внимание.pool'), 2);
+    eq(dice(fresh, 'skills.vnimanie.pool') - dice(crashed, 'skills.vnimanie.pool'), 2);
     const soak = (target: Sheet) => {
-      const out = exchange({ system, compendium, die: () => 6, sheets: [runner({ agility: 4, 'skills.стрельба.rank': 5 }, [{ of: 'predator_vi' }]), { ...target, id: 'цель' } as Sheet], actionId: 'predator_vi:0', fromId: 'бег', toIds: ['цель'], inputs: { дистанция: 'близкая' } });
-      return out.reports.flatMap(r => (r.report.trace ?? []) as { step: unknown; rolls?: number[] }[]).find(entry => entry.step === 'сопротивление_бросок')?.rolls?.length as number;
+      const out = exchange({ system, compendium, die: () => 6, sheets: [runner({ agility: 4, 'skills.strelba.rank': 5 }, [{ of: 'predator_vi' }]), { ...target, id: 'цель' } as Sheet], actionId: 'predator_vi:0', fromId: 'бег', toIds: ['цель'], inputs: { distanciya_2: 'blizkaya' } });
+      return out.reports.flatMap(r => (r.report.trace ?? []) as { step: unknown; rolls?: number[] }[]).find(entry => entry.step === 'soprotivlenie_brosok')?.rolls?.length as number;
     };
     eq(soak(fresh) - soak({ ...crashed, effects: crashed.effects.filter(e => e.effectId !== 'fatigued') } as Sheet), 2);
   });
@@ -196,36 +196,36 @@ group('Shadowrun 6: заявки к броску с листа — лечени�
   };
 
   test('аптечка: +1 кубик к Биотехнологиям только с заявкой «лечение» и в беспроводном режиме; автовзломщик — к заявке «взлом замков»', () => {
-    const medic = (wireless: boolean) => runner({ 'skills.биотехнологии.rank': 2 }, [{ of: 'medkit', values: { wireless } }]);
-    const base = rollWith(medic(true), 'skills.биотехнологии.pool').pool;
-    eq(rollWith(medic(true), 'skills.биотехнологии.pool', ['лечение']).pool, base + 1);
-    eq(rollWith(medic(false), 'skills.биотехнологии.pool', ['лечение']).pool, base);
-    const picker = runner({ 'skills.инженерное_дело.rank': 2 }, [{ of: 'brk_autopick' }]);
-    eq(rollWith(picker, 'skills.инженерное_дело.pool', ['взлом замков']).pool, rollWith(picker, 'skills.инженерное_дело.pool').pool + 1);
+    const medic = (wireless: boolean) => runner({ 'skills.biotehnologii.rank': 2 }, [{ of: 'medkit', values: { wireless } }]);
+    const base = rollWith(medic(true), 'skills.biotehnologii.pool').pool;
+    eq(rollWith(medic(true), 'skills.biotehnologii.pool', ['healing']).pool, base + 1);
+    eq(rollWith(medic(false), 'skills.biotehnologii.pool', ['healing']).pool, base);
+    const picker = runner({ 'skills.inzhenernoe_delo.rank': 2 }, [{ of: 'brk_autopick' }]);
+    eq(rollWith(picker, 'skills.inzhenernoe_delo.pool', ['vzlom_zamkov']).pool, rollWith(picker, 'skills.inzhenernoe_delo.pool').pool + 1);
   });
 
   test('беспроводной режим аптечки, вписанный за столом, включает +1 к лечению', () => {
-    const medic = runner({ 'skills.биотехнологии.rank': 2 }, [{ of: 'medkit' }]);
-    const base = rollWith(medic, 'skills.биотехнологии.pool', ['лечение']).pool;
+    const medic = runner({ 'skills.biotehnologii.rank': 2 }, [{ of: 'medkit' }]);
+    const base = rollWith(medic, 'skills.biotehnologii.pool', ['healing']).pool;
     const out = perform({ system, compendium, clock: null, sheets: [medic], die: () => 2 }, { op: 'set', sheetId: medic.id, tag: 'item:medkit.wireless', value: true });
     if (out.kind !== 'done') throw new Error('вписать не должно спрашивать');
     const wired = out.sheets.find(s => s.id === medic.id)!;
     deepEq(wired.has, [{ of: 'medkit', values: { wireless: true } }]);
-    eq(rollWith(wired, 'skills.биотехнологии.pool', ['лечение']).pool, base + 1);
+    eq(rollWith(wired, 'skills.biotehnologii.pool', ['healing']).pool, base + 1);
   });
 
   test('пространственный распознаватель: Внимание с заявкой «слух» — +1 кубик без проводов и очко Преимущества; «слух» к другой проверке — ничего', () => {
-    const ears = runner({ 'skills.внимание.rank': 2, 'skills.атлетика.rank': 2 }, [{ of: 'aud_enh_spatial_recognizer', values: { wireless: true } }]);
-    const plain = rollWith(ears, 'skills.внимание.pool');
-    const heard = rollWith(ears, 'skills.внимание.pool', ['слух']);
+    const ears = runner({ 'skills.vnimanie.rank': 2, 'skills.atletika.rank': 2 }, [{ of: 'aud_enh_spatial_recognizer', values: { wireless: true } }]);
+    const plain = rollWith(ears, 'skills.vnimanie.pool');
+    const heard = rollWith(ears, 'skills.vnimanie.pool', ['sluh']);
     eq(heard.pool, plain.pool + 1);
     deepEq([plain.edge, heard.edge], [0, 1]);
-    eq(rollWith(ears, 'skills.атлетика.pool', ['слух']).edge, 0);
+    eq(rollWith(ears, 'skills.atletika.pool', ['sluh']).edge, 0);
   });
 
   test('Улучшение чувства: проверка с заявкой чувства — очко Преимущества, без заявки — нет', () => {
-    const adept = runner({ 'skills.внимание.rank': 2 }, [{ of: 'adept_improved_sense' }]);
-    deepEq([rollWith(adept, 'skills.внимание.pool', ['обоняние']).edge, rollWith(adept, 'skills.внимание.pool').edge], [1, 0]);
+    const adept = runner({ 'skills.vnimanie.rank': 2 }, [{ of: 'adept_improved_sense' }]);
+    deepEq([rollWith(adept, 'skills.vnimanie.pool', ['obonyanie']).edge, rollWith(adept, 'skills.vnimanie.pool').edge], [1, 0]);
   });
 });
 

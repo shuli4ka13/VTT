@@ -264,7 +264,7 @@ export function danglingRows(system: System, compendium?: Compendium): Dangling[
         if (!lost.length) continue;
         out.push({
           where,
-          text: `в строке «${String(row.value)}» колонка «${column.label || column.key}» указывает на «${lost.map(String).join('», «')}», а в «${tables[column.from]!.label || column.from}» такой строки нет`,
+          text: `в строке «${String(row.label ?? row.value)}» колонка «${column.label || column.key}» указывает на «${lost.map(String).join('», «')}», а в «${tables[column.from]!.label || column.from}» такой строки нет`,
         });
       }
     }

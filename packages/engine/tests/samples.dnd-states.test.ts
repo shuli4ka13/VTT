@@ -14,7 +14,7 @@ const world = (die: number) => ({ system, compendium: dnd.compendium, die: () =>
 
 group('D&D: состояние само повторяет спасбросок', () => {
   test('наложенный заклинанием паралич — в конце хода спасбросок против запомненной сложности', () => {
-    const held = worn(sheetOf('goblin'), [{ effectId: 'paralyzed', args: { запомнено: 13 } }]);
+    const held = worn(sheetOf('goblin'), [{ effectId: 'paralyzed', args: { zapomneno: 13 } }]);
     const lucky = fireMoments([{ moment: 'turn-end', sheetId: 'goblin' }], [held], world(20) as never);
     ok(!wears(lucky.sheets[0], 'paralyzed'), 'двадцатка — спасся, паралич спал');
     const unlucky = fireMoments([{ moment: 'turn-end', sheetId: 'goblin' }], [held], world(1) as never);

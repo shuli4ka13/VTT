@@ -169,7 +169,7 @@
         ],
         "rows": [
           {
-            "value": "blizhniy_boy___Sila",
+            "value": "blizhniy_boy_Sila",
             "label": "ближний бой — Сила",
             "cells": {
               "attack": {
@@ -181,7 +181,7 @@
             }
           },
           {
-            "value": "dalniy_boy___Lovkost",
+            "value": "dalniy_boy_Lovkost",
             "label": "дальний бой — Ловкость",
             "cells": {
               "attack": {
@@ -1160,7 +1160,7 @@
         "table": "weapon",
         "cells": {
           "weapon_die": "1d8",
-          "wield": "blizhniy_boy___Sila"
+          "wield": "blizhniy_boy_Sila"
         }
       },
       {
@@ -1170,7 +1170,7 @@
         "table": "weapon",
         "cells": {
           "weapon_die": "1d4",
-          "wield": "blizhniy_boy___Sila"
+          "wield": "blizhniy_boy_Sila"
         }
       },
       {
@@ -1180,7 +1180,7 @@
         "table": "weapon",
         "cells": {
           "weapon_die": "1d8",
-          "wield": "dalniy_boy___Lovkost"
+          "wield": "dalniy_boy_Lovkost"
         }
       },
       {

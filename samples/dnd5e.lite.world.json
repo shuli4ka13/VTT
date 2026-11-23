@@ -1780,7 +1780,7 @@
         ],
         "rows": [
           {
-            "value": "blizhniy_boy___Sila",
+            "value": "blizhniy_boy_Sila",
             "label": "ближний бой — Сила",
             "cells": {
               "reach": "blizhniy",
@@ -1793,7 +1793,7 @@
             }
           },
           {
-            "value": "fehtovalnoe___Sila_ili_Lovkost",
+            "value": "fehtovalnoe_Sila_ili_Lovkost",
             "label": "фехтовальное — Сила или Ловкость",
             "cells": {
               "reach": "blizhniy",
@@ -1806,7 +1806,7 @@
             }
           },
           {
-            "value": "dalniy_boy___Lovkost",
+            "value": "dalniy_boy_Lovkost",
             "label": "дальний бой — Ловкость",
             "cells": {
               "reach": "dalniy",
@@ -4870,7 +4870,7 @@
           "damage_dice": "1d8",
           "damage_type": "rubyaschiy",
           "damage_source": "nemagicheskiy",
-          "wield": "blizhniy_boy___Sila",
+          "wield": "blizhniy_boy_Sila",
           "properties": [
             "universalnoe"
           ],
@@ -4887,7 +4887,7 @@
           "damage_dice": "2d6",
           "damage_type": "rubyaschiy",
           "damage_source": "nemagicheskiy",
-          "wield": "blizhniy_boy___Sila",
+          "wield": "blizhniy_boy_Sila",
           "properties": [
             "tyazheloe",
             "dvuruchnoe"
@@ -4905,7 +4905,7 @@
           "damage_dice": "1d4",
           "damage_type": "kolyuschiy",
           "damage_source": "nemagicheskiy",
-          "wield": "fehtovalnoe___Sila_ili_Lovkost",
+          "wield": "fehtovalnoe_Sila_ili_Lovkost",
           "properties": [
             "legkoe",
             "fehtovalnoe",
@@ -4924,7 +4924,7 @@
           "damage_dice": "1d8",
           "damage_type": "kolyuschiy",
           "damage_source": "nemagicheskiy",
-          "wield": "fehtovalnoe___Sila_ili_Lovkost",
+          "wield": "fehtovalnoe_Sila_ili_Lovkost",
           "properties": [
             "fehtovalnoe"
           ],
@@ -4941,7 +4941,7 @@
           "damage_dice": "1d6",
           "damage_type": "kolyuschiy",
           "damage_source": "nemagicheskiy",
-          "wield": "dalniy_boy___Lovkost",
+          "wield": "dalniy_boy_Lovkost",
           "range": "80/320",
           "properties": [
             "dvuruchnoe",
@@ -4978,7 +4978,7 @@
           "damage_dice": "1d8",
           "damage_type": "rubyaschiy",
           "damage_source": "magicheskiy",
-          "wield": "blizhniy_boy___Sila",
+          "wield": "blizhniy_boy_Sila",
           "properties": [],
           "weight": 3
         }

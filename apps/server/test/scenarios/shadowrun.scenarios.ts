@@ -1,13 +1,13 @@
 import type { Scenario } from './run.ts';
 
 const shot = (range: string, extra: Record<string, number | string> = {}) => ({
-  'дистанция': range, 'режим': 'одиночный выстрел', 'приём': 'нет', ...extra,
+  distanciya_2: range, rezhim: 'odinochnyy_vystrel', priem: 'none', ...extra,
 });
 
 const batonInRound1 = [
   { turn: 'start', order: ['razor', 'lone_star'] },
   { turn: 'next' },
-  { act: 'stun_baton:0', from: 'lone_star', to: 'razor', inputs: { 'приём': 'нет' } },
+  { act: 'stun_baton:0', from: 'lone_star', to: 'razor', inputs: { priem: 'none' } },
 ] as Scenario['steps'];
 
 const batonDice = [
@@ -23,7 +23,7 @@ export const scenarios: Scenario[] = [
     world: 'shadowrun',
     declineRest: true,
     dice: [5, 6, 5, 6, 6, 1, 2, 3, 4, 1, 2, 5, 2, 3, 4, 5, 1, 3],
-    steps: [{ act: 'predator_vi:0', from: 'razor', to: 'sauron', inputs: shot('вплотную') }],
+    steps: [{ act: 'predator_vi:0', from: 'razor', to: 'sauron', inputs: shot('vplotnuyu') }],
     expect: {
       values: {
         sauron: { physical: 6, wound_mod: -2, defense_pool: 2 },
@@ -39,7 +39,7 @@ export const scenarios: Scenario[] = [
     world: 'shadowrun',
     declineRest: true,
     dice: [5, 2, 1, 2, 3, 4, 2, 3, 4, 1, 2, 5, 6, 2, 3],
-    steps: [{ act: 'predator_vi:0', from: 'razor', to: 'sauron', inputs: shot('вплотную') }],
+    steps: [{ act: 'predator_vi:0', from: 'razor', to: 'sauron', inputs: shot('vplotnuyu') }],
     expect: { values: { sauron: { physical: 0, stun: 0 }, razor: { edge_left: 4 } } },
   },
   {
@@ -48,7 +48,7 @@ export const scenarios: Scenario[] = [
     world: 'shadowrun',
     declineRest: true,
     dice: [1, 1, 1, 1, 1, 1, 5, 2, 3, 4, 2, 2, 3, 4, 2, 2, 3, 4],
-    steps: [{ act: 'predator_vi:0', from: 'razor', to: 'sauron', inputs: shot('средняя') }],
+    steps: [{ act: 'predator_vi:0', from: 'razor', to: 'sauron', inputs: shot('srednyaya') }],
     expect: {
       values: { sauron: { physical: 4 } },
       log: ['применяет «Сбой»'],
@@ -62,8 +62,8 @@ export const scenarios: Scenario[] = [
     declineRest: true,
     dice: [1, 1, 1, 5, 2, 3, 5, 6, 2, 3, 1, 1, 1, 1, 2, 3, 5, 2, 3, 4],
     steps: [
-      { act: 'colt_l36:0', from: 'silk', to: 'humanis', inputs: shot('вплотную'), answers: [[]] },
-      { act: 'colt_l36:0', from: 'silk', to: 'humanis', inputs: shot('вплотную'), answers: [[]] },
+      { act: 'colt_l36:0', from: 'silk', to: 'humanis', inputs: shot('vplotnuyu'), answers: [[]] },
+      { act: 'colt_l36:0', from: 'silk', to: 'humanis', inputs: shot('vplotnuyu'), answers: [[]] },
     ],
     expect: {
       values: { humanis: { physical: 0 } },
@@ -77,7 +77,7 @@ export const scenarios: Scenario[] = [
     world: 'shadowrun',
     declineRest: true,
     dice: [1, 1, 1, 1, 1, 1, 5, 6, 2, 3, 4, 2, 3, 4, 1, 5, 2, 5, 5, 6, 2, 3, 4],
-    steps: [{ act: 'predator_vi:0', from: 'razor', to: ['humanis', 'lone_star'], inputs: shot('вплотную') }],
+    steps: [{ act: 'predator_vi:0', from: 'razor', to: ['humanis', 'lone_star'], inputs: shot('vplotnuyu') }],
     expect: {
       values: { humanis: { physical: 4 }, lone_star: { physical: 0 } },
       log: ['применяет «Сбой»'],
@@ -90,7 +90,7 @@ export const scenarios: Scenario[] = [
     declineRest: true,
     sheets: { razor: { values: { edge_left: 5 } } },
     dice: [5, 6, 1, 2, 3, 4, 1, 2, 3, 4, 1, 5, 3, 6, 2, 1, 4, 5, 2, 3, 5, 2, 3, 4, 1, 2, 3],
-    steps: [{ act: 'predator_vi:0', from: 'razor', to: 'sauron', inputs: shot('средняя'), answers: [['reroll_failures']] }],
+    steps: [{ act: 'predator_vi:0', from: 'razor', to: 'sauron', inputs: shot('srednyaya'), answers: [['reroll_failures']] }],
     expect: { values: { sauron: { physical: 7 }, razor: { edge_left: 1 } } },
   },
   {
@@ -100,7 +100,7 @@ export const scenarios: Scenario[] = [
     declineRest: true,
     sheets: { razor: { values: { edge_left: 5 } } },
     dice: [6, 5, 1, 2, 3, 4, 2, 3, 4, 1, 2, 3, 4, 2, 6, 3, 2, 3, 4, 1, 1, 2, 3],
-    steps: [{ act: 'predator_vi:0', from: 'razor', to: 'sauron', inputs: shot('средняя'), answers: [['push_edge']] }],
+    steps: [{ act: 'predator_vi:0', from: 'razor', to: 'sauron', inputs: shot('srednyaya'), answers: [['push_edge']] }],
     expect: { values: { sauron: { physical: 6 }, razor: { edge_left: 1 } } },
   },
   {
@@ -123,10 +123,10 @@ export const scenarios: Scenario[] = [
     declineRest: true,
     sheets: { sauron: { values: { physical: 4 } } },
     dice: [5, 6, 5, 6, 5, 6, 2, 3, 4, 2, 3, 2, 3, 4, 2, 2, 3],
-    steps: [{ act: 'predator_vi:0', from: 'razor', to: 'sauron', inputs: shot('вплотную') }],
+    steps: [{ act: 'predator_vi:0', from: 'razor', to: 'sauron', inputs: shot('vplotnuyu') }],
     expect: {
       values: {
-        sauron: { physical: 13, physical_max: 11, critical: 2, bleeding_out: true, is_dead: false, wound_mod: -3, 'skills.стрельба.pool': 2, defense_pool: 1 },
+        sauron: { physical: 13, physical_max: 11, critical: 2, bleeding_out: true, is_dead: false, wound_mod: -3, 'skills.strelba.pool': 2, defense_pool: 1 },
       },
       effects: { sauron: { has: ['bleeding', 'prone'], not: ['dead', 'unconscious'] } },
     },

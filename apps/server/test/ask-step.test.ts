@@ -11,7 +11,7 @@ import { RoomsService } from '../src/rooms/rooms.service.ts';
 
 const world = () => {
   const raw = JSON.parse(readFileSync(fileURLToPath(new URL('../../../samples/warhammer.lite.world.json', import.meta.url)), 'utf8'));
-  return { ...raw, sheets: raw.sheets.map((s: any) => s.id === 'культист' ? { ...s, values: { ...s.values, 'характеристики.ближний_бой.значение': 45 } } : s) };
+  return { ...raw, sheets: raw.sheets.map((s: any) => s.id === 'kultist' ? { ...s, values: { ...s.values, 'harakteristiki.blizhniy_boy.znachenie': 45 } } : s) };
 };
 
 async function stand(die: (sides: number) => number) {
@@ -48,7 +48,7 @@ async function stand(die: (sides: number) => number) {
   return { rooms, roomId, gm, player, journal, state, close: async () => { await app.close(); db.close(); } };
 }
 
-const strike = (roomId: string) => ({ roomId, actionId: 'sword:0', fromId: 'ваал', toIds: ['культист'], inputs: { чем: 'ближний_бой' } });
+const strike = (roomId: string) => ({ roomId, actionId: 'sword:0', fromId: 'vaal', toIds: ['kultist'], inputs: { chem: 'blizhniy_boy' } });
 const tape = (...rolls: number[]) => { const queue = [...rolls]; return (_sides: number) => queue.shift() ?? 1; };
 
 describe('шаг «Спросить» на сервере', () => {

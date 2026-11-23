@@ -10,19 +10,19 @@ const sr = PLAYABLE_WORLDS.find(w => (w.system as System).id === 'shadowrun6')!;
 const system = sr.system as System;
 const book = sr.compendium as Compendium;
 
-const praetor = { id: 'praetor', table: 'firearm', label: 'ФН Р93 Претор', cells: { dv: 4, damage_kind: 'физический', skill: 'стрельба', class: 'пистолет-пулемёт', modes: ['короткая очередь', 'длинная очередь', 'непрерывный огонь'], ammo_max: 50, reload: 'обойма', ar1: 9, ar2: 12, ar3: 7 } };
+const praetor = { id: 'praetor', table: 'firearm', label: 'ФН Р93 Претор', cells: { dv: 4, damage_kind: 'fizicheskiy', skill: 'strelba', class: 'pistolet_pulemet', modes: ['korotkaya_ochered', 'dlinnaya_ochered', 'nepreryvnyy_ogon'], ammo_max: 50, reload: 'oboyma', ar1: 9, ar2: 12, ar3: 7 } };
 const compendium = { ...book, records: [...book.records, praetor] } as Compendium;
 
 const fighter = (id: string, values: Record<string, unknown>, has: Sheet['has'] = []): Sheet => ({
   id, systemId: 'shadowrun6', of: 'runner', name: id,
-  values: { metatype: 'человек', body: 3, agility: 3, reaction: 3, strength: 3, willpower: 3, logic: 3, intuition: 3, charisma: 3, edge: 3, edge_left: 0, edge_gained: 0, ...values },
+  values: { metatype: 'chelovek', body: 3, agility: 3, reaction: 3, strength: 3, willpower: 3, logic: 3, intuition: 3, charisma: 3, edge: 3, edge_left: 0, edge_gained: 0, ...values },
   has, effects: [],
 }) as unknown as Sheet;
 const tape = (...faces: number[]) => { const rest = [...faces]; return () => rest.shift() ?? 2; };
 const at = (sheet: Sheet, tag: string) => calc(system, sheet, tag, newPass(system, sheet, { compendium }));
 const shoot = (from: Sheet, to: Sheet[], faces: number[], inputs: Record<string, string> = {}, action = 'predator_vi:0') => exchange({
   system, compendium, die: tape(...faces), sheets: [from, ...to], actionId: action, fromId: from.id, toIds: to.map(t => t.id),
-  inputs: { дистанция: 'близкая', ...inputs },
+  inputs: { distanciya_2: 'blizkaya', ...inputs },
 });
 const after = (out: { sheets: Sheet[] }, id: string) => out.sheets.find(s => s.id === id)!;
 const prone = (sheet: Sheet) => sheet.effects.some(e => e.effectId === 'prone');
@@ -30,7 +30,7 @@ const ammo = (sheet: Sheet, of: string) => sheet.has.find(h => h.of === of)?.val
 
 group('Shadowrun 6, глава «Бой»: ситуации книжника (стр. 104–115)', () => {
   test('S3 (стр. 105, 46): ничья 3 на 3 — попадание базовой СУ; ЗА 10 − ЗЩ 6 = 4 — очко стрелку', () => {
-    const shooter = fighter('стрелок', { agility: 5, 'skills.стрельба.rank': 4 }, [{ of: 'predator_vi' }]);
+    const shooter = fighter('стрелок', { agility: 5, 'skills.strelba.rank': 4 }, [{ of: 'predator_vi' }]);
     const target = fighter('цель', { body: 4, armor_worn: 2, reaction: 3, intuition: 3 });
     const out = shoot(shooter, [target], [6, 5, 5, 4, 3, 2, 2, 1, 1, 6, 5, 5, 3, 2, 1, 5, 4, 2, 1]);
     eq(after(out, 'стрелок').values.edge_left, 1);
@@ -40,9 +40,9 @@ group('Shadowrun 6, глава «Бой»: ситуации книжника (с
   });
 
   test('S4 (стр. 109, 111, 39): КО — ЗА 8, очка нет; СУ 3 + 1 + 3 = 7, сопротивление 1 → 6; Распластан; штраф −2; патронов 13', () => {
-    const shooter = fighter('стрелок', { agility: 5, 'skills.стрельба.rank': 4 }, [{ of: 'predator_vi', values: { ammo: 15 } }]);
+    const shooter = fighter('стрелок', { agility: 5, 'skills.strelba.rank': 4 }, [{ of: 'predator_vi', values: { ammo: 15 } }]);
     const target = fighter('цель', { body: 3, armor_worn: 2, reaction: 3, intuition: 2 });
-    const out = shoot(shooter, [target], [6, 6, 5, 5, 4, 3, 2, 1, 1, 5, 3, 2, 2, 1, 6, 4, 1], { режим: 'короткая очередь' });
+    const out = shoot(shooter, [target], [6, 6, 5, 5, 4, 3, 2, 1, 1, 5, 3, 2, 2, 1, 6, 4, 1], { rezhim: 'korotkaya_ochered' });
     eq(after(out, 'стрелок').values.edge_left, 0);
     eq(after(out, 'цель').values.physical, 6);
     ok(prone(after(out, 'цель')));
@@ -51,43 +51,43 @@ group('Shadowrun 6, глава «Бой»: ситуации книжника (с
   });
 
   test('S5 (стр. 109): ДО при 3 патронах — ЗА 10 − 3 = 7, очко стрелку; 2 против 3 — промах; патронов 0', () => {
-    const shooter = fighter('стрелок', { agility: 5, 'skills.стрельба.rank': 3 }, [{ of: 'predator_vi', values: { ammo: 3 } }]);
+    const shooter = fighter('стрелок', { agility: 5, 'skills.strelba.rank': 3 }, [{ of: 'predator_vi', values: { ammo: 3 } }]);
     const target = fighter('цель', { body: 3, reaction: 3, intuition: 2 });
-    const out = shoot(shooter, [target], [5, 5, 4, 3, 3, 2, 1, 1, 6, 5, 5, 1, 1], { режим: 'длинная очередь' });
+    const out = shoot(shooter, [target], [5, 5, 4, 3, 3, 2, 1, 1, 6, 5, 5, 1, 1], { rezhim: 'dlinnaya_ochered' });
     eq(after(out, 'стрелок').values.edge_left, 1);
     eq(after(out, 'цель').values.physical ?? 0, 0);
     eq(ammo(after(out, 'стрелок'), 'predator_vi'), 0);
   });
 
   test('S5а (стр. 109): КО при одном патроне — нельзя (правило нехватки — только у ДО)', () => {
-    const shooter = fighter('стрелок', { agility: 5, 'skills.стрельба.rank': 3 }, [{ of: 'predator_vi', values: { ammo: 1 } }]);
+    const shooter = fighter('стрелок', { agility: 5, 'skills.strelba.rank': 3 }, [{ of: 'predator_vi', values: { ammo: 1 } }]);
     let refused = '';
-    try { shoot(shooter, [fighter('цель', {})], [], { режим: 'короткая очередь' }); } catch (err) { refused = (err as Error).message; }
+    try { shoot(shooter, [fighter('цель', {})], [], { rezhim: 'korotkaya_ochered' }); } catch (err) { refused = (err as Error).message; }
     ok(refused.includes('не хватает патронов'), refused);
   });
 
   test('S5б (стр. 109): одиночный выстрел — у любого оружия дальнего боя', () => {
-    const shooter = fighter('стрелок', { agility: 5, 'skills.стрельба.rank': 3 }, [{ of: 'praetor', values: { ammo: 50 } }]);
-    const out = shoot(shooter, [fighter('цель', {})], [], { режим: 'одиночный выстрел' }, 'praetor:0');
+    const shooter = fighter('стрелок', { agility: 5, 'skills.strelba.rank': 3 }, [{ of: 'praetor', values: { ammo: 50 } }]);
+    const out = shoot(shooter, [fighter('цель', {})], [], { rezhim: 'odinochnyy_vystrel' }, 'praetor:0');
     eq(ammo(after(out, 'стрелок'), 'praetor'), 49);
   });
 
   test('S7 (стр. 108, 46, 39): средняя — ЗА 8; ЗЩ 12 — очко защитнику; ранение −1 в защите; сопротивление без штрафа гасит всё', () => {
-    const shooter = fighter('стрелок', { agility: 5, 'skills.стрельба.rank': 5 }, [{ of: 'predator_vi' }]);
+    const shooter = fighter('стрелок', { agility: 5, 'skills.strelba.rank': 5 }, [{ of: 'predator_vi' }]);
     const target = fighter('цель', { body: 6, armor_worn: 6, reaction: 4, intuition: 5, physical: 3 });
-    const out = shoot(shooter, [target], [6, 5, 4, 4, 3, 3, 2, 2, 1, 1, 5, 5, 4, 3, 2, 2, 1, 1, 6, 6, 5, 5, 2, 1], { дистанция: 'средняя' });
+    const out = shoot(shooter, [target], [6, 5, 4, 4, 3, 3, 2, 2, 1, 1, 5, 5, 4, 3, 2, 2, 1, 1, 6, 6, 5, 5, 2, 1], { distanciya_2: 'srednyaya' });
     const trace = out.reports.flatMap(r => (r.report.trace ?? []) as { step: unknown; rolls?: number[] }[]);
-    eq(trace.find(t => t.step === 'защита')?.rolls?.length, 8);
-    eq(trace.find(t => t.step === 'сопротивление_бросок')?.rolls?.length, 6);
+    eq(trace.find(t => t.step === 'zaschita')?.rolls?.length, 8);
+    eq(trace.find(t => t.step === 'soprotivlenie_brosok')?.rolls?.length, 6);
     eq(after(out, 'цель').values.edge_left, 1);
     eq(after(out, 'цель').values.physical, 3);
   });
 
   test('S8 (стр. 109, 46): НО по двум целям — ЗА 12 − 6 = 6; против наивысшей ЗЩ 4 очка нет; урон по каждой своей защитой; патронов 40', () => {
-    const shooter = fighter('стрелок', { agility: 6, 'skills.стрельба.rank': 4 }, [{ of: 'praetor', values: { ammo: 50 } }]);
+    const shooter = fighter('стрелок', { agility: 6, 'skills.strelba.rank': 4 }, [{ of: 'praetor', values: { ammo: 50 } }]);
     const a = fighter('А', { body: 2, reaction: 2, intuition: 2 });
     const b = fighter('Б', { body: 4, reaction: 3, intuition: 3 });
-    const out = shoot(shooter, [a, b], [6, 5, 5, 5, 4, 3, 3, 2, 2, 1, 5, 3, 2, 1, 4, 2, 6, 5, 5, 5, 2, 1, 5, 3, 2, 1], { режим: 'непрерывный огонь' }, 'praetor:0');
+    const out = shoot(shooter, [a, b], [6, 5, 5, 5, 4, 3, 3, 2, 2, 1, 5, 3, 2, 1, 4, 2, 6, 5, 5, 5, 2, 1, 5, 3, 2, 1], { rezhim: 'nepreryvnyy_ogon' }, 'praetor:0');
     eq(after(out, 'стрелок').values.edge_left, 0);
     eq(after(out, 'А').values.physical, 7);
     ok(prone(after(out, 'А')));
@@ -97,7 +97,7 @@ group('Shadowrun 6, глава «Бой»: ситуации книжника (с
   });
 
   test('S9 (стр. 45): у стрелка 3 единицы из 6 — не сбой; у защитника 4 из 6 — сбой', () => {
-    const shooter = fighter('стрелок', { agility: 5, 'skills.стрельба.rank': 1 }, [{ of: 'predator_vi' }]);
+    const shooter = fighter('стрелок', { agility: 5, 'skills.strelba.rank': 1 }, [{ of: 'predator_vi' }]);
     const target = fighter('цель', { body: 5, armor_worn: 3, reaction: 2, intuition: 4 });
     const out = shoot(shooter, [target], [5, 4, 3, 1, 1, 1, 6, 3, 1, 1, 1, 1, 5, 4, 3, 2, 1]);
     ok(!out.log.some(l => l.startsWith('стрелок применяет «Сбой»')), out.log.join('\n'));
@@ -106,7 +106,7 @@ group('Shadowrun 6, глава «Бой»: ситуации книжника (с
   });
 
   test('S10 (стр. 45): атака без успехов с 4 единицами из 7 — критический сбой', () => {
-    const shooter = fighter('стрелок', { agility: 5, 'skills.стрельба.rank': 2 }, [{ of: 'predator_vi' }]);
+    const shooter = fighter('стрелок', { agility: 5, 'skills.strelba.rank': 2 }, [{ of: 'predator_vi' }]);
     const target = fighter('цель', { body: 3, armor_worn: 4, reaction: 2, intuition: 2 });
     const out = shoot(shooter, [target], [4, 3, 2, 1, 1, 1, 1, 4, 3, 2, 2, 2, 2, 2]);
     ok(out.log.some(l => l.startsWith('стрелок применяет «Критический сбой»')), out.log.join('\n'));
@@ -122,18 +122,18 @@ group('Shadowrun 6, глава «Урон, броня, ранения»: сит�
   };
 
   test('DMG-03 (стр. 105–106): сопротивление — только Тело, броня в набор не входит', () => {
-    const shooter = fighter('стрелок', { agility: 3, 'skills.стрельба.rank': 3 }, [{ of: 'predator_vi' }]);
+    const shooter = fighter('стрелок', { agility: 3, 'skills.strelba.rank': 3 }, [{ of: 'predator_vi' }]);
     const target = fighter('цель', { body: 4, armor_worn: 2 });
     const out = shoot(shooter, [target], [5, 5, 5, 2, 2, 2, 5, 5, 5, 2, 2, 2, 6, 2, 2, 1]);
     const trace = out.reports.flatMap(r => (r.report.trace ?? []) as { step: unknown; rolls?: number[] }[]);
-    eq(trace.find(t => t.step === 'сопротивление_бросок')?.rolls?.length, 4);
+    eq(trace.find(t => t.step === 'soprotivlenie_brosok')?.rolls?.length, 4);
     eq(after(out, 'цель').values.physical, 2);
   });
 
   test('DMG-06 (стр. 39): штраф ранений — по полным рядам обоих счётчиков; к сопротивлению не применяется', () => {
-    const one = fighter('р', { body: 4, willpower: 3, agility: 5, 'skills.стрельба.rank': 4, physical: 3, stun: 8 });
+    const one = fighter('р', { body: 4, willpower: 3, agility: 5, 'skills.strelba.rank': 4, physical: 3, stun: 8 });
     eq(at(one, 'wound_mod'), -3);
-    eq(at(one, 'skills.стрельба.pool'), 6);
+    eq(at(one, 'skills.strelba.pool'), 6);
     eq(at(fighter('р', { body: 4, willpower: 3, physical: 3, stun: 9 }), 'wound_mod'), -4);
   });
 
@@ -207,36 +207,36 @@ group('Shadowrun 6, глава «Инициатива и действия»: с�
 group('Shadowrun 6: действия защиты (стр. 42–43)', () => {
   const desk = { id: 'desk', systemId: 'shadowrun6', name: 'Стол', values: {}, has: [], effects: [] } as unknown as Sheet;
   const prepare = (who: Sheet, pick: string, battle = false) => {
-    const out = exchange({ system, compendium, die: tape(), sheets: [who, desk], ...(battle ? { clock: fight(who.id) } : {}), actionId: '+defense_action', fromId: who.id, toIds: [], inputs: { действие: pick } });
+    const out = exchange({ system, compendium, die: tape(), sheets: [who, desk], ...(battle ? { clock: fight(who.id) } : {}), actionId: '+defense_action', fromId: who.id, toIds: [], inputs: { deystvie: pick } });
     return after(out, who.id);
   };
   const defenseDice = (attacker: Sheet, weapon: string, target: Sheet) => {
-    const out = exchange({ system, compendium, die: tape(), sheets: [attacker, target], actionId: weapon, fromId: attacker.id, toIds: [target.id], ...(weapon.startsWith('sap') ? {} : { inputs: { дистанция: 'вплотную' } }) });
+    const out = exchange({ system, compendium, die: tape(), sheets: [attacker, target], actionId: weapon, fromId: attacker.id, toIds: [target.id], ...(weapon.startsWith('sap') ? {} : { inputs: { distanciya_2: 'vplotnuyu' } }) });
     const trace = out.reports.flatMap(r => (r.report.trace ?? []) as { step: unknown; rolls?: number[] }[]);
-    return { dice: trace.find(t => t.step === 'защита')?.rolls?.length, target: after(out, target.id) };
+    return { dice: trace.find(t => t.step === 'zaschita')?.rolls?.length, target: after(out, target.id) };
   };
-  const whitney = () => fighter('Уитни', { reaction: 4, intuition: 3, 'skills.ближний_бой.rank': 5, 'skills.атлетика.rank': 2, willpower: 3 });
-  const thug = fighter('бандит', { agility: 3, 'skills.ближний_бой.rank': 3, 'skills.стрельба.rank': 3 }, [{ of: 'sap' }, { of: 'colt_l36' }]);
+  const whitney = () => fighter('Уитни', { reaction: 4, intuition: 3, 'skills.blizhniy_boy.rank': 5, 'skills.atletika.rank': 2, willpower: 3 });
+  const thug = fighter('бандит', { agility: 3, 'skills.blizhniy_boy.rank': 3, 'skills.strelba.rank': 3 }, [{ of: 'sap' }, { of: 'colt_l36' }]);
 
   test('INI-06 (стр. 42): Блокировать — Реакция 4 + Интуиция 3 + Ближний бой 5 = 12 кубиков на одну защиту в рукопашной; потом снова 7', () => {
-    const ready = prepare(whitney(), 'Блокировать');
+    const ready = prepare(whitney(), 'Blokirovat');
     const first = defenseDice(thug, 'sap:0', ready);
     eq(first.dice, 12);
     eq(defenseDice(thug, 'sap:0', first.target).dice, 7);
   });
 
   test('Блокировать не помогает против стрельбы (стр. 42)', () => {
-    eq(defenseDice(thug, 'colt_l36:0', prepare(whitney(), 'Блокировать')).dice, 7);
+    eq(defenseDice(thug, 'colt_l36:0', prepare(whitney(), 'Blokirovat')).dice, 7);
   });
 
   test('Уклониться — Атлетика к одной защите, в бою тратит простое действие (стр. 43)', () => {
-    const ready = prepare({ ...whitney(), values: { ...whitney().values, simple_left: 2 } } as Sheet, 'Уклониться', true);
+    const ready = prepare({ ...whitney(), values: { ...whitney().values, simple_left: 2 } } as Sheet, 'Uklonitsya', true);
     eq(ready.values.simple_left, 1);
     eq(defenseDice(thug, 'colt_l36:0', ready).dice, 9);
   });
 
   test('Глухая оборона — Воля ко всем защитам раунда, тратит сложное действие (стр. 43)', () => {
-    const ready = prepare({ ...whitney(), values: { ...whitney().values, complex_left: 1 } } as Sheet, 'Глухая оборона', true);
+    const ready = prepare({ ...whitney(), values: { ...whitney().values, complex_left: 1 } } as Sheet, 'Gluhaya_oborona', true);
     eq(at(ready, 'complex_left'), 0);
     const first = defenseDice(thug, 'sap:0', ready);
     eq(first.dice, 10);
@@ -246,28 +246,28 @@ group('Shadowrun 6: действия защиты (стр. 42–43)', () => {
 
 group('Shadowrun 6: чувство заявляют и к броскам действия (стр. 53)', () => {
   test('ослеплённый стрелок: «зрение», заявленное к «Выстрелить», снимает 3 кубика с атаки', () => {
-    const shooter = { ...fighter('стрелок', { agility: 5, 'skills.стрельба.rank': 4 }, [{ of: 'predator_vi' }]), effects: [{ effectId: 'blinded' }] } as Sheet;
+    const shooter = { ...fighter('стрелок', { agility: 5, 'skills.strelba.rank': 4 }, [{ of: 'predator_vi' }]), effects: [{ effectId: 'blinded' }] } as Sheet;
     const target = fighter('цель', { body: 4, reaction: 3, intuition: 3 });
     const attack = (claims?: { source: string[] }) => {
-      const out = exchange({ system, compendium, die: tape(), sheets: [shooter, target], actionId: 'predator_vi:0', fromId: shooter.id, toIds: [target.id], inputs: { дистанция: 'близкая' }, ...(claims ? { claims } : {}) });
+      const out = exchange({ system, compendium, die: tape(), sheets: [shooter, target], actionId: 'predator_vi:0', fromId: shooter.id, toIds: [target.id], inputs: { distanciya_2: 'blizkaya' }, ...(claims ? { claims } : {}) });
       return (/Бросок \(атака\): \[([^\]]*)\]/.exec(out.log.join(' · '))?.[1] ?? '').split(',').filter(Boolean).length;
     };
-    eq(attack({ source: ['зрение'] }), attack() - 3);
+    eq(attack({ source: ['zrenie'] }), attack() - 3);
   });
 
   test('«зрение» не трогает сопротивления: у мага колдовство −3, истощение прежнее; у цели защита −3, сопротивление урону прежнее', () => {
     const pool = (out: ReturnType<typeof exchange>, part: string) =>
       ([...out.log.join(' · ').matchAll(/Бросок \(([^)]*)\): \[([^\]]*)\]/g)].find(m => m[1]!.includes(part))?.[2] ?? '').split(',').filter(Boolean).length;
-    const mage = { ...fighter('маг', { magic: 5, willpower: 4, logic: 4, 'skills.колдовство.rank': 4 }, [{ of: 'spell_mana_bolt' }]), effects: [{ effectId: 'blinded' }] } as Sheet;
+    const mage = { ...fighter('маг', { magic: 5, willpower: 4, logic: 4, 'skills.koldovstvo.rank': 4 }, [{ of: 'spell_mana_bolt' }]), effects: [{ effectId: 'blinded' }] } as Sheet;
     const victim = fighter('цель', { body: 4, willpower: 3 });
     const cast = (claims?: { source: string[] }) => exchange({ system, compendium, die: tape(), sheets: [mage, victim], actionId: 'spell_mana_bolt:0', fromId: mage.id, toIds: [victim.id], ...(claims ? { claims } : {}) });
-    const [plain, seen] = [cast(), cast({ source: ['зрение'] })];
+    const [plain, seen] = [cast(), cast({ source: ['zrenie'] })];
     eq(pool(seen, 'колдовство'), pool(plain, 'колдовство') - 3);
     eq(pool(seen, 'истощению'), pool(plain, 'истощению'));
-    const shooter = fighter('стрелок', { agility: 5, 'skills.стрельба.rank': 4 }, [{ of: 'predator_vi' }]);
+    const shooter = fighter('стрелок', { agility: 5, 'skills.strelba.rank': 4 }, [{ of: 'predator_vi' }]);
     const blind = { ...fighter('цель', { body: 4, reaction: 3, intuition: 3 }), effects: [{ effectId: 'blinded' }] } as Sheet;
-    const shot = (claims?: { target: string[] }) => exchange({ system, compendium, die: tape(), sheets: [shooter, blind], actionId: 'predator_vi:0', fromId: shooter.id, toIds: [blind.id], inputs: { дистанция: 'близкая' }, ...(claims ? { claims } : {}) });
-    const [open, dark] = [shot(), shot({ target: ['зрение'] })];
+    const shot = (claims?: { target: string[] }) => exchange({ system, compendium, die: tape(), sheets: [shooter, blind], actionId: 'predator_vi:0', fromId: shooter.id, toIds: [blind.id], inputs: { distanciya_2: 'blizkaya' }, ...(claims ? { claims } : {}) });
+    const [open, dark] = [shot(), shot({ target: ['zrenie'] })];
     eq(pool(dark, 'защита'), pool(open, 'защита') - 3);
     eq(pool(dark, 'физический'), pool(open, 'физический'));
   });
@@ -275,15 +275,15 @@ group('Shadowrun 6: чувство заявляют и к броскам дей�
   test('«Дикий кубик», заявленный к действию, — к одной проверке: у цели на защиту, не на сопротивление урону; у мага на колдовство, не на истощение', () => {
     const wild = (out: ReturnType<typeof exchange>, part: string) =>
       [...out.log.join(' · ').matchAll(/Бросок \(([^)]*)\)[^·|]*/g)].find(m => m[1]!.includes(part))?.[0].includes('Дикий кубик');
-    const shooter = fighter('стрелок', { agility: 5, 'skills.стрельба.rank': 4 }, [{ of: 'predator_vi' }]);
+    const shooter = fighter('стрелок', { agility: 5, 'skills.strelba.rank': 4 }, [{ of: 'predator_vi' }]);
     const target = fighter('цель', { body: 4, reaction: 3, intuition: 3 });
-    const shot = exchange({ system, compendium, die: tape(), sheets: [shooter, target], actionId: 'predator_vi:0', fromId: shooter.id, toIds: [target.id], inputs: { дистанция: 'близкая' }, claims: { target: ['wild_die'] } });
+    const shot = exchange({ system, compendium, die: tape(), sheets: [shooter, target], actionId: 'predator_vi:0', fromId: shooter.id, toIds: [target.id], inputs: { distanciya_2: 'blizkaya' }, claims: { target: ['wild_die'] } });
     deepEq([wild(shot, 'защита'), wild(shot, 'физический')], [true, false]);
     const lucky = fighter('цель', { body: 4, reaction: 3, intuition: 3, edge_left: 3 });
-    const asked = exchange({ system, compendium, die: tape(), sheets: [shooter, lucky], actionId: 'predator_vi:0', fromId: shooter.id, toIds: [lucky.id], inputs: { дистанция: 'близкая' }, claims: { target: ['wild_die'] }, answer: () => [] });
+    const asked = exchange({ system, compendium, die: tape(), sheets: [shooter, lucky], actionId: 'predator_vi:0', fromId: shooter.id, toIds: [lucky.id], inputs: { distanciya_2: 'blizkaya' }, claims: { target: ['wild_die'] }, answer: () => [] });
     ok(asked.questions.length > 0, 'действие останавливалось на вопросах и выполнялось заново');
     deepEq([wild(asked, 'защита'), wild(asked, 'физический')], [true, false]);
-    const mage = fighter('маг', { magic: 5, willpower: 4, logic: 4, 'skills.колдовство.rank': 4 }, [{ of: 'spell_mana_bolt' }]);
+    const mage = fighter('маг', { magic: 5, willpower: 4, logic: 4, 'skills.koldovstvo.rank': 4 }, [{ of: 'spell_mana_bolt' }]);
     const cast = exchange({ system, compendium, die: tape(), sheets: [mage, fighter('цель', { body: 4, willpower: 3 })], actionId: 'spell_mana_bolt:0', fromId: mage.id, toIds: ['цель'], claims: { source: ['wild_die'] } });
     deepEq([wild(cast, 'колдовство'), wild(cast, 'истощению')], [true, false]);
   });

@@ -10,14 +10,14 @@ const dnd = () => clone(PLAYABLE_WORLDS[0]!);
 group('целостность ссылок на строки таблиц', () => {
   test('строка «физический» занята: на неё смотрят типы урона и правки', () => {
     const мир = dnd();
-    const кто = rowUsers(мир.system as System, 'damage_nature', 'физический', мир.compendium as Compendium).map(u => u.text);
+    const кто = rowUsers(мир.system as System, 'damage_nature', 'fizicheskiy', мир.compendium as Compendium).map(u => u.text);
     ok(кто.some(t => t.includes('Типы урона')), кто.join(' | '));
     ok(кто.some(t => t.includes('правка')), кто.join(' | '));
   });
 
   test('строка «рубящий» занята записями книги', () => {
     const мир = dnd();
-    const кто = rowUsers(мир.system as System, 'damage_types', 'рубящий', мир.compendium as Compendium).map(u => u.text);
+    const кто = rowUsers(мир.system as System, 'damage_types', 'rubyaschiy', мир.compendium as Compendium).map(u => u.text);
     ok(кто.some(t => t.includes('Длинный меч')), кто.slice(0, 5).join(' | '));
   });
 
@@ -31,27 +31,27 @@ group('целостность ссылок на строки таблиц', () =
   test('удалили строку, на которую ссылаются, — линт называет ошибку словами', () => {
     const мир = dnd();
     const system = мир.system as System;
-    system.tables!.damage_nature!.rows = system.tables!.damage_nature!.rows!.filter(r => r.value !== 'физический');
+    system.tables!.damage_nature!.rows = system.tables!.damage_nature!.rows!.filter(r => r.value !== 'fizicheskiy');
     const ошибки = errorsOf(lintSystem(system, мир.compendium as Compendium)).map(p => p.text);
-    ok(ошибки.some(t => t.includes('физический') && t.includes('Природа урона')), ошибки.slice(0, 4).join('\n'));
+    ok(ошибки.some(t => t.includes('fizicheskiy') && t.includes('Природа урона')), ошибки.slice(0, 4).join('\n'));
   });
 
   test('переименование ключа ведёт за собой все ссылки — и в системе, и в книге', () => {
     const мир = dnd();
     const system = мир.system as System;
     const книга = мир.compendium as Compendium;
-    renameRow(system, 'damage_types', 'рубящий', 'режущий');
-    renameRowInBook(system, книга, 'damage_types', 'рубящий', 'режущий');
+    renameRow(system, 'damage_types', 'rubyaschiy', 'режущий');
+    renameRowInBook(system, книга, 'damage_types', 'rubyaschiy', 'режущий');
     eq(danglingRows(system, книга).length, 0, 'ни одной висячей ссылки');
     eq(книга.records!.find(i => i.id === 'longsword')!.cells!.damage_type, 'режущий');
     ok(rowUsers(system, 'damage_types', 'режущий', книга).length > 0, 'ссылки переехали');
-    eq(rowUsers(system, 'damage_types', 'рубящий', книга).length, 0, 'на старое имя не смотрит никто');
+    eq(rowUsers(system, 'damage_types', 'rubyaschiy', книга).length, 0, 'на старое имя не смотрит никто');
   });
 
   test('переименовали природу — правка ярости поехала следом', () => {
     const мир = dnd();
     const system = мир.system as System;
-    renameRow(system, 'damage_nature', 'физический', 'телесный');
+    renameRow(system, 'damage_nature', 'fizicheskiy', 'телесный');
     const ярость = system.effects.raging!.modifiers!.find(m => (m as { where?: unknown }).where) as { where: { is: string } };
     eq(ярость.where.is, 'телесный');
     eq(danglingRows(system, мир.compendium as Compendium).length, 0);
@@ -75,11 +75,11 @@ group('ключ строке без ключа — не переименован
     const мир = dnd();
     const system = мир.system as System;
     eq(errorsOf(lintSystem(system, мир.compendium as Compendium)).length, 0);
-    renameRow(system, 'abilities', 'телосложение', 'выносливость');
-    renameRowInBook(system, мир.compendium as Compendium, 'abilities', 'телосложение', 'выносливость');
+    renameRow(system, 'abilities', 'constitution', 'выносливость');
+    renameRowInBook(system, мир.compendium as Compendium, 'abilities', 'constitution', 'выносливость');
     eq(errorsOf(lintSystem(system, мир.compendium as Compendium)).map(p => p.text).join('\n'), '');
     ok(JSON.stringify(system.tables).includes('@abilities.выносливость.mod'));
-    ok(!JSON.stringify(system.effects).includes('"\\"телосложение\\""'));
+    ok(!JSON.stringify(system.effects).includes('"\\"constitution\\""'));
   });
 });
 

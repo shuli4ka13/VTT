@@ -15,9 +15,9 @@ const withProbe = (tags: string[]) => {
     params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }],
     steps: [{ type: 'each', of: 'цели' }, { type: 'emit', effect: 'damage', args: {
       amount: { expr: '10' },
-      лист: { expr: '@цель' },
-      источник: { expr: '@действующий' },
-      ...Object.fromEntries(tags.map(tag => [tag.startsWith('по ') ? 'aim' : 'damage_type', { expr: JSON.stringify(tag) }])),
+      who: { expr: '@цель' },
+      source: { expr: '@действующий' },
+      ...Object.fromEntries(tags.map(tag => [tag.startsWith('po_') ? 'aim' : 'damage_type', { expr: JSON.stringify(tag) }])),
     } }],
   } as never;
   system.tables = { ...system.tables, проба: { shape: 'book', use: 'action', label: 'Проба' } } as never;
@@ -37,41 +37,41 @@ const hit = (tags: string[]) => {
 
 group('условие шага «где у метки колонка = значение»', () => {
   test('пуля в тело упирается в броню: 10 − 7 = 3, броня тела −1', () => {
-    const v = hit(['пуля', 'по телу']);
+    const v = hit(['pulya', 'po_telu']);
     eq(v.hp, 37);
     eq(v.sp_body, 6);
   });
 
   test('огонь в тело идёт мимо брони: весь урон, броня цела', () => {
-    const v = hit(['огонь', 'по телу']);
+    const v = hit(['fire', 'po_telu']);
     eq(v.hp, 30);
     eq(v.sp_body, 7);
   });
 
   test('яд в голову — тоже мимо брони, без удвоения за голову', () => {
-    const v = hit(['яд', 'по голове']);
+    const v = hit(['yad', 'po_golove']);
     eq(v.hp, 30);
     eq(v.sp_head, 7);
   });
 
   test('кровотечение без места попадания — мимо брони', () => {
-    eq(hit(['кровотечение']).hp, 30);
+    eq(hit(['krovotechenie']).hp, 30);
   });
 
   test('строка «мимо брони» занята условием шага, переименование ведёт его за собой', () => {
     const system = red().system as System;
-    ok(rowUsers(system, 'armor_pass', 'мимо брони').some(u => u.text === 'условие шага'));
-    renameRow(system, 'armor_pass', 'мимо брони', 'в обход');
+    ok(rowUsers(system, 'armor_pass', 'mimo_broni').some(u => u.text === 'условие шага'));
+    renameRow(system, 'armor_pass', 'mimo_broni', 'в обход');
     eq(danglingRows(system).length, 0);
     const шаг = system.effects.damage!.steps!.findLast(step => step.type === 'branch') as { if: { expr: string } };
     ok(шаг.if.expr.includes('"в обход"'), шаг.if.expr);
-    ok(!шаг.if.expr.includes('мимо брони'), шаг.if.expr);
+    ok(!шаг.if.expr.includes('mimo_broni'), шаг.if.expr);
   });
 
   test('условие ждёт строку, которой нет, — висячая ссылка словами', () => {
     const system = red().system as System;
     const шаг = system.effects.damage!.steps!.findLast(step => step.type === 'branch') as { if: { expr: string } };
-    шаг.if.expr = шаг.if.expr.replace('мимо брони', 'сквозь стены');
+    шаг.if.expr = шаг.if.expr.replace('mimo_broni', 'сквозь стены');
     ok(danglingRows(system).some(d => d.text.includes('условие шага ждёт «сквозь стены»')));
   });
 });

@@ -49,7 +49,7 @@ group('Shadowrun 6, глава «Риггинг»: ситуации книжни
       const thrower = { ...sheetOf('mafia', { edge_left: 0 }), has: [{ of: 'grenade_probe', values: { count: 2 } }] } as Sheet;
       return exchange({
         system, compendium: { ...compendium, records: [...compendium.records, grenade(dv, electric)] } as Compendium, die: tape(), sheets: [thrower, sheetOf('drone_doberman')],
-        actionId: 'grenade_probe:0', fromId: 'mafia', toIds: ['drone_doberman'], inputs: { дистанция: 'близкая', кольцо: { drone_doberman: 'эпицентр' } } as never,
+        actionId: 'grenade_probe:0', fromId: 'mafia', toIds: ['drone_doberman'], inputs: { distanciya_2: 'blizkaya', kolco: { drone_doberman: 'epicentr' } } as never,
       }).sheets.find(s => s.id === 'drone_doberman')!;
     };
     eq(thrown(4, false).values.stun ?? 0, 0, 'СУ 4 не больше Тела 4');

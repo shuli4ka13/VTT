@@ -12,19 +12,19 @@ const damage = (base: number, mods: { op: string; stage: string; value: number }
 
 group('урон D&D по этапам (SRD 5.2)', () => {
   test('сопротивление из таблицы и «В ярости» — одно сопротивление: 10 → 5', () => {
-    eq(damage(10, [mul(0.5, 'сопротивление'), mul(0.5, 'сопротивление')]), 5);
+    eq(damage(10, [mul(0.5, 'soprotivlenie'), mul(0.5, 'soprotivlenie')]), 5);
   });
   test('сопротивление, затем уязвимость, с округлением вниз: 7 → 3 → 6', () => {
-    eq(damage(7, [mul(0.5, 'сопротивление'), mul(2, 'уязвимость')]), 6);
+    eq(damage(7, [mul(0.5, 'soprotivlenie'), mul(2, 'uyazvimost')]), 6);
   });
   test('таблица «как есть» (×1) не гасит уязвимость ×2', () => {
-    eq(damage(7, [mul(1, 'уязвимость'), mul(2, 'уязвимость')]), 14);
+    eq(damage(7, [mul(1, 'uyazvimost'), mul(2, 'uyazvimost')]), 14);
   });
   test('иммунитет ×0 сильнее сопротивления ×0.5', () => {
-    eq(damage(9, [mul(0.5, 'сопротивление'), mul(0, 'сопротивление')]), 0);
+    eq(damage(9, [mul(0.5, 'soprotivlenie'), mul(0, 'soprotivlenie')]), 0);
   });
   test('Невероятное уклонение и сопротивление складываются: 9 → 4 → 2', () => {
-    eq(damage(9, [mul(0.5, 'половина'), mul(0.5, 'сопротивление')]), 2);
+    eq(damage(9, [mul(0.5, 'polovina'), mul(0.5, 'soprotivlenie')]), 2);
   });
 });
 

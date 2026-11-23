@@ -14,22 +14,22 @@ const swap = (system: System, from: string, to: string): System => JSON.parse(JS
 describe('слово не из вариантов — ошибка «Проблем»', () => {
   it('условие по итогу «исход»', () => {
     const system = copy('dnd5e');
-    system.effects.strike!.steps!.splice(2, 0, { type: 'branch', if: { expr: '@бросок.исход == "критт"' } } as never, { type: 'end' } as never);
+    system.effects.strike!.steps!.splice(2, 0, { type: 'branch', if: { expr: '@brosok.ishod == "критт"' } } as never, { type: 'end' } as never);
     expect(words(system, 'dnd5e')).toEqual([expect.stringContaining('«критт» — в таблице «Исход атаки» такого варианта нет')]);
   });
 
   it('слово в формуле самого итога', () => {
-    const system = swap(copy('dnd5e'), '"крит\\", \\"попадание\\"', '"критт\\", \\"попадание\\"');
+    const system = swap(copy('dnd5e'), '"krit\\", \\"popadanie\\"', '"критт\\", \\"popadanie\\"');
     expect(words(system, 'dnd5e')).toEqual([expect.stringContaining('итог «исход»: «критт»')]);
   });
 
   it('ступень проверки', () => {
-    const system = swap(copy('blades'), '@бросок.degree == \\"провал\\"', '@бросок.degree == \\"провл\\"');
+    const system = swap(copy('blades'), '@brosok.degree == \\"провал\\"', '@brosok.degree == \\"провл\\"');
     expect(words(system, 'blades')).toEqual([expect.stringContaining('«провл»')]);
   });
 
   it('колонка вещи — класс оружия', () => {
-    const system = swap(copy('shadowrun6'), 'not @режим.always and not', '@item.class != \\"луук\\" and not @режим.always and not');
+    const system = swap(copy('shadowrun6'), 'not @rezhim.always and not', '@item.class != \\"луук\\" and not @rezhim.always and not');
     expect(words(system, 'shadowrun6')).toEqual([expect.stringContaining('«луук» — в таблице «Классы оружия»')]);
   });
 });
