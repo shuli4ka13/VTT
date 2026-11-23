@@ -1,4 +1,4 @@
-import { OUTCOME_COLUMNS } from '../words/glossary.ts';
+import { OUTCOME_COLUMNS, OUTCOME_WORDS } from '../words/glossary.ts';
 import type { System } from '../model/types.ts';
 
 const WORD = /^[\p{L}_](?:[\p{L}\p{N}_ ]*[\p{L}\p{N}_])?$/u;
@@ -23,14 +23,13 @@ export function outcomeWords(system: System, tags: readonly string[]): { success
       const row = (table.rows ?? []).find(r => r.value === tag);
       if (!row) continue;
       for (const side of ['success', 'fail'] as const) {
-        const word = OUTCOME_COLUMNS[side];
-        const column = (table.columns ?? []).find(c => c.key === word || c.label?.toLowerCase() === word);
+        const column = (table.columns ?? []).find(c => c.key === OUTCOME_COLUMNS[side]);
         const cell = column ? (row.cells ?? {})[column.key] : undefined;
         if (!found[side] && typeof cell === 'string' && cell.trim()) found[side] = cell.trim();
       }
     }
   }
-  return { success: found.success ?? OUTCOME_COLUMNS.success, fail: found.fail ?? OUTCOME_COLUMNS.fail };
+  return { success: found.success ?? OUTCOME_WORDS.success, fail: found.fail ?? OUTCOME_WORDS.fail };
 }
 
 export function tagSaid(system: System | undefined, tag: string): string {

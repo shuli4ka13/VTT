@@ -103,7 +103,7 @@ group('D&D: прогрессия класса — своя таблица с п�
   });
 
   test('настроить можно не больше трёх чудесных вещей', () => {
-    const field = dnd.system.tables!['list_2']!.columns!.find(c => c.key === 'attuned')!;
+    const field = dnd.system.tables!['list']!.columns!.find(c => c.key === 'attuned')!;
     eq(field.max, 3);
   });
 });

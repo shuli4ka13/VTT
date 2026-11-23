@@ -13,8 +13,8 @@ const seven = () => 7;
 
 group('проверка — одна на всё: шаг, бросок с листа, инициатива', () => {
   test('бросок поля — проверка, где прибавка — само поле', () => {
-    const check = fieldCheck(system, 'abilities.dexterity.mod');
-    eq(check.bonus?.expr, '@abilities.dexterity.mod');
+    const check = fieldCheck(system, 'abilities.lovkost.mod');
+    eq(check.bonus?.expr, '@abilities.lovkost.mod');
     const out = rollCheck(system, arven, check, { compendium, die: seven, owner: check.label });
     eq(out.total, 7 + out.bonus);
   });

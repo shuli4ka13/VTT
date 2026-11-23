@@ -26,7 +26,7 @@ group('кубики', () => {
 });
 
 const savingBy = target => ({ ...system, effects: { ...system.effects, save: { ...system.effects.save, steps: system.effects.save.steps.map(step =>
-  (step.id === 'save_brosok' ? { ...step, bonus: { expr: '@aim.dex_save' } } : step)) } } });
+  (step.id === 'save_brosok' ? { ...step, bonus: { expr: '@cel.dex_save' } } : step)) } } });
 
 const hit = (actionId, from, to, die, sys = system, book = compendium) => {
   const targets = Array.isArray(to) ? to : [to];
@@ -185,20 +185,20 @@ const PARAMETRIC = {
   label: 'Параметрический удар', activation: 'manual',
   params: [
     { key: 'deystvuyuschiy', kind: 'sheet' },
-    { key: 'aims', kind: 'sheet', many: true, item: { key: 'aim' } },
+    { key: 'celi', kind: 'sheet', many: true, item: { key: 'cel' } },
     { key: 'bonus', label: 'Бонус проверки', kind: 'number' },
     { key: 'versus', label: 'Против чего', kind: 'number', optional: true },
     { key: 'damage_dice', label: 'Кость урона', kind: 'dice' },
     { key: 'damage_bonus', label: 'Бонус урона', kind: 'number' },
   ],
   steps: [
-    { type: 'each', of: 'aims' },
+    { type: 'each', of: 'celi' },
     { id: 'hit_brosok', type: 'roll', die: 'lead_die', bonus: { expr: '@bonus' }, tags: ['ataka'],
       by: { expr: '@deystvuyuschiy' } },
-    { id: 'hit', type: 'check', value: { expr: '@hit_brosok' }, versus: { expr: '@versus or @aim.ac' } },
+    { id: 'hit', type: 'check', value: { expr: '@hit_brosok' }, versus: { expr: '@versus or @cel.ac' } },
     { type: 'branch', if: { expr: 'not @hit.success' } }, { type: 'stop' }, { type: 'end' },
     { id: 'dmg', type: 'roll', die: { expr: '@damage_dice' }, bonus: { expr: '@damage_bonus' } },
-    { type: 'apply', target: { expr: '@aim.hp_current' }, direction: 'subtract',
+    { type: 'apply', target: { expr: '@cel.hp_current' }, direction: 'subtract',
       value: { expr: '@dmg' } },
   ],
 };

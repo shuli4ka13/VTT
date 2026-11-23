@@ -13,7 +13,7 @@ describe('формула колонки словами для строки', () 
     expect(rowWords(dnd, 'skills', row('atletika'), total)).toBe('Сила · Модификатор + Атлетика · Владение × Бонус мастерства');
     expect(rowWords(dnd, 'skills', row('skrytnost'), total)).toBe('Ловкость · Модификатор + Скрытность · Владение × Бонус мастерства');
     const mod = dnd.tables!.abilities!.columns!.find(c => c.key === 'mod')!.expr!.expr;
-    const strength = dnd.tables!.abilities!.rows!.find(r => r.value === 'strength')!;
+    const strength = dnd.tables!.abilities!.rows!.find(r => r.value === 'sila')!;
     expect(rowWords(dnd, 'abilities', strength, mod)).toBe('округлить вниз((Сила · Значение - 10) / 2)');
   });
 

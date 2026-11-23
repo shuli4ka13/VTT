@@ -11,10 +11,10 @@ const system = {
   ] },
     rolls: {
       label: 'Броски', key: 'word',
-      columns: [{ key: 'успех', label: 'Успех', kind: 'text' }, { key: 'провал', label: 'Провал', kind: 'text' }],
+      columns: [{ key: 'uspeh', label: 'Успех', kind: 'text' }, { key: 'proval', label: 'Провал', kind: 'text' }],
       rows: [
-        { value: 'атака', cells: { успех: 'попадание', провал: 'промах' } },
-        { value: 'спас', cells: { успех: 'спасся', провал: 'не спасся' } },
+        { value: 'атака', cells: { uspeh: 'попадание', proval: 'промах' } },
+        { value: 'спас', cells: { uspeh: 'спасся', proval: 'не спасся' } },
         { value: 'без_слов' },
       ],
     },

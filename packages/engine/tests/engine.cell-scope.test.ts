@@ -23,7 +23,7 @@ const totals = (system: System): number[] => {
 };
 
 describe('клетка справочной таблицы, прочитанная из эффекта, видит его имена', () => {
-  const cells = { цель: '@aim.abilities.strength.mod', действующий: '@deystvuyuschiy.abilities.strength.mod + 100' };
+  const cells = { цель: '@cel.abilities.sila.mod', действующий: '@deystvuyuschiy.abilities.sila.mod + 100' };
 
   it('у каждой цели — своё значение клетки: гоблин −1, орк +3', () => {
     const system = withProbe(cells);
@@ -36,7 +36,7 @@ describe('клетка справочной таблицы, прочитанна
   });
 
   it('поле листа в клетке читается как прежде — без имени эффекта', () => {
-    expect(totals(withProbe({ цель: '@aim.abilities.strength.mod', поле: '@level' }, 'поле'))).toEqual([5, 5]);
+    expect(totals(withProbe({ цель: '@cel.abilities.sila.mod', поле: '@level' }, 'поле'))).toEqual([5, 5]);
   });
 
   it('в клетке работают функции языка: «строки(…)» — как в формуле шага', () => {

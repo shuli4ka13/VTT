@@ -105,7 +105,8 @@ function valueProblem(param: AskedParam, value: unknown, name: string, system: S
   if (kind === 'choice') {
     const options = choicesOf(system, param);
     if (!options.includes(String(value))) {
-      return `${name}: можно только ${options.map((option: string) => `«${option}»`).join(', ') || '(список пуст)'}`;
+      const said = (listOf(system, param.from) ?? []).map(option => String((option as { label?: string }).label ?? option.value));
+      return `${name}: можно только ${said.map(one => `«${one}»`).join(', ') || '(список пуст)'}`;
     }
   }
   return null;

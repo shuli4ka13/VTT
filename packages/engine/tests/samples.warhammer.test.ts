@@ -8,11 +8,11 @@ import type { Sheet } from '../src/model/types.ts';
 const world = LITE_WORLDS.find(one => one.system.id === 'imperium-maledictum')!;
 const system = flattenSystem(world.system);
 
-const hero = (target: number): Sheet => ({ id: 'г', systemId: system.id, name: 'Г', values: { 'harakteristiki.strength.znachenie': target }, has: [], effects: [] } as unknown as Sheet);
+const hero = (target: number): Sheet => ({ id: 'г', systemId: system.id, name: 'Г', values: { 'harakteristiki.sila.znachenie': target }, has: [], effects: [] } as unknown as Sheet);
 
 const test = (target: number, rolled: number, claims?: string[]): string => {
   const out = perform({ system, compendium: world.compendium, clock: null, sheets: [hero(target)], die: () => rolled } as never,
-    { op: 'roll', sheetId: 'г', tag: 'harakteristiki.strength.total', ...(claims ? { claims } : {}) } as never);
+    { op: 'roll', sheetId: 'г', tag: 'harakteristiki.sila.itog', ...(claims ? { claims } : {}) } as never);
   if (out.kind !== 'done') throw new Error('бросок спросил');
   return out.log.join('\n');
 };

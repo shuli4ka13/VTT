@@ -4,70 +4,70 @@
     "id": "shadowrun6",
     "name": "Shadowrun: Шестой мир",
     "groups": {
-      "Ataka": {
+      "ataka": {
         "label": "Атака"
       },
-      "Preimuschestvo": {
+      "preimuschestvo": {
         "label": "Преимущество"
       },
-      "Deystviya": {
+      "deystviya": {
         "label": "Действия"
       },
-      "Sostoyaniya": {
+      "sostoyaniya": {
         "label": "Состояния"
       },
-      "Obschie_pravila": {
+      "obschie_pravila": {
         "label": "Общие правила"
       },
-      "Plata": {
+      "plata": {
         "label": "Плата"
       },
-      "Boy": {
+      "boy": {
         "label": "Бой"
       },
-      "Matrica": {
+      "matrica": {
         "label": "Матрица"
       },
-      "Magiya": {
+      "magiya": {
         "label": "Магия"
       },
-      "Zaklinaniya": {
+      "zaklinaniya": {
         "label": "Заклинания"
       },
-      "Kachestva": {
+      "kachestva": {
         "label": "Качества"
       },
-      "Transport": {
+      "transport": {
         "label": "Транспорт"
       },
-      "Himiya": {
+      "himiya": {
         "label": "Химия"
       },
-      "Mir": {
+      "mir": {
         "label": "Мир"
       },
-      "Broski_i_proverki": {
+      "broski_i_proverki": {
         "label": "Броски и проверки"
       },
-      "Chto_sluchaetsya": {
+      "chto_sluchaetsya": {
         "label": "Что случается"
       },
-      "Raschety": {
+      "raschety": {
         "label": "Расчёты"
       },
-      "Pravila_listov": {
+      "pravila_listov": {
         "label": "Правила листов"
       },
-      "Implanty": {
+      "implanty": {
         "label": "Импланты"
       },
-      "Priemy": {
+      "priemy": {
         "label": "Приёмы"
       },
-      "Snaryazhenie": {
+      "snaryazhenie": {
         "label": "Снаряжение"
       },
-      "Sposobnosti_adepta": {
+      "sposobnosti_adepta": {
         "label": "Способности адепта"
       }
     },
@@ -587,7 +587,7 @@
             "label": "Режим Матрицы",
             "kind": "choice",
             "from": "matrix_modes",
-            "default": "none"
+            "default": "net"
           },
           {
             "key": "dev_rating",
@@ -694,28 +694,28 @@
             "label": "На Проникновении",
             "kind": "choice",
             "from": "matrix_attrs",
-            "default": "P"
+            "default": "p"
           },
           {
             "key": "cfg_sleaze",
             "label": "На Ускользании",
             "kind": "choice",
             "from": "matrix_attrs",
-            "default": "U"
+            "default": "u"
           },
           {
             "key": "cfg_dp",
             "label": "На Вычислительной мощности",
             "kind": "choice",
             "from": "matrix_attrs",
-            "default": "VM"
+            "default": "vm"
           },
           {
             "key": "cfg_firewall",
             "label": "На Сетевом экране",
             "kind": "choice",
             "from": "matrix_attrs",
-            "default": "SE"
+            "default": "se"
           },
           {
             "key": "m_attack",
@@ -911,7 +911,7 @@
             "label": "Вид льда",
             "kind": "choice",
             "from": "ic_kinds",
-            "default": "none"
+            "default": "net"
           },
           {
             "key": "host_rating",
@@ -942,14 +942,14 @@
             "label": "Пробуждённый",
             "kind": "choice",
             "from": "awakened_kinds",
-            "default": "none"
+            "default": "net"
           },
           {
             "key": "tradition",
             "label": "Традиция",
             "kind": "choice",
             "from": "traditions",
-            "default": "none"
+            "default": "net"
           },
           {
             "key": "trad_attr",
@@ -991,7 +991,7 @@
             "label": "Астрал",
             "kind": "choice",
             "from": "astral_modes",
-            "default": "none"
+            "default": "net"
           },
           {
             "key": "drain_stun",
@@ -1885,7 +1885,7 @@
         "key": "word",
         "columns": [
           {
-            "key": "hit",
+            "key": "uspeh",
             "label": "Успех",
             "kind": "text"
           },
@@ -1905,7 +1905,7 @@
             "value": "proverka",
             "label": "проверка",
             "cells": {
-              "hit": "есть успехи",
+              "uspeh": "есть успехи",
               "proval": "ни одного успеха"
             }
           },
@@ -1913,7 +1913,7 @@
             "value": "ataka",
             "label": "атака",
             "cells": {
-              "hit": "попадание",
+              "uspeh": "попадание",
               "proval": "промах"
             }
           },
@@ -1930,7 +1930,7 @@
             "label": "инициатива"
           },
           {
-            "value": "healing",
+            "value": "lechenie",
             "label": "лечение",
             "cells": {
               "claim": true
@@ -2199,7 +2199,7 @@
             "label": "изгнание"
           },
           {
-            "value": "ritual_2",
+            "value": "ritual",
             "label": "ритуал"
           },
           {
@@ -2267,11 +2267,11 @@
             "label": "прыжок"
           },
           {
-            "value": "bez_Preimuschestva",
+            "value": "bez_preimuschestva",
             "label": "без Преимущества"
           },
           {
-            "value": "bonus_Preimuschestva",
+            "value": "bonus_preimuschestva",
             "label": "бонус Преимущества"
           },
           {
@@ -2745,11 +2745,11 @@
         ],
         "rows": [
           {
-            "value": "none",
+            "value": "net",
             "label": "нет"
           },
           {
-            "value": "Metko_popast",
+            "value": "metko_popast",
             "label": "Метко попасть",
             "cells": {
               "dv": 2,
@@ -2759,7 +2759,7 @@
             }
           },
           {
-            "value": "Pyrnut",
+            "value": "pyrnut",
             "label": "Пырнуть",
             "cells": {
               "cost": 1,
@@ -2770,7 +2770,7 @@
             }
           },
           {
-            "value": "Vyrubit_udarom",
+            "value": "vyrubit_udarom",
             "label": "Вырубить ударом",
             "cells": {
               "cost": 2,
@@ -2779,7 +2779,7 @@
             }
           },
           {
-            "value": "Metko_popast_v_zhiznenno_vazhnuyu_chast",
+            "value": "metko_popast_v_zhiznenno_vazhnuyu_chast",
             "label": "Метко попасть в жизненно важную часть",
             "cells": {
               "cost": 5,
@@ -2788,7 +2788,7 @@
             }
           },
           {
-            "value": "Obrushit",
+            "value": "obrushit",
             "label": "Обрушить",
             "cells": {
               "cost": 1,
@@ -2796,7 +2796,7 @@
             }
           },
           {
-            "value": "Metko_popast_i_razoruzhit",
+            "value": "metko_popast_i_razoruzhit",
             "label": "Метко попасть и разоружить",
             "cells": {
               "cost": 5,
@@ -2805,7 +2805,7 @@
             }
           },
           {
-            "value": "Strelyat_iz_ukrytiya",
+            "value": "strelyat_iz_ukrytiya",
             "label": "Стрелять из укрытия",
             "cells": {
               "cost": 2,
@@ -3054,7 +3054,7 @@
         "hint": "Общее у всего оружия: урон, вид урона, значения атаки по дистанциям и навык.",
         "shape": "book",
         "use": "item",
-        "block": "Snaryazhenie",
+        "block": "snaryazhenie",
         "columns": [
           {
             "key": "dv",
@@ -3130,7 +3130,7 @@
         "hint": "Режимы, магазин, патроны и модификации; сам считает прицел, гашение отдачи и поправки патронов.",
         "shape": "book",
         "use": "item",
-        "block": "Snaryazhenie",
+        "block": "snaryazhenie",
         "extends": "weapon",
         "columns": [
           {
@@ -3266,7 +3266,7 @@
         "label": "Пусковая установка",
         "shape": "book",
         "use": "item",
-        "block": "Snaryazhenie",
+        "block": "snaryazhenie",
         "extends": "ranged_weapon",
         "bindings": [
           {
@@ -3382,7 +3382,7 @@
             }
           }
         ],
-        "block": "Snaryazhenie",
+        "block": "snaryazhenie",
         "icon": "🔫",
         "hint": "Режимы, магазин, патроны и модификации; сам считает прицел, гашение отдачи и поправки патронов."
       },
@@ -3425,7 +3425,7 @@
             }
           }
         ],
-        "block": "Snaryazhenie",
+        "block": "snaryazhenie",
         "icon": "🔫",
         "hint": "Клинки, дубинки, кастеты, имплантированное и щиты: атака вплотную."
       },
@@ -3435,7 +3435,7 @@
         "hint": "Значение защиты = рейтинг. Броня не складывается: берётся лучшая; шлем и щит — сверху.",
         "shape": "book",
         "use": "item",
-        "block": "Snaryazhenie",
+        "block": "snaryazhenie",
         "columns": [],
         "extends": "gear",
         "modifiers": [
@@ -3455,7 +3455,7 @@
         "hint": "Преимущество, лечение, простые действия.",
         "shape": "book",
         "use": "action",
-        "block": "Priemy"
+        "block": "priemy"
       },
       "edge_action": {
         "label": "Действие Преимущества",
@@ -3463,7 +3463,7 @@
         "hint": "Лечение за очки Преимущества.",
         "shape": "book",
         "use": "action",
-        "block": "Priemy",
+        "block": "priemy",
         "extends": "action",
         "columns": [
           {
@@ -3651,7 +3651,7 @@
         ],
         "rows": [
           {
-            "value": "Karmannyy_Legkiy_Avtomaticheskiy_pistolet",
+            "value": "karmannyy_legkiy_avtomaticheskiy_pistolet",
             "label": "Карманный/Лёгкий/Автоматический пистолет",
             "cells": {
               "price": 5,
@@ -3659,7 +3659,7 @@
             }
           },
           {
-            "value": "Tyazhelyy_pistolet_Pistolet_pulemet",
+            "value": "tyazhelyy_pistolet_pistolet_pulemet",
             "label": "Тяжёлый пистолет/Пистолет-пулемёт",
             "cells": {
               "price": 10,
@@ -3667,7 +3667,7 @@
             }
           },
           {
-            "value": "Vintovka",
+            "value": "vintovka",
             "label": "Винтовка",
             "cells": {
               "price": 20,
@@ -3676,7 +3676,7 @@
             }
           },
           {
-            "value": "Shoker",
+            "value": "shoker",
             "label": "Шокер",
             "cells": {
               "price": 10,
@@ -3684,7 +3684,7 @@
             }
           },
           {
-            "value": "Inekcionnyy_drotik",
+            "value": "inekcionnyy_drotik",
             "label": "Инъекционный дротик",
             "cells": {
               "price": 5,
@@ -3692,7 +3692,7 @@
             }
           },
           {
-            "value": "Shturmovaya_pushka",
+            "value": "shturmovaya_pushka",
             "label": "Штурмовая пушка",
             "cells": {
               "price": 50,
@@ -3701,7 +3701,7 @@
             }
           },
           {
-            "value": "Pulemet",
+            "value": "pulemet",
             "label": "Пулемёт",
             "cells": {
               "price": 15,
@@ -3710,7 +3710,7 @@
             }
           },
           {
-            "value": "DMSO",
+            "value": "dmso",
             "label": "ДМСО",
             "cells": {
               "price": 10,
@@ -3718,7 +3718,7 @@
             }
           },
           {
-            "value": "Drobovik",
+            "value": "drobovik",
             "label": "Дробовик",
             "cells": {
               "price": 15,
@@ -3751,7 +3751,7 @@
             "value": "shoker",
             "label": "шокер",
             "cells": {
-              "ammo": "Shoker",
+              "ammo": "shoker",
               "mounts": [
                 "sverhu"
               ]
@@ -3761,14 +3761,14 @@
             "value": "karmannyy_pistolet",
             "label": "карманный пистолет",
             "cells": {
-              "ammo": "Karmannyy_Legkiy_Avtomaticheskiy_pistolet"
+              "ammo": "karmannyy_legkiy_avtomaticheskiy_pistolet"
             }
           },
           {
             "value": "legkiy_pistolet",
             "label": "лёгкий пистолет",
             "cells": {
-              "ammo": "Karmannyy_Legkiy_Avtomaticheskiy_pistolet",
+              "ammo": "karmannyy_legkiy_avtomaticheskiy_pistolet",
               "mounts": [
                 "sverhu",
                 "stvol"
@@ -3779,7 +3779,7 @@
             "value": "avtomaticheskiy_pistolet",
             "label": "автоматический пистолет",
             "cells": {
-              "ammo": "Karmannyy_Legkiy_Avtomaticheskiy_pistolet",
+              "ammo": "karmannyy_legkiy_avtomaticheskiy_pistolet",
               "mounts": [
                 "sverhu",
                 "stvol"
@@ -3790,7 +3790,7 @@
             "value": "tyazhelyy_pistolet",
             "label": "тяжёлый пистолет",
             "cells": {
-              "ammo": "Tyazhelyy_pistolet_Pistolet_pulemet",
+              "ammo": "tyazhelyy_pistolet_pistolet_pulemet",
               "mounts": [
                 "sverhu",
                 "stvol"
@@ -3801,7 +3801,7 @@
             "value": "pistolet_pulemet",
             "label": "пистолет-пулемёт",
             "cells": {
-              "ammo": "Tyazhelyy_pistolet_Pistolet_pulemet",
+              "ammo": "tyazhelyy_pistolet_pistolet_pulemet",
               "mounts": [
                 "sverhu",
                 "stvol"
@@ -3812,7 +3812,7 @@
             "value": "drobovik",
             "label": "дробовик",
             "cells": {
-              "ammo": "Drobovik",
+              "ammo": "drobovik",
               "mounts": [
                 "sverhu",
                 "stvol",
@@ -3824,7 +3824,7 @@
             "value": "shturmovaya_vintovka",
             "label": "штурмовая винтовка",
             "cells": {
-              "ammo": "Vintovka",
+              "ammo": "vintovka",
               "mounts": [
                 "sverhu",
                 "stvol",
@@ -3836,7 +3836,7 @@
             "value": "snayperskaya_vintovka",
             "label": "снайперская винтовка",
             "cells": {
-              "ammo": "Vintovka",
+              "ammo": "vintovka",
               "mounts": [
                 "sverhu",
                 "stvol",
@@ -3848,7 +3848,7 @@
             "value": "ohotnichya_vintovka",
             "label": "охотничья винтовка",
             "cells": {
-              "ammo": "Vintovka",
+              "ammo": "vintovka",
               "mounts": [
                 "sverhu",
                 "stvol",
@@ -3860,7 +3860,7 @@
             "value": "legkiy_pulemet",
             "label": "лёгкий пулемёт",
             "cells": {
-              "ammo": "Pulemet",
+              "ammo": "pulemet",
               "mounts": [
                 "sverhu",
                 "stvol",
@@ -3872,7 +3872,7 @@
             "value": "sredniy_pulemet",
             "label": "средний пулемёт",
             "cells": {
-              "ammo": "Pulemet",
+              "ammo": "pulemet",
               "mounts": [
                 "sverhu",
                 "stvol",
@@ -3884,7 +3884,7 @@
             "value": "tyazhelyy_pulemet",
             "label": "тяжёлый пулемёт",
             "cells": {
-              "ammo": "Pulemet",
+              "ammo": "pulemet",
               "mounts": [
                 "sverhu",
                 "stvol",
@@ -3896,7 +3896,7 @@
             "value": "shturmovaya_pushka",
             "label": "штурмовая пушка",
             "cells": {
-              "ammo": "Shturmovaya_pushka",
+              "ammo": "shturmovaya_pushka",
               "mounts": [
                 "sverhu",
                 "stvol",
@@ -3905,10 +3905,10 @@
             }
           },
           {
-            "value": "marker_DMSO",
+            "value": "marker_dmso",
             "label": "маркер ДМСО",
             "cells": {
-              "ammo": "DMSO",
+              "ammo": "dmso",
               "mounts": [
                 "sverhu",
                 "podstvol"
@@ -3919,7 +3919,7 @@
             "value": "drotikovyy_pistolet",
             "label": "дротиковый пистолет",
             "cells": {
-              "ammo": "Inekcionnyy_drotik",
+              "ammo": "inekcionnyy_drotik",
               "mounts": [
                 "sverhu"
               ]
@@ -3929,7 +3929,7 @@
             "value": "drotikovaya_vintovka",
             "label": "дротиковая винтовка",
             "cells": {
-              "ammo": "Inekcionnyy_drotik",
+              "ammo": "inekcionnyy_drotik",
               "mounts": [
                 "sverhu",
                 "podstvol"
@@ -3968,7 +3968,7 @@
         "hint": "Цена, доступность, легальность, рейтинг, Сокрытие, ёмкость — у всех вещей.",
         "shape": "book",
         "use": "item",
-        "block": "Snaryazhenie",
+        "block": "snaryazhenie",
         "columns": [
           {
             "key": "cost",
@@ -4025,7 +4025,7 @@
         "hint": "Ставится в оружие: гасит штраф очереди, даёт прицел, опору, Сокрытие.",
         "shape": "book",
         "use": "item",
-        "block": "Snaryazhenie",
+        "block": "snaryazhenie",
         "extends": "gear",
         "columns": [
           {
@@ -4077,7 +4077,7 @@
         "hint": "Заряжаются в оружие: правят значение атаки, урон и его вид.",
         "shape": "book",
         "use": "item",
-        "block": "Snaryazhenie",
+        "block": "snaryazhenie",
         "extends": "gear",
         "columns": [
           {
@@ -4117,7 +4117,7 @@
         "label": "Взрывчатое",
         "shape": "book",
         "use": "item",
-        "block": "Snaryazhenie",
+        "block": "snaryazhenie",
         "extends": "gear",
         "columns": [
           {
@@ -4185,7 +4185,7 @@
         "hint": "Урон по кольцам от эпицентра: эпицентр, вплотную, близко; дальше взрыва — ничего.",
         "shape": "book",
         "use": "item",
-        "block": "Snaryazhenie",
+        "block": "snaryazhenie",
         "extends": "blast_item",
         "columns": [
           {
@@ -4216,7 +4216,7 @@
         "icon": "💣",
         "shape": "book",
         "use": "item",
-        "block": "Snaryazhenie",
+        "block": "snaryazhenie",
         "extends": "blast_item",
         "columns": [
           {
@@ -4232,7 +4232,7 @@
         "hint": "Взрывпакет: рейтинг задаёт и силу, и количество.",
         "shape": "book",
         "use": "item",
-        "block": "Snaryazhenie",
+        "block": "snaryazhenie",
         "extends": "blast_item",
         "columns": [
           {
@@ -4286,7 +4286,7 @@
         "hint": "Прибавка к значению защиты сверх брони.",
         "shape": "book",
         "use": "item",
-        "block": "Snaryazhenie",
+        "block": "snaryazhenie",
         "extends": "gear",
         "columns": [],
         "modifiers": [
@@ -4306,7 +4306,7 @@
         "hint": "Прибавка к значению защиты сверх брони; им можно бить.",
         "shape": "book",
         "use": "item",
-        "block": "Snaryazhenie",
+        "block": "snaryazhenie",
         "extends": "melee",
         "columns": [],
         "modifiers": [
@@ -4326,7 +4326,7 @@
         "hint": "Ставится в броню, занимает ёмкость; защита от стихии гасит состояние рейтинг раз.",
         "shape": "book",
         "use": "item",
-        "block": "Snaryazhenie",
+        "block": "snaryazhenie",
         "extends": "gear",
         "columns": [
           {
@@ -4350,7 +4350,7 @@
         "hint": "Одежда без защиты.",
         "shape": "book",
         "use": "item",
-        "block": "Snaryazhenie",
+        "block": "snaryazhenie",
         "extends": "gear",
         "columns": []
       },
@@ -4608,7 +4608,7 @@
             }
           },
           {
-            "value": "delta_2",
+            "value": "delta",
             "label": "дельта",
             "cells": {
               "ess": 0.5,
@@ -4688,7 +4688,7 @@
         "hint": "Кибер- и биоимпланты: Сущность, сорт (б/у, альфа, бета, дельта), правки характеристик, наборов, защиты.",
         "shape": "book",
         "use": "item",
-        "block": "Implanty",
+        "block": "implanty",
         "extends": "gear",
         "columns": [
           {
@@ -4768,7 +4768,7 @@
         "hint": "Органические импланты: Сущность меньше, цена выше; культивированные — отдельным видом.",
         "shape": "book",
         "use": "item",
-        "block": "Implanty",
+        "block": "implanty",
         "extends": "implant",
         "columns": [
           {
@@ -4787,7 +4787,7 @@
         "hint": "Замена конечности: своя Сила и Проворство (база 2), ёмкость под аксессуары, +1 ячейка здоровья.",
         "shape": "book",
         "use": "item",
-        "block": "Implanty",
+        "block": "implanty",
         "extends": "implant",
         "columns": [
           {
@@ -4825,7 +4825,7 @@
         "hint": "Ставится в киберконечность, занимает её ёмкость.",
         "shape": "book",
         "use": "item",
-        "block": "Implanty",
+        "block": "implanty",
         "extends": "implant",
         "columns": []
       },
@@ -4835,7 +4835,7 @@
         "hint": "Оружие в теле: атакует как оружие, стоит Сущность.",
         "shape": "book",
         "use": "item",
-        "block": "Implanty",
+        "block": "implanty",
         "extends": "melee",
         "columns": [
           {
@@ -4903,7 +4903,7 @@
         "hint": "Положительное стоит карму, отрицательное даёт; уровни и выбор (навык, характеристика) — у экземпляра.",
         "shape": "book",
         "use": "item",
-        "block": "Kachestva",
+        "block": "kachestva",
         "columns": [
           {
             "key": "kind",
@@ -4958,7 +4958,7 @@
         "hint": "Стоит очки способностей (ОС), уровни — у экземпляра.",
         "shape": "book",
         "use": "item",
-        "block": "Sposobnosti_adepta",
+        "block": "sposobnosti_adepta",
         "columns": [
           {
             "key": "pp",
@@ -5007,7 +5007,7 @@
         "hint": "Цена в месяц.",
         "shape": "book",
         "use": "item",
-        "block": "Snaryazhenie",
+        "block": "snaryazhenie",
         "extends": "gear",
         "columns": []
       },
@@ -5083,14 +5083,14 @@
         ],
         "rows": [
           {
-            "value": "none",
+            "value": "net",
             "label": "нет",
             "cells": {
               "init_dice": 0
             }
           },
           {
-            "value": "DR",
+            "value": "dr",
             "label": "ДР",
             "cells": {
               "init_dice": 0,
@@ -5098,7 +5098,7 @@
             }
           },
           {
-            "value": "holodnaya_VR",
+            "value": "holodnaya_vr",
             "label": "холодная ВР",
             "cells": {
               "init_dice": 1,
@@ -5110,7 +5110,7 @@
             }
           },
           {
-            "value": "goryachaya_VR",
+            "value": "goryachaya_vr",
             "label": "горячая ВР",
             "cells": {
               "init_dice": 2,
@@ -5153,7 +5153,7 @@
         ],
         "rows": [
           {
-            "value": "P",
+            "value": "p",
             "label": "П",
             "cells": {
               "device": {
@@ -5169,7 +5169,7 @@
             }
           },
           {
-            "value": "U",
+            "value": "u",
             "label": "У",
             "cells": {
               "device": {
@@ -5185,7 +5185,7 @@
             }
           },
           {
-            "value": "VM",
+            "value": "vm",
             "label": "ВМ",
             "cells": {
               "device": {
@@ -5201,7 +5201,7 @@
             }
           },
           {
-            "value": "SE",
+            "value": "se",
             "label": "СЭ",
             "cells": {
               "device": {
@@ -5239,7 +5239,7 @@
             "label": "кибердека"
           },
           {
-            "value": "RPU",
+            "value": "rpu",
             "label": "РПУ",
             "cells": {
               "noise_per_rating": 1
@@ -5290,7 +5290,7 @@
         ],
         "rows": [
           {
-            "value": "Proniknovenie",
+            "value": "proniknovenie",
             "label": "Проникновение",
             "cells": {
               "penalty": {
@@ -5302,7 +5302,7 @@
             }
           },
           {
-            "value": "Uskolzanie",
+            "value": "uskolzanie",
             "label": "Ускользание",
             "cells": {
               "penalty": {
@@ -5314,7 +5314,7 @@
             }
           },
           {
-            "value": "none",
+            "value": "net",
             "label": "нет",
             "cells": {
               "penalty": 0
@@ -5392,7 +5392,7 @@
         ],
         "rows": [
           {
-            "value": "Logika_VM",
+            "value": "logika_vm",
             "label": "Логика + ВМ",
             "cells": {
               "persona": {
@@ -5404,7 +5404,7 @@
             }
           },
           {
-            "value": "Volya_SE",
+            "value": "volya_se",
             "label": "Воля + СЭ",
             "cells": {
               "persona": {
@@ -5416,7 +5416,7 @@
             }
           },
           {
-            "value": "Volya_U",
+            "value": "volya_u",
             "label": "Воля + У",
             "cells": {
               "persona": {
@@ -5428,7 +5428,7 @@
             }
           },
           {
-            "value": "Logika_SE",
+            "value": "logika_se",
             "label": "Логика + СЭ",
             "cells": {
               "persona": {
@@ -5440,7 +5440,7 @@
             }
           },
           {
-            "value": "Intuiciya_SE",
+            "value": "intuiciya_se",
             "label": "Интуиция + СЭ",
             "cells": {
               "persona": {
@@ -5452,7 +5452,7 @@
             }
           },
           {
-            "value": "VM_SE",
+            "value": "vm_se",
             "label": "ВМ + СЭ",
             "cells": {
               "persona": {
@@ -5464,7 +5464,7 @@
             }
           },
           {
-            "value": "Harizma_VM",
+            "value": "harizma_vm",
             "label": "Харизма + ВМ",
             "cells": {
               "persona": {
@@ -5476,7 +5476,7 @@
             }
           },
           {
-            "value": "Intuiciya_VM",
+            "value": "intuiciya_vm",
             "label": "Интуиция + ВМ",
             "cells": {
               "persona": {
@@ -5488,7 +5488,7 @@
             }
           },
           {
-            "value": "VM_reyting",
+            "value": "vm_reyting",
             "label": "ВМ + рейтинг",
             "cells": {
               "persona": {
@@ -5500,7 +5500,7 @@
             }
           },
           {
-            "value": "Volya_P",
+            "value": "volya_p",
             "label": "Воля + П",
             "cells": {
               "persona": {
@@ -5512,7 +5512,7 @@
             }
           },
           {
-            "value": "Volya_VM",
+            "value": "volya_vm",
             "label": "Воля + ВМ",
             "cells": {
               "persona": {
@@ -5534,7 +5534,7 @@
             }
           },
           {
-            "value": "none",
+            "value": "net",
             "label": "нет",
             "cells": {
               "persona": 0,
@@ -5543,7 +5543,7 @@
             }
           },
           {
-            "value": "Reyting_SE",
+            "value": "reyting_se",
             "label": "Рейтинг + СЭ",
             "cells": {
               "persona": {
@@ -5562,7 +5562,7 @@
         "hint": "Коммуникатор, кибердека, РПУ: задают персоне рейтинг и П/У/ВМ/СЭ, пока надето.",
         "shape": "book",
         "use": "item",
-        "block": "Matrica",
+        "block": "matrica",
         "extends": "gear",
         "columns": [
           {
@@ -5677,7 +5677,7 @@
         "hint": "Ставится в устройство; правки персоны и действий Матрицы.",
         "shape": "book",
         "use": "item",
-        "block": "Matrica",
+        "block": "matrica",
         "extends": "gear",
         "columns": [
           {
@@ -5712,7 +5712,7 @@
         "hint": "Аксессуары, RFID, связь, софт, инструменты.",
         "shape": "book",
         "use": "item",
-        "block": "Snaryazhenie",
+        "block": "snaryazhenie",
         "extends": "gear",
         "columns": [
           {
@@ -5728,7 +5728,7 @@
         "hint": "Оптические устройства и визуальные усиления.",
         "shape": "book",
         "use": "item",
-        "block": "Snaryazhenie",
+        "block": "snaryazhenie",
         "extends": "gear",
         "columns": []
       },
@@ -5738,7 +5738,7 @@
         "hint": "Аудиоустройства и звуковые усиления.",
         "shape": "book",
         "use": "item",
-        "block": "Snaryazhenie",
+        "block": "snaryazhenie",
         "extends": "gear",
         "columns": []
       },
@@ -5748,7 +5748,7 @@
         "hint": "Сенсоры, пакеты, функции.",
         "shape": "book",
         "use": "item",
-        "block": "Snaryazhenie",
+        "block": "snaryazhenie",
         "extends": "gear",
         "columns": []
       },
@@ -5758,7 +5758,7 @@
         "hint": "Охранные устройства, замки, наручники.",
         "shape": "book",
         "use": "item",
-        "block": "Snaryazhenie",
+        "block": "snaryazhenie",
         "extends": "gear",
         "columns": []
       },
@@ -5768,7 +5768,7 @@
         "hint": "Средства взлома и проникновения.",
         "shape": "book",
         "use": "item",
-        "block": "Snaryazhenie",
+        "block": "snaryazhenie",
         "extends": "gear",
         "columns": []
       },
@@ -5778,7 +5778,7 @@
         "hint": "Снаряжение для выживания, химикаты, кошка.",
         "shape": "book",
         "use": "item",
-        "block": "Snaryazhenie",
+        "block": "snaryazhenie",
         "extends": "gear",
         "columns": []
       },
@@ -5788,7 +5788,7 @@
         "hint": "ГРЕХ, лицензии, кредстики.",
         "shape": "book",
         "use": "item",
-        "block": "Snaryazhenie",
+        "block": "snaryazhenie",
         "extends": "gear",
         "columns": [
           {
@@ -5802,7 +5802,7 @@
         "label": "Матрица: действие",
         "shape": "book",
         "use": "action",
-        "block": "Matrica",
+        "block": "matrica",
         "columns": [
           {
             "key": "pool",
@@ -5817,7 +5817,7 @@
             "label": "Защита",
             "kind": "choice",
             "from": "matrix_defenses",
-            "default": "none"
+            "default": "net"
           },
           {
             "key": "illegal",
@@ -5837,7 +5837,7 @@
             "label": "Связано с",
             "kind": "choice",
             "from": "matrix_links",
-            "default": "none"
+            "default": "net"
           },
           {
             "key": "action",
@@ -5853,7 +5853,7 @@
         "hint": "Действия Матрицы книги: набор, защита, законность, связь.",
         "shape": "book",
         "use": "action",
-        "block": "Matrica",
+        "block": "matrica",
         "extends": "matrix_base",
         "columns": [
           {
@@ -5888,13 +5888,13 @@
         "label": "Действие техноманта",
         "shape": "book",
         "use": "action",
-        "block": "Matrica"
+        "block": "matrica"
       },
       "matrix_access_action": {
         "label": "Взлом доступа",
         "shape": "book",
         "use": "action",
-        "block": "Matrica",
+        "block": "matrica",
         "extends": "matrix_base",
         "bindings": [
           {
@@ -5919,7 +5919,7 @@
             "label": "Защита",
             "kind": "choice",
             "from": "matrix_defenses",
-            "default": "none"
+            "default": "net"
           },
           {
             "key": "text",
@@ -5951,14 +5951,14 @@
         ],
         "rows": [
           {
-            "value": "none",
+            "value": "net",
             "label": "нет"
           },
           {
             "value": "vzryvnoy",
             "label": "взрывной",
             "cells": {
-              "defense": "Logika_SE",
+              "defense": "logika_se",
               "text": "Урон Матрицы = рейтинг сервера, цель залипает.",
               "dmg": {
                 "expr": "@deystvuyuschiy.host_rating"
@@ -5970,7 +5970,7 @@
             "value": "vyslezhivayuschiy",
             "label": "выслеживающий",
             "cells": {
-              "defense": "Volya_U",
+              "defense": "volya_u",
               "text": "Раскрывает физическое местоположение цели."
             }
           },
@@ -5978,7 +5978,7 @@
             "value": "dozornyy",
             "label": "дозорный",
             "cells": {
-              "defense": "Volya_U",
+              "defense": "volya_u",
               "text": "Внимание в Матрице раз в минуту (рейтинг × 2), урона нет."
             }
           },
@@ -5986,16 +5986,16 @@
             "value": "edkiy",
             "label": "едкий",
             "cells": {
-              "defense": "Volya_SE",
+              "defense": "volya_se",
               "text": "Сетевой экран цели −1 за чистый успех.",
-              "cut": "SE"
+              "cut": "se"
             }
           },
           {
             "value": "iskryaschiy",
             "label": "искрящий",
             "cells": {
-              "defense": "Intuiciya_SE",
+              "defense": "intuiciya_se",
               "text": "Биоотдача: рейтинг сервера + чистые успехи.",
               "dmg": 0,
               "bio": {
@@ -6007,7 +6007,7 @@
             "value": "lipnuschiy",
             "label": "липнущий",
             "cells": {
-              "defense": "Logika_SE",
+              "defense": "logika_se",
               "text": "Залипание.",
               "lock": true
             }
@@ -6016,16 +6016,16 @@
             "value": "podavlyayuschiy",
             "label": "подавляющий",
             "cells": {
-              "defense": "Volya_P",
+              "defense": "volya_p",
               "text": "Проникновение цели −1 за чистый успех.",
-              "cut": "P"
+              "cut": "p"
             }
           },
           {
             "value": "probivayuschiy",
             "label": "пробивающий",
             "cells": {
-              "defense": "Volya_SE",
+              "defense": "volya_se",
               "text": "Цель перезагружает устройство на следующем ходу, если не залипла."
             }
           },
@@ -6033,25 +6033,25 @@
             "value": "proyavlyayuschiy",
             "label": "проявляющий",
             "cells": {
-              "defense": "Volya_U",
+              "defense": "volya_u",
               "text": "Ускользание цели −1 за чистый успех.",
-              "cut": "U"
+              "cut": "u"
             }
           },
           {
             "value": "skovyvayuschiy",
             "label": "сковывающий",
             "cells": {
-              "defense": "Volya_VM",
+              "defense": "volya_vm",
               "text": "Вычислительная мощность цели −1 за чистый успех; при 0 — никаких действий в Матрице.",
-              "cut": "VM"
+              "cut": "vm"
             }
           },
           {
             "value": "sokrushayuschiy",
             "label": "сокрушающий",
             "cells": {
-              "defense": "Intuiciya_SE",
+              "defense": "intuiciya_se",
               "text": "Останавливает одну случайную программу до перезагрузки."
             }
           },
@@ -6059,7 +6059,7 @@
             "value": "ubivayuschiy",
             "label": "убивающий",
             "cells": {
-              "defense": "Intuiciya_SE",
+              "defense": "intuiciya_se",
               "text": "Урон Матрицы: чистые успехи + рейтинг сервера.",
               "dmg": {
                 "expr": "@deystvuyuschiy.host_rating + @otpor_itog.chistye"
@@ -6070,7 +6070,7 @@
             "value": "chernyy",
             "label": "чёрный",
             "cells": {
-              "defense": "Intuiciya_SE",
+              "defense": "intuiciya_se",
               "text": "Рейтинг сервера + чистые успехи урона и в Матрице, и биоотдачей.",
               "dmg": {
                 "expr": "@deystvuyuschiy.host_rating + @otpor_itog.chistye"
@@ -6094,7 +6094,7 @@
         ],
         "rows": [
           {
-            "value": "none",
+            "value": "net",
             "label": "нет",
             "cells": {
               "attr": 0
@@ -6172,7 +6172,7 @@
         ],
         "rows": [
           {
-            "value": "none",
+            "value": "net",
             "label": "нет",
             "cells": {
               "pp_max": 0
@@ -6317,7 +6317,7 @@
         ],
         "rows": [
           {
-            "value": "none",
+            "value": "net",
             "label": "нет"
           },
           {
@@ -6372,7 +6372,7 @@
         ],
         "rows": [
           {
-            "value": "Volya_Intuiciya",
+            "value": "volya_intuiciya",
             "label": "Воля + Интуиция",
             "cells": {
               "pool": {
@@ -6382,7 +6382,7 @@
             }
           },
           {
-            "value": "Reakciya_Volya",
+            "value": "reakciya_volya",
             "label": "Реакция + Воля",
             "cells": {
               "pool": {
@@ -6392,7 +6392,7 @@
             }
           },
           {
-            "value": "Telo_Volya",
+            "value": "telo_volya",
             "label": "Тело + Воля",
             "cells": {
               "pool": {
@@ -6402,7 +6402,7 @@
             }
           },
           {
-            "value": "Logika_Volya",
+            "value": "logika_volya",
             "label": "Логика + Воля",
             "cells": {
               "pool": {
@@ -6412,7 +6412,7 @@
             }
           },
           {
-            "value": "Volya",
+            "value": "volya",
             "label": "Воля",
             "cells": {
               "pool": {
@@ -6422,7 +6422,7 @@
             }
           },
           {
-            "value": "Intuiciya_Logika",
+            "value": "intuiciya_logika",
             "label": "Интуиция + Логика",
             "cells": {
               "pool": {
@@ -6432,7 +6432,7 @@
             }
           },
           {
-            "value": "Telo",
+            "value": "telo",
             "label": "Тело",
             "cells": {
               "pool": {
@@ -6442,7 +6442,7 @@
             }
           },
           {
-            "value": "Telo_Sila",
+            "value": "telo_sila",
             "label": "Тело + Сила",
             "cells": {
               "pool": {
@@ -6452,7 +6452,7 @@
             }
           },
           {
-            "value": "Volya_vybrannaya_harakteristika",
+            "value": "volya_vybrannaya_harakteristika",
             "label": "Воля + выбранная характеристика",
             "cells": {
               "pool": {
@@ -6490,7 +6490,7 @@
             }
           },
           {
-            "value": "Soprotivlenie_materialov",
+            "value": "soprotivlenie_materialov",
             "label": "Сопротивление материалов",
             "cells": {
               "versus": {
@@ -6500,7 +6500,7 @@
             }
           },
           {
-            "value": "Mosch_istochnika_2",
+            "value": "mosch_istochnika_2",
             "label": "Мощь источника × 2",
             "cells": {
               "versus": {
@@ -6510,7 +6510,7 @@
             }
           },
           {
-            "value": "none",
+            "value": "net",
             "label": "нет",
             "cells": {
               "versus": 0
@@ -6524,19 +6524,19 @@
         "columns": [],
         "rows": [
           {
-            "value": "K",
+            "value": "k",
             "label": "К"
           },
           {
-            "value": "V",
+            "value": "v",
             "label": "В"
           },
           {
-            "value": "V_o",
+            "value": "v_o",
             "label": "В(о)"
           },
           {
-            "value": "O",
+            "value": "o",
             "label": "О"
           }
         ]
@@ -6547,11 +6547,11 @@
         "columns": [],
         "rows": [
           {
-            "value": "A",
+            "value": "a",
             "label": "А"
           },
           {
-            "value": "F",
+            "value": "f",
             "label": "Ф"
           }
         ]
@@ -6569,22 +6569,22 @@
         ],
         "rows": [
           {
-            "value": "M",
+            "value": "m",
             "label": "М"
           },
           {
-            "value": "D",
+            "value": "d",
             "label": "Д",
             "cells": {
               "sustained": true
             }
           },
           {
-            "value": "O",
+            "value": "o",
             "label": "О"
           },
           {
-            "value": "P",
+            "value": "p",
             "label": "П"
           }
         ]
@@ -6616,18 +6616,18 @@
         ],
         "rows": [
           {
-            "value": "none",
+            "value": "net",
             "label": "нет"
           },
           {
-            "value": "fire",
+            "value": "ogon",
             "label": "огонь",
             "cells": {
               "status": "burning"
             }
           },
           {
-            "value": "cold",
+            "value": "holod",
             "label": "холод",
             "cells": {
               "status": "chilled"
@@ -6682,7 +6682,7 @@
             "label": "урон"
           },
           {
-            "value": "healing",
+            "value": "lechenie",
             "label": "лечение",
             "cells": {
               "heals": true,
@@ -6715,7 +6715,7 @@
             "label": "состояние"
           },
           {
-            "value": "none",
+            "value": "net",
             "label": "нет"
           }
         ]
@@ -6773,7 +6773,7 @@
         ],
         "rows": [
           {
-            "value": "Istochnik_prizyva",
+            "value": "istochnik_prizyva",
             "label": "Источник призыва",
             "cells": {
               "category": "Духовные",
@@ -6785,7 +6785,7 @@
             }
           },
           {
-            "value": "Istochnik_izgnaniya",
+            "value": "istochnik_izgnaniya",
             "label": "Источник изгнания",
             "cells": {
               "category": "Духовные",
@@ -6797,7 +6797,7 @@
             }
           },
           {
-            "value": "Istochnik_kontrzaklinaniya",
+            "value": "istochnik_kontrzaklinaniya",
             "label": "Источник контрзаклинания",
             "cells": {
               "category": "Заклинательные",
@@ -6809,7 +6809,7 @@
             }
           },
           {
-            "value": "Istochnik_podderzhaniya",
+            "value": "istochnik_podderzhaniya",
             "label": "Источник поддержания",
             "cells": {
               "category": "Заклинательные",
@@ -6821,7 +6821,7 @@
             }
           },
           {
-            "value": "Istochnik_ritualnogo_zaklinaniya",
+            "value": "istochnik_ritualnogo_zaklinaniya",
             "label": "Источник ритуального заклинания",
             "cells": {
               "category": "Заклинательные",
@@ -6833,7 +6833,7 @@
             }
           },
           {
-            "value": "Istochnik_sotvoreniya_zaklinaniy",
+            "value": "istochnik_sotvoreniya_zaklinaniy",
             "label": "Источник сотворения заклинаний",
             "cells": {
               "category": "Заклинательные",
@@ -6845,7 +6845,7 @@
             }
           },
           {
-            "value": "Alhimicheskiy_istochnik",
+            "value": "alhimicheskiy_istochnik",
             "label": "Алхимический источник",
             "cells": {
               "category": "Зачаровывающие",
@@ -6857,7 +6857,7 @@
             }
           },
           {
-            "value": "Istochnik_snyatiya_zacharovaniya",
+            "value": "istochnik_snyatiya_zacharovaniya",
             "label": "Источник снятия зачарования",
             "cells": {
               "category": "Зачаровывающие",
@@ -6869,7 +6869,7 @@
             }
           },
           {
-            "value": "Istochnik_izmeneniya_zaklinaniy",
+            "value": "istochnik_izmeneniya_zaklinaniy",
             "label": "Источник изменения заклинаний",
             "cells": {
               "category": "Метамагические",
@@ -6881,7 +6881,7 @@
             }
           },
           {
-            "value": "Istochnik_rasplyvchatogo_sleda",
+            "value": "istochnik_rasplyvchatogo_sleda",
             "label": "Источник расплывчатого следа",
             "cells": {
               "category": "Метамагические",
@@ -6893,7 +6893,7 @@
             }
           },
           {
-            "value": "Koncentriruyuschiy_istochnik",
+            "value": "koncentriruyuschiy_istochnik",
             "label": "Концентрирующий источник",
             "cells": {
               "category": "Метамагические",
@@ -6905,7 +6905,7 @@
             }
           },
           {
-            "value": "Maskiruyuschiy_istochnik",
+            "value": "maskiruyuschiy_istochnik",
             "label": "Маскирующий источник",
             "cells": {
               "category": "Метамагические",
@@ -6917,7 +6917,7 @@
             }
           },
           {
-            "value": "Istochnik_sily",
+            "value": "istochnik_sily",
             "label": "Источник силы",
             "cells": {
               "category": "Силы",
@@ -6929,7 +6929,7 @@
             }
           },
           {
-            "value": "Oruzheynyy_istochnik",
+            "value": "oruzheynyy_istochnik",
             "label": "Оружейный источник",
             "cells": {
               "category": "Оружейные",
@@ -6941,7 +6941,7 @@
             }
           },
           {
-            "value": "Istochnik_ci",
+            "value": "istochnik_ci",
             "label": "Источник ци",
             "cells": {
               "category": "Ци",
@@ -7237,7 +7237,7 @@
         ],
         "rows": [
           {
-            "value": "Kazhdyy_chas_so_vremeni_aktivnosti_astralnoy_svyazi",
+            "value": "kazhdyy_chas_so_vremeni_aktivnosti_astralnoy_svyazi",
             "label": "Каждый час со времени активности астральной связи",
             "cells": {
               "mod": 1,
@@ -7245,14 +7245,14 @@
             }
           },
           {
-            "value": "Cel_za_magicheskim_barerom",
+            "value": "cel_za_magicheskim_barerom",
             "label": "Цель за магическим барьером",
             "cells": {
               "text": "К порогу прибавляется Мощь барьера"
             }
           },
           {
-            "value": "Vyslezhivanie_hozyaina_cherez_duh",
+            "value": "vyslezhivanie_hozyaina_cherez_duh",
             "label": "Выслеживание хозяина через дух",
             "cells": {
               "mod": 2,
@@ -7283,7 +7283,7 @@
         ],
         "rows": [
           {
-            "value": "Zaklinanie_Magicheskiy_barer",
+            "value": "zaklinanie_magicheskiy_barer",
             "label": "Заклинание Магический барьер",
             "cells": {
               "planes": "один из двух",
@@ -7292,7 +7292,7 @@
             }
           },
           {
-            "value": "Magicheskaya_masterskaya",
+            "value": "magicheskaya_masterskaya",
             "label": "Магическая мастерская",
             "cells": {
               "planes": "оба",
@@ -7301,7 +7301,7 @@
             }
           },
           {
-            "value": "Ritual_Krug_zaschity",
+            "value": "ritual_krug_zaschity",
             "label": "Ритуал Круг защиты",
             "cells": {
               "planes": "оба",
@@ -7310,7 +7310,7 @@
             }
           },
           {
-            "value": "Ritual_Obereg",
+            "value": "ritual_obereg",
             "label": "Ритуал Оберег",
             "cells": {
               "planes": "оба",
@@ -7337,7 +7337,7 @@
         ],
         "rows": [
           {
-            "value": "Estestvennye_materialy",
+            "value": "estestvennye_materialy",
             "label": "Естественные материалы",
             "cells": {
               "resistance": 3,
@@ -7345,7 +7345,7 @@
             }
           },
           {
-            "value": "Nizkotehnologichnye_predmety_i_materialy",
+            "value": "nizkotehnologichnye_predmety_i_materialy",
             "label": "Низкотехнологичные предметы и материалы",
             "cells": {
               "resistance": 6,
@@ -7353,7 +7353,7 @@
             }
           },
           {
-            "value": "Vysokotehnologichnye_predmety_i_materialy",
+            "value": "vysokotehnologichnye_predmety_i_materialy",
             "label": "Высокотехнологичные предметы и материалы",
             "cells": {
               "resistance": 9,
@@ -7361,7 +7361,7 @@
             }
           },
           {
-            "value": "Gotovaya_produkciya",
+            "value": "gotovaya_produkciya",
             "label": "Готовая продукция",
             "cells": {
               "resistance": 15,
@@ -7376,7 +7376,7 @@
         "hint": "Заклинание книги: категория, дистанция, тип, длительность, СИ; кнопка «Сотворить».",
         "shape": "book",
         "use": "item",
-        "block": "Magiya",
+        "block": "magiya",
         "columns": [
           {
             "key": "category",
@@ -7431,14 +7431,14 @@
             "label": "Стихия",
             "kind": "choice",
             "from": "spell_elements",
-            "default": "none"
+            "default": "net"
           },
           {
             "key": "defense",
             "label": "Защита",
             "kind": "choice",
             "from": "spell_defenses",
-            "default": "none"
+            "default": "net"
           },
           {
             "key": "threshold",
@@ -7450,7 +7450,7 @@
             "label": "Исход",
             "kind": "choice",
             "from": "spell_outcomes",
-            "default": "none"
+            "default": "net"
           },
           {
             "key": "boost_field",
@@ -7514,7 +7514,7 @@
         "hint": "Ритуальное заклинание: порог, длительность.",
         "shape": "book",
         "use": "item",
-        "block": "Magiya",
+        "block": "magiya",
         "columns": [
           {
             "key": "keywords",
@@ -7550,7 +7550,7 @@
         "hint": "Источник маны: Мощь = рейтинг; прибавляет Мощь к своим проверкам, пока надет.",
         "shape": "book",
         "use": "item",
-        "block": "Magiya",
+        "block": "magiya",
         "extends": "gear",
         "columns": [
           {
@@ -7619,7 +7619,7 @@
         "hint": "Реагенты, формулы, материалы.",
         "shape": "book",
         "use": "item",
-        "block": "Magiya",
+        "block": "magiya",
         "extends": "gear",
         "columns": []
       },
@@ -7629,7 +7629,7 @@
         "hint": "Метамагия инициированного.",
         "shape": "book",
         "use": "item",
-        "block": "Magiya",
+        "block": "magiya",
         "columns": [
           {
             "key": "adept_only",
@@ -7644,7 +7644,7 @@
         "hint": "Дух-наставник (качество): бонусы и недостаток.",
         "shape": "book",
         "use": "item",
-        "block": "Magiya",
+        "block": "magiya",
         "columns": [
           {
             "key": "bonus_all",
@@ -7674,7 +7674,7 @@
         "hint": "Призыв, изгнание, контрзаклинание, ритуал, астрал.",
         "shape": "book",
         "use": "action",
-        "block": "Magiya"
+        "block": "magiya"
       },
       "complex_form": {
         "label": "Сложная форма",
@@ -7682,7 +7682,7 @@
         "hint": "Сложная форма техноманта: угасание, длительность, исход.",
         "shape": "book",
         "use": "item",
-        "block": "Matrica",
+        "block": "matrica",
         "columns": [
           {
             "key": "fading",
@@ -7714,7 +7714,7 @@
             "label": "Защита",
             "kind": "choice",
             "from": "matrix_defenses",
-            "default": "none"
+            "default": "net"
           },
           {
             "key": "threshold",
@@ -7726,7 +7726,7 @@
             "label": "Исход",
             "kind": "choice",
             "from": "form_outcomes",
-            "default": "none"
+            "default": "net"
           },
           {
             "key": "net_hits",
@@ -7768,7 +7768,7 @@
         "hint": "Способность спрайта: тратит задачу.",
         "shape": "book",
         "use": "item",
-        "block": "Matrica",
+        "block": "matrica",
         "columns": [
           {
             "key": "action",
@@ -7795,7 +7795,7 @@
             "label": "Защита",
             "kind": "choice",
             "from": "matrix_defenses",
-            "default": "none"
+            "default": "net"
           },
           {
             "key": "status",
@@ -7832,7 +7832,7 @@
         "hint": "Отголосок погружения.",
         "shape": "book",
         "use": "item",
-        "block": "Matrica",
+        "block": "matrica",
         "columns": [
           {
             "key": "times",
@@ -10347,7 +10347,7 @@
         "hint": "Вождение, таран, захват управления.",
         "shape": "book",
         "use": "action",
-        "block": "Transport"
+        "block": "transport"
       },
       "autosoft": {
         "label": "Автософт",
@@ -10355,7 +10355,7 @@
         "hint": "Программа дрона: работает как навык рейтинга.",
         "shape": "book",
         "use": "item",
-        "block": "Transport",
+        "block": "transport",
         "extends": "gear",
         "columns": [
           {
@@ -10464,7 +10464,7 @@
         "hint": "Риггерский интерфейс, станки.",
         "shape": "book",
         "use": "item",
-        "block": "Transport",
+        "block": "transport",
         "extends": "gear",
         "columns": [
           {
@@ -10491,7 +10491,7 @@
         "hint": "Путь введения, скорость, длительность, сила, эффект (стр. 121–123).",
         "shape": "book",
         "use": "item",
-        "block": "Snaryazhenie",
+        "block": "snaryazhenie",
         "extends": "gear",
         "columns": [
           {
@@ -10551,7 +10551,7 @@
         "hint": "Срок — игровое время; по окончании — отходняк (стр. 124–125).",
         "shape": "book",
         "use": "item",
-        "block": "Snaryazhenie",
+        "block": "snaryazhenie",
         "extends": "gear",
         "columns": [
           {
@@ -14343,7 +14343,7 @@
         "hint": "Заготовки, репутация, розыск, замки, сенсоры.",
         "shape": "book",
         "use": "action",
-        "block": "Mir"
+        "block": "mir"
       },
       "creature_power": {
         "label": "Способность существа",
@@ -14351,7 +14351,7 @@
         "hint": "Способность существа (стр. 221–228).",
         "shape": "book",
         "use": "item",
-        "block": "Mir",
+        "block": "mir",
         "columns": [
           {
             "key": "action",
@@ -14387,7 +14387,7 @@
         "hint": "Уязвимость (стр. 229).",
         "shape": "book",
         "use": "item",
-        "block": "Mir",
+        "block": "mir",
         "columns": []
       },
       "magic_skills": {
@@ -14544,11 +14544,11 @@
         ],
         "rows": [
           {
-            "value": "uron_Matricy",
+            "value": "uron_matricy",
             "label": "урон Матрицы"
           },
           {
-            "value": "lechenie_Matricy",
+            "value": "lechenie_matricy",
             "label": "лечение Матрицы"
           },
           {
@@ -14556,11 +14556,11 @@
             "label": "шум цели +"
           },
           {
-            "value": "PN_celi",
+            "value": "pn_celi",
             "label": "ПН цели +"
           },
           {
-            "value": "svoy_PN",
+            "value": "svoy_pn",
             "label": "свой ПН −"
           },
           {
@@ -14583,7 +14583,7 @@
             }
           },
           {
-            "value": "harakteristika_2",
+            "value": "harakteristika",
             "label": "характеристика −",
             "cells": {
               "status": "form_diffusion",
@@ -14594,7 +14594,7 @@
             }
           },
           {
-            "value": "none",
+            "value": "net",
             "label": "нет"
           }
         ]
@@ -14741,7 +14741,7 @@
         ],
         "rows": [
           {
-            "value": "Uklonitsya",
+            "value": "uklonitsya",
             "label": "Уклониться",
             "cells": {
               "status": "dodge_ready",
@@ -14750,7 +14750,7 @@
             }
           },
           {
-            "value": "Blokirovat",
+            "value": "blokirovat",
             "label": "Блокировать",
             "cells": {
               "status": "block_ready",
@@ -14759,7 +14759,7 @@
             }
           },
           {
-            "value": "Gluhaya_oborona",
+            "value": "gluhaya_oborona",
             "label": "Глухая оборона",
             "cells": {
               "status": "full_defense",
@@ -14779,7 +14779,7 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "kind": "sheet",
             "many": true
           }
@@ -14790,7 +14790,7 @@
         ],
         "said": {
           "deystvuyuschiy": "действующий",
-          "aims": "цели",
+          "celi": "цели",
           "cel": "цель",
           "vred": "вред"
         }
@@ -14813,7 +14813,7 @@
           "ataka"
         ]
       },
-      "deystvie_v_Matrice": {
+      "deystvie_v_matrice": {
         "label": "действие в Матрице",
         "inputs": [
           {
@@ -14821,7 +14821,7 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "kind": "sheet",
             "many": true
           }
@@ -14832,7 +14832,7 @@
         ],
         "said": {
           "deystvuyuschiy": "действующий",
-          "aims": "цели",
+          "celi": "цели",
           "cel": "цель",
           "otpor_itog": "отпор_итог"
         }
@@ -14840,10 +14840,10 @@
       "led": {
         "label": "лёд",
         "includes": [
-          "deystvie_v_Matrice"
+          "deystvie_v_matrice"
         ]
       },
-      "uron_Matricy": {
+      "uron_matricy": {
         "label": "урон Матрицы",
         "inputs": [
           {
@@ -14851,7 +14851,7 @@
             "kind": "sheet"
           },
           {
-            "key": "source",
+            "key": "istochnik",
             "kind": "sheet"
           },
           {
@@ -14861,7 +14861,7 @@
         ],
         "said": {
           "list": "лист",
-          "source": "источник"
+          "istochnik": "источник"
         }
       },
       "biootdacha": {
@@ -14888,7 +14888,7 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "kind": "sheet",
             "many": true
           }
@@ -14899,7 +14899,7 @@
         ],
         "said": {
           "deystvuyuschiy": "действующий",
-          "aims": "цели",
+          "celi": "цели",
           "cel": "цель",
           "zaschita": "защита"
         }
@@ -14925,17 +14925,17 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "kind": "sheet",
             "many": true
           }
         ],
         "said": {
           "deystvuyuschiy": "действующий",
-          "aims": "цели"
+          "celi": "цели"
         }
       },
-      "ritual_2": {
+      "ritual": {
         "label": "ритуал",
         "inputs": [
           {
@@ -14950,7 +14950,7 @@
       "slozhnaya_forma": {
         "label": "сложная форма",
         "includes": [
-          "deystvie_v_Matrice"
+          "deystvie_v_matrice"
         ]
       },
       "sposobnost_sprayta": {
@@ -14961,14 +14961,14 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "kind": "sheet",
             "many": true
           }
         ],
         "said": {
           "deystvuyuschiy": "действующий",
-          "aims": "цели"
+          "celi": "цели"
         }
       },
       "visyaschaya_forma": {
@@ -15006,7 +15006,7 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "kind": "sheet",
             "many": true
           }
@@ -15014,7 +15014,7 @@
         "each": "cel",
         "said": {
           "deystvuyuschiy": "действующий",
-          "aims": "цели",
+          "celi": "цели",
           "cel": "цель"
         }
       },
@@ -15026,7 +15026,7 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "kind": "sheet",
             "many": true
           }
@@ -15034,14 +15034,14 @@
         "each": "cel",
         "said": {
           "deystvuyuschiy": "действующий",
-          "aims": "цели",
+          "celi": "цели",
           "cel": "цель"
         }
       },
       "gasit_gorenie": {
         "label": "гасит горение"
       },
-      "priem_Preimuschestva": {
+      "priem_preimuschestva": {
         "label": "приём Преимущества"
       }
     },
@@ -15085,7 +15085,7 @@
     "effects": {
       "shoot": {
         "label": "Выстрелить",
-        "group": "Ataka",
+        "group": "ataka",
         "tags": [
           "strelba"
         ],
@@ -15097,7 +15097,7 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
@@ -15137,7 +15137,7 @@
             "default": false
           },
           {
-            "key": "distanciya_2",
+            "key": "distanciya",
             "label": "Дистанция",
             "kind": "choice",
             "from": "ranges",
@@ -15165,7 +15165,7 @@
             "ask": {
               "by": "actor"
             },
-            "default": "none"
+            "default": "net"
           },
           {
             "key": "oruzhie",
@@ -15193,7 +15193,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@distanciya_2.item_ar < 1"
+              "expr": "@distanciya.item_ar < 1"
             }
           },
           {
@@ -15296,7 +15296,7 @@
             "label": "атк",
             "type": "roll",
             "fixed": {
-              "expr": "@distanciya_2.item_ar + @rezhim.penalty + (@oruzhie.sight + @oruzhie.ammo_ar) + if(@deystvuyuschiy.prone >= 1, (@oruzhie.prone_ar + @oruzhie.brace_bonus), 0) + @deystvuyuschiy.ar_mod"
+              "expr": "@distanciya.item_ar + @rezhim.penalty + (@oruzhie.sight + @oruzhie.ammo_ar) + if(@deystvuyuschiy.prone >= 1, (@oruzhie.prone_ar + @oruzhie.brace_bonus), 0) + @deystvuyuschiy.ar_mod"
             }
           },
           {
@@ -15313,7 +15313,7 @@
             "type": "emit",
             "effect": "attack_roll",
             "args": {
-              "who": {
+              "kto": {
                 "expr": "@deystvuyuschiy"
               },
               "nabor": {
@@ -15323,13 +15323,13 @@
                 "expr": "@atk"
               },
               "zsch": {
-                "expr": "max(@aims.defense_rating)"
+                "expr": "max(@celi.defense_rating)"
               }
             }
           },
           {
             "type": "each",
-            "of": "aims"
+            "of": "celi"
           },
           {
             "id": "otpor",
@@ -15337,7 +15337,7 @@
             "type": "emit",
             "effect": "defend",
             "args": {
-              "who": {
+              "kto": {
                 "expr": "@cel"
               },
               "uspehov": {
@@ -15350,7 +15350,7 @@
                 "expr": "@attack_skill"
               },
               "blizko": {
-                "expr": "@distanciya_2.close"
+                "expr": "@distanciya.close"
               }
             }
           },
@@ -15378,7 +15378,7 @@
               "cel": {
                 "expr": "@cel"
               },
-              "source": {
+              "istochnik": {
                 "expr": "@deystvuyuschiy"
               },
               "su": {
@@ -15402,7 +15402,7 @@
       },
       "melee_strike": {
         "label": "Ударить",
-        "group": "Ataka",
+        "group": "ataka",
         "tags": [
           "blizhniy_boy"
         ],
@@ -15414,7 +15414,7 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
@@ -15462,7 +15462,7 @@
             "ask": {
               "by": "actor"
             },
-            "default": "none"
+            "default": "net"
           },
           {
             "key": "oruzhie",
@@ -15523,7 +15523,7 @@
             "type": "emit",
             "effect": "attack_roll",
             "args": {
-              "who": {
+              "kto": {
                 "expr": "@deystvuyuschiy"
               },
               "nabor": {
@@ -15533,13 +15533,13 @@
                 "expr": "@atk"
               },
               "zsch": {
-                "expr": "max(@aims.defense_rating)"
+                "expr": "max(@celi.defense_rating)"
               }
             }
           },
           {
             "type": "each",
-            "of": "aims"
+            "of": "celi"
           },
           {
             "id": "otpor",
@@ -15547,7 +15547,7 @@
             "type": "emit",
             "effect": "defend",
             "args": {
-              "who": {
+              "kto": {
                 "expr": "@cel"
               },
               "uspehov": {
@@ -15588,7 +15588,7 @@
               "cel": {
                 "expr": "@cel"
               },
-              "source": {
+              "istochnik": {
                 "expr": "@deystvuyuschiy"
               },
               "su": {
@@ -15612,11 +15612,11 @@
       },
       "defend": {
         "label": "Отразить атаку",
-        "group": "Broski_i_proverki",
+        "group": "broski_i_proverki",
         "description": "Реакция + Интуиция защитника против успехов атаки; ничья — попадание (стр. 105). Значение защиты больше значения атаки на 4 — очко Преимущества защитнику (стр. 46). Распластан: +2 к защите издалека, −2 вплотную и близко.",
         "params": [
           {
-            "key": "who",
+            "key": "kto",
             "label": "Кто защищается",
             "kind": "sheet",
             "role": "target"
@@ -15668,7 +15668,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@atk - @who.defense_rating <= -4"
+              "expr": "@atk - @kto.defense_rating <= -4"
             }
           },
           {
@@ -15676,7 +15676,7 @@
             "effect": "gain_edge",
             "args": {
               "list": {
-                "expr": "@who"
+                "expr": "@kto"
               }
             }
           },
@@ -15689,7 +15689,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "max(0, @who.defense_pool + if(@who.prone >= 1, if(@blizko, -2, 2), 0))"
+              "expr": "max(0, @kto.defense_pool + if(@kto.prone >= 1, if(@blizko, -2, 2), 0))"
             },
             "tags": [
               "zaschita",
@@ -15698,14 +15698,14 @@
               }
             ],
             "by": {
-              "expr": "@who"
+              "expr": "@kto"
             }
           }
         ]
       },
       "strike_damage": {
         "label": "Нанести урон",
-        "group": "Chto_sluchaetsya",
+        "group": "chto_sluchaetsya",
         "description": "Сопротивление Телом (у транспорта — Телом модели), остаток — «Урон» (стр. 105–106). Электричество с уроном — Электрошок; урон больше Тела — Распластан (стр. 111); «Вырубить ударом» — урон больше Воли заполняет счётчик оглушения (стр. 48).",
         "params": [
           {
@@ -15715,7 +15715,7 @@
             "role": "target"
           },
           {
-            "key": "source",
+            "key": "istochnik",
             "label": "Кто бьёт",
             "kind": "sheet",
             "role": "actor"
@@ -15770,8 +15770,8 @@
               "list": {
                 "expr": "@cel"
               },
-              "source": {
-                "expr": "@source"
+              "istochnik": {
+                "expr": "@istochnik"
               },
               "velichina": {
                 "expr": "if(@bez_urona, 0, @su)"
@@ -15842,7 +15842,7 @@
       },
       "spend_action": {
         "label": "Потратить действие",
-        "group": "Plata",
+        "group": "plata",
         "description": "В бою — потратить сложное и простые действия хода; не хватает — действие не состоялось (стр. 41, 107). Вне боя — ничего.",
         "params": [
           {
@@ -15944,9 +15944,9 @@
       },
       "edge_heal": {
         "label": "Залечить за Преимущество",
-        "group": "Preimuschestvo",
+        "group": "preimuschestvo",
         "tags": [
-          "priem_Preimuschestva"
+          "priem_preimuschestva"
         ],
         "params": [
           {
@@ -16028,12 +16028,12 @@
       },
       "scene_start": {
         "label": "Начало игровой встречи",
-        "group": "Preimuschestvo",
+        "group": "preimuschestvo",
         "description": "В начале игровой встречи очков Преимущества — столько, какова характеристика Преимущество у цели (стр. 45).",
         "steps": [
           {
             "type": "each",
-            "of": "aims"
+            "of": "celi"
           },
           {
             "type": "apply",
@@ -16053,7 +16053,7 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
@@ -16066,9 +16066,9 @@
       },
       "reroll_failures": {
         "label": "Преимущество: перебросить все неуспехи",
-        "group": "Preimuschestvo",
+        "group": "preimuschestvo",
         "tags": [
-          "priem_Preimuschestva"
+          "priem_preimuschestva"
         ],
         "activation": "passive",
         "duration": {
@@ -16083,7 +16083,7 @@
             },
             "notTags": [
               "iniciativa",
-              "bez_Preimuschestva"
+              "bez_preimuschestva"
             ],
             "confirm": true,
             "cost": [
@@ -16113,9 +16113,9 @@
       },
       "push_edge": {
         "label": "Преимущество: добавить к набору",
-        "group": "Preimuschestvo",
+        "group": "preimuschestvo",
         "tags": [
-          "priem_Preimuschestva"
+          "priem_preimuschestva"
         ],
         "activation": "passive",
         "duration": {
@@ -16130,7 +16130,7 @@
             },
             "notTags": [
               "iniciativa",
-              "bez_Preimuschestva"
+              "bez_preimuschestva"
             ],
             "confirm": true,
             "cost": [
@@ -16161,7 +16161,7 @@
       },
       "round_edge": {
         "label": "Предел Преимущества: раунд, конец боя и сцены",
-        "group": "Obschie_pravila",
+        "group": "obschie_pravila",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -16217,7 +16217,7 @@
       },
       "turn_actions": {
         "label": "Начало хода: действия",
-        "group": "Obschie_pravila",
+        "group": "obschie_pravila",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -16330,7 +16330,7 @@
       },
       "glitch": {
         "label": "Сбой",
-        "group": "Obschie_pravila",
+        "group": "obschie_pravila",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -16351,7 +16351,7 @@
       },
       "critical_glitch": {
         "label": "Критический сбой",
-        "group": "Obschie_pravila",
+        "group": "obschie_pravila",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -16372,7 +16372,7 @@
       },
       "prone": {
         "label": "Распластан",
-        "group": "Sostoyaniya",
+        "group": "sostoyaniya",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -16395,7 +16395,7 @@
       },
       "shocked": {
         "label": "Электрошок",
-        "group": "Sostoyaniya",
+        "group": "sostoyaniya",
         "tags": [
           "stihiya"
         ],
@@ -16437,7 +16437,7 @@
       },
       "dazed": {
         "label": "Ошеломление",
-        "group": "Sostoyaniya",
+        "group": "sostoyaniya",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -16472,7 +16472,7 @@
       },
       "chilled": {
         "label": "Заморозка",
-        "group": "Sostoyaniya",
+        "group": "sostoyaniya",
         "tags": [
           "stihiya",
           "gasit_gorenie"
@@ -16515,7 +16515,7 @@
       },
       "fatigued": {
         "label": "Утомление",
-        "group": "Sostoyaniya",
+        "group": "sostoyaniya",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -16544,7 +16544,7 @@
       },
       "frightened": {
         "label": "Испуг",
-        "group": "Sostoyaniya",
+        "group": "sostoyaniya",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -16552,7 +16552,7 @@
         "description": "Штраф −4 к проверкам против источника страха и к защите от него (стр. 52).",
         "params": [
           {
-            "key": "source",
+            "key": "istochnik",
             "label": "Кого боится",
             "kind": "sheet"
           }
@@ -16567,17 +16567,17 @@
               "expr": "-4"
             },
             "if": {
-              "expr": "@roller == @holder and @against == @source"
+              "expr": "@roller == @holder and @against == @istochnik"
             },
             "notTags": [
-              "healing"
+              "lechenie"
             ]
           }
         ]
       },
       "unconscious": {
         "label": "Без сознания",
-        "group": "Sostoyaniya",
+        "group": "sostoyaniya",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -16586,7 +16586,7 @@
       },
       "bleeding": {
         "label": "Тяжело ранен",
-        "group": "Sostoyaniya",
+        "group": "sostoyaniya",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -16595,7 +16595,7 @@
       },
       "dead": {
         "label": "Мёртв",
-        "group": "Sostoyaniya",
+        "group": "sostoyaniya",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -16604,7 +16604,7 @@
       },
       "knock_out": {
         "label": "Потеря сознания",
-        "group": "Obschie_pravila",
+        "group": "obschie_pravila",
         "description": "Счётчик оглушения полон — «Без сознания».",
         "activation": "passive",
         "duration": {
@@ -16630,7 +16630,7 @@
       },
       "bleed_out": {
         "label": "Тяжёлое ранение",
-        "group": "Obschie_pravila",
+        "group": "obschie_pravila",
         "description": "Счётчик здоровья полон — «Тяжело ранен».",
         "activation": "passive",
         "duration": {
@@ -16656,7 +16656,7 @@
       },
       "die": {
         "label": "Смерть",
-        "group": "Obschie_pravila",
+        "group": "obschie_pravila",
         "description": "Критический урон достиг Тело × 2 — «Мёртв».",
         "activation": "passive",
         "duration": {
@@ -16690,7 +16690,7 @@
       },
       "come_to": {
         "label": "Приходит в себя",
-        "group": "Obschie_pravila",
+        "group": "obschie_pravila",
         "description": "Оба счётчика снова не полны — состояния сняты.",
         "activation": "passive",
         "duration": {
@@ -16725,7 +16725,7 @@
       },
       "reload": {
         "label": "Перезарядить",
-        "group": "Deystviya",
+        "group": "deystviya",
         "description": "Патроны оружия — до боезапаса. В бою перезарядка — сложное действие; простое — только смартган с активным смартлинком (стр. 42, 44).",
         "params": [
           {
@@ -16787,7 +16787,7 @@
       },
       "dodge_ready": {
         "label": "Уклоняется",
-        "group": "Deystviya",
+        "group": "deystviya",
         "activation": "passive",
         "duration": {
           "kind": "uses",
@@ -16826,7 +16826,7 @@
       },
       "block_ready": {
         "label": "Блокирует",
-        "group": "Deystviya",
+        "group": "deystviya",
         "activation": "passive",
         "duration": {
           "kind": "uses",
@@ -16867,7 +16867,7 @@
       },
       "full_defense": {
         "label": "Глухая оборона",
-        "group": "Deystviya",
+        "group": "deystviya",
         "activation": "passive",
         "duration": {
           "kind": "rounds",
@@ -16894,7 +16894,7 @@
       },
       "blast_damage": {
         "label": "Урон от взрыва",
-        "group": "Boy",
+        "group": "boy",
         "description": "Защиты от взрыва нет: цель сопротивляется Телом, как при любом уроне («Нанести урон»); сравнение с Телом транспорта идёт по СУ до сопротивления. Распластанная цель — СУ −2. Электрический — «Электрошок»; урон больше Тела — «Распластан» (стр. 114, 196).",
         "params": [
           {
@@ -16904,7 +16904,7 @@
             "role": "target"
           },
           {
-            "key": "source",
+            "key": "istochnik",
             "label": "Кто бьёт",
             "kind": "sheet",
             "role": "actor"
@@ -16938,8 +16938,8 @@
               "cel": {
                 "expr": "@cel"
               },
-              "source": {
-                "expr": "@source"
+              "istochnik": {
+                "expr": "@istochnik"
               },
               "su": {
                 "expr": "@su"
@@ -16966,7 +16966,7 @@
       },
       "throw_blast": {
         "label": "Бросить гранату",
-        "group": "Boy",
+        "group": "boy",
         "tags": [
           "vzryv"
         ],
@@ -16978,7 +16978,7 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "label": "Все в радиусе взрыва",
             "kind": "sheet",
             "many": true,
@@ -16988,7 +16988,7 @@
             }
           },
           {
-            "key": "distanciya_2",
+            "key": "distanciya",
             "label": "Дистанция",
             "kind": "choice",
             "from": "ranges",
@@ -17037,7 +17037,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "not @distanciya_2.throwable"
+              "expr": "not @distanciya.throwable"
             }
           },
           {
@@ -17068,7 +17068,7 @@
             "label": "атк",
             "type": "roll",
             "fixed": {
-              "expr": "@deystvuyuschiy.unarmed_rating - @distanciya_2.throw_ar + if(@deystvuyuschiy.prone >= 1, 2, 0) + @deystvuyuschiy.ar_mod"
+              "expr": "@deystvuyuschiy.unarmed_rating - @distanciya.throw_ar + if(@deystvuyuschiy.prone >= 1, 2, 0) + @deystvuyuschiy.ar_mod"
             }
           },
           {
@@ -17096,7 +17096,7 @@
                 "expr": "@ataka_brosok.total"
               },
               "popravka": {
-                "expr": "@distanciya_2.throw_ricochet"
+                "expr": "@distanciya.throw_ricochet"
               }
             }
           },
@@ -17112,7 +17112,7 @@
           },
           {
             "type": "each",
-            "of": "aims"
+            "of": "celi"
           },
           {
             "id": "vred",
@@ -17132,7 +17132,7 @@
               "elektrichestvo": {
                 "expr": "@oruzhie.electric"
               },
-              "source": {
+              "istochnik": {
                 "expr": "@deystvuyuschiy"
               }
             }
@@ -17141,7 +17141,7 @@
       },
       "launch_blast": {
         "label": "Выстрелить из пусковой установки",
-        "group": "Boy",
+        "group": "boy",
         "tags": [
           "strelba",
           "vzryv"
@@ -17154,7 +17154,7 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "label": "Все в радиусе взрыва",
             "kind": "sheet",
             "many": true,
@@ -17164,7 +17164,7 @@
             }
           },
           {
-            "key": "distanciya_2",
+            "key": "distanciya",
             "label": "Дистанция",
             "kind": "choice",
             "from": "ranges",
@@ -17198,7 +17198,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@distanciya_2.item_ar < 1"
+              "expr": "@distanciya.item_ar < 1"
             }
           },
           {
@@ -17259,7 +17259,7 @@
             "label": "атк",
             "type": "roll",
             "fixed": {
-              "expr": "@distanciya_2.item_ar + @oruzhie.sight + if(@deystvuyuschiy.prone >= 1, (@oruzhie.prone_ar + @oruzhie.brace_bonus), 0)"
+              "expr": "@distanciya.item_ar + @oruzhie.sight + if(@deystvuyuschiy.prone >= 1, (@oruzhie.prone_ar + @oruzhie.brace_bonus), 0)"
             }
           },
           {
@@ -17287,7 +17287,7 @@
                 "expr": "@ataka_brosok.total"
               },
               "popravka": {
-                "expr": "0 - @distanciya_2.launch_ricochet"
+                "expr": "0 - @distanciya.launch_ricochet"
               }
             }
           },
@@ -17303,7 +17303,7 @@
           },
           {
             "type": "each",
-            "of": "aims"
+            "of": "celi"
           },
           {
             "id": "vred",
@@ -17323,7 +17323,7 @@
               "elektrichestvo": {
                 "expr": "@oruzhie.electric"
               },
-              "source": {
+              "istochnik": {
                 "expr": "@deystvuyuschiy"
               }
             }
@@ -17332,7 +17332,7 @@
       },
       "detonate": {
         "label": "Подорвать",
-        "group": "Boy",
+        "group": "boy",
         "description": "Взрывпакет: эпицентр — рейтинг, вплотную — рейтинг/2, близко — рейтинг/4 (округление вниз — книга его не называет), радиус — рейтинг в метрах (стр. 117). Пакетов становится на один меньше.",
         "params": [
           {
@@ -17341,7 +17341,7 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "label": "Все в радиусе взрыва",
             "kind": "sheet",
             "many": true,
@@ -17424,7 +17424,7 @@
           },
           {
             "type": "each",
-            "of": "aims"
+            "of": "celi"
           },
           {
             "type": "emit",
@@ -17436,7 +17436,7 @@
               "su": {
                 "expr": "@kolco.dv"
               },
-              "source": {
+              "istochnik": {
                 "expr": "@deystvuyuschiy"
               }
             }
@@ -17445,7 +17445,7 @@
       },
       "gain_edge": {
         "label": "Получить очко Преимущества",
-        "group": "Preimuschestvo",
+        "group": "preimuschestvo",
         "description": "Очко в запас: не больше 7 накопленных и в бою не больше 2 бонусных за раунд, от любого источника — снаряжения, заклинаний, качеств (стр. 46). Запрет получать (Ошеломление и др.) — не получает.",
         "params": [
           {
@@ -17504,7 +17504,7 @@
       },
       "spend_edge": {
         "label": "Потратить Преимущество",
-        "group": "Plata",
+        "group": "plata",
         "description": "Одно место траты очков Преимущества: запрет тратить (Ошеломление и др.) — отказ; не хватает — отказ.",
         "params": [
           {
@@ -17570,7 +17570,7 @@
       },
       "take_damage": {
         "label": "Урон",
-        "group": "Boy",
+        "group": "boy",
         "description": "Записать урон после сопротивления: физический — в счётчик здоровья, оглушающий — в счётчик оглушения. Снижения урона (импланты, способности) — правками этого вызова по этапам. Итог — сколько получено.",
         "params": [
           {
@@ -17580,7 +17580,7 @@
             "role": "target"
           },
           {
-            "key": "source",
+            "key": "istochnik",
             "label": "Источник",
             "kind": "sheet",
             "optional": true,
@@ -17716,7 +17716,7 @@
       },
       "burning": {
         "label": "Горение",
-        "group": "Sostoyaniya",
+        "group": "sostoyaniya",
         "tags": [
           "stihiya",
           "uron_v_raund"
@@ -17786,7 +17786,7 @@
       },
       "immobilized": {
         "label": "Неподвижность",
-        "group": "Sostoyaniya",
+        "group": "sostoyaniya",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -17828,7 +17828,7 @@
       },
       "petrified": {
         "label": "Окаменение",
-        "group": "Sostoyaniya",
+        "group": "sostoyaniya",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -17866,7 +17866,7 @@
       },
       "blinded": {
         "label": "Ослепление",
-        "group": "Sostoyaniya",
+        "group": "sostoyaniya",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -17938,7 +17938,7 @@
       },
       "poisoned": {
         "label": "Отравление",
-        "group": "Sostoyaniya",
+        "group": "sostoyaniya",
         "tags": [
           "uron_v_raund"
         ],
@@ -18021,7 +18021,7 @@
       },
       "corroded": {
         "label": "Разъедание",
-        "group": "Sostoyaniya",
+        "group": "sostoyaniya",
         "tags": [
           "stihiya",
           "uron_v_raund"
@@ -18064,7 +18064,7 @@
       },
       "wet": {
         "label": "Сырость",
-        "group": "Sostoyaniya",
+        "group": "sostoyaniya",
         "tags": [
           "gasit_gorenie"
         ],
@@ -18089,7 +18089,7 @@
               "soprotivlenie"
             ],
             "anyTags": [
-              "cold",
+              "holod",
               "elektrichestvo"
             ]
           }
@@ -18097,7 +18097,7 @@
       },
       "nauseated": {
         "label": "Тошнота",
-        "group": "Sostoyaniya",
+        "group": "sostoyaniya",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -18131,7 +18131,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "if(@toshnota.hit, 1, 2)"
+                  "expr": "if(@toshnota.uspeh, 1, 2)"
                 }
               }
             ]
@@ -18152,7 +18152,7 @@
       },
       "cover": {
         "label": "Укрытие",
-        "group": "Sostoyaniya",
+        "group": "sostoyaniya",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -18196,9 +18196,9 @@
       },
       "edge_reroll_one": {
         "label": "Преимущество: перебросить 1 кубик",
-        "group": "Preimuschestvo",
+        "group": "preimuschestvo",
         "tags": [
-          "priem_Preimuschestva"
+          "priem_preimuschestva"
         ],
         "activation": "passive",
         "duration": {
@@ -18212,7 +18212,7 @@
               "expr": "@roller == @holder"
             },
             "notTags": [
-              "bez_Preimuschestva"
+              "bez_preimuschestva"
             ],
             "confirm": true,
             "cost": [
@@ -18240,9 +18240,9 @@
       },
       "edge_bump": {
         "label": "Преимущество: +1 к значению кубика",
-        "group": "Preimuschestvo",
+        "group": "preimuschestvo",
         "tags": [
-          "priem_Preimuschestva"
+          "priem_preimuschestva"
         ],
         "activation": "passive",
         "duration": {
@@ -18257,7 +18257,7 @@
             },
             "notTags": [
               "iniciativa",
-              "bez_Preimuschestva"
+              "bez_preimuschestva"
             ],
             "confirm": true,
             "cost": [
@@ -18287,9 +18287,9 @@
       },
       "edge_init": {
         "label": "Преимущество: +3 к инициативе",
-        "group": "Preimuschestvo",
+        "group": "preimuschestvo",
         "tags": [
-          "priem_Preimuschestva"
+          "priem_preimuschestva"
         ],
         "activation": "passive",
         "duration": {
@@ -18333,9 +18333,9 @@
       },
       "edge_plus_hit": {
         "label": "Преимущество: +1 успех",
-        "group": "Preimuschestvo",
+        "group": "preimuschestvo",
         "tags": [
-          "priem_Preimuschestva"
+          "priem_preimuschestva"
         ],
         "activation": "passive",
         "duration": {
@@ -18350,7 +18350,7 @@
             },
             "notTags": [
               "iniciativa",
-              "bez_Preimuschestva"
+              "bez_preimuschestva"
             ],
             "confirm": true,
             "cost": [
@@ -18380,7 +18380,7 @@
       },
       "beatdown": {
         "label": "Взбучка",
-        "group": "Preimuschestvo",
+        "group": "preimuschestvo",
         "activation": "passive",
         "duration": {
           "kind": "turns",
@@ -18407,9 +18407,9 @@
       },
       "edge_bonus": {
         "label": "Бонусное очко Преимущества",
-        "group": "Preimuschestvo",
+        "group": "preimuschestvo",
         "tags": [
-          "bonus_Preimuschestva"
+          "bonus_preimuschestva"
         ],
         "activation": "passive",
         "duration": {
@@ -18423,7 +18423,7 @@
               "expr": "@roller == @holder"
             },
             "tags": [
-              "bonus_Preimuschestva"
+              "bonus_preimuschestva"
             ],
             "steps": [
               {
@@ -18441,9 +18441,9 @@
       },
       "matrix_hurt": {
         "label": "Урон в Матрице",
-        "group": "Matrica",
+        "group": "matrica",
         "tags": [
-          "uron_Matricy"
+          "uron_matricy"
         ],
         "description": "Урон Матрицы — сопротивление Сетевым экраном (стр. 176, 178).",
         "params": [
@@ -18454,7 +18454,7 @@
             "role": "target"
           },
           {
-            "key": "source",
+            "key": "istochnik",
             "label": "Кто бьёт",
             "kind": "sheet",
             "optional": true
@@ -18502,7 +18502,7 @@
       },
       "lockdown_attack": {
         "label": "Локдаун",
-        "group": "Matrica",
+        "group": "matrica",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -18510,9 +18510,9 @@
         "description": "Урон в Матрице вызывает залипание цели (стр. 185).",
         "on": [
           {
-            "on": "after:uron_Matricy",
+            "on": "after:uron_matricy",
             "if": {
-              "expr": "@source == @holder"
+              "expr": "@istochnik == @holder"
             },
             "steps": [
               {
@@ -18528,7 +18528,7 @@
       },
       "biofeedback_attack": {
         "label": "Биоотдача",
-        "group": "Matrica",
+        "group": "matrica",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -18536,9 +18536,9 @@
         "description": "Урон в Матрице бьёт и по телу цели: сопротивление Волей (стр. 185).",
         "on": [
           {
-            "on": "after:uron_Matricy",
+            "on": "after:uron_matricy",
             "if": {
-              "expr": "@source == @holder"
+              "expr": "@istochnik == @holder"
             },
             "steps": [
               {
@@ -18559,7 +18559,7 @@
       },
       "dumpshock": {
         "label": "Демпшок",
-        "group": "Matrica",
+        "group": "matrica",
         "description": "3о (холодный сим) / 3ф (горячий), сопротивление Волей; (10 − Воля) минут без Преимущества (стр. 176).",
         "params": [
           {
@@ -18586,7 +18586,7 @@
             "type": "end"
           },
           {
-            "id": "will",
+            "id": "volya",
             "label": "воля",
             "type": "roll",
             "die": "pool",
@@ -18608,7 +18608,7 @@
                 "expr": "@list"
               },
               "amount": {
-                "expr": "max(0, 3 - @will.total)"
+                "expr": "max(0, 3 - @volya.total)"
               },
               "physical_hit": {
                 "expr": "@list.matrix_mode.hot"
@@ -18643,14 +18643,14 @@
             },
             "direction": "set",
             "value": {
-              "expr": "\"none\""
+              "expr": "\"net\""
             }
           }
         ]
       },
       "dumpshocked": {
         "label": "Дезориентация после демпшока",
-        "group": "Matrica",
+        "group": "matrica",
         "activation": "passive",
         "duration": {
           "kind": "minutes",
@@ -18687,7 +18687,7 @@
       },
       "link_lock": {
         "label": "Залипание",
-        "group": "Matrica",
+        "group": "matrica",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -18706,7 +18706,7 @@
       },
       "matrix_access": {
         "label": "Доступ",
-        "group": "Matrica",
+        "group": "matrica",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -18748,7 +18748,7 @@
       },
       "matrix_drain": {
         "label": "Смоляная яма: ВМ снижена",
-        "group": "Matrica",
+        "group": "matrica",
         "activation": "passive",
         "duration": {
           "kind": "rounds",
@@ -18780,7 +18780,7 @@
       },
       "convergence": {
         "label": "Конвергенция",
-        "group": "Matrica",
+        "group": "matrica",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -18796,7 +18796,7 @@
               {
                 "type": "branch",
                 "if": {
-                  "expr": "@holder.matrix_mode == \"holodnaya_VR\" or @holder.matrix_mode == \"goryachaya_VR\""
+                  "expr": "@holder.matrix_mode == \"holodnaya_vr\" or @holder.matrix_mode == \"goryachaya_vr\""
                 }
               },
               {
@@ -18837,7 +18837,7 @@
       },
       "device_bricked": {
         "label": "Сдохшее устройство",
-        "group": "Matrica",
+        "group": "matrica",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -18875,7 +18875,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "\"none\""
+                  "expr": "\"net\""
                 }
               },
               {
@@ -18905,9 +18905,9 @@
       },
       "matrix_check": {
         "label": "Действие в Матрице",
-        "group": "Matrica",
+        "group": "matrica",
         "tags": [
-          "deystvie_v_Matrice"
+          "deystvie_v_matrice"
         ],
         "description": "Навык + характеристика против защиты цели (или порога); незаконное — ПН + успехи защиты; ЗА/ЗЩ ±4 — очко Преимущества (стр. 175–185).",
         "params": [
@@ -18917,7 +18917,7 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
@@ -18963,7 +18963,7 @@
                 "expr": "@deystvuyuschiy"
               },
               "celey": {
-                "expr": "count(@aims)"
+                "expr": "count(@celi)"
               },
               "link": {
                 "expr": "@deystvie.link"
@@ -19008,7 +19008,7 @@
           },
           {
             "type": "each",
-            "of": "aims"
+            "of": "celi"
           },
           {
             "id": "otpor_itog",
@@ -19070,7 +19070,7 @@
               "amount": {
                 "expr": "@uron"
               },
-              "source": {
+              "istochnik": {
                 "expr": "@deystvuyuschiy"
               }
             }
@@ -19129,9 +19129,9 @@
       },
       "matrix_hack": {
         "label": "Взлом: доступ",
-        "group": "Matrica",
+        "group": "matrica",
         "tags": [
-          "deystvie_v_Matrice"
+          "deystvie_v_matrice"
         ],
         "description": "Брутфорс или Зондирование: успех — доступ пользователя или администратора к цели; администратор без доступа пользователя — значение защиты цели +4, набор защиты +2 (стр. 180–181).",
         "params": [
@@ -19141,7 +19141,7 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
@@ -19205,7 +19205,7 @@
                 "expr": "@deystvuyuschiy"
               },
               "celey": {
-                "expr": "count(@aims)"
+                "expr": "count(@celi)"
               },
               "link": {
                 "expr": "@deystvie.link"
@@ -19250,7 +19250,7 @@
           },
           {
             "type": "each",
-            "of": "aims"
+            "of": "celi"
           },
           {
             "id": "otpor_itog",
@@ -19321,7 +19321,7 @@
       },
       "matrix_stat_cut": {
         "label": "Характеристика Матрицы снижена",
-        "group": "Matrica",
+        "group": "matrica",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -19355,7 +19355,7 @@
       },
       "ic_attack": {
         "label": "Удар льда",
-        "group": "Matrica",
+        "group": "matrica",
         "tags": [
           "led"
         ],
@@ -19368,7 +19368,7 @@
             "role": "actor"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
@@ -19387,7 +19387,7 @@
                 "expr": "@deystvuyuschiy"
               },
               "celey": {
-                "expr": "count(@aims)"
+                "expr": "count(@celi)"
               },
               "check_vm": {
                 "expr": "false"
@@ -19430,7 +19430,7 @@
           },
           {
             "type": "each",
-            "of": "aims"
+            "of": "celi"
           },
           {
             "id": "otpor_itog",
@@ -19559,7 +19559,7 @@
       },
       "implant_blast": {
         "label": "Детонация импланта",
-        "group": "Boy",
+        "group": "boy",
         "description": "Урон носителю, сопротивление Телом (стр. 283).",
         "params": [
           {
@@ -19606,7 +19606,7 @@
       },
       "spell_drain": {
         "label": "Истощение",
-        "group": "Magiya",
+        "group": "magiya",
         "description": "Воля + характеристика традиции (адепт — Тело + Воля) против СИ; остаток — оглушающий, больше Магии — физический; лечится только отдыхом (стр. 127, 131). Угасание техномантов — тот же шаг с другим видом отдачи.",
         "params": [
           {
@@ -19682,7 +19682,7 @@
       },
       "spell_defense": {
         "label": "Защита от заклинания",
-        "group": "Broski_i_proverki",
+        "group": "broski_i_proverki",
         "description": "Цель сопротивляется заклинанию: Преимущество при перевесе в четыре, бросок защиты и проверка против значения защиты.",
         "params": [
           {
@@ -19701,7 +19701,7 @@
             "key": "zaschita",
             "label": "Защита",
             "kind": "choice",
-            "default": "none",
+            "default": "net",
             "from": "spell_defenses"
           },
           {
@@ -19774,7 +19774,7 @@
             }
           },
           {
-            "id": "total",
+            "id": "itog",
             "label": "итог",
             "type": "check",
             "value": {
@@ -19792,7 +19792,7 @@
             "kind": "boolean",
             "no": "не прошло",
             "expr": {
-              "expr": "@total.success"
+              "expr": "@itog.success"
             }
           },
           {
@@ -19800,14 +19800,14 @@
             "label": "чистые успехи",
             "kind": "number",
             "expr": {
-              "expr": "max(0, @total.margin)"
+              "expr": "max(0, @itog.margin)"
             }
           }
         ]
       },
       "cast_spell": {
         "label": "Сотворить заклинание",
-        "group": "Magiya",
+        "group": "magiya",
         "tags": [
           "zaklinanie"
         ],
@@ -19819,7 +19819,7 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
@@ -19941,7 +19941,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "not @zaklinanie.area and count(@aims) > 1"
+              "expr": "not @zaklinanie.area and count(@celi) > 1"
             }
           },
           {
@@ -20003,7 +20003,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "max(0, @deystvuyuschiy.skills.koldovstvo.pool + max(@deystvuyuschiy.focus_kinds.Istochnik_sily.force, @deystvuyuschiy.spell_categories.[@zaklinanie.category].focus))"
+              "expr": "max(0, @deystvuyuschiy.skills.koldovstvo.pool + max(@deystvuyuschiy.focus_kinds.istochnik_sily.force, @deystvuyuschiy.spell_categories.[@zaklinanie.category].focus))"
             },
             "tags": [
               "proverka",
@@ -20033,7 +20033,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@zaklinanie.defense.opposed and @deystvuyuschiy.spell_ar - max(@aims.plane_dr) >= 4"
+              "expr": "@zaklinanie.defense.opposed and @deystvuyuschiy.spell_ar - max(@celi.plane_dr) >= 4"
             }
           },
           {
@@ -20050,7 +20050,7 @@
           },
           {
             "type": "each",
-            "of": "aims"
+            "of": "celi"
           },
           {
             "id": "zaschita",
@@ -20071,7 +20071,7 @@
                 "expr": "@sotvorenie"
               },
               "vysshaya_zsch": {
-                "expr": "max(@aims.plane_dr)"
+                "expr": "max(@celi.plane_dr)"
               },
               "porog": {
                 "expr": "@zaklinanie.threshold or @porog"
@@ -20106,7 +20106,7 @@
               "list": {
                 "expr": "@cel"
               },
-              "source": {
+              "istochnik": {
                 "expr": "@deystvuyuschiy"
               },
               "amount": {
@@ -20132,7 +20132,7 @@
               "list": {
                 "expr": "@cel"
               },
-              "source": {
+              "istochnik": {
                 "expr": "@deystvuyuschiy"
               },
               "velichina": {
@@ -20300,7 +20300,7 @@
       },
       "stop_spell": {
         "label": "Прекратить заклинание",
-        "group": "Magiya",
+        "group": "magiya",
         "description": "Отпустить поддерживаемое заклинание: снять одно «Поддержание» заклинателя с этим заклинанием — заклинание спадает со всех целей (стр. 131).",
         "params": [
           {
@@ -20332,7 +20332,7 @@
       },
       "sustaining": {
         "label": "Поддержание",
-        "group": "Magiya",
+        "group": "magiya",
         "description": "Заклинатель поддерживает длительное заклинание или сложную форму: −2 кубика к проверкам за каждое (стр. 131). Одно на сотворение; спадает, когда держать больше нечего.",
         "activation": "passive",
         "duration": {
@@ -20368,7 +20368,7 @@
       },
       "sp_increase_attribute": {
         "label": "Улучшение характеристики",
-        "group": "Zaklinaniya",
+        "group": "zaklinaniya",
         "tags": [
           "visyaschee_zaklinanie"
         ],
@@ -20416,7 +20416,7 @@
       },
       "sp_armor": {
         "label": "Броня",
-        "group": "Zaklinaniya",
+        "group": "zaklinaniya",
         "tags": [
           "visyaschee_zaklinanie"
         ],
@@ -20459,7 +20459,7 @@
       },
       "summon_spirit": {
         "label": "Призвать духа",
-        "group": "Magiya",
+        "group": "magiya",
         "tags": [
           "prizyv"
         ],
@@ -20471,7 +20471,7 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "label": "Дух",
             "kind": "sheet",
             "many": true,
@@ -20530,7 +20530,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "count(@aims) != 1"
+              "expr": "count(@celi) != 1"
             }
           },
           {
@@ -20565,7 +20565,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "max(0, @deystvuyuschiy.skills.voploschenie.pool + max(@deystvuyuschiy.focus_kinds.Istochnik_sily.force, @deystvuyuschiy.focus_kinds.Istochnik_prizyva.force))"
+              "expr": "max(0, @deystvuyuschiy.skills.voploschenie.pool + max(@deystvuyuschiy.focus_kinds.istochnik_sily.force, @deystvuyuschiy.focus_kinds.istochnik_prizyva.force))"
             },
             "tags": [
               "proverka",
@@ -20579,7 +20579,7 @@
           },
           {
             "type": "each",
-            "of": "aims"
+            "of": "celi"
           },
           {
             "id": "duh",
@@ -20597,7 +20597,7 @@
             }
           },
           {
-            "id": "total",
+            "id": "itog",
             "label": "итог",
             "type": "check",
             "value": {
@@ -20622,7 +20622,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@total.margin >= 1"
+              "expr": "@itog.margin >= 1"
             }
           },
           {
@@ -20652,7 +20652,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "@total.margin"
+              "expr": "@itog.margin"
             }
           },
           {
@@ -20682,9 +20682,9 @@
       },
       "ritual_cast": {
         "label": "Провести ритуал",
-        "group": "Magiya",
+        "group": "magiya",
         "tags": [
-          "ritual_2"
+          "ritual"
         ],
         "description": "Лидер: Колдовство + Магия (+ источник ритуала, +1 кубик за участника, −2 за участника чужой традиции) против кубиков = порогу; истощение СИ = 2 × успехи порога (не меньше 2), −1 за драхму реагентов сверх нормы (стр. 143–144).",
         "params": [
@@ -20745,18 +20745,18 @@
         ],
         "steps": [
           {
-            "id": "ritual_2",
+            "id": "ritual",
             "label": "ритуал",
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "max(0, @deystvuyuschiy.skills.koldovstvo.pool + max(@deystvuyuschiy.focus_kinds.Istochnik_sily.force, @deystvuyuschiy.focus_kinds.Istochnik_ritualnogo_zaklinaniya.force) + @helpers - 2 * @foreign)"
+              "expr": "max(0, @deystvuyuschiy.skills.koldovstvo.pool + max(@deystvuyuschiy.focus_kinds.istochnik_sily.force, @deystvuyuschiy.focus_kinds.istochnik_ritualnogo_zaklinaniya.force) + @helpers - 2 * @foreign)"
             },
             "tags": [
               "proverka",
               "magiya",
               "koldovstvo",
-              "ritual_2"
+              "ritual"
             ],
             "by": {
               "expr": "@deystvuyuschiy"
@@ -20778,11 +20778,11 @@
             }
           },
           {
-            "id": "total",
+            "id": "itog",
             "label": "итог",
             "type": "check",
             "value": {
-              "expr": "@ritual_2"
+              "expr": "@ritual"
             },
             "versus": {
               "expr": "@soprotivlenie"
@@ -20804,7 +20804,7 @@
       },
       "form_infusion": {
         "label": "Инфузия",
-        "group": "Matrica",
+        "group": "matrica",
         "tags": [
           "visyaschaya_forma"
         ],
@@ -20841,7 +20841,7 @@
       },
       "form_diffusion": {
         "label": "Диффузия",
-        "group": "Matrica",
+        "group": "matrica",
         "tags": [
           "visyaschaya_forma"
         ],
@@ -20878,7 +20878,7 @@
       },
       "form_channel": {
         "label": "Резонансный канал",
-        "group": "Matrica",
+        "group": "matrica",
         "tags": [
           "visyaschaya_forma"
         ],
@@ -20909,9 +20909,9 @@
       },
       "cast_form": {
         "label": "Запустить сложную форму",
-        "group": "Matrica",
+        "group": "matrica",
         "tags": [
-          "deystvie_v_Matrice",
+          "deystvie_v_matrice",
           "slozhnaya_forma"
         ],
         "description": "Навык + Резонанс против защиты цели (или порога); угасание до целей (Воля + Логика); длительная — −2 к проверкам, пока держится (стр. 190–191).",
@@ -20922,7 +20922,7 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
@@ -21053,7 +21053,7 @@
           },
           {
             "type": "each",
-            "of": "aims"
+            "of": "celi"
           },
           {
             "id": "otpor_itog",
@@ -21098,7 +21098,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@slozhnaya_forma.outcome == \"uron_Matricy\""
+              "expr": "@slozhnaya_forma.outcome == \"uron_matricy\""
             }
           },
           {
@@ -21116,7 +21116,7 @@
           {
             "type": "orElse",
             "if": {
-              "expr": "@slozhnaya_forma.outcome == \"lechenie_Matricy\""
+              "expr": "@slozhnaya_forma.outcome == \"lechenie_matricy\""
             }
           },
           {
@@ -21148,7 +21148,7 @@
           {
             "type": "orElse",
             "if": {
-              "expr": "@slozhnaya_forma.outcome == \"PN_celi\""
+              "expr": "@slozhnaya_forma.outcome == \"pn_celi\""
             }
           },
           {
@@ -21164,7 +21164,7 @@
           {
             "type": "orElse",
             "if": {
-              "expr": "@slozhnaya_forma.outcome == \"svoy_PN\""
+              "expr": "@slozhnaya_forma.outcome == \"svoy_pn\""
             }
           },
           {
@@ -21217,7 +21217,7 @@
       },
       "compile_sprite": {
         "label": "Компилировать спрайта",
-        "group": "Matrica",
+        "group": "matrica",
         "description": "Многозадачность + Резонанс против Уровень × 2; задачи = чистые; угасание = успехи спрайта, Воля + Харизма; один незарегистрированный; живёт Уровень × 2 часа (стр. 191–192). Лист спрайта ведущий заводит заранее.",
         "params": [
           {
@@ -21226,7 +21226,7 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "label": "Спрайт",
             "kind": "sheet",
             "many": true,
@@ -21273,7 +21273,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "count(@aims) != 1"
+              "expr": "count(@celi) != 1"
             }
           },
           {
@@ -21321,7 +21321,7 @@
           },
           {
             "type": "each",
-            "of": "aims"
+            "of": "celi"
           },
           {
             "id": "otpor",
@@ -21339,7 +21339,7 @@
             }
           },
           {
-            "id": "total",
+            "id": "itog",
             "label": "итог",
             "type": "check",
             "value": {
@@ -21367,7 +21367,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@total.success"
+              "expr": "@itog.success"
             }
           },
           {
@@ -21407,7 +21407,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "@total.margin"
+              "expr": "@itog.margin"
             }
           },
           {
@@ -21437,7 +21437,7 @@
       },
       "sprite_trap": {
         "label": "Ловушка",
-        "group": "Matrica",
+        "group": "matrica",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -21485,7 +21485,7 @@
       },
       "sprite_storm": {
         "label": "Электрошторм",
-        "group": "Matrica",
+        "group": "matrica",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -21553,7 +21553,7 @@
       },
       "sprite_diagnostics": {
         "label": "Диагностика",
-        "group": "Matrica",
+        "group": "matrica",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -21590,9 +21590,9 @@
       },
       "sprite_power_use": {
         "label": "Способность спрайта",
-        "group": "Matrica",
+        "group": "matrica",
         "tags": [
-          "deystvie_v_Matrice",
+          "deystvie_v_matrice",
           "sposobnost_sprayta"
         ],
         "description": "Навык (= уровень) + Резонанс или Уровень против защиты; тратит задачу (стр. 194–195).",
@@ -21603,7 +21603,7 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
@@ -21691,7 +21691,7 @@
           },
           {
             "type": "each",
-            "of": "aims"
+            "of": "celi"
           },
           {
             "id": "otpor_itog",
@@ -21764,7 +21764,7 @@
       },
       "drive_check": {
         "label": "Проверка управляемости",
-        "group": "Transport",
+        "group": "transport",
         "tags": [
           "vozhdenie"
         ],
@@ -21776,7 +21776,7 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "label": "Транспорт",
             "kind": "sheet",
             "many": true,
@@ -21798,7 +21798,7 @@
         "steps": [
           {
             "type": "each",
-            "of": "aims"
+            "of": "celi"
           },
           {
             "id": "rezhim",
@@ -21819,7 +21819,7 @@
             "label": "набор",
             "type": "roll",
             "fixed": {
-              "expr": "max(0, @rezhim.who.pool - @cel.veh_speed_pen)"
+              "expr": "max(0, @rezhim.kto.pool - @cel.veh_speed_pen)"
             }
           },
           {
@@ -21848,7 +21848,7 @@
             }
           },
           {
-            "id": "total",
+            "id": "itog",
             "label": "итог",
             "type": "check",
             "value": {
@@ -21861,7 +21861,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "not @total.success"
+              "expr": "not @itog.success"
             }
           },
           {
@@ -21901,7 +21901,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@rezhim.who.inside"
+              "expr": "@rezhim.kto.inside"
             }
           },
           {
@@ -21958,7 +21958,7 @@
       },
       "intoxicate": {
         "label": "Токсин",
-        "group": "Himiya",
+        "group": "himiya",
         "tags": [
           "toksin"
         ],
@@ -21970,7 +21970,7 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
@@ -21999,7 +21999,7 @@
         "steps": [
           {
             "type": "each",
-            "of": "aims"
+            "of": "celi"
           },
           {
             "id": "stoykost",
@@ -22021,7 +22021,7 @@
             }
           },
           {
-            "id": "total",
+            "id": "itog",
             "label": "итог",
             "type": "check",
             "value": {
@@ -22035,7 +22035,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@total.success"
+              "expr": "@itog.success"
             }
           },
           {
@@ -22052,7 +22052,7 @@
                 "expr": "@cel"
               },
               "amount": {
-                "expr": "@total.margin"
+                "expr": "@itog.margin"
               },
               "physical_hit": {
                 "expr": "@toksin.damage_kind.physical"
@@ -22078,7 +22078,7 @@
       },
       "drug_crashes": {
         "label": "Отходняк",
-        "group": "Himiya",
+        "group": "himiya",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -22212,7 +22212,7 @@
       },
       "dg_alcohol": {
         "label": "Алкоголь",
-        "group": "Himiya",
+        "group": "himiya",
         "activation": "passive",
         "reapply": "refresh",
         "description": "Синтетический алкоголь, от пива до самогона. Сила 6; через минуту после приёма принявший получает Реакцию −1, Логику −1 и Устойчивость к боли (штраф за раны меньше на 1). Время действия (8 − Тело) часов, не меньше часа. Доступности нет, цена от 5 до 500 ¥ (в клетке 5) (стр. 124)",
@@ -22261,7 +22261,7 @@
       },
       "dg_alcohol_take": {
         "label": "Принять: Алкоголь",
-        "group": "Himiya",
+        "group": "himiya",
         "description": "Срок: (8 − Тело) часов, минимум 1 час (стр. 124).",
         "params": [
           {
@@ -22295,7 +22295,7 @@
       },
       "dg_jazz": {
         "label": "«Джаз»",
-        "group": "Himiya",
+        "group": "himiya",
         "activation": "passive",
         "reapply": "refresh",
         "description": "Стимулятор для дежурных офицеров, обычно в одноразовых ингаляторах. Сила 9; Реакция +1, к инициативе +2 кубика (в книге «+2D6 куб. ин.»). Длительность 10 × 1к6 минут. После окончания — ломка: Ошеломление на столько же, сколько длился эффект. Доступность 2 (Л), цена 75 ¥ (стр. 124)",
@@ -22335,7 +22335,7 @@
       },
       "dg_jazz_take": {
         "label": "Принять: «Джаз»",
-        "group": "Himiya",
+        "group": "himiya",
         "description": "Срок: 10 × 1к6 минут (стр. 124).",
         "params": [
           {
@@ -22377,7 +22377,7 @@
       },
       "dg_long_way": {
         "label": "«Долгий путь»",
-        "group": "Himiya",
+        "group": "himiya",
         "activation": "passive",
         "reapply": "refresh",
         "description": "Синтетические гормоны и регуляторы мозга. Сила 11; принявший не спит 4 дня без штрафов за усталость. Затем падает без сознания и спит 8к6 часов; если не спит — Утомление I, галлюцинации, не может сосредоточиться. Вторая доза после окончания первой: ещё (1к6 / 2) дней без сна и Утомление I; третья — ещё 1 день и Утомление II; четвёртая — ещё 1 день и Утомление III; следующие дозы не действуют, дают 12 оглушающего урона без сопротивления и ломку, а сон дальше не блокируется. Если стимулирующим пластырем держать в сознании, Утомление III держится, пока не отоспит 8к6 часов. Доступности нет, цена 50 ¥ (стр. 124–125)",
@@ -22399,7 +22399,7 @@
       },
       "dg_zubrila": {
         "label": "«Зубрила»",
-        "group": "Himiya",
+        "group": "himiya",
         "activation": "passive",
         "reapply": "refresh",
         "description": "Популярный стимулятор. Сила 8; через 10 минут Реакция +1 и +1 кубик инициативы (книга «+1D6 куб. ин.»). Время действия (12 − Тело) часов, не меньше часа. Состояние гипербдительности, вплоть до паранойи, дрожь и нервозность. После окончания — 6 оглушающего урона без сопротивления. Доступность 2 (Л), цена 10 ¥ (стр. 125)",
@@ -22439,7 +22439,7 @@
       },
       "dg_kamikaze": {
         "label": "«Камикадзе»",
-        "group": "Himiya",
+        "group": "himiya",
         "activation": "passive",
         "reapply": "refresh",
         "description": "Боевой стимулятор. Сила 10; Тело +1, Проворство +1, Сила +2, Воля +1, +2 кубика инициативы (книга «+2D6 куб. ин.»), Устойчивость к боли. Длительность 10 × 1к6 минут. После — Реакция −1, Воля −1 и Утомление II на время, вдвое большее длительности эффекта, и 6 оглушающего урона без сопротивления. Долгое употребление разрушает метаболизм, крупные дозы дают тревогу и галлюцинации, высокие — смерть. Доступность 3 (Л), цена 100 ¥ (стр. 125)",
@@ -22514,7 +22514,7 @@
       },
       "dg_nitro": {
         "label": "Нитро",
-        "group": "Himiya",
+        "group": "himiya",
         "activation": "passive",
         "reapply": "refresh",
         "description": "Мощный стимулятор, любимый троллями банд. Сила 12; Сила +2, Воля +2, Внимание +2, +1 кубик инициативы (книга «+1D6 куб. ин.»), Устойчивость к боли. Длительность 10 × 1к6 минут. После — 9 оглушающего урона без сопротивления и штраф −2 ко всем проверкам, включая сопротивление урону, на столько же времени. Доступность 2 (Л), цена 50 ¥ (стр. 125)",
@@ -22579,7 +22579,7 @@
       },
       "insecurity_shaken": {
         "label": "Неуверенность: сорвалось",
-        "group": "Kachestva",
+        "group": "kachestva",
         "activation": "passive",
         "duration": {
           "kind": "combat"
@@ -22606,7 +22606,7 @@
       },
       "insecurity_check": {
         "label": "Неуверенность",
-        "group": "Kachestva",
+        "group": "kachestva",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -22636,7 +22636,7 @@
               {
                 "type": "branch",
                 "if": {
-                  "expr": "not @vyderzhka.hit"
+                  "expr": "not @vyderzhka.uspeh"
                 }
               },
               {
@@ -22655,7 +22655,7 @@
       },
       "attack_cost": {
         "label": "Плата за атаку",
-        "group": "Plata",
+        "group": "plata",
         "description": "Приём стоит Преимущества (не хватает — атаки нет); сложное действие и простые от укрытия и приёма — в бою (стр. 41, 46, 107). «Дрожь в руках» запрещает платный приём при атаке (стр. 76).",
         "params": [
           {
@@ -22669,7 +22669,7 @@
             "label": "Приём",
             "kind": "choice",
             "from": "edge_actions",
-            "default": "none"
+            "default": "net"
           }
         ],
         "steps": [
@@ -22731,11 +22731,11 @@
       },
       "attack_roll": {
         "label": "Бросок атаки",
-        "group": "Broski_i_proverki",
+        "group": "broski_i_proverki",
         "description": "Бросок набора атаки с запасом от прицеливания; значение атаки больше наивысшей защиты целей на 4 — очко Преимущества атакующему (стр. 46). Прицеливание сгорает.",
         "params": [
           {
-            "key": "who",
+            "key": "kto",
             "label": "Кто атакует",
             "kind": "sheet",
             "role": "actor"
@@ -22763,19 +22763,19 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "max(0, @nabor + @who.aim_bonus)"
+              "expr": "max(0, @nabor + @kto.aim_bonus)"
             },
             "tags": [
               "ataka"
             ],
             "by": {
-              "expr": "@who"
+              "expr": "@kto"
             }
           },
           {
             "type": "apply",
             "target": {
-              "expr": "@who.aim_bonus"
+              "expr": "@kto.aim_bonus"
             },
             "direction": "set",
             "value": {
@@ -22785,7 +22785,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@atk - @zsch >= 4 and @who.cover < 1"
+              "expr": "@atk - @zsch >= 4 and @kto.cover < 1"
             }
           },
           {
@@ -22793,7 +22793,7 @@
             "effect": "gain_edge",
             "args": {
               "list": {
-                "expr": "@who"
+                "expr": "@kto"
               }
             }
           },
@@ -22814,7 +22814,7 @@
       },
       "scatter": {
         "label": "Рикошет",
-        "group": "Broski_i_proverki",
+        "group": "broski_i_proverki",
         "description": "Гранату или ракету относит на кости 2к6 минус успехи атаки, не меньше 0; метры — на столе (стр. 111).",
         "params": [
           {
@@ -22869,7 +22869,7 @@
       },
       "resist_damage": {
         "label": "Сопротивиться урону",
-        "group": "Broski_i_proverki",
+        "group": "broski_i_proverki",
         "description": "Тело (у транспорта — Тело модели) против урона; остаток уходит в «Урон» (стр. 105–106).",
         "params": [
           {
@@ -22879,7 +22879,7 @@
             "role": "target"
           },
           {
-            "key": "source",
+            "key": "istochnik",
             "label": "Кто бьёт",
             "kind": "sheet",
             "role": "actor",
@@ -22902,7 +22902,7 @@
             "label": "Стихия урона",
             "kind": "choice",
             "from": "spell_elements",
-            "default": "none"
+            "default": "net"
           },
           {
             "key": "elektrichestvo",
@@ -22932,7 +22932,7 @@
                 "expr": "if(@fizicheskiy, \"fizicheskiy\", \"\")"
               },
               {
-                "expr": "if(@elektrichestvo, \"elektrichestvo\", if(@stihiya == \"none\", \"\", @stihiya))"
+                "expr": "if(@elektrichestvo, \"elektrichestvo\", if(@stihiya == \"net\", \"\", @stihiya))"
               }
             ],
             "by": {
@@ -22948,8 +22948,8 @@
               "list": {
                 "expr": "@list"
               },
-              "source": {
-                "expr": "@source"
+              "istochnik": {
+                "expr": "@istochnik"
               },
               "amount": {
                 "expr": "max(0, @velichina - @soprotivlenie_brosok.total)"
@@ -22979,7 +22979,7 @@
       },
       "can_cast": {
         "label": "Владеет магией",
-        "group": "Plata",
+        "group": "plata",
         "description": "Магия не меньше 1; аспектный маг владеет только навыком «своим».",
         "params": [
           {
@@ -23030,7 +23030,7 @@
       },
       "heal_damage": {
         "label": "Снять урон",
-        "group": "Chto_sluchaetsya",
+        "group": "chto_sluchaetsya",
         "description": "Убирает урон выбранного вида, не больше, чем есть.",
         "params": [
           {
@@ -23089,7 +23089,7 @@
       },
       "attr_test": {
         "label": "Проверка характеристик",
-        "group": "Broski_i_proverki",
+        "group": "broski_i_proverki",
         "description": "Бросок набора против порога; успех и чистые успехи — в итогах.",
         "params": [
           {
@@ -23126,7 +23126,7 @@
             }
           },
           {
-            "id": "total",
+            "id": "itog",
             "label": "итог",
             "type": "check",
             "value": {
@@ -23139,11 +23139,11 @@
         ],
         "returns": [
           {
-            "key": "hit",
+            "key": "uspeh",
             "label": "успех",
             "kind": "boolean",
             "expr": {
-              "expr": "@total.success"
+              "expr": "@itog.success"
             }
           },
           {
@@ -23151,14 +23151,14 @@
             "label": "чистые успехи",
             "kind": "number",
             "expr": {
-              "expr": "max(0, @total.margin)"
+              "expr": "max(0, @itog.margin)"
             }
           }
         ]
       },
       "matrix_ready": {
         "label": "Готовность к Матрице",
-        "group": "Plata",
+        "group": "plata",
         "description": "Цели в пределах «Разветвления», устройство с рейтингом, мощность и счётчик в порядке, связь не оборвана шумом, связанная характеристика не упала до 0.",
         "params": [
           {
@@ -23178,7 +23178,7 @@
             "label": "Связь действия",
             "kind": "choice",
             "from": "matrix_links",
-            "default": "none"
+            "default": "net"
           },
           {
             "key": "check_vm",
@@ -23282,7 +23282,7 @@
       },
       "matrix_defend": {
         "label": "Отпор в Матрице",
-        "group": "Broski_i_proverki",
+        "group": "broski_i_proverki",
         "description": "Бросок защиты цели против действия; значение атаки больше значения защиты на 4 — очко Преимущества (стр. 46). Незаконное действие копит Показатель надзора (стр. 174).",
         "params": [
           {
@@ -23307,7 +23307,7 @@
             "label": "Защита",
             "kind": "choice",
             "from": "matrix_defenses",
-            "default": "none"
+            "default": "net"
           },
           {
             "key": "illegal",
@@ -23391,7 +23391,7 @@
             }
           },
           {
-            "id": "total",
+            "id": "itog",
             "label": "итог",
             "type": "check",
             "value": {
@@ -23428,7 +23428,7 @@
             "kind": "boolean",
             "no": "не вышло",
             "expr": {
-              "expr": "@total.success"
+              "expr": "@itog.success"
             }
           },
           {
@@ -23436,7 +23436,7 @@
             "label": "чистые успехи",
             "kind": "number",
             "expr": {
-              "expr": "max(0, @total.margin)"
+              "expr": "max(0, @itog.margin)"
             }
           },
           {
@@ -23444,14 +23444,14 @@
             "label": "успехов",
             "kind": "number",
             "expr": {
-              "expr": "@total.total"
+              "expr": "@itog.total"
             }
           }
         ]
       },
       "matrix_harm": {
         "label": "Нанести урон Матрицы",
-        "group": "Chto_sluchaetsya",
+        "group": "chto_sluchaetsya",
         "description": "Техномант получает его как оглушающий урон, остальные — в счётчик Матрицы.",
         "params": [
           {
@@ -23515,7 +23515,7 @@
       },
       "bio_hurt": {
         "label": "Биоотдача",
-        "group": "Chto_sluchaetsya",
+        "group": "chto_sluchaetsya",
         "tags": [
           "biootdacha"
         ],
@@ -23548,7 +23548,7 @@
             }
           },
           {
-            "id": "will",
+            "id": "volya",
             "label": "воля",
             "type": "roll",
             "die": "pool",
@@ -23571,7 +23571,7 @@
                 "expr": "@list"
               },
               "amount": {
-                "expr": "max(0, @amount - @will.total)"
+                "expr": "max(0, @amount - @volya.total)"
               },
               "physical_hit": {
                 "expr": "not @oglushayuschaya and @list.matrix_mode.hot"
@@ -23585,7 +23585,7 @@
       },
       "drive_mode": {
         "label": "Кто ведёт",
-        "group": "Raschety",
+        "group": "raschety",
         "description": "Сам транспорт (автопилот), водитель или риггер в захвате.",
         "params": [
           {
@@ -23604,7 +23604,7 @@
         "steps": [],
         "returns": [
           {
-            "key": "who",
+            "key": "kto",
             "label": "кто ведёт",
             "kind": "choice",
             "from": "veh_control",
@@ -23616,7 +23616,7 @@
       },
       "defense_action": {
         "label": "Защитное действие",
-        "group": "Deystviya",
+        "group": "deystviya",
         "description": "Простое или сложное действие: даёт состояние защиты до следующей проверки защиты или раунда (стр. 42–43).",
         "params": [
           {
@@ -23666,7 +23666,7 @@
       },
       "dg_kamikaze_crash": {
         "label": "Ломка «Камикадзе»",
-        "group": "Himiya",
+        "group": "himiya",
         "activation": "passive",
         "duration": {
           "kind": "minutes",
@@ -23733,7 +23733,7 @@
       },
       "dg_nitro_crash": {
         "label": "Ломка Нитро",
-        "group": "Himiya",
+        "group": "himiya",
         "activation": "passive",
         "duration": {
           "kind": "minutes",
@@ -23766,7 +23766,7 @@
       },
       "sheet_matrix_noise": {
         "label": "Матрица: рана и шум",
-        "group": "Pravila_listov",
+        "group": "pravila_listov",
         "description": "К проверкам с меткой «матрица»: раны матричного счётчика прибавляют штраф, шум убирает кубики.",
         "activation": "passive",
         "modifiers": [
@@ -23789,7 +23789,7 @@
       },
       "sheet_astral_penalty": {
         "label": "Астральное восприятие: помеха мирскому",
-        "group": "Pravila_listov",
+        "group": "pravila_listov",
         "description": "Пока включено астральное восприятие: −2 кубика к проверкам, кроме магических и сопротивления истощению.",
         "activation": "passive",
         "modifiers": [
@@ -23817,7 +23817,7 @@
       },
       "vehicle_hull": {
         "label": "Корпус транспорта",
-        "group": "Pravila_listov",
+        "group": "pravila_listov",
         "description": "Транспорт невосприимчив к оглушающему урону с СУ не выше его Тела; электричество проходит.",
         "activation": "passive",
         "modifiers": [
@@ -23837,7 +23837,7 @@
       },
       "vehicle_speed_penalty": {
         "label": "Скоростной интервал: штраф к атакам",
-        "group": "Pravila_listov",
+        "group": "pravila_listov",
         "description": "Штраф скоростного интервала убирает кубики из проверок атаки с этого транспорта.",
         "activation": "passive",
         "modifiers": [
@@ -24250,12 +24250,12 @@
           }
         ],
         "blocks": [
-          "Harakteristiki",
-          "Navyki",
-          "Nabory_kubikov",
-          "Zaschita",
-          "Schetchiki",
-          "Iniciativa"
+          "harakteristiki",
+          "navyki",
+          "nabory_kubikov",
+          "zaschita",
+          "schetchiki",
+          "iniciativa"
         ]
       },
       "opponent": {
@@ -24264,12 +24264,12 @@
         "icon": "👤",
         "hint": "Лист противника: характеристики, навыки, защита, счётчики.",
         "blocks": [
-          "Harakteristiki",
-          "Navyki",
-          "Nabory_kubikov",
-          "Zaschita",
-          "Schetchiki",
-          "Iniciativa"
+          "harakteristiki",
+          "navyki",
+          "nabory_kubikov",
+          "zaschita",
+          "schetchiki",
+          "iniciativa"
         ],
         "modifiers": []
       },
@@ -24968,7 +24968,7 @@
     },
     "blocks": [
       {
-        "key": "Lichnoe_delo",
+        "key": "lichnoe_delo",
         "label": "Личное дело",
         "parts": [
           {
@@ -24980,7 +24980,7 @@
         ]
       },
       {
-        "key": "Harakteristiki",
+        "key": "harakteristiki",
         "label": "Характеристики",
         "parts": [
           {
@@ -24999,7 +24999,7 @@
         ]
       },
       {
-        "key": "Osobye",
+        "key": "osobye",
         "label": "Особые",
         "parts": [
           {
@@ -25026,7 +25026,7 @@
         ]
       },
       {
-        "key": "Navyki",
+        "key": "navyki",
         "label": "Навыки",
         "parts": [
           {
@@ -25038,7 +25038,7 @@
         ]
       },
       {
-        "key": "Nabory_kubikov",
+        "key": "nabory_kubikov",
         "label": "Наборы кубиков",
         "parts": [
           {
@@ -25059,7 +25059,7 @@
         ]
       },
       {
-        "key": "Zaschita",
+        "key": "zaschita",
         "label": "Защита",
         "parts": [
           {
@@ -25082,7 +25082,7 @@
         ]
       },
       {
-        "key": "Schetchiki",
+        "key": "schetchiki",
         "label": "Счётчики",
         "parts": [
           {
@@ -25128,7 +25128,7 @@
         ]
       },
       {
-        "key": "Iniciativa",
+        "key": "iniciativa",
         "label": "Инициатива",
         "parts": [
           {
@@ -25154,7 +25154,7 @@
         ]
       },
       {
-        "key": "Stol",
+        "key": "stol",
         "label": "Стол",
         "parts": [
           {
@@ -25583,7 +25583,7 @@
         "cells": {
           "cost": 5,
           "avail": 2,
-          "class": "Inekcionnyy_drotik"
+          "class": "inekcionnyy_drotik"
         }
       },
       {
@@ -25833,7 +25833,7 @@
               "expr": "1"
             },
             "tags": [
-              "healing"
+              "lechenie"
             ],
             "if": {
               "expr": "@roller == @holder and @row.wireless"
@@ -26356,7 +26356,7 @@
             "call": "roll",
             "param": "tags",
             "value": {
-              "expr": "\"bez_Preimuschestva\""
+              "expr": "\"bez_preimuschestva\""
             },
             "anyTags": [
               "ataka",
@@ -26505,7 +26505,7 @@
             "call": "roll",
             "param": "tags",
             "value": {
-              "expr": "\"bonus_Preimuschestva\""
+              "expr": "\"bonus_preimuschestva\""
             },
             "anyTags": [
               "zrenie",
@@ -26563,7 +26563,7 @@
           "avail": 3,
           "legal": "licenziya",
           "cost": 16000,
-          "device_kind": "RPU",
+          "device_kind": "rpu",
           "device_rating": 3,
           "m_dp": 4,
           "m_firewall": 4
@@ -26790,7 +26790,7 @@
             "call": "roll",
             "param": "tags",
             "value": {
-              "expr": "\"bonus_Preimuschestva\""
+              "expr": "\"bonus_preimuschestva\""
             },
             "tags": [
               "vnimanie",
@@ -26954,10 +26954,10 @@
         "label": "Брутфорс",
         "description": "Незаконный доступ; админ без пользователя — СЭ +2 и значение защиты +4. (стр. 180).",
         "cells": {
-          "zaschita": "Volya_SE",
+          "zaschita": "volya_se",
           "illegal": true,
-          "link": "Proniknovenie",
-          "action": "брутфорс"
+          "link": "proniknovenie",
+          "action": "brutfors"
         }
       },
       {
@@ -26966,10 +26966,10 @@
         "label": "Инфошип",
         "description": "(стр. 181).",
         "cells": {
-          "zaschita": "VM_SE",
+          "zaschita": "vm_se",
           "illegal": true,
-          "link": "Proniknovenie",
-          "action": "инфошип"
+          "link": "proniknovenie",
+          "action": "infoship"
         },
         "bindings": [
           {
@@ -26988,10 +26988,10 @@
         "label": "Смоляная яма",
         "description": "(стр. 184).",
         "cells": {
-          "zaschita": "VM_SE",
+          "zaschita": "vm_se",
           "illegal": true,
-          "link": "Proniknovenie",
-          "action": "смоляная яма",
+          "link": "proniknovenie",
+          "action": "smolyanaya_yama",
           "nakladyvaet": "matrix_drain"
         },
         "bindings": [
@@ -27011,9 +27011,9 @@
         "label": "Спрятаться",
         "description": "(стр. 184).",
         "cells": {
-          "zaschita": "Intuiciya_VM",
+          "zaschita": "intuiciya_vm",
           "illegal": true,
-          "action": "спрятаться"
+          "action": "spryatatsya"
         },
         "bindings": [
           {
@@ -27033,15 +27033,15 @@
         "description": "Как Огненный удар, по области. (стр. 133)",
         "cells": {
           "category": "boevoe",
-          "range": "V_o",
-          "stype": "F",
-          "duration": "M",
+          "range": "v_o",
+          "stype": "f",
+          "duration": "m",
           "drain": 6,
           "area": true,
           "combat": "kosvennoe",
           "damage": "fizicheskiy",
-          "element": "fire",
-          "defense": "Reakciya_Volya",
+          "element": "ogon",
+          "defense": "reakciya_volya",
           "outcome": "uron"
         }
       },
@@ -27052,15 +27052,15 @@
         "description": "Чистая энергия, физический урон. Одна цель. (стр. 133)",
         "cells": {
           "category": "boevoe",
-          "range": "V",
-          "stype": "A",
-          "duration": "M",
+          "range": "v",
+          "stype": "a",
+          "duration": "m",
           "drain": 4,
           "area": false,
           "combat": "pryamoe",
           "damage": "fizicheskiy",
-          "element": "none",
-          "defense": "Volya_Intuiciya",
+          "element": "net",
+          "defense": "volya_intuiciya",
           "outcome": "uron"
         }
       },
@@ -27071,13 +27071,13 @@
         "description": "Проверка Колдовство + Магия с порогом (5 − Сущность). Восстанавливает 1 ячейку оглушающего, физического или критического урона за каждый чистый успех. На каждую травму можно воздействовать только одним исцеляющим заклинанием (включая Охлаждающее, Очищающее, Согревающее исцеление). (стр. 135)",
         "cells": {
           "category": "iscelenie",
-          "range": "K",
-          "stype": "F",
-          "duration": "P",
+          "range": "k",
+          "stype": "f",
+          "duration": "p",
           "drain": 5,
           "area": false,
           "defense": "iscelenie",
-          "outcome": "healing"
+          "outcome": "lechenie"
         }
       },
       {
@@ -27087,9 +27087,9 @@
         "description": "Для цели с критическим уроном или продолжительным уроном (состояние). Проверка Колдовство + Магия с порогом = числу ячеек критического урона. При преодолении порога цель стабилизирована и весь критический урон убирается. Чистые успехи влияют только на критический урон, не исцеляют обычный. (стр. 136)",
         "cells": {
           "category": "iscelenie",
-          "range": "K",
-          "stype": "A",
-          "duration": "P",
+          "range": "k",
+          "stype": "a",
+          "duration": "p",
           "drain": 3,
           "area": false,
           "defense": "kriticheskie",
@@ -27103,9 +27103,9 @@
         "description": "Проверка Колдовство + Магия (5 − Сущность). Заклинатель выбирает характеристику до сотворения; 1 уровень повышения за 1 чистый успех (максимальный бонус +4). За каждый применённый успех сверх первого СИ +1. Не действует на Преимущество, Сущность, Магию, Резонанс. (стр. 137)",
         "cells": {
           "category": "iscelenie",
-          "range": "K",
-          "stype": "F",
-          "duration": "D",
+          "range": "k",
+          "stype": "f",
+          "duration": "d",
           "drain": 3,
           "area": false,
           "defense": "iscelenie",
@@ -27122,12 +27122,12 @@
         "description": "Проверка Колдовство + Магия; чистые успехи добавляются к значению защиты цели. (стр. 139)",
         "cells": {
           "category": "upravlenie",
-          "range": "K",
-          "stype": "F",
-          "duration": "D",
+          "range": "k",
+          "stype": "f",
+          "duration": "d",
           "drain": 4,
           "area": false,
-          "defense": "none",
+          "defense": "net",
           "outcome": "usilenie_polya",
           "boost_field": "armor_extra",
           "spell_effect": "sp_armor"
@@ -27150,7 +27150,7 @@
         "label": "Источник ритуального заклинания",
         "description": "Заклинательные. Добавляет свою Мощь к набору кубиков для проверок Ритуального заклинания (неважно, лидер вы или участник). Если ритуал не включает заклинание, источник всё равно можно использовать; если ритуал с заклинанием другой категории, использовать источник нельзя. Привязка: Мощь × 2 кармы и 1 час на единицу Мощи (стр. 155)",
         "cells": {
-          "focus_kind": "Istochnik_ritualnogo_zaklinaniya",
+          "focus_kind": "istochnik_ritualnogo_zaklinaniya",
           "legal": "licenziya",
           "rating": 1,
           "rating_max": 6
@@ -27162,7 +27162,7 @@
         "label": "Источник силы",
         "description": "Силы. Временно увеличивает ваш действующий уровень Магии. Добавляет Мощь к набору кубиков для проверок Колдовства каждый раз, когда используете этот навык, а также к другим проверкам, связанным с Магией. Форма любая (популярны кольца и амулеты). Привязка: Мощь × 6 кармы и 1 час на единицу Мощи (стр. 155)",
         "cells": {
-          "focus_kind": "Istochnik_sily",
+          "focus_kind": "istochnik_sily",
           "legal": "licenziya",
           "rating": 1,
           "rating_max": 6
@@ -27174,7 +27174,7 @@
         "label": "Оружейный источник",
         "description": "Оружейные. Всегда оружие ближнего боя (не дистанционное). Добавляет магическую силу к атакам ближнего боя. В физическом бою добавляет Мощь к набору кубиков проверки Атаки; вы используете собственные характеристики и навыки. Эффективен против астральных форм независимо от того, астральная проекция или Внимание в астрале: добавляет Мощь к проверкам Астрального боя. Урон оружия тот же, что и в физическом мире, вы выбираете оглушающий или физический. Привязка: Мощь × 3 кармы и 1 час на единицу Мощи (стр. 156)",
         "cells": {
-          "focus_kind": "Oruzheynyy_istochnik",
+          "focus_kind": "oruzheynyy_istochnik",
           "legal": "licenziya",
           "rating": 1,
           "rating_max": 6
@@ -27268,7 +27268,7 @@
         "description": "Простая проверка Электроники + Резонанса с порогом 4: за каждый чистый успех выбранная характеристика в Матрице +1, но не выше базового значения × 2. Можно приобрести несколько раз, каждый раз для новой характеристики. Угасание 4, длительная (стр. 190)",
         "cells": {
           "fading": 4,
-          "duration": "D",
+          "duration": "d",
           "skill": "elektronika",
           "defense": "porog",
           "outcome": "harakteristika",
@@ -27282,11 +27282,11 @@
         "description": "Проверка Взлома + Резонанса против Воли + Сетевого экрана. Каждый чистый успех наносит 1 урон Матрицы без сопротивления. Угасание 4, мгновенная (стр. 191)",
         "cells": {
           "fading": 4,
-          "duration": "M",
+          "duration": "m",
           "skill": "vzlom",
           "illegal": true,
-          "defense": "Volya_SE",
-          "outcome": "uron_Matricy"
+          "defense": "volya_se",
+          "outcome": "uron_matricy"
         }
       },
       {
@@ -27297,7 +27297,7 @@
         "cells": {
           "action": "slozhnoe",
           "skill": "vzlom",
-          "defense": "Volya_SE",
+          "defense": "volya_se",
           "status": "sprite_trap"
         }
       },
@@ -27309,7 +27309,7 @@
         "cells": {
           "action": "prostoe",
           "skill": "elektronika",
-          "defense": "none",
+          "defense": "net",
           "duration_rounds": "Уровень × 10"
         }
       },

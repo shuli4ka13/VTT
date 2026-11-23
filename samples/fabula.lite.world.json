@@ -4,13 +4,13 @@
     "id": "fabula-ultima",
     "name": "Fabula Ultima",
     "tables": {
-      "who": {
+      "list": {
         "label": "Лист",
         "shape": "single",
         "owner": "sheet",
         "columns": [
           {
-            "key": "dexterity",
+            "key": "lovkost",
             "label": "Ловкость",
             "kind": "number",
             "default": 8,
@@ -26,7 +26,7 @@
             "max": 12
           },
           {
-            "key": "strength",
+            "key": "sila",
             "label": "Сила",
             "kind": "number",
             "default": 8,
@@ -34,7 +34,7 @@
             "max": 12
           },
           {
-            "key": "will",
+            "key": "volya",
             "label": "Воля",
             "kind": "number",
             "default": 8,
@@ -42,7 +42,7 @@
             "max": 12
           },
           {
-            "key": "defense",
+            "key": "zaschita",
             "label": "Защита",
             "kind": "number",
             "default": 10
@@ -101,10 +101,10 @@
         ],
         "rows": [
           {
-            "value": "dexterity",
+            "value": "lovkost",
             "label": "Ловкость",
             "cells": {
-              "pole": "dexterity"
+              "pole": "lovkost"
             }
           },
           {
@@ -115,17 +115,17 @@
             }
           },
           {
-            "value": "strength",
+            "value": "sila",
             "label": "Сила",
             "cells": {
-              "pole": "strength"
+              "pole": "sila"
             }
           },
           {
-            "value": "will",
+            "value": "volya",
             "label": "Воля",
             "cells": {
-              "pole": "will"
+              "pole": "volya"
             }
           }
         ]
@@ -141,7 +141,7 @@
           }
         ]
       },
-      "weapon": {
+      "oruzhie": {
         "label": "Оружие",
         "shape": "book",
         "use": "item",
@@ -164,7 +164,7 @@
             "kind": "number"
           },
           {
-            "key": "damage",
+            "key": "uron",
             "label": "Урон сверх старшей кости",
             "kind": "number"
           }
@@ -172,7 +172,7 @@
         "bindings": [
           {
             "label": "Атаковать",
-            "effect": "attack",
+            "effect": "ataka",
             "args": {
               "pervaya": {
                 "expr": "@pervaya"
@@ -183,8 +183,8 @@
               "tochnost": {
                 "expr": "@tochnost"
               },
-              "damage": {
-                "expr": "@damage"
+              "uron": {
+                "expr": "@uron"
               }
             }
           }
@@ -204,9 +204,9 @@
         "bindings": [
           {
             "label": "Применить",
-            "effect": "healing",
+            "effect": "lechenie",
             "args": {
-              "amount": {
+              "skolko": {
                 "expr": "@lechit"
               }
             }
@@ -266,48 +266,48 @@
         ],
         "fields": [
           {
-            "table": "who",
-            "column": "dexterity"
+            "table": "list",
+            "column": "lovkost"
           },
           {
-            "table": "who",
+            "table": "list",
             "column": "vospriyatie"
           },
           {
-            "table": "who",
-            "column": "strength"
+            "table": "list",
+            "column": "sila"
           },
           {
-            "table": "who",
-            "column": "will"
+            "table": "list",
+            "column": "volya"
           }
         ]
       }
     },
     "blocks": [
       {
-        "key": "Harakteristiki",
+        "key": "harakteristiki",
         "label": "Характеристики",
         "parts": [
           {
-            "table": "who",
+            "table": "list",
             "columns": [
-              "dexterity",
+              "lovkost",
               "vospriyatie",
-              "strength",
-              "will"
+              "sila",
+              "volya"
             ]
           }
         ]
       },
       {
-        "key": "Boy",
+        "key": "boy",
         "label": "Бой",
         "parts": [
           {
-            "table": "who",
+            "table": "list",
             "columns": [
-              "defense",
+              "zaschita",
               "mag_zaschita",
               "oz",
               "oz_maks",
@@ -405,7 +405,7 @@
           }
         ]
       },
-      "attack": {
+      "ataka": {
         "label": "Атака",
         "description": "Проверка меткости: две кости характеристик оружия плюс его прибавка против Защиты цели. Попал — урон: старшая из двух костей плюс число оружия.",
         "params": [
@@ -417,10 +417,10 @@
           {
             "kind": "sheet",
             "many": true,
-            "key": "aims",
+            "key": "celi",
             "label": "Цели",
             "item": {
-              "key": "aim",
+              "key": "cel",
               "label": "Цель"
             }
           },
@@ -442,7 +442,7 @@
             "kind": "number"
           },
           {
-            "key": "damage",
+            "key": "uron",
             "label": "Урон сверх старшей кости",
             "kind": "number"
           }
@@ -464,7 +464,7 @@
           },
           {
             "type": "each",
-            "of": "aims"
+            "of": "celi"
           },
           {
             "id": "proverka",
@@ -474,7 +474,7 @@
               "expr": "@brosok"
             },
             "versus": {
-              "expr": "if(@brosok.parts.pervaya == @brosok.parts.vtoraya and @brosok.parts.pervaya >= 6, 0, if(@brosok.parts.pervaya == 1 and @brosok.parts.vtoraya == 1, 999, @aim.defense))"
+              "expr": "if(@brosok.parts.pervaya == @brosok.parts.vtoraya and @brosok.parts.pervaya >= 6, 0, if(@brosok.parts.pervaya == 1 and @brosok.parts.vtoraya == 1, 999, @cel.zaschita))"
             },
             "degrees": [
               {
@@ -500,10 +500,10 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@aim.oz"
+              "expr": "@cel.oz"
             },
             "value": {
-              "expr": "max(@brosok.parts.pervaya, @brosok.parts.vtoraya) + @damage"
+              "expr": "max(@brosok.parts.pervaya, @brosok.parts.vtoraya) + @uron"
             }
           },
           {
@@ -511,7 +511,7 @@
           }
         ]
       },
-      "healing": {
+      "lechenie": {
         "label": "Лечение",
         "description": "Возвращает очки здоровья без броска.",
         "params": [
@@ -521,7 +521,7 @@
             "label": "Кто действует"
           },
           {
-            "key": "amount",
+            "key": "skolko",
             "label": "Сколько ОЗ",
             "kind": "number"
           }
@@ -534,7 +534,7 @@
             },
             "direction": "add",
             "value": {
-              "expr": "@amount"
+              "expr": "@skolko"
             }
           }
         ]
@@ -556,14 +556,14 @@
       },
       {
         "id": "weapon_example",
-        "table": "weapon",
+        "table": "oruzhie",
         "label": "Оружие из примера",
         "description": "Пример буклета: Ловкость + Сила, +2 к меткости, урон — старшая кость + 10.",
         "cells": {
-          "pervaya": "dexterity",
-          "vtoraya": "strength",
+          "pervaya": "lovkost",
+          "vtoraya": "sila",
           "tochnost": 2,
-          "damage": 10
+          "uron": 10
         }
       },
       {
@@ -583,11 +583,11 @@
       "systemId": "fabula-ultima",
       "name": "Герой",
       "values": {
-        "dexterity": 10,
+        "lovkost": 10,
         "vospriyatie": 8,
-        "strength": 8,
-        "will": 6,
-        "defense": 11,
+        "sila": 8,
+        "volya": 6,
+        "zaschita": 11,
         "oz_maks": 50,
         "oz": 50
       },
@@ -609,11 +609,11 @@
       "systemId": "fabula-ultima",
       "name": "Противник",
       "values": {
-        "dexterity": 8,
+        "lovkost": 8,
         "vospriyatie": 6,
-        "strength": 10,
-        "will": 6,
-        "defense": 9,
+        "sila": 10,
+        "volya": 6,
+        "zaschita": 9,
         "oz_maks": 40,
         "oz": 40
       },

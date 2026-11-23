@@ -21,13 +21,13 @@ const traceOf = (out: ReturnType<typeof exchange>, step: string) =>
   out.reports.flatMap(r => (r.report.trace ?? []) as { step: unknown; total?: number }[]).find(t => t.step === step)?.total;
 const fire = (has: Sheet['has'], inputs: Record<string, string>, values: Record<string, unknown> = {}) => exchange({
   system, compendium, die: tape(), sheets: [runner({ agility: 4, 'skills.strelba.rank': 5, ...values }, has), { ...runner({}), id: 'цель' } as Sheet],
-  actionId: 'predator_vi:0', fromId: 'бег', toIds: ['цель'], inputs: { distanciya_2: 'blizkaya', ...inputs },
+  actionId: 'predator_vi:0', fromId: 'бег', toIds: ['цель'], inputs: { distanciya: 'blizkaya', ...inputs },
 });
 
 group('Shadowrun 6, глава «Снаряжение и импланты»: ситуации книжника (стр. 39, 108–109, 244–293)', () => {
   test('SR-GEAR-1 (стр. 282): сорт импланта множит Сущность — киберглаза 3 дельта 0,15, б/у 0,33', () => {
     const essence = (grade: string) => at(runner({}, [{ of: 'cybereyes', values: { rating: 3, grade } }]), 'essence') as number;
-    eq(Math.round((6 - essence('delta_2')) * 100) / 100, 0.15);
+    eq(Math.round((6 - essence('delta')) * 100) / 100, 0.15);
     eq(Math.round((6 - essence('b_u')) * 100) / 100, 0.33);
     eq(Math.round((6 - essence('standart')) * 100) / 100, 0.3);
   });
@@ -61,7 +61,7 @@ group('Shadowrun 6, глава «Снаряжение и импланты»: с�
     const laser = (wireless: boolean) => [{ of: 'colt_l36', id: 'ствол' }, { of: 'laser_sight', in: 'ствол', ...(wireless ? { values: { wireless: true } } : {}) }] as Sheet['has'];
     const colt = (has: Sheet['has'], values: Record<string, unknown> = {}) => traceOf(exchange({
       system, compendium, die: tape(), sheets: [runner({ agility: 4, 'skills.strelba.rank': 5, ...values }, has), { ...runner({}), id: 'цель' } as Sheet],
-      actionId: 'colt_l36:0', fromId: 'бег', toIds: ['цель'], inputs: { distanciya_2: 'blizkaya' },
+      actionId: 'colt_l36:0', fromId: 'бег', toIds: ['цель'], inputs: { distanciya: 'blizkaya' },
     }), 'atk');
     const base = colt([{ of: 'colt_l36' }])!;
     eq(colt(laser(false)), base + 1);
@@ -77,7 +77,7 @@ group('Shadowrun 6, глава «Снаряжение и импланты»: с�
       const dice = (sheet: Sheet) => {
         const out = exchange({
           system, compendium, die: () => 6, sheets: [runner({ agility: 4, 'skills.strelba.rank': 5, 'skills.blizhniy_boy.rank': 5 }, [{ of: damage === 'физический' ? 'predator_vi' : 'stun_baton' }]), sheet],
-          actionId: damage === 'физический' ? 'predator_vi:0' : 'stun_baton:0', fromId: 'бег', toIds: ['цель'], inputs: damage === 'физический' ? { distanciya_2: 'blizkaya' } : {},
+          actionId: damage === 'физический' ? 'predator_vi:0' : 'stun_baton:0', fromId: 'бег', toIds: ['цель'], inputs: damage === 'физический' ? { distanciya: 'blizkaya' } : {},
         });
         return out.reports.flatMap(r => (r.report.trace ?? []) as { step: unknown; rolls?: number[] }[]).find(entry => entry.step === 'soprotivlenie_brosok')?.rolls?.length as number;
       };
@@ -168,7 +168,7 @@ group('Shadowrun 6, глава «Снаряжение и импланты»: с�
     };
     eq(dice(fresh, 'skills.vnimanie.pool') - dice(crashed, 'skills.vnimanie.pool'), 2);
     const soak = (target: Sheet) => {
-      const out = exchange({ system, compendium, die: () => 6, sheets: [runner({ agility: 4, 'skills.strelba.rank': 5 }, [{ of: 'predator_vi' }]), { ...target, id: 'цель' } as Sheet], actionId: 'predator_vi:0', fromId: 'бег', toIds: ['цель'], inputs: { distanciya_2: 'blizkaya' } });
+      const out = exchange({ system, compendium, die: () => 6, sheets: [runner({ agility: 4, 'skills.strelba.rank': 5 }, [{ of: 'predator_vi' }]), { ...target, id: 'цель' } as Sheet], actionId: 'predator_vi:0', fromId: 'бег', toIds: ['цель'], inputs: { distanciya: 'blizkaya' } });
       return out.reports.flatMap(r => (r.report.trace ?? []) as { step: unknown; rolls?: number[] }[]).find(entry => entry.step === 'soprotivlenie_brosok')?.rolls?.length as number;
     };
     eq(soak(fresh) - soak({ ...crashed, effects: crashed.effects.filter(e => e.effectId !== 'fatigued') } as Sheet), 2);
@@ -198,20 +198,20 @@ group('Shadowrun 6: заявки к броску с листа — лечени�
   test('аптечка: +1 кубик к Биотехнологиям только с заявкой «лечение» и в беспроводном режиме; автовзломщик — к заявке «взлом замков»', () => {
     const medic = (wireless: boolean) => runner({ 'skills.biotehnologii.rank': 2 }, [{ of: 'medkit', values: { wireless } }]);
     const base = rollWith(medic(true), 'skills.biotehnologii.pool').pool;
-    eq(rollWith(medic(true), 'skills.biotehnologii.pool', ['healing']).pool, base + 1);
-    eq(rollWith(medic(false), 'skills.biotehnologii.pool', ['healing']).pool, base);
+    eq(rollWith(medic(true), 'skills.biotehnologii.pool', ['lechenie']).pool, base + 1);
+    eq(rollWith(medic(false), 'skills.biotehnologii.pool', ['lechenie']).pool, base);
     const picker = runner({ 'skills.inzhenernoe_delo.rank': 2 }, [{ of: 'brk_autopick' }]);
     eq(rollWith(picker, 'skills.inzhenernoe_delo.pool', ['vzlom_zamkov']).pool, rollWith(picker, 'skills.inzhenernoe_delo.pool').pool + 1);
   });
 
   test('беспроводной режим аптечки, вписанный за столом, включает +1 к лечению', () => {
     const medic = runner({ 'skills.biotehnologii.rank': 2 }, [{ of: 'medkit' }]);
-    const base = rollWith(medic, 'skills.biotehnologii.pool', ['healing']).pool;
+    const base = rollWith(medic, 'skills.biotehnologii.pool', ['lechenie']).pool;
     const out = perform({ system, compendium, clock: null, sheets: [medic], die: () => 2 }, { op: 'set', sheetId: medic.id, tag: 'item:medkit.wireless', value: true });
     if (out.kind !== 'done') throw new Error('вписать не должно спрашивать');
     const wired = out.sheets.find(s => s.id === medic.id)!;
     deepEq(wired.has, [{ of: 'medkit', values: { wireless: true } }]);
-    eq(rollWith(wired, 'skills.biotehnologii.pool', ['healing']).pool, base + 1);
+    eq(rollWith(wired, 'skills.biotehnologii.pool', ['lechenie']).pool, base + 1);
   });
 
   test('пространственный распознаватель: Внимание с заявкой «слух» — +1 кубик без проводов и очко Преимущества; «слух» к другой проверке — ничего', () => {

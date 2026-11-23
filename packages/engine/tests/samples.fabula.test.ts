@@ -32,19 +32,19 @@ const attack = (rolled: number[]) => exchange({
 
 describe('Fabula Ultima: проверка двумя костями характеристик', () => {
   it('грани костей — значения двух характеристик листа', () => {
-    expect(check([4, 3], 'dexterity', 'strength', 10).sides).toEqual([10, 8]);
-    expect(check([4, 3], 'will', 'will', 10).sides).toEqual([6, 6]);
+    expect(check([4, 3], 'lovkost', 'sila', 10).sides).toEqual([10, 8]);
+    expect(check([4, 3], 'volya', 'volya', 10).sides).toEqual([6, 6]);
   });
 
   it('сумма не меньше сложности — успех', () => {
-    expect(check([4, 3], 'dexterity', 'strength', 10).log).toContain('провал');
-    expect(check([6, 4], 'dexterity', 'strength', 10).log).toContain('успех');
+    expect(check([4, 3], 'lovkost', 'sila', 10).log).toContain('провал');
+    expect(check([6, 4], 'lovkost', 'sila', 10).log).toContain('успех');
   });
 
   it('дубль от шестёрок — успех при любой сложности, две единицы — провал при любой', () => {
-    expect(check([6, 6], 'dexterity', 'dexterity', 13).log).toContain('успех, степень критический успех');
-    expect(check([5, 5], 'dexterity', 'dexterity', 13).log).toContain('провал');
-    expect(check([1, 1], 'dexterity', 'strength', 2).log).toContain('провал, степень критический провал');
+    expect(check([6, 6], 'lovkost', 'lovkost', 13).log).toContain('успех, степень критический успех');
+    expect(check([5, 5], 'lovkost', 'lovkost', 13).log).toContain('провал');
+    expect(check([1, 1], 'lovkost', 'sila', 2).log).toContain('провал, степень критический провал');
   });
 });
 
@@ -70,31 +70,31 @@ const click = (rolled: number[], tag: string, more: Record<string, unknown> = {}
 
 describe('Fabula Ultima: проверка щелчком по характеристике листа', () => {
   it('одна характеристика — её кость бросается дважды; вторая названа — кости двух характеристик', () => {
-    expect(click([4, 3], 'dexterity').sides).toEqual([10, 10]);
-    const both = click([4, 3], 'dexterity', { second: 'strength' });
+    expect(click([4, 3], 'lovkost').sides).toEqual([10, 10]);
+    const both = click([4, 3], 'lovkost', { second: 'sila' });
     expect(both.sides).toEqual([10, 8]);
     expect(both.log).toContain('Проверка: Ловкость + Сила');
     expect(both.log).toContain('= 7');
   });
 
   it('без сложности бросок — просто число, без «успех» и «провал»', () => {
-    const out = click([4, 3], 'dexterity', { second: 'strength' }).log;
+    const out = click([4, 3], 'lovkost', { second: 'sila' }).log;
     expect(out).not.toContain('успех');
     expect(out).not.toContain('провал');
   });
 
   it('сложность, названная перед броском: сумма не меньше её — успех', () => {
-    expect(click([4, 3], 'dexterity', { second: 'strength', versus: 10 }).log).toContain('порог 10: провал');
-    expect(click([6, 4], 'dexterity', { second: 'strength', versus: 10 }).log).toContain('порог 10: успех');
+    expect(click([4, 3], 'lovkost', { second: 'sila', versus: 10 }).log).toContain('порог 10: провал');
+    expect(click([6, 4], 'lovkost', { second: 'sila', versus: 10 }).log).toContain('порог 10: успех');
   });
 
   it('дубль от шестёрок — успех при любой сложности и виден без неё, две единицы — провал', () => {
-    expect(click([6, 6], 'dexterity', { versus: 13 }).log).toContain('успех · критический успех');
-    expect(click([6, 6], 'dexterity').log).toContain('критический успех');
-    expect(click([1, 1], 'dexterity', { second: 'strength', versus: 2 }).log).toContain('провал · критический провал');
+    expect(click([6, 6], 'lovkost', { versus: 13 }).log).toContain('успех · критический успех');
+    expect(click([6, 6], 'lovkost').log).toContain('критический успех');
+    expect(click([1, 1], 'lovkost', { second: 'sila', versus: 2 }).log).toContain('провал · критический провал');
   });
 
   it('второе поле из другого броска или у обычного броска — отказ', () => {
-    expect(() => click([1, 1], 'dexterity', { second: 'defense' })).toThrow();
+    expect(() => click([1, 1], 'lovkost', { second: 'zaschita' })).toThrow();
   });
 });

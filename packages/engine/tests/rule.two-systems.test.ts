@@ -37,7 +37,7 @@ group('две системы одними слотами', () => {
       eq(report.trace[0].margin, 2);
       eq(report.trace[2].total, 8, 'урон считается при первом обращении: кость меча 5 плюс Сила 3');
       eq(report.trace[3].event, 'damage', 'удар не трогает хиты сам — отправляет посчитанное');
-      deepEq(report.trace[3].tags, ['рубящий'], 'тип урона приехал из записи оружия');
+      deepEq(report.trace[3].tags, ['rubyaschiy'], 'тип урона приехал из записи оружия');
       eq(report.trace[3].amount, 8);
       eq(report.trace[5].within, 'damage', 'хиты снимает общий эффект');
       eq(report.trace[5].from, 21);
@@ -180,7 +180,7 @@ group('две системы одними слотами', () => {
       const book = {
         ...compendium,
         records: [...compendium.records, { id: 'axe-item', table: 'weapon', label: 'Топор',
-            cells: { damage_dice: '1d12', damage_type: 'рубящий' }, modifiers: [],
+            cells: { damage_dice: '1d12', damage_type: 'rubyaschiy' }, modifiers: [],
 
             bindings: [{ label: 'Удар', effect: 'strike',
               args: { damage_dice: { expr: '@damage_dice' }, damage_type: { expr: '@damage_type' } } }] }],

@@ -4,25 +4,25 @@
     "id": "cp-slice",
     "name": "Киберпанк RED",
     "groups": {
-      "Ataka": {
+      "ataka": {
         "label": "Атака"
       },
-      "Sostoyaniya": {
+      "sostoyaniya": {
         "label": "Состояния"
       },
-      "Snaryazhenie": {
+      "snaryazhenie": {
         "label": "Снаряжение"
       },
-      "Priemy": {
+      "priemy": {
         "label": "Приёмы"
       },
-      "Obschie_pravila": {
+      "obschie_pravila": {
         "label": "Общие правила"
       },
-      "Plata": {
+      "plata": {
         "label": "Плата"
       },
-      "Navyki": {
+      "navyki": {
         "label": "Навыки"
       }
     },
@@ -86,7 +86,7 @@
       }
     },
     "tables": {
-      "who": {
+      "list": {
         "label": "Лист",
         "shape": "single",
         "columns": [
@@ -401,7 +401,7 @@
             }
           },
           {
-            "value": "fire",
+            "value": "ogon",
             "label": "огонь",
             "cells": {
               "armor": "mimo_broni"
@@ -471,7 +471,7 @@
         "key": "word",
         "rows": [
           {
-            "value": "attack",
+            "value": "ataka",
             "label": "атака"
           },
           {
@@ -479,7 +479,7 @@
             "label": "проверка"
           },
           {
-            "value": "saving_throw",
+            "value": "spasbrosok",
             "label": "спасбросок"
           }
         ]
@@ -1055,7 +1055,7 @@
         "hint": "Ствол или клинок: кость урона своя у каждого.",
         "shape": "book",
         "use": "item",
-        "block": "Snaryazhenie",
+        "block": "snaryazhenie",
         "columns": [
           {
             "key": "damage_dice",
@@ -1090,7 +1090,7 @@
         "hint": "Прочность брони: её съедает каждое попадание.",
         "shape": "book",
         "use": "item",
-        "block": "Snaryazhenie",
+        "block": "snaryazhenie",
         "columns": [
           {
             "key": "sp",
@@ -1105,7 +1105,7 @@
         "hint": "То, что персонаж умеет и без снаряжения.",
         "shape": "book",
         "use": "action",
-        "block": "Priemy"
+        "block": "priemy"
       }
     },
     "initiative": {
@@ -1129,7 +1129,7 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
@@ -1196,7 +1196,7 @@
               "expr": "@spend_luck - if(@aim == \"po_golove\", 8, 0)"
             },
             "tags": [
-              "attack"
+              "ataka"
             ]
           },
           {
@@ -1226,7 +1226,7 @@
           },
           {
             "type": "each",
-            "of": "aims"
+            "of": "celi"
           },
           {
             "id": "slozhnost",
@@ -1238,7 +1238,7 @@
             }
           },
           {
-            "id": "hit",
+            "id": "popadanie",
             "label": "попадание",
             "type": "check",
             "value": {
@@ -1251,7 +1251,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@hit.success"
+              "expr": "@popadanie.success"
             }
           },
           {
@@ -1261,10 +1261,10 @@
               "amount": {
                 "expr": "@uron.total"
               },
-              "who": {
+              "list": {
                 "expr": "@cel"
               },
-              "source": {
+              "istochnik": {
                 "expr": "@deystvuyuschiy"
               },
               "damage_type": {
@@ -1291,10 +1291,10 @@
               "damage_type": {
                 "expr": "\"kriticheskiy\""
               },
-              "who": {
+              "list": {
                 "expr": "@cel"
               },
-              "source": {
+              "istochnik": {
                 "expr": "@deystvuyuschiy"
               },
               "aim": {
@@ -1309,16 +1309,16 @@
             "type": "end"
           }
         ],
-        "group": "Ataka",
+        "group": "ataka",
         "cost": [
           {
             "type": "emit",
             "effect": "cost_action",
             "args": {
-              "who": {
+              "list": {
                 "expr": "@deystvuyuschiy"
               },
-              "source": {
+              "istochnik": {
                 "expr": "@deystvuyuschiy"
               }
             }
@@ -1334,7 +1334,7 @@
           }
         ],
         "tags": [
-          "attack"
+          "ataka"
         ]
       },
       "injury_roll": {
@@ -1348,7 +1348,7 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
@@ -1361,7 +1361,7 @@
         "steps": [
           {
             "type": "each",
-            "of": "aims"
+            "of": "celi"
           },
           {
             "id": "chto",
@@ -1383,7 +1383,7 @@
             }
           }
         ],
-        "group": "Sostoyaniya"
+        "group": "sostoyaniya"
       },
       "damage": {
         "label": "Урон",
@@ -1400,7 +1400,7 @@
               "expr": "@amount"
             },
             "versus": {
-              "expr": "@who.sp_body"
+              "expr": "@list.sp_body"
             },
             "successWhen": "over",
             "id": "through_armor"
@@ -1423,7 +1423,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@who.hp"
+              "expr": "@list.hp"
             },
             "value": {
               "expr": "@through_armor.margin"
@@ -1432,7 +1432,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@who.sp_body"
+              "expr": "@list.sp_body"
             },
             "value": {
               "expr": "1"
@@ -1455,7 +1455,7 @@
               "expr": "@amount"
             },
             "versus": {
-              "expr": "@who.sp_head"
+              "expr": "@list.sp_head"
             },
             "successWhen": "over"
           },
@@ -1493,7 +1493,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@who.hp"
+              "expr": "@list.hp"
             },
             "value": {
               "expr": "@v_golovu"
@@ -1502,7 +1502,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@who.sp_head"
+              "expr": "@list.sp_head"
             },
             "value": {
               "expr": "1"
@@ -1520,7 +1520,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@who.hp"
+              "expr": "@list.hp"
             },
             "value": {
               "expr": "@amount"
@@ -1532,13 +1532,13 @@
         ],
         "params": [
           {
-            "key": "who",
+            "key": "list",
             "label": "Лист",
             "kind": "sheet",
             "role": "target"
           },
           {
-            "key": "source",
+            "key": "istochnik",
             "label": "Источник",
             "kind": "sheet",
             "optional": true,
@@ -1567,17 +1567,17 @@
       },
       "cost_action": {
         "label": "Стоимость: действие",
-        "group": "Plata",
+        "group": "plata",
         "description": "Списывается только в бою. Не хватило — действие не состоялось.",
         "params": [
           {
-            "key": "who",
+            "key": "list",
             "label": "Лист",
             "kind": "sheet",
             "role": "actor"
           },
           {
-            "key": "source",
+            "key": "istochnik",
             "label": "Источник",
             "kind": "sheet",
             "optional": true,
@@ -1594,7 +1594,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@who.turn_action < 1"
+              "expr": "@list.turn_action < 1"
             }
           },
           {
@@ -1609,7 +1609,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@who.turn_action"
+              "expr": "@list.turn_action"
             },
             "value": {
               "expr": "1"
@@ -1631,7 +1631,7 @@
         "modifiers": [
           {
             "tags": [
-              "attack"
+              "ataka"
             ],
             "kind": "edit",
             "call": "roll",
@@ -1642,7 +1642,7 @@
             }
           }
         ],
-        "group": "Sostoyaniya"
+        "group": "sostoyaniya"
       },
       "bleeding": {
         "label": "Кровотечение",
@@ -1652,7 +1652,7 @@
           "kind": "permanent"
         },
         "description": "В начале своего хода теряешь 2 хита мимо брони, пока рану не заткнут.",
-        "group": "Sostoyaniya",
+        "group": "sostoyaniya",
         "on": [
           {
             "on": "moment:turn-start",
@@ -1670,10 +1670,10 @@
                   "damage_type": {
                     "expr": "\"krovotechenie\""
                   },
-                  "who": {
+                  "list": {
                     "expr": "@holder"
                   },
-                  "source": {
+                  "istochnik": {
                     "expr": "@holder"
                   }
                 }
@@ -1693,7 +1693,7 @@
         "modifiers": [
           {
             "anyTags": [
-              "attack",
+              "ataka",
               "proverka"
             ],
             "kind": "edit",
@@ -1708,7 +1708,7 @@
             }
           }
         ],
-        "group": "Sostoyaniya"
+        "group": "sostoyaniya"
       },
       "crit_rule": {
         "label": "Критический бросок",
@@ -1721,7 +1721,7 @@
         "modifiers": [
           {
             "anyTags": [
-              "attack",
+              "ataka",
               "proverka"
             ],
             "kind": "edit",
@@ -1734,7 +1734,7 @@
           },
           {
             "anyTags": [
-              "attack",
+              "ataka",
               "proverka"
             ],
             "kind": "edit",
@@ -1746,7 +1746,7 @@
             }
           }
         ],
-        "group": "Sostoyaniya"
+        "group": "sostoyaniya"
       },
       "death_save": {
         "label": "Спасбросок от смерти",
@@ -1756,7 +1756,7 @@
           "kind": "permanent"
         },
         "description": "Хиты на нуле: в начале своего хода к10 минус штраф строго ниже Телосложения, иначе смерть. Каждый спасбросок увеличивает штраф на 1; на новой грани смерти штраф снова 0.",
-        "group": "Sostoyaniya",
+        "group": "sostoyaniya",
         "on": [
           {
             "on": "moment:turn-start",
@@ -1773,14 +1773,14 @@
                   "expr": "@holder.death_penalty"
                 },
                 "tags": [
-                  "saving_throw"
+                  "spasbrosok"
                 ],
                 "by": {
                   "expr": "@holder"
                 }
               },
               {
-                "id": "save",
+                "id": "spas",
                 "label": "спас",
                 "type": "check",
                 "value": {
@@ -1804,7 +1804,7 @@
               {
                 "type": "branch",
                 "if": {
-                  "expr": "not @save.success"
+                  "expr": "not @spas.success"
                 }
               },
               {
@@ -1844,7 +1844,7 @@
       },
       "battle_start": {
         "label": "Начало боя",
-        "group": "Obschie_pravila",
+        "group": "obschie_pravila",
         "description": "Бой пошёл: траты хода считаются, у всех полный запас.",
         "activation": "passive",
         "duration": {
@@ -1880,7 +1880,7 @@
       },
       "turn_refresh": {
         "label": "Начало хода",
-        "group": "Obschie_pravila",
+        "group": "obschie_pravila",
         "description": "Траты хода — снова полные.",
         "activation": "passive",
         "duration": {
@@ -1926,7 +1926,7 @@
       "crit_rule"
     ],
     "tags": {
-      "attack": {
+      "ataka": {
         "label": "Атака",
         "inputs": [
           {
@@ -1934,30 +1934,30 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "kind": "sheet",
             "many": true
           }
         ],
         "each": "cel",
         "outputs": [
-          "hit"
+          "popadanie"
         ],
         "said": {
           "deystvuyuschiy": "действующий",
-          "aims": "цели",
+          "celi": "цели",
           "cel": "цель",
-          "hit": "попадание"
+          "popadanie": "попадание"
         }
       }
     },
     "blocks": [
       {
-        "key": "Lichnoe_delo",
+        "key": "lichnoe_delo",
         "label": "Личное дело",
         "parts": [
           {
-            "table": "who",
+            "table": "list",
             "columns": [
               "handle",
               "role"
@@ -1966,11 +1966,11 @@
         ]
       },
       {
-        "key": "Harakteristiki",
+        "key": "harakteristiki",
         "label": "Характеристики",
         "parts": [
           {
-            "table": "who",
+            "table": "list",
             "columns": [
               "int",
               "ref",
@@ -1988,11 +1988,11 @@
         ]
       },
       {
-        "key": "Sostoyanie",
+        "key": "sostoyanie",
         "label": "Состояние",
         "parts": [
           {
-            "table": "who",
+            "table": "list",
             "columns": [
               "hp_max",
               "hp",
@@ -2025,11 +2025,11 @@
         ]
       },
       {
-        "key": "Bronya",
+        "key": "bronya",
         "label": "Броня",
         "parts": [
           {
-            "table": "who",
+            "table": "list",
             "columns": [
               "sp_head",
               "sp_body"
@@ -2046,7 +2046,7 @@
         ]
       },
       {
-        "key": "Navyki_vnimanie",
+        "key": "navyki_vnimanie",
         "label": "Навыки — внимание",
         "parts": [
           {
@@ -2065,10 +2065,10 @@
             }
           }
         ],
-        "parent": "Navyki"
+        "parent": "navyki"
       },
       {
-        "key": "Navyki_telo",
+        "key": "navyki_telo",
         "label": "Навыки — тело",
         "parts": [
           {
@@ -2088,10 +2088,10 @@
             }
           }
         ],
-        "parent": "Navyki"
+        "parent": "navyki"
       },
       {
-        "key": "Navyki_upravlenie",
+        "key": "navyki_upravlenie",
         "label": "Навыки — управление",
         "parts": [
           {
@@ -2109,10 +2109,10 @@
             }
           }
         ],
-        "parent": "Navyki"
+        "parent": "navyki"
       },
       {
-        "key": "Navyki_obrazovanie",
+        "key": "navyki_obrazovanie",
         "label": "Навыки — образование",
         "parts": [
           {
@@ -2142,10 +2142,10 @@
             }
           }
         ],
-        "parent": "Navyki"
+        "parent": "navyki"
       },
       {
-        "key": "Navyki_boy",
+        "key": "navyki_boy",
         "label": "Навыки — бой",
         "parts": [
           {
@@ -2163,10 +2163,10 @@
             }
           }
         ],
-        "parent": "Navyki"
+        "parent": "navyki"
       },
       {
-        "key": "Navyki_vystuplenie",
+        "key": "navyki_vystuplenie",
         "label": "Навыки — выступление",
         "parts": [
           {
@@ -2182,10 +2182,10 @@
             }
           }
         ],
-        "parent": "Navyki"
+        "parent": "navyki"
       },
       {
-        "key": "Navyki_strelba",
+        "key": "navyki_strelba",
         "label": "Навыки — стрельба",
         "parts": [
           {
@@ -2204,10 +2204,10 @@
             }
           }
         ],
-        "parent": "Navyki"
+        "parent": "navyki"
       },
       {
-        "key": "Navyki_obschenie",
+        "key": "navyki_obschenie",
         "label": "Навыки — общение",
         "parts": [
           {
@@ -2230,10 +2230,10 @@
             }
           }
         ],
-        "parent": "Navyki"
+        "parent": "navyki"
       },
       {
-        "key": "Navyki_tehnika",
+        "key": "navyki_tehnika",
         "label": "Навыки — техника",
         "parts": [
           {
@@ -2262,14 +2262,14 @@
             }
           }
         ],
-        "parent": "Navyki"
+        "parent": "navyki"
       },
       {
-        "key": "V_boyu",
+        "key": "v_boyu",
         "label": "В бою",
         "parts": [
           {
-            "table": "who",
+            "table": "list",
             "columns": [
               "turn_action",
               "turn_move"

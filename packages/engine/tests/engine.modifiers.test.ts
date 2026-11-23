@@ -398,15 +398,15 @@ group('бросок находят по меткам', () => {
   const bonus = (sys, tags) => resolveRoll(sys, sheet, tags, newPass(sys, sheet, { compendium })).bonus;
 
   test('правка на метки ложится на бросок, где есть все её метки', () => {
-    const sys = owl(['proverka', 'wisdom']);
-    eq(bonus(sys, ['proverka', 'wisdom']), 5);
-    eq(bonus(sys, ['proverka', 'wisdom', 'vnimatelnost']), 5, 'лишние метки броска не мешают');
+    const sys = owl(['proverka', 'mudrost']);
+    eq(bonus(sys, ['proverka', 'mudrost']), 5);
+    eq(bonus(sys, ['proverka', 'mudrost', 'vnimatelnost']), 5, 'лишние метки броска не мешают');
   });
 
   test('не хватает хоть одной метки — правка мимо', () => {
-    const sys = owl(['proverka', 'wisdom']);
-    eq(bonus(sys, ['proverka', 'strength']), 0, 'другая характеристика');
-    eq(bonus(sys, ['spasbrosok', 'wisdom']), 0, 'спасбросок той же характеристики');
+    const sys = owl(['proverka', 'mudrost']);
+    eq(bonus(sys, ['proverka', 'sila']), 0, 'другая характеристика');
+    eq(bonus(sys, ['spasbrosok', 'mudrost']), 0, 'спасбросок той же характеристики');
     eq(bonus(sys, []), 0, 'бросок без меток');
   });
 
@@ -416,7 +416,7 @@ group('бросок находят по меткам', () => {
   });
 
   test('характеристика при этом не меняется', () => {
-    const sys = owl(['proverka', 'wisdom']);
+    const sys = owl(['proverka', 'mudrost']);
     eq(calc(sys, sheet, 'wis', newPass(sys, sheet, { compendium })), 12, 'Мудрость как была');
     eq(calc(sys, sheet, 'wis_mod', newPass(sys, sheet, { compendium })), 1, 'и модификатор тоже');
   });

@@ -4,28 +4,28 @@
     "id": "13age",
     "name": "13th Age",
     "groups": {
-      "Ataka": {
+      "ataka": {
         "label": "Атака"
       },
-      "Boy": {
+      "boy": {
         "label": "Бой"
       },
-      "Broski_i_proverki": {
+      "broski_i_proverki": {
         "label": "Броски и проверки"
       },
-      "Chto_sluchaetsya": {
+      "chto_sluchaetsya": {
         "label": "Что случается"
       },
-      "Plata": {
+      "plata": {
         "label": "Плата"
       },
-      "Snaryazhenie": {
+      "snaryazhenie": {
         "label": "Снаряжение"
       },
-      "Priemy": {
+      "priemy": {
         "label": "Приёмы"
       },
-      "Obschie_pravila": {
+      "obschie_pravila": {
         "label": "Общие правила"
       }
     },
@@ -169,26 +169,26 @@
         ],
         "rows": [
           {
-            "value": "blizhniy_boy_Sila",
+            "value": "blizhniy_boy_sila",
             "label": "ближний бой — Сила",
             "cells": {
               "attack": {
-                "expr": "@abilities.strength.mod"
+                "expr": "@abilities.sila.mod"
               },
               "damage": {
-                "expr": "@abilities.strength.mod"
+                "expr": "@abilities.sila.mod"
               }
             }
           },
           {
-            "value": "dalniy_boy_Lovkost",
+            "value": "dalniy_boy_lovkost",
             "label": "дальний бой — Ловкость",
             "cells": {
               "attack": {
-                "expr": "@abilities.dexterity.mod"
+                "expr": "@abilities.lovkost.mod"
               },
               "damage": {
-                "expr": "@abilities.dexterity.mod"
+                "expr": "@abilities.lovkost.mod"
               }
             }
           }
@@ -229,27 +229,27 @@
         ],
         "rows": [
           {
-            "value": "strength",
+            "value": "sila",
             "label": "Сила"
           },
           {
-            "value": "constitution",
+            "value": "teloslozhenie",
             "label": "Телосложение"
           },
           {
-            "value": "dexterity",
+            "value": "lovkost",
             "label": "Ловкость"
           },
           {
-            "value": "intelligence",
+            "value": "intellekt",
             "label": "Интеллект"
           },
           {
-            "value": "wisdom",
+            "value": "mudrost",
             "label": "Мудрость"
           },
           {
-            "value": "charisma",
+            "value": "harizma",
             "label": "Харизма"
           }
         ],
@@ -261,7 +261,7 @@
         "hint": "Кость оружия и способ атаки свои у каждого.",
         "shape": "book",
         "use": "item",
-        "block": "Snaryazhenie",
+        "block": "snaryazhenie",
         "columns": [
           {
             "key": "weapon_die",
@@ -299,7 +299,7 @@
         "hint": "Бонус атаки и урон вписаны числами.",
         "shape": "book",
         "use": "action",
-        "block": "Priemy",
+        "block": "priemy",
         "columns": [
           {
             "key": "to_hit",
@@ -333,7 +333,7 @@
         "hint": "Ведущий двигает кость эскалации.",
         "shape": "book",
         "use": "action",
-        "block": "Priemy"
+        "block": "priemy"
       },
       "attack_outcomes": {
         "label": "Исход атаки",
@@ -381,13 +381,13 @@
     "initiative": {
       "die": "lead_die",
       "bonus": {
-        "expr": "@abilities.dexterity.mod + @level"
+        "expr": "@abilities.lovkost.mod + @level"
       }
     },
     "effects": {
       "damage": {
         "label": "Урон",
-        "group": "Chto_sluchaetsya",
+        "group": "chto_sluchaetsya",
         "params": [
           {
             "key": "list",
@@ -396,7 +396,7 @@
             "role": "target"
           },
           {
-            "key": "source",
+            "key": "istochnik",
             "label": "Источник",
             "kind": "sheet",
             "optional": true,
@@ -423,7 +423,7 @@
       },
       "hero_attack": {
         "label": "Атака героя",
-        "group": "Ataka",
+        "group": "ataka",
         "description": "к20 + модификатор + уровень + кость эскалации против КЗ. Попал — кость оружия за каждый уровень, на 20 вдвое. Промах — урон, равный уровню.",
         "params": [
           {
@@ -432,12 +432,12 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
             "item": {
-              "key": "aim",
+              "key": "cel",
               "label": "Цель"
             }
           },
@@ -460,7 +460,7 @@
         "steps": [
           {
             "type": "each",
-            "of": "aims"
+            "of": "celi"
           },
           {
             "id": "brosok",
@@ -468,14 +468,14 @@
             "type": "emit",
             "effect": "attack_roll",
             "args": {
-              "bonus_2": {
+              "bonus": {
                 "expr": "@attack_with + @deystvuyuschiy.level + @desk.escalation"
               },
-              "who": {
+              "kto": {
                 "expr": "@deystvuyuschiy"
               },
               "protiv": {
-                "expr": "@aim"
+                "expr": "@cel"
               }
             }
           },
@@ -507,9 +507,9 @@
                 "expr": "@uron.total"
               },
               "list": {
-                "expr": "@aim"
+                "expr": "@cel"
               },
-              "source": {
+              "istochnik": {
                 "expr": "@deystvuyuschiy"
               }
             }
@@ -525,9 +525,9 @@
                 "expr": "@deystvuyuschiy.level"
               },
               "list": {
-                "expr": "@aim"
+                "expr": "@cel"
               },
-              "source": {
+              "istochnik": {
                 "expr": "@deystvuyuschiy"
               }
             }
@@ -544,7 +544,7 @@
               "list": {
                 "expr": "@deystvuyuschiy"
               },
-              "source": {
+              "istochnik": {
                 "expr": "@deystvuyuschiy"
               }
             }
@@ -556,7 +556,7 @@
       },
       "monster_attack": {
         "label": "Атака монстра",
-        "group": "Ataka",
+        "group": "ataka",
         "description": "Монстры бьют фиксированным уроном и кость эскалации не получают.",
         "params": [
           {
@@ -565,12 +565,12 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
             "item": {
-              "key": "aim",
+              "key": "cel",
               "label": "Цель"
             }
           },
@@ -588,7 +588,7 @@
         "steps": [
           {
             "type": "each",
-            "of": "aims"
+            "of": "celi"
           },
           {
             "id": "brosok",
@@ -596,14 +596,14 @@
             "type": "emit",
             "effect": "attack_roll",
             "args": {
-              "bonus_2": {
+              "bonus": {
                 "expr": "@to_hit"
               },
-              "who": {
+              "kto": {
                 "expr": "@deystvuyuschiy"
               },
               "protiv": {
-                "expr": "@aim"
+                "expr": "@cel"
               }
             }
           },
@@ -621,9 +621,9 @@
                 "expr": "@hit_damage"
               },
               "list": {
-                "expr": "@aim"
+                "expr": "@cel"
               },
-              "source": {
+              "istochnik": {
                 "expr": "@deystvuyuschiy"
               }
             }
@@ -640,7 +640,7 @@
               "list": {
                 "expr": "@deystvuyuschiy"
               },
-              "source": {
+              "istochnik": {
                 "expr": "@deystvuyuschiy"
               }
             }
@@ -652,12 +652,12 @@
       },
       "new_round": {
         "label": "Новый раунд",
-        "group": "Boy",
+        "group": "boy",
         "description": "Кость эскалации растёт на единицу, но не выше 6. Только если ведущий ведёт раунды без часов: при ходах по инициативе кость растёт сама в начале раунда — не жмите вместе.",
         "steps": [
           {
             "type": "each",
-            "of": "aims"
+            "of": "celi"
           },
           {
             "type": "apply",
@@ -677,12 +677,12 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
             "item": {
-              "key": "aim",
+              "key": "cel",
               "label": "Цель"
             }
           }
@@ -690,12 +690,12 @@
       },
       "end_battle": {
         "label": "Конец боя",
-        "group": "Boy",
+        "group": "boy",
         "description": "Кость эскалации сбрасывается.",
         "steps": [
           {
             "type": "each",
-            "of": "aims"
+            "of": "celi"
           },
           {
             "type": "apply",
@@ -715,12 +715,12 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
             "item": {
-              "key": "aim",
+              "key": "cel",
               "label": "Цель"
             }
           }
@@ -728,7 +728,7 @@
       },
       "cost_standard": {
         "label": "Стоимость: стандартное",
-        "group": "Plata",
+        "group": "plata",
         "description": "Списывается только в бою. Не хватило — действие не состоялось.",
         "params": [
           {
@@ -738,7 +738,7 @@
             "role": "actor"
           },
           {
-            "key": "source",
+            "key": "istochnik",
             "label": "Источник",
             "kind": "sheet",
             "optional": true,
@@ -783,7 +783,7 @@
       },
       "battle_start": {
         "label": "Начало боя",
-        "group": "Obschie_pravila",
+        "group": "obschie_pravila",
         "description": "Бой пошёл: траты хода считаются, у всех полный запас.",
         "activation": "passive",
         "duration": {
@@ -829,7 +829,7 @@
       },
       "turn_refresh": {
         "label": "Начало хода",
-        "group": "Obschie_pravila",
+        "group": "obschie_pravila",
         "description": "Траты хода — снова полные.",
         "activation": "passive",
         "duration": {
@@ -878,7 +878,7 @@
       },
       "escalation_round": {
         "label": "Эскалация раунда",
-        "group": "Obschie_pravila",
+        "group": "obschie_pravila",
         "description": "В начале каждого раунда, кроме первого, кость эскалации растёт на единицу (не выше 6); в первом раунде — 0. Висит на столе — срабатывает раз за раунд.",
         "activation": "passive",
         "duration": {
@@ -904,11 +904,11 @@
       },
       "attack_roll": {
         "label": "Бросок атаки",
-        "group": "Broski_i_proverki",
+        "group": "broski_i_proverki",
         "description": "Бросок к20 + бонус против защиты (КД) цели; 20 на кости — крит.",
         "params": [
           {
-            "key": "who",
+            "key": "kto",
             "label": "Кто бросает",
             "kind": "sheet",
             "role": "actor"
@@ -920,7 +920,7 @@
             "role": "target"
           },
           {
-            "key": "bonus_2",
+            "key": "bonus",
             "label": "Бонус атаки",
             "kind": "number",
             "default": 0
@@ -952,13 +952,13 @@
             "type": "roll",
             "die": "lead_die",
             "bonus": {
-              "expr": "@bonus_2"
+              "expr": "@bonus"
             },
             "tags": [
               "ataka"
             ],
             "by": {
-              "expr": "@who"
+              "expr": "@kto"
             }
           },
           {
@@ -1008,26 +1008,26 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "kind": "sheet",
             "many": true
           }
         ],
-        "each": "aim",
+        "each": "cel",
         "outputs": [
           "brosok"
         ],
         "said": {
           "deystvuyuschiy": "действующий",
-          "aims": "цели",
-          "aim": "цель",
+          "celi": "цели",
+          "cel": "цель",
           "brosok": "бросок"
         }
       }
     },
     "blocks": [
       {
-        "key": "Harakteristiki",
+        "key": "harakteristiki",
         "label": "Характеристики",
         "parts": [
           {
@@ -1050,7 +1050,7 @@
         ]
       },
       {
-        "key": "Modifikatory",
+        "key": "modifikatory",
         "label": "Модификаторы",
         "parts": [
           {
@@ -1067,7 +1067,7 @@
         ]
       },
       {
-        "key": "Zaschita",
+        "key": "zaschita",
         "label": "Защита",
         "parts": [
           {
@@ -1081,7 +1081,7 @@
         ]
       },
       {
-        "key": "Zdorove",
+        "key": "zdorove",
         "label": "Здоровье",
         "parts": [
           {
@@ -1104,7 +1104,7 @@
         ]
       },
       {
-        "key": "Stol",
+        "key": "stol",
         "label": "Стол",
         "parts": [
           {
@@ -1118,7 +1118,7 @@
         ]
       },
       {
-        "key": "V_boyu",
+        "key": "v_boyu",
         "label": "В бою",
         "parts": [
           {
@@ -1143,7 +1143,7 @@
         ]
       },
       {
-        "key": "Tolpa",
+        "key": "tolpa",
         "label": "Толпа",
         "parts": [
           {
@@ -1166,7 +1166,7 @@
         "table": "weapon",
         "cells": {
           "weapon_die": "1d8",
-          "wield": "blizhniy_boy_Sila"
+          "wield": "blizhniy_boy_sila"
         }
       },
       {
@@ -1176,7 +1176,7 @@
         "table": "weapon",
         "cells": {
           "weapon_die": "1d4",
-          "wield": "blizhniy_boy_Sila"
+          "wield": "blizhniy_boy_sila"
         }
       },
       {
@@ -1186,7 +1186,7 @@
         "table": "weapon",
         "cells": {
           "weapon_die": "1d8",
-          "wield": "dalniy_boy_Lovkost"
+          "wield": "dalniy_boy_lovkost"
         }
       },
       {
@@ -1232,12 +1232,12 @@
       "of": "personazh",
       "name": "Кай",
       "values": {
-        "abilities.strength.score": 18,
-        "abilities.constitution.score": 14,
-        "abilities.dexterity.score": 12,
-        "abilities.intelligence.score": 10,
-        "abilities.wisdom.score": 12,
-        "abilities.charisma.score": 10,
+        "abilities.sila.score": 18,
+        "abilities.teloslozhenie.score": 14,
+        "abilities.lovkost.score": 12,
+        "abilities.intellekt.score": 10,
+        "abilities.mudrost.score": 12,
+        "abilities.harizma.score": 10,
         "level": 2,
         "ac": 17,
         "pd": 14,
@@ -1264,12 +1264,12 @@
       "of": "personazh",
       "name": "Лея",
       "values": {
-        "abilities.strength.score": 10,
-        "abilities.constitution.score": 12,
-        "abilities.dexterity.score": 18,
-        "abilities.intelligence.score": 12,
-        "abilities.wisdom.score": 14,
-        "abilities.charisma.score": 10,
+        "abilities.sila.score": 10,
+        "abilities.teloslozhenie.score": 12,
+        "abilities.lovkost.score": 18,
+        "abilities.intellekt.score": 12,
+        "abilities.mudrost.score": 14,
+        "abilities.harizma.score": 10,
         "level": 2,
         "ac": 15,
         "pd": 15,
@@ -1299,8 +1299,8 @@
       "of": "protivnik",
       "name": "Гоблин",
       "values": {
-        "abilities.strength.score": 10,
-        "abilities.dexterity.score": 14,
+        "abilities.sila.score": 10,
+        "abilities.lovkost.score": 14,
         "level": 1,
         "ac": 16,
         "pd": 14,
@@ -1321,8 +1321,8 @@
       "of": "protivnik",
       "name": "Орк-берсерк",
       "values": {
-        "abilities.strength.score": 16,
-        "abilities.dexterity.score": 10,
+        "abilities.sila.score": 16,
+        "abilities.lovkost.score": 10,
         "level": 2,
         "ac": 16,
         "pd": 15,
@@ -1350,8 +1350,8 @@
       "of": "protivnik",
       "name": "Гоблин из толпы №1",
       "values": {
-        "abilities.strength.score": 10,
-        "abilities.dexterity.score": 14,
+        "abilities.sila.score": 10,
+        "abilities.lovkost.score": 14,
         "level": 1,
         "ac": 16,
         "pd": 14,
@@ -1371,8 +1371,8 @@
       "of": "protivnik",
       "name": "Гоблин из толпы №2",
       "values": {
-        "abilities.strength.score": 10,
-        "abilities.dexterity.score": 14,
+        "abilities.sila.score": 10,
+        "abilities.lovkost.score": 14,
         "level": 1,
         "ac": 16,
         "pd": 14,

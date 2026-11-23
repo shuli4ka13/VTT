@@ -64,7 +64,7 @@ function engine(one: Case, random: () => number): Seen | { error: string } {
   try {
     out = exchange({
       system, compendium, die: () => 1 + Math.floor(random() * 6), sheets: [a, d], actionId: 'испытательный_ствол:0', fromId: 'стрелок', toId: 'цель',
-      inputs: { distanciya_2: one.range, rezhim: MODE_NAME[one.mode] },
+      inputs: { distanciya: one.range, rezhim: MODE_NAME[one.mode] },
     });
   } catch (err) {
     const text = (err as Error).message;

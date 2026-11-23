@@ -4,40 +4,40 @@
     "id": "daggerheart",
     "name": "Daggerheart",
     "groups": {
-      "Deystviya": {
+      "deystviya": {
         "label": "Действия"
       },
-      "Ataka": {
+      "ataka": {
         "label": "Атака"
       },
-      "Chto_sluchaetsya": {
+      "chto_sluchaetsya": {
         "label": "Что случается"
       },
-      "Plata": {
+      "plata": {
         "label": "Плата"
       },
-      "Pravila": {
+      "pravila": {
         "label": "Правила"
       },
-      "Sostoyaniya": {
+      "sostoyaniya": {
         "label": "Состояния"
       },
-      "Smertelnye_hody": {
+      "smertelnye_hody": {
         "label": "Смертельные ходы"
       },
-      "Otdyh": {
+      "otdyh": {
         "label": "Отдых"
       },
-      "Sposobnosti_Nadezhdy": {
+      "sposobnosti_nadezhdy": {
         "label": "Способности Надежды"
       },
-      "Veduschiy": {
+      "veduschiy": {
         "label": "Ведущий"
       },
-      "Snaryazhenie": {
+      "snaryazhenie": {
         "label": "Снаряжение"
       },
-      "Priemy": {
+      "priemy": {
         "label": "Приёмы"
       }
     },
@@ -78,7 +78,7 @@
       }
     },
     "tables": {
-      "who": {
+      "list": {
         "label": "Лист",
         "shape": "single",
         "columns": [
@@ -349,7 +349,7 @@
         "key": "word",
         "columns": [
           {
-            "key": "hit",
+            "key": "uspeh",
             "label": "Успех",
             "kind": "text"
           },
@@ -364,7 +364,7 @@
             "value": "deystvie",
             "label": "действие",
             "cells": {
-              "hit": "успех",
+              "uspeh": "успех",
               "proval": "неудача"
             }
           },
@@ -372,7 +372,7 @@
             "value": "ataka",
             "label": "атака",
             "cells": {
-              "hit": "попадание",
+              "uspeh": "попадание",
               "proval": "промах"
             }
           },
@@ -500,7 +500,7 @@
         ],
         "rows": [
           {
-            "value": "Bard_Bard",
+            "value": "bard_bard",
             "label": "Бард (Bard)",
             "cells": {
               "evasion": 10,
@@ -511,7 +511,7 @@
             }
           },
           {
-            "value": "Druid_Druid",
+            "value": "druid_druid",
             "label": "Друид (Druid)",
             "cells": {
               "evasion": 10,
@@ -522,7 +522,7 @@
             }
           },
           {
-            "value": "Strazh_Guardian",
+            "value": "strazh_guardian",
             "label": "Страж (Guardian)",
             "cells": {
               "evasion": 9,
@@ -533,7 +533,7 @@
             }
           },
           {
-            "value": "Sledopyt_Ranger",
+            "value": "sledopyt_ranger",
             "label": "Следопыт (Ranger)",
             "cells": {
               "evasion": 12,
@@ -544,7 +544,7 @@
             }
           },
           {
-            "value": "Plut_Rogue",
+            "value": "plut_rogue",
             "label": "Плут (Rogue)",
             "cells": {
               "evasion": 12,
@@ -555,7 +555,7 @@
             }
           },
           {
-            "value": "Serafim_Seraph",
+            "value": "serafim_seraph",
             "label": "Серафим (Seraph)",
             "cells": {
               "evasion": 9,
@@ -566,7 +566,7 @@
             }
           },
           {
-            "value": "Charodey_Sorcerer",
+            "value": "charodey_sorcerer",
             "label": "Чародей (Sorcerer)",
             "cells": {
               "evasion": 10,
@@ -577,7 +577,7 @@
             }
           },
           {
-            "value": "Voin_Warrior",
+            "value": "voin_warrior",
             "label": "Воин (Warrior)",
             "cells": {
               "evasion": 11,
@@ -588,7 +588,7 @@
             }
           },
           {
-            "value": "Volshebnik_Wizard",
+            "value": "volshebnik_wizard",
             "label": "Волшебник (Wizard)",
             "cells": {
               "evasion": 11,
@@ -637,7 +637,7 @@
         ],
         "rows": [
           {
-            "value": "Klank_Clank",
+            "value": "klank_clank",
             "label": "Кланк (Clank)",
             "cells": {
               "first": "Purposeful Design: +1 навсегда к одному опыту",
@@ -649,7 +649,7 @@
             }
           },
           {
-            "value": "Drakona_Drakona",
+            "value": "drakona_drakona",
             "label": "Дракона (Drakona)",
             "cells": {
               "first": "Scales: при тяжёлом уроне отметить Стресс и отметить на одну клетку хитов меньше",
@@ -661,7 +661,7 @@
             }
           },
           {
-            "value": "Dvorf_Dwarf",
+            "value": "dvorf_dwarf",
             "label": "Дворф (Dwarf)",
             "cells": {
               "first": "Thick Skin: при лёгком уроне отметить 2 Стресса вместо клетки хитов",
@@ -673,7 +673,7 @@
             }
           },
           {
-            "value": "Elf_Elf",
+            "value": "elf_elf",
             "label": "Эльф (Elf)",
             "cells": {
               "first": "Quick Reactions: отметить Стресс — преимущество на реакцию",
@@ -685,7 +685,7 @@
             }
           },
           {
-            "value": "Feya_Faerie",
+            "value": "feya_faerie",
             "label": "Фея (Faerie)",
             "cells": {
               "first": "Luckbender: раз за сессию за 3 Надежды перебросить кости двойственности",
@@ -697,7 +697,7 @@
             }
           },
           {
-            "value": "Favn_Faun",
+            "value": "favn_faun",
             "label": "Фавн (Faun)",
             "cells": {
               "first": "Caprine Leap: прыжок в пределах ближней дистанции",
@@ -709,7 +709,7 @@
             }
           },
           {
-            "value": "Firbolg_Firbolg",
+            "value": "firbolg_firbolg",
             "label": "Фирболг (Firbolg)",
             "cells": {
               "first": "Charge: рывок и 1к12 физ. всем вплотную за Стресс",
@@ -721,7 +721,7 @@
             }
           },
           {
-            "value": "Fungril_Fungril",
+            "value": "fungril_fungril",
             "label": "Фунгрил (Fungril)",
             "cells": {
               "first": "Fungril Network: связь на любом расстоянии",
@@ -733,7 +733,7 @@
             }
           },
           {
-            "value": "Galapa_Galapa",
+            "value": "galapa_galapa",
             "label": "Галапа (Galapa)",
             "cells": {
               "first": "Shell: + мастерство к порогам урона",
@@ -745,7 +745,7 @@
             }
           },
           {
-            "value": "Velikan_Giant",
+            "value": "velikan_giant",
             "label": "Великан (Giant)",
             "cells": {
               "first": "Endurance: +1 клетка хитов при создании",
@@ -757,7 +757,7 @@
             }
           },
           {
-            "value": "Goblin_Goblin",
+            "value": "goblin_goblin",
             "label": "Гоблин (Goblin)",
             "cells": {
               "first": "Surefooted: помеха на броски Проворства не действует",
@@ -769,7 +769,7 @@
             }
           },
           {
-            "value": "Poluroslik_Halfling",
+            "value": "poluroslik_halfling",
             "label": "Полурослик (Halfling)",
             "cells": {
               "first": "Luckbringer: в начале сессии вся партия получает Надежду",
@@ -781,7 +781,7 @@
             }
           },
           {
-            "value": "Chelovek_Human",
+            "value": "chelovek_human",
             "label": "Человек (Human)",
             "cells": {
               "first": "High Stamina: +1 клетка Стресса при создании",
@@ -793,7 +793,7 @@
             }
           },
           {
-            "value": "Infernis_Infernis",
+            "value": "infernis_infernis",
             "label": "Инфернис (Infernis)",
             "cells": {
               "first": "Fearless: бросок со Страхом — отметить 2 Стресса, чтобы он стал с Надеждой",
@@ -805,7 +805,7 @@
             }
           },
           {
-            "value": "Katari_Katari",
+            "value": "katari_katari",
             "label": "Катари (Katari)",
             "cells": {
               "first": "Feline Instincts: на Проворство за 2 Надежды перебросить кость Надежды",
@@ -817,7 +817,7 @@
             }
           },
           {
-            "value": "Ork_Orc",
+            "value": "ork_orc",
             "label": "Орк (Orc)",
             "cells": {
               "first": "Sturdy: на последней клетке хитов атаки по вам с помехой",
@@ -829,7 +829,7 @@
             }
           },
           {
-            "value": "Ribbet_Ribbet",
+            "value": "ribbet_ribbet",
             "label": "Риббет (Ribbet)",
             "cells": {
               "first": "Amphibious: дышит и двигается под водой",
@@ -841,7 +841,7 @@
             }
           },
           {
-            "value": "Simia_Simiah",
+            "value": "simia_simiah",
             "label": "Симиа (Simiah)",
             "cells": {
               "first": "Natural Climber: преимущество, чтобы лазать и держать равновесие",
@@ -866,63 +866,63 @@
         ],
         "rows": [
           {
-            "value": "Znat_Highborne",
+            "value": "znat_highborne",
             "label": "Знать (Highborne)",
             "cells": {
               "feature": "Privilege: преимущество среди знати, в торге и когда пускаете в ход репутацию"
             }
           },
           {
-            "value": "Knizhniki_Loreborne",
+            "value": "knizhniki_loreborne",
             "label": "Книжники (Loreborne)",
             "cells": {
               "feature": "Well-Read: преимущество на историю, культуру и политику"
             }
           },
           {
-            "value": "Orden_Orderborne",
+            "value": "orden_orderborne",
             "label": "Орден (Orderborne)",
             "cells": {
               "feature": "Dedicated: три заповеди; раз за отдых, следуя им, кость Надежды — к20"
             }
           },
           {
-            "value": "Gorcy_Ridgeborne",
+            "value": "gorcy_ridgeborne",
             "label": "Горцы (Ridgeborne)",
             "cells": {
               "feature": "Steady: преимущество на скалах и в суровой местности"
             }
           },
           {
-            "value": "Morehody_Seaborne",
+            "value": "morehody_seaborne",
             "label": "Мореходы (Seaborne)",
             "cells": {
               "feature": "Know the Tide: бросок со Страхом даёт жетон, жетон — +1 к броску действия"
             }
           },
           {
-            "value": "Pronyry_Slyborne",
+            "value": "pronyry_slyborne",
             "label": "Проныры (Slyborne)",
             "cells": {
               "feature": "Scoundrel: преимущество с преступниками, на ложь и укрытие"
             }
           },
           {
-            "value": "Podzemnye_Underborne",
+            "value": "podzemnye_underborne",
             "label": "Подземные (Underborne)",
             "cells": {
               "feature": "Low-Light Living: преимущество в полутьме — прятаться, искать, замечать"
             }
           },
           {
-            "value": "Stranniki_Wanderborne",
+            "value": "stranniki_wanderborne",
             "label": "Странники (Wanderborne)",
             "cells": {
               "feature": "Nomadic Pack: раз за сессию за Надежду достать полезную вещь"
             }
           },
           {
-            "value": "Lesnye_Wildborne",
+            "value": "lesnye_wildborne",
             "label": "Лесные (Wildborne)",
             "cells": {
               "feature": "Lightfoot: двигается бесшумно"
@@ -1017,7 +1017,7 @@
         ],
         "rows": [
           {
-            "value": "Kislotnyy_zemleroy_Acid_Burrower",
+            "value": "kislotnyy_zemleroy_acid_burrower",
             "label": "Кислотный землерой (Acid Burrower)",
             "cells": {
               "type": "Solo",
@@ -1031,7 +1031,7 @@
             }
           },
           {
-            "value": "Medved_Bear",
+            "value": "medved_bear",
             "label": "Медведь (Bear)",
             "cells": {
               "type": "Bruiser",
@@ -1045,7 +1045,7 @@
             }
           },
           {
-            "value": "Peschernyy_ogr_Cave_Ogre",
+            "value": "peschernyy_ogr_cave_ogre",
             "label": "Пещерный огр (Cave Ogre)",
             "cells": {
               "type": "Solo",
@@ -1059,7 +1059,7 @@
             }
           },
           {
-            "value": "Konstrukt_Construct",
+            "value": "konstrukt_construct",
             "label": "Конструкт (Construct)",
             "cells": {
               "type": "Solo",
@@ -1073,7 +1073,7 @@
             }
           },
           {
-            "value": "Pridvornyy_Courtier",
+            "value": "pridvornyy_courtier",
             "label": "Придворный (Courtier)",
             "cells": {
               "type": "Social",
@@ -1087,7 +1087,7 @@
             }
           },
           {
-            "value": "Gigantskie_komary_Giant_Mosquitoes",
+            "value": "gigantskie_komary_giant_mosquitoes",
             "label": "Гигантские комары (Giant Mosquitoes)",
             "cells": {
               "type": "Horde",
@@ -1101,7 +1101,7 @@
             }
           },
           {
-            "value": "Zaschitnik_Glubokih_korney_Deeproot_Defender",
+            "value": "zaschitnik_glubokih_korney_deeproot_defender",
             "label": "Защитник Глубоких корней (Deeproot Defender)",
             "cells": {
               "type": "Bruiser",
@@ -1115,7 +1115,7 @@
             }
           },
           {
-            "value": "Gigantskaya_krysa_Giant_Rat",
+            "value": "gigantskaya_krysa_giant_rat",
             "label": "Гигантская крыса (Giant Rat)",
             "cells": {
               "type": "Minion",
@@ -1129,7 +1129,7 @@
             }
           },
           {
-            "value": "Lyutyy_volk_Dire_Wolf",
+            "value": "lyutyy_volk_dire_wolf",
             "label": "Лютый волк (Dire Wolf)",
             "cells": {
               "type": "Skulk",
@@ -1143,7 +1143,7 @@
             }
           },
           {
-            "value": "Gigantskiy_skorpion_Giant_Scorpion",
+            "value": "gigantskiy_skorpion_giant_scorpion",
             "label": "Гигантский скорпион (Giant Scorpion)",
             "cells": {
               "type": "Bruiser",
@@ -1157,7 +1157,7 @@
             }
           },
           {
-            "value": "Steklyannyy_zmey_Glass_Snake",
+            "value": "steklyannyy_zmey_glass_snake",
             "label": "Стеклянный змей (Glass Snake)",
             "cells": {
               "type": "Standard",
@@ -1171,7 +1171,7 @@
             }
           },
           {
-            "value": "Zastrelschik_Harrier",
+            "value": "zastrelschik_harrier",
             "label": "Застрельщик (Harrier)",
             "cells": {
               "type": "Standard",
@@ -1185,7 +1185,7 @@
             }
           },
           {
-            "value": "Strazhnik_s_klinkom_Bladed_Guard",
+            "value": "strazhnik_s_klinkom_bladed_guard",
             "label": "Стражник с клинком (Bladed Guard)",
             "cells": {
               "type": "Standard",
@@ -1199,7 +1199,7 @@
             }
           },
           {
-            "value": "Nachalnik_strazhi_Head_Guard",
+            "value": "nachalnik_strazhi_head_guard",
             "label": "Начальник стражи (Head Guard)",
             "cells": {
               "type": "Leader",
@@ -1213,7 +1213,7 @@
             }
           },
           {
-            "value": "Strazhnik_luchnik_Archer_Guard",
+            "value": "strazhnik_luchnik_archer_guard",
             "label": "Стражник-лучник (Archer Guard)",
             "cells": {
               "type": "Ranged",
@@ -1227,7 +1227,7 @@
             }
           },
           {
-            "value": "Razboynik_Zazubrennogo_nozha_Jagged_Knife_Bandit",
+            "value": "razboynik_zazubrennogo_nozha_jagged_knife_bandit",
             "label": "Разбойник Зазубренного ножа (Jagged Knife Bandit)",
             "cells": {
               "type": "Standard",
@@ -1241,7 +1241,7 @@
             }
           },
           {
-            "value": "Vorozhey_Zazubrennogo_nozha_Jagged_Knife_Hexer",
+            "value": "vorozhey_zazubrennogo_nozha_jagged_knife_hexer",
             "label": "Ворожей Зазубренного ножа (Jagged Knife Hexer)",
             "cells": {
               "type": "Support",
@@ -1255,7 +1255,7 @@
             }
           },
           {
-            "value": "Leytenant_Zazubrennogo_nozha_Jagged_Knife_Lieutenant",
+            "value": "leytenant_zazubrennogo_nozha_jagged_knife_lieutenant",
             "label": "Лейтенант Зазубренного ножа (Jagged Knife Lieutenant)",
             "cells": {
               "type": "Leader",
@@ -1269,7 +1269,7 @@
             }
           },
           {
-            "value": "Kostolom_Zazubrennogo_nozha_Jagged_Knife_Kneebreaker",
+            "value": "kostolom_zazubrennogo_nozha_jagged_knife_kneebreaker",
             "label": "Костолом Зазубренного ножа (Jagged Knife Kneebreaker)",
             "cells": {
               "type": "Bruiser",
@@ -1283,7 +1283,7 @@
             }
           },
           {
-            "value": "Ten_Zazubrennogo_nozha_Jagged_Knife_Shadow",
+            "value": "ten_zazubrennogo_nozha_jagged_knife_shadow",
             "label": "Тень Зазубренного ножа (Jagged Knife Shadow)",
             "cells": {
               "type": "Skulk",
@@ -1297,7 +1297,7 @@
             }
           },
           {
-            "value": "Shesterka_Zazubrennogo_nozha_Jagged_Knife_Lackey",
+            "value": "shesterka_zazubrennogo_nozha_jagged_knife_lackey",
             "label": "Шестёрка Зазубренного ножа (Jagged Knife Lackey)",
             "cells": {
               "type": "Minion",
@@ -1311,7 +1311,7 @@
             }
           },
           {
-            "value": "Snayper_Zazubrennogo_nozha_Jagged_Knife_Sniper",
+            "value": "snayper_zazubrennogo_nozha_jagged_knife_sniper",
             "label": "Снайпер Зазубренного ножа (Jagged Knife Sniper)",
             "cells": {
               "type": "Ranged",
@@ -1325,7 +1325,7 @@
             }
           },
           {
-            "value": "Torgovec_Merchant",
+            "value": "torgovec_merchant",
             "label": "Торговец (Merchant)",
             "cells": {
               "type": "Social",
@@ -1346,7 +1346,7 @@
         "hint": "Черта, дистанция, кость урона и прибавка.",
         "shape": "book",
         "use": "item",
-        "block": "Snaryazhenie",
+        "block": "snaryazhenie",
         "columns": [
           {
             "key": "trait",
@@ -1425,7 +1425,7 @@
         "hint": "Основа порогов и броня.",
         "shape": "book",
         "use": "item",
-        "block": "Snaryazhenie",
+        "block": "snaryazhenie",
         "columns": [
           {
             "key": "major",
@@ -1450,7 +1450,7 @@
         "hint": "Урон вписан в приём, особенности — в описании.",
         "shape": "book",
         "use": "action",
-        "block": "Priemy",
+        "block": "priemy",
         "columns": [
           {
             "key": "damage_dice",
@@ -1484,7 +1484,7 @@
         "hint": "Бросок, отдых, смертельные ходы, способности.",
         "shape": "book",
         "use": "action",
-        "block": "Priemy"
+        "block": "priemy"
       }
     },
     "roll_edits": {
@@ -1551,7 +1551,7 @@
     "effects": {
       "action_roll": {
         "label": "Бросок действия",
-        "group": "Deystviya",
+        "group": "deystviya",
         "description": "Кости двойственности + черта (+2 за опыт, если потратить Надежду) против сложности, которую называет ведущий. Дубль — крит: успех при любом итоге.",
         "params": [
           {
@@ -1686,7 +1686,7 @@
       },
       "hero_attack": {
         "label": "Атака героя",
-        "group": "Ataka",
+        "group": "ataka",
         "description": "Кости двойственности + черта оружия против сложности противника. Попал — кости урона по числу мастерства плюс прибавка; на крите сверху максимум костей урона.",
         "params": [
           {
@@ -1695,12 +1695,12 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
             "item": {
-              "key": "aim",
+              "key": "cel",
               "label": "Цель"
             }
           },
@@ -1770,7 +1770,7 @@
           },
           {
             "type": "each",
-            "of": "aims"
+            "of": "celi"
           },
           {
             "id": "brosok",
@@ -1780,7 +1780,7 @@
               "expr": "@brosok_brosok"
             },
             "versus": {
-              "expr": "@aim.difficulty"
+              "expr": "@cel.difficulty"
             },
             "degrees": [
               {
@@ -1837,10 +1837,10 @@
               "amount": {
                 "expr": "@uron.total"
               },
-              "who": {
-                "expr": "@aim"
+              "list": {
+                "expr": "@cel"
               },
-              "source": {
+              "istochnik": {
                 "expr": "@deystvuyuschiy"
               }
             }
@@ -1849,7 +1849,7 @@
       },
       "adversary_attack": {
         "label": "Атака противника",
-        "group": "Ataka",
+        "group": "ataka",
         "description": "к20 + модификатор атаки против уклонения героя; натуральная 20 попадает всегда. Попал — урон приёма; на натуральной 20 сверху максимум костей урона.",
         "params": [
           {
@@ -1858,12 +1858,12 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
             "item": {
-              "key": "aim",
+              "key": "cel",
               "label": "Цель"
             }
           },
@@ -1908,7 +1908,7 @@
           },
           {
             "type": "each",
-            "of": "aims"
+            "of": "celi"
           },
           {
             "id": "udar",
@@ -1918,7 +1918,7 @@
               "expr": "@udar_brosok"
             },
             "versus": {
-              "expr": "@aim.evasion"
+              "expr": "@cel.evasion"
             },
             "succeedOn": {
               "expr": "20"
@@ -1937,10 +1937,10 @@
               "amount": {
                 "expr": "@uron.total + if(@udar.natural >= 20, dicemax(@damage_dice), 0)"
               },
-              "who": {
-                "expr": "@aim"
+              "list": {
+                "expr": "@cel"
               },
-              "source": {
+              "istochnik": {
                 "expr": "@deystvuyuschiy"
               }
             }
@@ -1952,17 +1952,17 @@
       },
       "damage": {
         "label": "Урон",
-        "group": "Chto_sluchaetsya",
+        "group": "chto_sluchaetsya",
         "description": "Урон против порогов: ниже серьёзного — одна клетка хитов, от серьёзного — две, от тяжёлого — три. Бронеслот игрок отмечает сам действием «Отметить бронеслот».",
         "params": [
           {
-            "key": "who",
+            "key": "list",
             "label": "Лист",
             "kind": "sheet",
             "role": "target"
           },
           {
-            "key": "source",
+            "key": "istochnik",
             "label": "Источник",
             "kind": "sheet",
             "optional": true,
@@ -1979,23 +1979,23 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@who.hp"
+              "expr": "@list.hp"
             },
             "direction": "add",
             "value": {
-              "expr": "if(@amount >= @who.severe, 3, if(@amount >= @who.major, 2, if(@amount >= 1, 1, 0)))"
+              "expr": "if(@amount >= @list.severe, 3, if(@amount >= @list.major, 2, if(@amount >= 1, 1, 0)))"
             }
           }
         ]
       },
       "mark_armor": {
         "label": "Отметить бронеслот",
-        "group": "Deystviya",
+        "group": "deystviya",
         "description": "После урона: отметить бронеслот и отметить на одну клетку хитов меньше. При броне 0 нельзя.",
         "steps": [
           {
             "type": "each",
-            "of": "aims"
+            "of": "celi"
           },
           {
             "type": "branch",
@@ -2030,7 +2030,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@aim.armor_marked"
+              "expr": "@cel.armor_marked"
             },
             "direction": "add",
             "value": {
@@ -2040,7 +2040,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@aim.hp"
+              "expr": "@cel.hp"
             },
             "value": {
               "expr": "1"
@@ -2054,12 +2054,12 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
             "item": {
-              "key": "aim",
+              "key": "cel",
               "label": "Цель"
             }
           }
@@ -2067,7 +2067,7 @@
       },
       "avoid_death": {
         "label": "Избежать смерти",
-        "group": "Smertelnye_hody",
+        "group": "smertelnye_hody",
         "description": "Герой без сознания до лечения клетки хитов или долгого отдыха. Кость Надежды не больше уровня — шрам: вычеркнуть клетку Надежды.",
         "steps": [
           {
@@ -2084,21 +2084,21 @@
           },
           {
             "type": "each",
-            "of": "aims"
+            "of": "celi"
           },
           {
             "type": "status",
             "mode": "remove",
             "effect": "death_move",
             "to": {
-              "expr": "@aim"
+              "expr": "@cel"
             }
           },
           {
             "type": "status",
             "effect": "unconscious",
             "to": {
-              "expr": "@aim"
+              "expr": "@cel"
             }
           },
           {
@@ -2122,7 +2122,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@aim.scars"
+              "expr": "@cel.scars"
             },
             "direction": "add",
             "value": {
@@ -2140,12 +2140,12 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
             "item": {
-              "key": "aim",
+              "key": "cel",
               "label": "Цель"
             }
           }
@@ -2153,7 +2153,7 @@
       },
       "risk_it_all": {
         "label": "Рискнуть всем",
-        "group": "Smertelnye_hody",
+        "group": "smertelnye_hody",
         "description": "Кости двойственности: больше на Надежде — на ногах и снять хиты по значению кости Надежды; на Страхе — смерть; дубль — снять все хиты и весь Стресс.",
         "steps": [
           {
@@ -2170,7 +2170,7 @@
           },
           {
             "type": "each",
-            "of": "aims"
+            "of": "celi"
           },
           {
             "id": "brosok",
@@ -2192,7 +2192,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@aim.hp"
+              "expr": "@cel.hp"
             },
             "value": {
               "expr": "min(@deystvuyuschiy.hp, @brosok.parts.nadezhda)"
@@ -2210,7 +2210,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@aim.hp"
+              "expr": "@cel.hp"
             },
             "direction": "set",
             "value": {
@@ -2220,7 +2220,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@aim.stress"
+              "expr": "@cel.stress"
             },
             "direction": "set",
             "value": {
@@ -2235,7 +2235,7 @@
             "mode": "remove",
             "effect": "death_move",
             "to": {
-              "expr": "@aim"
+              "expr": "@cel"
             }
           },
           {
@@ -2248,7 +2248,7 @@
             "type": "status",
             "effect": "dead",
             "to": {
-              "expr": "@aim"
+              "expr": "@cel"
             }
           },
           {
@@ -2262,12 +2262,12 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
             "item": {
-              "key": "aim",
+              "key": "cel",
               "label": "Цель"
             }
           }
@@ -2275,12 +2275,12 @@
       },
       "gm_short_rest": {
         "label": "Страх: короткий отдых",
-        "group": "Veduschiy",
+        "group": "veduschiy",
         "description": "Партия на коротком отдыхе — ведущий получает 1к4 Страха.",
         "steps": [
           {
             "type": "each",
-            "of": "aims"
+            "of": "celi"
           },
           {
             "id": "strah",
@@ -2308,12 +2308,12 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
             "item": {
-              "key": "aim",
+              "key": "cel",
               "label": "Цель"
             }
           }
@@ -2321,12 +2321,12 @@
       },
       "gm_long_rest": {
         "label": "Страх: долгий отдых",
-        "group": "Veduschiy",
+        "group": "veduschiy",
         "description": "Партия на долгом отдыхе — ведущий получает 1к4 + число героев Страха.",
         "steps": [
           {
             "type": "each",
-            "of": "aims"
+            "of": "celi"
           },
           {
             "id": "strah",
@@ -2357,12 +2357,12 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
             "item": {
-              "key": "aim",
+              "key": "cel",
               "label": "Цель"
             }
           },
@@ -2380,18 +2380,18 @@
       },
       "no_mercy": {
         "label": "Без пощады (No Mercy)",
-        "group": "Sposobnosti_Nadezhdy",
+        "group": "sposobnosti_nadezhdy",
         "description": "Воин: за 3 Надежды +1 к броскам атаки до следующего отдыха.",
         "steps": [
           {
             "type": "each",
-            "of": "aims"
+            "of": "celi"
           },
           {
             "type": "status",
             "effect": "merciless",
             "to": {
-              "expr": "@aim"
+              "expr": "@cel"
             }
           }
         ],
@@ -2409,10 +2409,10 @@
               "note": {
                 "expr": "\"нужно 3 Надежды\""
               },
-              "who": {
+              "list": {
                 "expr": "@deystvuyuschiy"
               },
-              "source": {
+              "istochnik": {
                 "expr": "@deystvuyuschiy"
               }
             }
@@ -2425,12 +2425,12 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
             "item": {
-              "key": "aim",
+              "key": "cel",
               "label": "Цель"
             }
           }
@@ -2438,18 +2438,18 @@
       },
       "rogues_dodge": {
         "label": "Уворот плута (Rogue’s Dodge)",
-        "group": "Sposobnosti_Nadezhdy",
+        "group": "sposobnosti_nadezhdy",
         "description": "Плут: за 3 Надежды +2 к уклонению, пока по вам не попадут атакой или до отдыха.",
         "steps": [
           {
             "type": "each",
-            "of": "aims"
+            "of": "celi"
           },
           {
             "type": "status",
             "effect": "dodging",
             "to": {
-              "expr": "@aim"
+              "expr": "@cel"
             }
           }
         ],
@@ -2467,10 +2467,10 @@
               "note": {
                 "expr": "\"нужно 3 Надежды\""
               },
-              "who": {
+              "list": {
                 "expr": "@deystvuyuschiy"
               },
-              "source": {
+              "istochnik": {
                 "expr": "@deystvuyuschiy"
               }
             }
@@ -2483,12 +2483,12 @@
             "kind": "sheet"
           },
           {
-            "key": "aims",
+            "key": "celi",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
             "item": {
-              "key": "aim",
+              "key": "cel",
               "label": "Цель"
             }
           }
@@ -2496,17 +2496,17 @@
       },
       "spend": {
         "label": "Потратить",
-        "group": "Plata",
+        "group": "plata",
         "description": "Проверить, что запаса хватает, и отнять. Не хватает — действие обрывается.",
         "params": [
           {
-            "key": "who",
+            "key": "list",
             "label": "Лист",
             "kind": "sheet",
             "role": "actor"
           },
           {
-            "key": "source",
+            "key": "istochnik",
             "label": "Источник",
             "kind": "sheet",
             "optional": true,
@@ -2558,7 +2558,7 @@
       },
       "duality": {
         "label": "Двойственность",
-        "group": "Pravila",
+        "group": "pravila",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -2713,7 +2713,7 @@
       },
       "vulnerable": {
         "label": "Уязвим",
-        "group": "Sostoyaniya",
+        "group": "sostoyaniya",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -2748,7 +2748,7 @@
       },
       "hidden": {
         "label": "Скрыт",
-        "group": "Sostoyaniya",
+        "group": "sostoyaniya",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -2783,7 +2783,7 @@
       },
       "stress_limit": {
         "label": "Последний Стресс",
-        "group": "Pravila",
+        "group": "pravila",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -2809,7 +2809,7 @@
       },
       "stress_relief": {
         "label": "Стресс снят",
-        "group": "Pravila",
+        "group": "pravila",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -2836,7 +2836,7 @@
       },
       "death_move": {
         "label": "Смертельный ход",
-        "group": "Sostoyaniya",
+        "group": "sostoyaniya",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -2845,7 +2845,7 @@
       },
       "last_hp": {
         "label": "Последний хит",
-        "group": "Pravila",
+        "group": "pravila",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -2871,7 +2871,7 @@
       },
       "dead": {
         "label": "Мёртв",
-        "group": "Sostoyaniya",
+        "group": "sostoyaniya",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -2880,7 +2880,7 @@
       },
       "unconscious": {
         "label": "Без сознания",
-        "group": "Sostoyaniya",
+        "group": "sostoyaniya",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -2889,7 +2889,7 @@
       },
       "merciless": {
         "label": "Без пощады",
-        "group": "Sostoyaniya",
+        "group": "sostoyaniya",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -2943,7 +2943,7 @@
       },
       "dodging": {
         "label": "Увёртливость",
-        "group": "Sostoyaniya",
+        "group": "sostoyaniya",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -2963,7 +2963,7 @@
           {
             "on": "after:damage",
             "if": {
-              "expr": "@who == @holder"
+              "expr": "@list == @holder"
             },
             "steps": [
               {
@@ -3056,19 +3056,19 @@
           }
         ],
         "blocks": [
-          "Porogi_urona",
-          "Zdorove",
-          "Protivnik"
+          "porogi_urona",
+          "zdorove",
+          "protivnik"
         ]
       }
     },
     "blocks": [
       {
-        "key": "Lichnoe_delo",
+        "key": "lichnoe_delo",
         "label": "Личное дело",
         "parts": [
           {
-            "table": "who",
+            "table": "list",
             "columns": [
               "class",
               "ancestry",
@@ -3080,11 +3080,11 @@
         ]
       },
       {
-        "key": "Cherty",
+        "key": "cherty",
         "label": "Черты",
         "parts": [
           {
-            "table": "who",
+            "table": "list",
             "columns": [
               "agility",
               "strength",
@@ -3097,11 +3097,11 @@
         ]
       },
       {
-        "key": "Progressiya",
+        "key": "progressiya",
         "label": "Прогрессия",
         "parts": [
           {
-            "table": "who",
+            "table": "list",
             "columns": [
               "level",
               "tier",
@@ -3111,11 +3111,11 @@
         ]
       },
       {
-        "key": "Uklonenie_i_bronya",
+        "key": "uklonenie_i_bronya",
         "label": "Уклонение и броня",
         "parts": [
           {
-            "table": "who",
+            "table": "list",
             "columns": [
               "evasion_bonus",
               "evasion",
@@ -3134,11 +3134,11 @@
         ]
       },
       {
-        "key": "Porogi_urona",
+        "key": "porogi_urona",
         "label": "Пороги урона",
         "parts": [
           {
-            "table": "who",
+            "table": "list",
             "columns": [
               "major_base",
               "severe_base",
@@ -3149,11 +3149,11 @@
         ]
       },
       {
-        "key": "Zdorove",
+        "key": "zdorove",
         "label": "Здоровье",
         "parts": [
           {
-            "table": "who",
+            "table": "list",
             "columns": [
               "hp_extra",
               "hp_max",
@@ -3183,11 +3183,11 @@
         ]
       },
       {
-        "key": "Nadezhda",
+        "key": "nadezhda",
         "label": "Надежда",
         "parts": [
           {
-            "table": "who",
+            "table": "list",
             "columns": [
               "hope",
               "scars"
@@ -3201,11 +3201,11 @@
         ]
       },
       {
-        "key": "Protivnik",
+        "key": "protivnik",
         "label": "Противник",
         "parts": [
           {
-            "table": "who",
+            "table": "list",
             "columns": [
               "difficulty",
               "adversary_hp",
@@ -3216,7 +3216,7 @@
         ]
       },
       {
-        "key": "Stol",
+        "key": "stol",
         "label": "Стол",
         "parts": [
           {
@@ -3231,7 +3231,7 @@
         "die": "duality",
         "fields": [
           {
-            "table": "who",
+            "table": "list",
             "column": "agility",
             "tags": [
               "geroy",
@@ -3239,7 +3239,7 @@
             ]
           },
           {
-            "table": "who",
+            "table": "list",
             "column": "strength",
             "tags": [
               "geroy",
@@ -3247,7 +3247,7 @@
             ]
           },
           {
-            "table": "who",
+            "table": "list",
             "column": "finesse",
             "tags": [
               "geroy",
@@ -3255,7 +3255,7 @@
             ]
           },
           {
-            "table": "who",
+            "table": "list",
             "column": "instinct",
             "tags": [
               "geroy",
@@ -3263,7 +3263,7 @@
             ]
           },
           {
-            "table": "who",
+            "table": "list",
             "column": "presence",
             "tags": [
               "geroy",
@@ -3271,7 +3271,7 @@
             ]
           },
           {
-            "table": "who",
+            "table": "list",
             "column": "knowledge",
             "tags": [
               "geroy",
@@ -3767,9 +3767,9 @@
       "of": "hero",
       "name": "Бран",
       "values": {
-        "class": "Voin_Warrior",
-        "ancestry": "Chelovek_Human",
-        "community": "Gorcy_Ridgeborne",
+        "class": "voin_warrior",
+        "ancestry": "chelovek_human",
+        "community": "gorcy_ridgeborne",
         "exp1": "Наёмник",
         "exp2": "Выносливый",
         "agility": 2,
@@ -3813,9 +3813,9 @@
       "of": "hero",
       "name": "Ильзе",
       "values": {
-        "class": "Plut_Rogue",
-        "ancestry": "Simia_Simiah",
-        "community": "Pronyry_Slyborne",
+        "class": "plut_rogue",
+        "ancestry": "simia_simiah",
+        "community": "pronyry_slyborne",
         "exp1": "Вор",
         "exp2": "Акробатка",
         "agility": 1,
@@ -3856,9 +3856,9 @@
       "of": "hero",
       "name": "Тома",
       "values": {
-        "class": "Serafim_Seraph",
-        "ancestry": "Galapa_Galapa",
-        "community": "Orden_Orderborne",
+        "class": "serafim_seraph",
+        "ancestry": "galapa_galapa",
+        "community": "orden_orderborne",
         "exp1": "Храмовница",
         "exp2": "Лекарка",
         "agility": 0,

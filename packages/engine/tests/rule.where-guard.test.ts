@@ -15,8 +15,8 @@ const withProbe = (tags: string[]) => {
     params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }],
     steps: [{ type: 'each', of: 'цели' }, { type: 'emit', effect: 'damage', args: {
       amount: { expr: '10' },
-      who: { expr: '@цель' },
-      source: { expr: '@действующий' },
+      list: { expr: '@цель' },
+      istochnik: { expr: '@действующий' },
       ...Object.fromEntries(tags.map(tag => [tag.startsWith('po_') ? 'aim' : 'damage_type', { expr: JSON.stringify(tag) }])),
     } }],
   } as never;
@@ -43,7 +43,7 @@ group('условие шага «где у метки колонка = знач�
   });
 
   test('огонь в тело идёт мимо брони: весь урон, броня цела', () => {
-    const v = hit(['fire', 'po_telu']);
+    const v = hit(['ogon', 'po_telu']);
     eq(v.hp, 30);
     eq(v.sp_body, 7);
   });

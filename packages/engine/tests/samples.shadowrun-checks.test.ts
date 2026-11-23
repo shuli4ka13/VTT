@@ -59,20 +59,20 @@ group('Shadowrun 6, глава «Проверки и Преимущество»:
     const shooter = { ...runner({ agility: 3, 'skills.strelba.rank': 3, edge_left: 6, edge_gained: 1, complex_left: 1 }), has: [{ of: 'predator_vi' }] } as Sheet;
     const target = (armor: number) => ({ ...runner({ body: 2, armor_worn: armor }), id: 'цель' }) as Sheet;
     const desk = { id: 'desk', systemId: 'shadowrun6', name: 'Стол', values: {}, has: [], effects: [] } as unknown as Sheet;
-    const first = exchange({ system, compendium, die: tape(), sheets: [shooter, target(4), desk], clock: fight('бег', 'цель'), actionId: 'predator_vi:0', fromId: 'бег', toId: 'цель', inputs: { distanciya_2: 'blizkaya' } });
+    const first = exchange({ system, compendium, die: tape(), sheets: [shooter, target(4), desk], clock: fight('бег', 'цель'), actionId: 'predator_vi:0', fromId: 'бег', toId: 'цель', inputs: { distanciya: 'blizkaya' } });
     const after = first.sheets.find(s => s.id === 'бег')!;
     eq(after.values.edge_left, 7);
     eq(after.values.edge_gained, 2);
-    const second = exchange({ system, compendium, die: tape(), sheets: [{ ...after, values: { ...after.values, complex_left: 1 } } as Sheet, target(3), desk], clock: fight('бег', 'цель'), actionId: 'predator_vi:0', fromId: 'бег', toId: 'цель', inputs: { distanciya_2: 'blizkaya' } });
+    const second = exchange({ system, compendium, die: tape(), sheets: [{ ...after, values: { ...after.values, complex_left: 1 } } as Sheet, target(3), desk], clock: fight('бег', 'цель'), actionId: 'predator_vi:0', fromId: 'бег', toId: 'цель', inputs: { distanciya: 'blizkaya' } });
     eq(second.sheets.find(s => s.id === 'бег')!.values.edge_left, 7);
-    const three = exchange({ system, compendium, die: tape(), sheets: [{ ...shooter, values: { ...shooter.values, edge_left: 2, edge_gained: 0, complex_left: 1 } } as Sheet, target(5), desk], clock: fight('бег', 'цель'), actionId: 'predator_vi:0', fromId: 'бег', toId: 'цель', inputs: { distanciya_2: 'blizkaya' } });
+    const three = exchange({ system, compendium, die: tape(), sheets: [{ ...shooter, values: { ...shooter.values, edge_left: 2, edge_gained: 0, complex_left: 1 } } as Sheet, target(5), desk], clock: fight('бег', 'цель'), actionId: 'predator_vi:0', fromId: 'бег', toId: 'цель', inputs: { distanciya: 'blizkaya' } });
     eq(three.sheets.find(s => s.id === 'бег')!.values.edge_left, 2, 'разница 3 — очка нет');
   });
 
   test('SR-CH-05б (стр. 46): вне боя предела в 2 очка за раунд нет, предел 7 держится', () => {
     const shooter = { ...runner({ agility: 3, 'skills.strelba.rank': 3, edge_left: 6, edge_gained: 2 }), has: [{ of: 'predator_vi' }] } as Sheet;
     const target = { ...runner({ body: 2, armor_worn: 4 }), id: 'цель' } as Sheet;
-    const out = exchange({ system, compendium, die: tape(), sheets: [shooter, target], actionId: 'predator_vi:0', fromId: 'бег', toId: 'цель', inputs: { distanciya_2: 'blizkaya' } });
+    const out = exchange({ system, compendium, die: tape(), sheets: [shooter, target], actionId: 'predator_vi:0', fromId: 'бег', toId: 'цель', inputs: { distanciya: 'blizkaya' } });
     const sheet = out.sheets.find(s => s.id === 'бег')!;
     eq(sheet.values.edge_left, 7);
     eq(sheet.values.edge_gained, 2);
@@ -119,8 +119,8 @@ group('Shadowrun 6, глава «Проверки и Преимущество»:
   test('«+1 успех» за 3 очка доходит до урона атаки (стр. 48)', () => {
     const shooter = { ...runner({ agility: 3, 'skills.strelba.rank': 3, edge_left: 3 }), has: [{ of: 'predator_vi' }] } as Sheet;
     const target = { ...runner({ body: 2, armor_worn: 5 }), id: 'цель' } as Sheet;
-    const plain = exchange({ system, compendium, die: tape(5, 5, 2, 2, 2, 2, 5, 2, 2, 2, 2, 2, 2, 2, 2), sheets: [shooter, target], actionId: 'predator_vi:0', fromId: 'бег', toId: 'цель', inputs: { distanciya_2: 'blizkaya' } });
-    const bought = exchange({ system, compendium, die: tape(5, 5, 2, 2, 2, 2, 5, 2, 2, 2, 2, 2, 2, 2, 2), sheets: [shooter, target], actionId: 'predator_vi:0', fromId: 'бег', toId: 'цель', inputs: { distanciya_2: 'blizkaya' },
+    const plain = exchange({ system, compendium, die: tape(5, 5, 2, 2, 2, 2, 5, 2, 2, 2, 2, 2, 2, 2, 2), sheets: [shooter, target], actionId: 'predator_vi:0', fromId: 'бег', toId: 'цель', inputs: { distanciya: 'blizkaya' } });
+    const bought = exchange({ system, compendium, die: tape(5, 5, 2, 2, 2, 2, 5, 2, 2, 2, 2, 2, 2, 2, 2), sheets: [shooter, target], actionId: 'predator_vi:0', fromId: 'бег', toId: 'цель', inputs: { distanciya: 'blizkaya' },
       answer: q => (q.offers.some(o => o.id === 'edge_plus_hit') ? ['edge_plus_hit'] : []) });
     eq(plain.sheets.find(s => s.id === 'цель')!.values.physical, 3 + 1);
     eq(bought.sheets.find(s => s.id === 'цель')!.values.physical, 3 + 2);

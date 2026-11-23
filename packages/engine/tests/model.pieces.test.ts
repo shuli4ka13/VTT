@@ -56,7 +56,7 @@ group('кусок добавляется, а не заменяет', () => {
   });
 
   test('своё одноимённое остаётся своим — кусок его не перезаписывает', () => {
-    const mine = { ...empty(), tables: { list_2: { shape: 'single', columns: [{ key: 'level', label: 'Мой уровень', kind: 'number', default: 3 }] } } } as unknown as System;
+    const mine = { ...empty(), tables: { list: { shape: 'single', columns: [{ key: 'level', label: 'Мой уровень', kind: 'number', default: 3 }] } } } as unknown as System;
     const out = bringPiece(mine, abilities);
     ok(out.kept.some(p => p.kind === 'field' && p.key === 'level'));
     deepEq(fieldOf(out.system, 'level')!.label, 'Мой уровень');

@@ -14,7 +14,7 @@ const like = (id: string, label: string, from: string, cells: Record<string, unk
   return { ...rest, id, label, cells: { ...base.cells, ...cells } };
 };
 const compendium = { ...book, records: [...book.records,
-  like('spell_ice_spear', 'Ледяное копьё', 'spell_fireball', { drain: 5, area: false, element: 'cold' }),
+  like('spell_ice_spear', 'Ледяное копьё', 'spell_fireball', { drain: 5, area: false, element: 'holod' }),
   like('spell_stunbolt', 'Оглушающий разряд', 'spell_mana_bolt', { drain: 3, damage: 'oglushayuschiy' }),
   like('spell_manaball', 'Шар маны', 'spell_mana_bolt', { drain: 5, area: true }),
 ] } as Compendium;

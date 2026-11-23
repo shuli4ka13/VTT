@@ -117,7 +117,7 @@ describe('пробный расчёт и итог бросают одни кос
       ...dnd,
       effects: {
         ...dnd.effects,
-        watch: { label: 'Настороже', activation: 'passive', duration: { kind: 'permanent' }, params: [], on: [{ on: 'before:save', if: { expr: '@aim == @holder' }, confirm: true, steps: [] }] },
+        watch: { label: 'Настороже', activation: 'passive', duration: { kind: 'permanent' }, params: [], on: [{ on: 'before:save', if: { expr: '@cel == @holder' }, confirm: true, steps: [] }] },
       },
     };
     const token = (await http().post('/auth/login').send({ name: 'Страж' })).body.token as string;
@@ -583,8 +583,8 @@ describe('права за столом', () => {
 
     await rooms.allowItems(gm, roomId, owner.userId, false);
     expect((await rooms.state(roomId)).members.find(m => m.userId === owner.userId)?.editsItems).toBeUndefined();
-    await expect(rooms.setValue(owner.userId, roomId, arven.id, sword, 'рубящий')).rejects.toThrow('значения вещей меняет ведущий');
-    expect(swordOf(await rooms.setValue(gm, roomId, arven.id, sword, 'рубящий'))).toEqual({ of: 'longsword-item' });
+    await expect(rooms.setValue(owner.userId, roomId, arven.id, sword, 'rubyaschiy')).rejects.toThrow('значения вещей меняет ведущий');
+    expect(swordOf(await rooms.setValue(gm, roomId, arven.id, sword, 'rubyaschiy'))).toEqual({ of: 'longsword-item' });
     expect((await rooms.journal(gm, roomId)).filter(entry => entry.op === 'items').map(entry => entry.input)).toEqual([
       { userId: owner.userId, on: true }, { userId: owner.userId, on: false },
     ]);

@@ -1,13 +1,13 @@
 import type { Scenario } from './run.ts';
 
 const shot = (range: string, extra: Record<string, number | string> = {}) => ({
-  distanciya_2: range, rezhim: 'odinochnyy_vystrel', priem: 'none', ...extra,
+  distanciya: range, rezhim: 'odinochnyy_vystrel', priem: 'net', ...extra,
 });
 
 const batonInRound1 = [
   { turn: 'start', order: ['razor', 'lone_star'] },
   { turn: 'next' },
-  { act: 'stun_baton:0', from: 'lone_star', to: 'razor', inputs: { priem: 'none' } },
+  { act: 'stun_baton:0', from: 'lone_star', to: 'razor', inputs: { priem: 'net' } },
 ] as Scenario['steps'];
 
 const batonDice = [

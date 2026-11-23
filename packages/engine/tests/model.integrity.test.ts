@@ -75,11 +75,11 @@ group('ключ строке без ключа — не переименован
     const мир = dnd();
     const system = мир.system as System;
     eq(errorsOf(lintSystem(system, мир.compendium as Compendium)).length, 0);
-    renameRow(system, 'abilities', 'constitution', 'выносливость');
-    renameRowInBook(system, мир.compendium as Compendium, 'abilities', 'constitution', 'выносливость');
+    renameRow(system, 'abilities', 'teloslozhenie', 'выносливость');
+    renameRowInBook(system, мир.compendium as Compendium, 'abilities', 'teloslozhenie', 'выносливость');
     eq(errorsOf(lintSystem(system, мир.compendium as Compendium)).map(p => p.text).join('\n'), '');
     ok(JSON.stringify(system.tables).includes('@abilities.выносливость.mod'));
-    ok(!JSON.stringify(system.effects).includes('"\\"constitution\\""'));
+    ok(!JSON.stringify(system.effects).includes('"\\"teloslozhenie\\""'));
   });
 });
 

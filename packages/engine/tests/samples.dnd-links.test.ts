@@ -12,7 +12,7 @@ const value = (id: string, tag: string) => calc(system, sheetOf(id), tag);
 group('D&D: класс и раса — ссылки, остальное из них следует', () => {
   test('воин: кость хитов к10, спасброски Силы и Телосложения из класса', () => {
     eq(value('arven', 'hit_die'), '1d10');
-    deepEq(['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].map(a => value('arven', `abilities.${a}.save_prof`)), [1, 0, 1, 0, 0, 0]);
+    deepEq(['sila', 'lovkost', 'teloslozhenie', 'intellekt', 'mudrost', 'harizma'].map(a => value('arven', `abilities.${a}.save_prof`)), [1, 0, 1, 0, 0, 0]);
   });
 
   test('жрец колдует от Мудрости, чародей — от Харизмы: без переключателей', () => {

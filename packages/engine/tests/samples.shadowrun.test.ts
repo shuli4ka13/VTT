@@ -22,8 +22,8 @@ const dice = (...runs: [number, number][]) => {
   return () => tape.shift() ?? 1;
 };
 
-const shoot = (from: Sheet, to: Sheet, action: string, die: () => number, distanciya_2 = 'blizkaya') => exchange({
-  system, compendium, die, sheets: [from, to], actionId: action, fromId: from.id, toId: to.id, inputs: { distanciya_2 },
+const shoot = (from: Sheet, to: Sheet, action: string, die: () => number, distanciya = 'blizkaya') => exchange({
+  system, compendium, die, sheets: [from, to], actionId: action, fromId: from.id, toId: to.id, inputs: { distanciya },
 });
 const after = (out: ReturnType<typeof exchange>, id: string) => out.sheets.find(s => s.id === id)!;
 
@@ -77,7 +77,7 @@ group('Shadowrun 6: Преимущество и действия', () => {
   const desk = { id: 'desk', systemId: 'shadowrun6', name: 'Стол', values: {}, has: [], effects: [] } as unknown as Sheet;
   const hit = (from: Sheet, to: Sheet, action: string, die: () => number, inputs: Record<string, unknown>, battle = false) => exchange({
     system, compendium, die, sheets: [from, to, desk], ...(battle ? { clock: fight(from.id, to.id) } : {}), actionId: action, fromId: from.id, toId: to.id,
-    inputs: { ...(/^(stun_baton|katana|sap|combat_knife):/.test(action) ? {} : { distanciya_2: 'blizkaya' }), ...inputs } as never,
+    inputs: { ...(/^(stun_baton|katana|sap|combat_knife):/.test(action) ? {} : { distanciya: 'blizkaya' }), ...inputs } as never,
   });
 
   test('не больше 2 очков Преимущества за раунд', () => {
@@ -91,7 +91,7 @@ group('Shadowrun 6: Преимущество и действия', () => {
 
   test('«Вырубить ударом» за 2 очка: урон больше Воли — счётчик оглушения полон', () => {
     const out = hit(sheetOf('lone_star', { edge_left: 2 }), sheetOf('humanis'), 'stun_baton:0', dice([7, 6], [4, 1], [2, 1]),
-      { priem: 'Vyrubit_udarom' });
+      { priem: 'vyrubit_udarom' });
     eq(after(out, 'lone_star').values.edge_left, 1, 'заплатил 2, получил 1 за АТК 6 против ЗЩТ 2');
     eq(after(out, 'humanis').values.stun, 9);
     ok(wears(after(out, 'humanis'), 'unconscious'));
@@ -221,7 +221,7 @@ group('Shadowrun 6: существа и пешки — книга, шаг 8', ()
     };
     const stunned = finishing(sheetOf('lone_star'), 'stun_baton:0', {});
     ok(wears(stunned, 'unconscious') && !wears(stunned, 'bleeding'), JSON.stringify(stunned.effects));
-    const shot = finishing(sheetOf('razor', { agility: 1, 'skills.strelba.rank': 1 }), 'predator_vi:0', { distanciya_2: 'blizkaya' });
+    const shot = finishing(sheetOf('razor', { agility: 1, 'skills.strelba.rank': 1 }), 'predator_vi:0', { distanciya: 'blizkaya' });
     ok(wears(shot, 'bleeding') && !wears(shot, 'unconscious'), JSON.stringify(shot.effects));
   });
 });
@@ -231,7 +231,7 @@ group('Shadowrun 6: отряд пешек', () => {
     const sheets = [sheetOf('razor'), sheetOf('fiveeyes'), sheetOf('fiveeyes_2'), sheetOf('fiveeyes_squad')];
     const out = exchange({
       system, compendium, die: dice([11, 6], [6, 1], [2, 1]), sheets, actionId: 'predator_vi:0', fromId: 'razor', toId: 'fiveeyes',
-      inputs: { distanciya_2: 'blizkaya' },
+      inputs: { distanciya: 'blizkaya' },
     });
     eq(after(out, 'fiveeyes_squad').values.physical, 3 + 11);
     const second = after(out, 'fiveeyes_2');
@@ -270,21 +270,21 @@ group('Shadowrun 6: оружие, патроны, модификации, взр
   const refusal = (run: () => unknown) => { try { run(); return ''; } catch (err) { return (err as Error).message; } };
 
   test('короткая очередь тратит 2 патрона и даёт СУ +1; газоотвод гасит штраф −2', () => {
-    const out = fire('hammer', 'humanis', 'ak_97:0', { distanciya_2: 'blizkaya', rezhim: 'korotkaya_ochered' });
+    const out = fire('hammer', 'humanis', 'ak_97:0', { distanciya: 'blizkaya', rezhim: 'korotkaya_ochered' });
     eq(item(after(out, 'hammer'), 'ak_97')?.values?.ammo, 36, 'боезапас 38 − 2');
     eq(step(out, 'atk'), 11, 'АК-97 на близкой 11, штраф КО погашен газоотводом');
     eq(step(out, 'ur'), 6, 'СУ 5 + 1 за очередь');
   });
 
   test('режим — только из разрешённых; с короткой очередью можно одиночный', () => {
-    ok(refusal(() => fire('silk', 'humanis', 'colt_l36:0', { distanciya_2: 'blizkaya', rezhim: 'dlinnaya_ochered' })).includes('нет такого режима'));
-    const single = fire('silk', 'humanis', 'colt_l36:0', { distanciya_2: 'blizkaya', rezhim: 'odinochnyy_vystrel' });
+    ok(refusal(() => fire('silk', 'humanis', 'colt_l36:0', { distanciya: 'blizkaya', rezhim: 'dlinnaya_ochered' })).includes('нет такого режима'));
+    const single = fire('silk', 'humanis', 'colt_l36:0', { distanciya: 'blizkaya', rezhim: 'odinochnyy_vystrel' });
     eq(item(after(single, 'silk'), 'colt_l36')?.values?.ammo, 10, 'боезапас 11 − 1');
   });
 
   test('лазерный прицел +1; ПБОП: ЗА +2, СУ −1; смартган со смартлинком +2, с лазером не складывается', () => {
-    eq(step(fire('silk', 'humanis', 'colt_l36:0', { distanciya_2: 'blizkaya', rezhim: 'odinochnyy_vystrel' }), 'atk'), 9, 'Кольт 8 + лазер 1');
-    const razor = fire('razor', 'humanis', 'predator_vi:0', { distanciya_2: 'blizkaya', rezhim: 'korotkaya_ochered' });
+    eq(step(fire('silk', 'humanis', 'colt_l36:0', { distanciya: 'blizkaya', rezhim: 'odinochnyy_vystrel' }), 'atk'), 9, 'Кольт 8 + лазер 1');
+    const razor = fire('razor', 'humanis', 'predator_vi:0', { distanciya: 'blizkaya', rezhim: 'korotkaya_ochered' });
     eq(step(razor, 'atk'), 10 - 2 + 2 + 2, 'Предатор 10, КО −2, встроенный смартган +2, ПБОП +2');
     eq(step(razor, 'ur'), 3 + 1 - 1);
   });
@@ -292,7 +292,7 @@ group('Shadowrun 6: оружие, патроны, модификации, взр
   test('патронов нет — действие не состоялось; «Перезарядить» — до боезапаса', () => {
     const empty = kit.silk!();
     item(empty, 'colt_l36')!.values = { ammo: 0 };
-    ok(refusal(() => exchange({ system, compendium, die: () => 1, sheets: [empty, sheetOf('humanis')], actionId: 'colt_l36:0', fromId: 'silk', toId: 'humanis', inputs: { distanciya_2: 'blizkaya', rezhim: 'odinochnyy_vystrel' } as never })).includes('патронов нет'));
+    ok(refusal(() => exchange({ system, compendium, die: () => 1, sheets: [empty, sheetOf('humanis')], actionId: 'colt_l36:0', fromId: 'silk', toId: 'humanis', inputs: { distanciya: 'blizkaya', rezhim: 'odinochnyy_vystrel' } as never })).includes('патронов нет'));
     const reloaded = exchange({ system, compendium, die: () => 1, sheets: [empty], actionId: 'colt_l36:1', fromId: 'silk', toIds: [] });
     eq(item(after(reloaded, 'silk'), 'colt_l36')?.values?.ammo, 11);
   });
@@ -301,7 +301,7 @@ group('Shadowrun 6: оружие, патроны, модификации, взр
     const out = exchange({
       system, compendium, die: () => 1, sheets: [sheetOf('razor'), sheetOf('humanis'), sheetOf('mafia')],
       actionId: 'grenade_frag:0', fromId: 'razor', toIds: ['humanis', 'mafia'],
-      inputs: { distanciya_2: 'blizkaya', kolco: { humanis: 'epicentr', mafia: 'blizko' } } as never,
+      inputs: { distanciya: 'blizkaya', kolco: { humanis: 'epicentr', mafia: 'blizko' } } as never,
     });
     const frag = compendium.records.find(r => r.id === 'grenade_frag')!.cells as Record<string, number>;
     eq(after(out, 'humanis').values.physical, frag.dv_e);
@@ -326,7 +326,7 @@ group('Shadowrun 6: оружие, патроны, модификации, взр
     const out = exchange({
       system, compendium, die: () => 1, sheets: [gunner, sheetOf('humanis'), sheetOf('mafia')],
       actionId: 'striker:0', fromId: 'razor', toIds: ['humanis', 'mafia'],
-      inputs: { distanciya_2: 'srednyaya', kolco: { humanis: 'epicentr', mafia: 'blizko' } } as never,
+      inputs: { distanciya: 'srednyaya', kolco: { humanis: 'epicentr', mafia: 'blizko' } } as never,
     });
     const rocket = compendium.records.find(r => r.id === 'rocket_frag')!.cells as Record<string, number>;
     eq(after(out, 'humanis').values.physical, rocket.dv_e);

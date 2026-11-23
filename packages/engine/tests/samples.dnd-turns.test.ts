@@ -46,7 +46,7 @@ group('действия хода — поля листа, а не отдельн
     const spent = hit(table());
     const out = fireMoments([{ moment: 'turn-start', sheetId: 'arven' }], spent, { system, compendium, die: () => 1 });
     eq(value(out.sheets, 'turn.deystvie.left'), 1);
-    eq(value(out.sheets, 'turn.reaction.left'), 1);
+    eq(value(out.sheets, 'turn.reakciya.left'), 1);
     eq(value(out.sheets, 'turn.ataki.left'), 0);
   });
 

@@ -23,10 +23,10 @@ const deckId = compendium.records.find(r => (r.cells as Record<string, unknown> 
 
 const technomancer = (values: Record<string, unknown> = {}, has: Sheet['has'] = []) => ({
   ...razor(), id: 'tm', name: 'Техномант',
-  values: { ...razor().values, awakened: 'tehnomant', resonance: 4, logic: 5, intuition: 4, charisma: 3, willpower: 4, matrix_mode: 'goryachaya_VR',
+  values: { ...razor().values, awakened: 'tehnomant', resonance: 4, logic: 5, intuition: 4, charisma: 3, willpower: 4, matrix_mode: 'goryachaya_vr',
     'skills.vzlom.rank': 5, 'skills.elektronika.rank': 4, 'skills.mnogozadachnost.rank': 5, ...values },
   has: [{ of: 'cf_res_spike' }, { of: 'cf_infusion' }, { of: 'tm_sprite_compile' }, ...has] } as Sheet);
-const decker = () => ({ ...razor(), values: { ...razor().values, matrix_mode: 'holodnaya_VR' }, has: [{ of: deckId }] } as Sheet);
+const decker = () => ({ ...razor(), values: { ...razor().values, matrix_mode: 'holodnaya_vr' }, has: [{ of: deckId }] } as Sheet);
 const blankSprite = () => ({ id: 'sp', systemId: sr.sheets[0]!.systemId, of: 'sprite', name: 'Спрайт', values: {}, has: [{ of: 'spw_trap' }], effects: [] } as unknown as Sheet);
 const act = (sheets: Sheet[], actionId: string, to: string[], die: () => number, inputs?: Record<string, string | number>, clock?: Clock) =>
   exchange({ system, compendium, die, sheets, actionId, fromId: sheets[0]!.id, toIds: to, ...(inputs ? { inputs } : {}), ...(clock ? { clock } : {}) });
@@ -50,7 +50,7 @@ group('Shadowrun 6: сложные формы', () => {
   });
 
   test('Инфузия: порог 4, + успехи сверх порога, не больше базового значения; поддержание (стр. 190)', () => {
-    const out = act([technomancer()], 'cf_infusion:0', ['tm'], tape(...six(8), 1, ...six(9)), { attr: 'VM' });
+    const out = act([technomancer()], 'cf_infusion:0', ['tm'], tape(...six(8), 1, ...six(9)), { attr: 'vm' });
     deepEq([computed(after(out, 'tm'), 'm_dp'), sustaining(after(out, 'tm'))], [9, 1]);
   });
 

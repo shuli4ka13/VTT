@@ -17,7 +17,7 @@ describe('D&D: новый лист', () => {
   const made = mine(perform(world([]), { op: 'sheet', name: 'Новичок', of: 'personazh' }));
 
   it('характеристики — 10, модификаторы — ноль', () => {
-    for (const ability of ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma']) {
+    for (const ability of ['sila', 'lovkost', 'teloslozhenie', 'intellekt', 'mudrost', 'harizma']) {
       expect(read(made, `abilities.${ability}.score`), ability).toBe(10);
       expect(read(made, `abilities.${ability}.mod`), ability).toBe(0);
     }

@@ -35,7 +35,7 @@ describe('Засада D&D: один бросок Скрытности прот�
     const out = play(world, world.sheets, '+hide', 'arven', ['goblin', 'ogre', 'orc'], [6]);
     const hidden = (id: string) => out.sheets.find(s => s.id === id)!.effects?.filter(e => e.effectId === 'hidden') ?? [];
     expect(out.log.filter(line => line.includes('Бросок')).length).toBe(1);
-    expect(hidden('ogre').map(e => e.args)).toEqual([{ whom: 'arven' }]);
+    expect(hidden('ogre').map(e => e.args)).toEqual([{ kogo: 'arven' }]);
     expect(hidden('goblin')).toEqual([]);
     expect(hidden('orc')).toEqual([]);
     expect(hidden('arven')).toEqual([]);
@@ -60,7 +60,7 @@ describe('Засада D&D: один бросок Скрытности прот�
     sheets = play(world, sheets, '+hide', 'mirra', ['ogre'], [15]).sheets;
     sheets = play(world, sheets, '+hide', 'arven', ['ogre'], [6]).sheets;
     const ogre = sheets.find(s => s.id === 'ogre')!;
-    expect(ogre.effects!.filter(e => e.effectId === 'hidden').map(e => e.args)).toEqual([{ whom: 'arven' }, { whom: 'mirra' }]);
+    expect(ogre.effects!.filter(e => e.effectId === 'hidden').map(e => e.args)).toEqual([{ kogo: 'arven' }, { kogo: 'mirra' }]);
     const arven = sheets.find(s => s.id === 'arven')!;
     expect(play(world, sheets, attackOf(world, arven), 'arven', ['ogre'], [3, 17, 4, 4, 4, 4]).log.join(' ')).toMatch(/Преимуществ/);
   });

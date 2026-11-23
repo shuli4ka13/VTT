@@ -56,9 +56,17 @@ export const toDice = (text: string): string => {
 
 export const FORBIDDEN_STEMS = ['слушател', 'карточк', 'карточе', 'кирпич', 'чарник', 'Шаблон Компендиума', 'рода записей', 'родов записей', 'род записи', 'без рода', 'родов ещё', 'род неизвестен', 'событи', 'потребност', 'отправител', 'получател'] as const;
 
-export const OUTCOME_COLUMNS = { success: 'успех', fail: 'провал' } as const;
+export const OUTCOME_COLUMNS = { success: 'uspeh', fail: 'proval' } as const;
 
-export const COST_BLOCK = 'Плата';
+export const OUTCOME_WORDS = { success: 'успех', fail: 'провал' } as const;
+
+export const COST_BLOCK = 'plata';
+
+export const COST_BLOCK_LABEL = 'Плата';
+
+export const GEAR_BLOCK = 'snaryazhenie';
+
+export const GEAR_BLOCK_LABEL = 'Снаряжение';
 
 export const SHEET_LISTS = { hanging: 'Висит сейчас', things: 'Снаряжение', actions: 'Действия' } as const;
 

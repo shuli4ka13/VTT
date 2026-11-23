@@ -12,20 +12,20 @@ describe('namesAt: что видно в каждом месте эффекта',
     const before = names(namesAt(dnd, 'strike', { part: 'steps', index: 0 }));
     expect(before).toContain('deystvuyuschiy');
     expect(before).not.toContain('brosok');
-    expect(before).not.toContain('aim');
+    expect(before).not.toContain('cel');
     const inside = namesAt(dnd, 'strike', { part: 'steps', index: 4 });
-    expect(names(inside)).toContain('aim');
+    expect(names(inside)).toContain('cel');
     expect(names(inside)).toContain('brosok');
-    expect(inside.find(one => one.name === 'aims')?.many).toBe(true);
+    expect(inside.find(one => one.name === 'celi')?.many).toBe(true);
     expect(inside.find(one => one.name === 'brosok')?.children?.map(c => c.path)).toContain('.ishod.hit');
     expect(inside.find(one => one.name === 'brosok')?.label).toBe('Бросок атаки');
   });
 
   it('шаги подписки: носитель и слышимые входы вызова с подписями', () => {
     const list = namesAt(dnd, 'hellish_rebuke', { part: 'handler', handler: 0, index: 2 });
-    expect(names(list)).toEqual(expect.arrayContaining(['holder', 'list_2', 'istochnik', 'amount', 'spas']));
+    expect(names(list)).toEqual(expect.arrayContaining(['holder', 'list', 'istochnik', 'amount', 'spas']));
     expect(list.find(one => one.name === 'istochnik')?.group).toBe('heard');
-    expect(names(sheetNamesAt(dnd, 'concentration', { part: 'handler', handler: 0, index: 0 }))).toEqual(expect.arrayContaining(['holder', 'list_2']));
+    expect(names(sheetNamesAt(dnd, 'concentration', { part: 'handler', handler: 0, index: 0 }))).toEqual(expect.arrayContaining(['holder', 'list']));
   });
 
   it('заклинание видит свои входы круга и ячейки', () => {

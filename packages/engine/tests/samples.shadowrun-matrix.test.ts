@@ -21,7 +21,7 @@ const dice = (...runs: [number, number][]) => {
 const after = (out: ReturnType<typeof exchange>, id: string) => out.sheets.find(s => s.id === id)!;
 const refusal = (fn: () => unknown) => { try { fn(); return ''; } catch (error) { return (error as Error).message; } };
 
-const decker = (values: Record<string, unknown> = {}, has: Sheet['has'] = []) => sheetOf('razor', { 'skills.vzlom.rank': 6, logic: 5, matrix_mode: 'goryachaya_VR', ...values },
+const decker = (values: Record<string, unknown> = {}, has: Sheet['has'] = []) => sheetOf('razor', { 'skills.vzlom.rank': 6, logic: 5, matrix_mode: 'goryachaya_vr', ...values },
   [{ of: 'dev_deck_erika_mcd6' }, { of: 'dev_comm_transys_avalon' }, { of: 'mx_spike' }, { of: 'mx_tarpit' }, { of: 'mx_brute' }, ...has]);
 const victim = (values: Record<string, unknown> = {}) => ({ ...decker(values), id: 'жертва', name: 'Жертва' } as Sheet);
 const act = (from: Sheet, to: Sheet[], actionId: string, die: () => number, inputs?: Record<string, string | number>) =>
@@ -36,12 +36,12 @@ group('Shadowrun 6: персона в Матрице', () => {
 
   test('инициатива в ВР: Интуиция + ВМ; кубики 2к6 холодная, 3к6 горячая (стр. 178)', () => {
     deepEq([computed(decker(), 'initiative'), computed(decker(), 'init_dice')], [4 + 3, 3]);
-    eq(computed(decker({ matrix_mode: 'holodnaya_VR' }), 'init_dice'), 2);
-    eq(computed(decker({ matrix_mode: 'none' }), 'init_dice'), 1);
+    eq(computed(decker({ matrix_mode: 'holodnaya_vr' }), 'init_dice'), 2);
+    eq(computed(decker({ matrix_mode: 'net' }), 'init_dice'), 1);
   });
 
   test('реконфигурация меняет местами П и У; программа «Инструментарий» +1 ВМ', () => {
-    const d = decker({ cfg_attack: 'U', cfg_sleaze: 'P' }, [{ of: 'prog_toolkit' }]);
+    const d = decker({ cfg_attack: 'u', cfg_sleaze: 'p' }, [{ of: 'prog_toolkit' }]);
     deepEq([computed(d, 'm_attack'), computed(d, 'm_sleaze'), computed(d, 'm_dp')], [3, 4, 4]);
   });
 
@@ -56,20 +56,20 @@ group('Shadowrun 6: персона в Матрице', () => {
 
 group('Shadowrun 6: действия в Матрице', () => {
   test('Инфошип: ⌈ЗА / 2⌉ + чистые успехи урона Матрицы, ПН + успехи защиты (стр. 181, 176)', () => {
-    const out = act(decker(), [victim({ matrix_mode: 'none' })], 'mx_spike:0', dice([6, 6], [5, 1], [1, 11]));
+    const out = act(decker(), [victim({ matrix_mode: 'net' })], 'mx_spike:0', dice([6, 6], [5, 1], [1, 11]));
     eq(after(out, 'жертва').values.matrix_damage, 4 + 6 - 1);
     eq(after(out, 'razor').values.overwatch, 1);
   });
 
   test('Смоляная яма: 1 + чистые урона и снижение ВМ цели (стр. 184)', () => {
-    const out = act(decker(), [victim({ matrix_mode: 'none' })], 'mx_tarpit:0', dice([3, 6], [20, 1]));
+    const out = act(decker(), [victim({ matrix_mode: 'net' })], 'mx_tarpit:0', dice([3, 6], [20, 1]));
     eq(after(out, 'жертва').values.matrix_damage, 4);
     ok(wears(after(out, 'жертва'), 'matrix_drain'));
   });
 
   test('Смоляная яма (стр. 184): снижается Вычислительная мощность цели; при ВМ 0 действие в Матрице отказывает', () => {
-    const before = computed(victim({ matrix_mode: 'none' }), 'm_dp') as number;
-    const out = act(decker(), [victim({ matrix_mode: 'none' })], 'mx_tarpit:0', dice([3, 6], [20, 1]));
+    const before = computed(victim({ matrix_mode: 'net' }), 'm_dp') as number;
+    const out = act(decker(), [victim({ matrix_mode: 'net' })], 'mx_tarpit:0', dice([3, 6], [20, 1]));
     eq(computed(after(out, 'жертва'), 'm_dp'), Math.max(0, before - 4));
     const drained = { ...decker(), effects: [{ effectId: 'matrix_drain', args: { amount: 99 } }] } as Sheet;
     const why = refusal(() => act(drained, [victim()], 'mx_spike:0', dice([30, 1])));
@@ -125,7 +125,7 @@ group('Shadowrun 6: сервер и лёд', () => {
     eq(d.values.matrix_damage, 11);
     ok(wears(d, 'dumpshocked'), out.log.join('\n'));
     eq(d.values.physical, 3);
-    eq(d.values.matrix_mode, 'none');
+    eq(d.values.matrix_mode, 'net');
   });
 
   test('дозорный лёд (стр. 187): в бою тратит простое действие, сложное не тронуто, урона нет', () => {
@@ -155,8 +155,8 @@ group('Shadowrun 6, глава «Матрица»: ситуации книжни
 
   test('MX-7 (стр. 176): демпшок — холодный сим 3о, горячий 3ф, сопротивление Волей; дезориентация', () => {
     const hit = (mode: string) => act(sheetOf('baraholka_killer'), [decker({ matrix_damage: 2, matrix_mode: mode, willpower: 4 })], '+ic_attack', dice([6, 6], [2, 1], [5, 1], [1, 6], [1, 6], [1, 5], [2, 2], [20, 2]));
-    const cold = after(hit('holodnaya_VR'), 'razor');
-    const hot = after(hit('goryachaya_VR'), 'razor');
+    const cold = after(hit('holodnaya_vr'), 'razor');
+    const hot = after(hit('goryachaya_vr'), 'razor');
     eq(cold.values.stun, 1);
     eq(hot.values.physical, 1);
     ok(wears(cold, 'dumpshocked') && wears(hot, 'dumpshocked'));
@@ -164,9 +164,9 @@ group('Shadowrun 6, глава «Матрица»: ситуации книжни
   });
 
   test('MX-7б (стр. 176): при Воле 10 демпшок есть (выброс из Матрицы), а дезориентации нет', () => {
-    const out = act(sheetOf('baraholka_killer'), [decker({ matrix_damage: 2, matrix_mode: 'holodnaya_VR', willpower: 10 })], '+ic_attack', dice([6, 6], [2, 1], [5, 1], [1, 6], [1, 6], [1, 5], [2, 2], [20, 2]));
+    const out = act(sheetOf('baraholka_killer'), [decker({ matrix_damage: 2, matrix_mode: 'holodnaya_vr', willpower: 10 })], '+ic_attack', dice([6, 6], [2, 1], [5, 1], [1, 6], [1, 6], [1, 5], [2, 2], [20, 2]));
     const d = after(out, 'razor');
-    eq(d.values.matrix_mode, 'none');
+    eq(d.values.matrix_mode, 'net');
     ok(!wears(d, 'dumpshocked'));
   });
 

@@ -48,7 +48,7 @@ group('Shadowrun 6: долг этапа 3 механикой', () => {
   });
 
   test('Киберразъём 4: ВМ 7, СЭ 6, в ВР +2 кубика инициативы (стр. 284)', () => {
-    const jack = sheetOf('razor', { matrix_mode: 'goryachaya_VR' }, [{ of: 'cyberjack', values: { rating: 4 } }]);
+    const jack = sheetOf('razor', { matrix_mode: 'goryachaya_vr' }, [{ of: 'cyberjack', values: { rating: 4 } }]);
     deepEq([computed(jack, 'm_dp'), computed(jack, 'm_firewall'), computed(jack, 'init_dice')], [7, 6, 5]);
   });
 
@@ -58,7 +58,7 @@ group('Shadowrun 6: долг этапа 3 механикой', () => {
   });
 
   test('Выжженный: в Матрице Преимущество не тратить (стр. 76)', () => {
-    eq(computed(sheetOf('razor', { matrix_mode: 'DR' }, [{ of: 'burned_out' }]), 'edge_no_spend'), 1);
+    eq(computed(sheetOf('razor', { matrix_mode: 'dr' }, [{ of: 'burned_out' }]), 'edge_no_spend'), 1);
     eq(computed(sheetOf('razor', {}, [{ of: 'burned_out' }]), 'edge_no_spend'), 0);
   });
 
@@ -70,7 +70,7 @@ group('Shadowrun 6: долг этапа 3 механикой', () => {
 
   test('Дрожь в руках: при защите от выстрела трату Преимущества предлагают (стр. 76)', () => {
     const offers = (has: Sheet['has']) => exchange({ system, compendium, die: () => 3, sheets: [sheetOf('silk', { edge_left: 0 }), sheetOf('razor', { edge_left: 3 }, has)], actionId: 'colt_l36:0', fromId: 'silk', toId: 'razor',
-      inputs: { distanciya_2: 'blizkaya' } as never, answer: () => [] }).questions.length;
+      inputs: { distanciya: 'blizkaya' } as never, answer: () => [] }).questions.length;
     eq(offers([{ of: 'shaky_hands' }]), offers([]));
     ok(offers([]) > 0);
   });
@@ -79,7 +79,7 @@ group('Shadowrun 6: долг этапа 3 механикой', () => {
     const baton = sheetOf('lone_star', { edge_left: 2 }, [{ of: 'shaky_hands' }]);
     let message = '';
     let sheets: Sheet[] = [];
-    try { sheets = exchange({ system, compendium, die: () => 1, sheets: [baton, sheetOf('humanis')], actionId: 'stun_baton:0', fromId: 'lone_star', toId: 'humanis', inputs: { priem: 'Vyrubit_udarom' } as never }).sheets; } catch (error) { message = (error as Error).message; }
+    try { sheets = exchange({ system, compendium, die: () => 1, sheets: [baton, sheetOf('humanis')], actionId: 'stun_baton:0', fromId: 'lone_star', toId: 'humanis', inputs: { priem: 'vyrubit_udarom' } as never }).sheets; } catch (error) { message = (error as Error).message; }
     ok(message.includes('Дрожь в руках'), message);
     eq(sheets.length, 0);
   });
