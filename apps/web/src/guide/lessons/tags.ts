@@ -2,12 +2,14 @@ import type { System, Effect, Handler } from '@vtt/schema';
 import { NAMES } from '@vtt/engine';
 import type { Lesson, View, Move } from '../types.ts';
 import { effectBy, stepsOf, errorsOf, is, numberOf, exprOf } from '../find.ts';
+import { slugOf } from '../../store/world.ts';
 import { problemsClean } from './first-system.ts';
 import { visible } from '../anchor.ts';
 import seed from '../seeds/tags.json' with { type: 'json' };
 
 const TAG = 'гасит огонь';
-const GUARD = 'защита';
+const TAGS = [TAG, slugOf(TAG)];
+const GUARD = 'zaschita';
 
 const effect = (view: View, label: string): Effect | undefined => effectBy(view.system, label)?.[1];
 const keyOf = (view: View, label: string): string | undefined => effectBy(view.system, label)?.[0];
@@ -28,7 +30,7 @@ const propsOpened: Move = {
 };
 
 const gainedTag = (view: View): Handler | undefined =>
-  handlers(view, 'Горение').find(handler => handler.on === `gained:${TAG}`);
+  handlers(view, 'Горение').find(handler => TAGS.some(tag => handler.on === `gained:${tag}`));
 
 const removesBurning = (view: View): boolean => {
   const burning = keyOf(view, 'Горение');
@@ -90,7 +92,7 @@ export const tags: Lesson = {
         },
         { at: { input: 'как назвать метку' }, say: 'Впишите «гасит огонь» и нажмите «добавить».' },
       ],
-      done: view => (effect(view, 'Сырость')?.tags ?? []).includes(TAG),
+      done: view => (effect(view, 'Сырость')?.tags ?? []).some(tag => TAGS.includes(tag)),
       result: () => '«Сырость» несёт метку «гасит огонь».',
     },
     {

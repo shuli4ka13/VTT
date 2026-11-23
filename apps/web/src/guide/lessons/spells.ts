@@ -1,6 +1,6 @@
 import type { System, Binding, Table } from '@vtt/schema';
 import type { Lesson, View } from '../types.ts';
-import { effectBy, tableBy, columnBy, is, errorsOf, FORMULA_DONE, barOpen, barText } from '../find.ts';
+import { effectBy, tableBy, columnBy, rowIs, is, errorsOf, FORMULA_DONE, barOpen, barText } from '../find.ts';
 import { visible } from '../anchor.ts';
 import { problemsClean } from './first-system.ts';
 import { bindingHolds } from '@vtt/engine';
@@ -34,6 +34,8 @@ const stopHolds = (view: View, term: unknown): boolean | null => {
   const record = { id: 'проба', label: 'Проба', table: found[0], cells: { [prop]: term } } as unknown as CompendiumRecord;
   try { return bindingHolds(view.system as unknown as EngineSystem, record, button as never); } catch { return null; }
 };
+
+const instant = (view: View): unknown => (terms(view)?.[1].rows ?? []).find(row => rowIs(row, 'мгновенное'))?.value;
 
 const stopFollowsTerm = (view: View): boolean => {
   const rows = terms(view)?.[1].rows ?? [];
@@ -170,7 +172,7 @@ export const spells: Lesson = {
       goal: 'в таблице «Сроки» не меньше двух сроков с «Держится» — да; у каждого такого срока «Прекратить» видна, у «мгновенного» нет; в «Проблемах» нет ошибок.',
       say: 'Заведите в таблице «Сроки» ещё один срок с «Держится» — да и убедитесь, что «Прекратить» у него есть, а у «мгновенного» нет.',
       hint: 'Таблица «Сроки» — в «Правила» → «Таблицы». Новую строку заполните как «концентрацию».',
-      done: view => longTerms(view) >= 2 && stopFollowsTerm(view) && stopHolds(view, 'мгновенное') === false && errorsOf(view.system) === 0,
+      done: view => longTerms(view) >= 2 && stopFollowsTerm(view) && stopHolds(view, instant(view)) === false && errorsOf(view.system) === 0,
       result: () => 'У нового срока «Прекратить» есть, у «мгновенного» нет.',
     },
   ],

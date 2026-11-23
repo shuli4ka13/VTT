@@ -625,9 +625,9 @@ export const same = (a: unknown, b: unknown): boolean => JSON.stringify(sorted(a
 
 
 const SINGLE_NAMES: Record<Holder, { id: string; label: string }> = {
-  sheet: { id: 'лист', label: 'Лист' },
-  desk: { id: 'стол', label: 'Стол' },
-  group: { id: 'группа', label: 'Группа' },
+  sheet: { id: 'list', label: 'Лист' },
+  desk: { id: 'stol', label: 'Стол' },
+  group: { id: 'gruppa', label: 'Группа' },
 };
 
 export const singleTableOf = (system: System, holder: Holder = 'sheet'): string | undefined =>

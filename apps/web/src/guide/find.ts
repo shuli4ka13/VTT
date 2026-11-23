@@ -21,8 +21,17 @@ export const effectBy = (system: System, label: string): [string, Effect] | unde
 export const tableBy = (system: System, label: string): [string, Table] | undefined =>
   Object.entries(system.tables ?? {}).find(([, table]) => same(table.label, label));
 
+export const rowIs = (row: { value?: unknown; label?: unknown } | undefined, word: string): boolean =>
+  same(row?.label, word) || same(row?.value, word);
+
 export const columnBy = (table: Table | undefined, label: string): Column | undefined =>
   (table?.columns ?? []).find(column => same(column.label, label));
+
+export const actorKey = (effect: Effect | undefined): string =>
+  effect?.params?.find(param => param.kind === 'sheet' && !param.many)?.key ?? 'deystvuyuschiy';
+
+export const aimKey = (effect: Effect | undefined): string =>
+  effect?.params?.find(param => param.kind === 'sheet' && param.many)?.item?.key ?? 'cel';
 
 export const stepsOf = (effect: Effect | undefined): Record<string, unknown>[] =>
   (effect?.steps ?? []) as unknown as Record<string, unknown>[];

@@ -1,4 +1,4 @@
-import { loopOf, splitsTargets, amountParamOf, ASK_WHOM, fieldOf, hasField, HOLDER, DESK_ID, NAME_LABELS } from '@vtt/engine';
+import { loopOf, splitsTargets, amountParamOf, ASK_WHOM, fieldOf, hasField, HOLDER, DESK_ID, NAME_LABELS, stepSaid } from '@vtt/engine';
 import { pickedRow } from './choice-rows.ts';
 import type { System, Effect, Step, SystemConstant } from '@vtt/schema';
 import { labelOfTag, formulaAsLabels } from '../../ui/formula.tsx';
@@ -14,13 +14,13 @@ export type Segment = { text: string } | { hole: string };
 const seg = (text: string): Segment => ({ text });
 const hole = (label: string): Segment => ({ hole: label });
 
-export function countWord(system: System, count: unknown): string {
+export function countWord(system: System, count: unknown, names?: ReadonlyMap<string, string>): string {
   if (typeof count !== 'object' || count === null) return String(count ?? 1);
   const expr = String((count as { expr?: unknown }).expr ?? '').trim();
   if (!expr) return '…';
   const tag = /^@([\p{L}\p{N}_]+)$/u.exec(expr)?.[1];
-  if (tag) return fieldOf(system, tag)?.label || tag;
-  return formulaAsLabels(system, expr);
+  if (tag) return fieldOf(system, tag)?.label || names?.get(tag) || formulaAsLabels(system, expr, names);
+  return formulaAsLabels(system, expr, names);
 }
 
 export function dieWord(system: System, name: string): string {
@@ -123,7 +123,7 @@ export function checkReadback(step: Step, system: System, effect: Effect, names?
 export function rollReadback(step: Step, system: System, effect: Effect, names?: Names): Segment[] {
   const r = step as any;
   const filled = (value: unknown): boolean => value !== undefined && value !== null;
-  const out: Segment[] = r.id ? [seg(`${String(r.id)} =`)] : [];
+  const out: Segment[] = r.id ? [seg(`${stepSaid(r)} =`)] : [];
   if (filled(r.field)) {
     out.push(seg('бросок поля'), refSegment(r.field, system, effect, 'какое поле?', names));
     if (filled(r.second)) out.push(seg('и'), refSegment(r.second, system, effect, 'какое второе поле?', names));
@@ -473,7 +473,7 @@ export function dieReadback(constant: SystemConstant, system: System, driven = f
   return [seg(`Кинуть ${dice} и ${tail}.`)];
 }
 
-export function dieSaid(constant: SystemConstant, system: System, counted: boolean): string | null {
+export function dieSaid(constant: SystemConstant, system: System, counted: boolean, names?: ReadonlyMap<string, string>): string | null {
   const terms = constant.dice ?? [];
   if (!terms.length) return null;
   const read = constant.read;
@@ -483,7 +483,7 @@ export function dieSaid(constant: SystemConstant, system: System, counted: boole
   if (lone && kind === 'sum' && (terms[0]!.count ?? 1) === 1) return null;
   const dice = terms.map(term => {
     const head = counted && lone ? `${DIE_LETTER}${term.sides}`
-      : typeof term.count === 'object' && term.count !== null ? `${DIE_LETTER}${term.sides} по числу «${countWord(system, term.count)}»`
+      : typeof term.count === 'object' && term.count !== null ? `${DIE_LETTER}${term.sides} по числу «${countWord(system, term.count, names)}»`
         : diceText(term.count, term.sides);
     return term.name ? `${head} «${term.label || term.name}»` : head;
   }).map((text, at) => (at === 0 ? text : ` + ${text}`)).join('');

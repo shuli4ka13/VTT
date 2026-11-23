@@ -3,20 +3,21 @@
   "name": "Учебная система",
   "blocks": [
     {
-      "key": "Бой",
+      "key": "novyy_blok",
+      "label": "Бой",
       "parts": [
         {
-          "table": "лист"
+          "table": "list"
         }
       ]
     }
   ],
   "tables": {
-    "лист": {
+    "list": {
       "shape": "single",
       "columns": [
         {
-          "key": "действий_осталось",
+          "key": "deystviy_ostalos",
           "label": "Действий осталось",
           "kind": "number",
           "default": 3,
@@ -26,12 +27,12 @@
     }
   },
   "effects": {
-    "удар": {
+    "udar": {
       "label": "Удар",
       "activation": "manual",
       "params": [
         {
-          "key": "действующий",
+          "key": "deystvuyuschiy",
           "label": "Кто действует",
           "kind": "sheet",
           "role": "actor"
@@ -41,6 +42,6 @@
     }
   },
   "grants": [
-    "удар"
+    "udar"
   ]
 }

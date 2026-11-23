@@ -3,20 +3,21 @@
   "name": "Учебная система",
   "blocks": [
     {
-      "key": "Бой",
+      "key": "novyy_blok",
+      "label": "Бой",
       "parts": [
         {
-          "table": "лист"
+          "table": "list"
         }
       ]
     }
   ],
   "tables": {
-    "лист": {
+    "list": {
       "shape": "single",
       "columns": [
         {
-          "key": "хиты",
+          "key": "hity",
           "label": "Хиты",
           "kind": "number",
           "default": 10,
@@ -24,47 +25,49 @@
         }
       ]
     },
-    "метки_бросков": {
+    "metki_broskov": {
       "label": "Метки бросков",
       "shape": "rows",
       "key": "word",
       "rows": [
         {
-          "value": "атака"
+          "value": "ataka",
+          "label": "атака"
         },
         {
-          "value": "защита"
+          "value": "zaschita",
+          "label": "защита"
         }
       ]
     }
   },
   "effects": {
-    "сырость": {
+    "syrost": {
       "label": "Сырость",
       "activation": "passive"
     },
-    "горение": {
+    "gorenie": {
       "label": "Горение",
       "activation": "passive"
     },
-    "удача": {
+    "udacha": {
       "label": "Удача",
       "activation": "passive"
     },
-    "холод": {
+    "holod": {
       "label": "Холод",
       "activation": "passive"
     },
-    "иней": {
+    "iney": {
       "label": "Иней",
       "activation": "passive"
     },
-    "согреться": {
+    "sogretsya": {
       "label": "Согреться",
       "activation": "manual",
       "params": [
         {
-          "key": "действующий",
+          "key": "deystvuyuschiy",
           "label": "Кто действует",
           "kind": "sheet"
         }

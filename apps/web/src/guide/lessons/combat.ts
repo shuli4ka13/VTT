@@ -1,7 +1,7 @@
 import type { System, Effect } from '@vtt/schema';
 import type { Lesson, View, Move } from '../types.ts';
 import { lazyPlan, NAMES } from '@vtt/engine';
-import { effectBy, fieldBy, stepsOf, reads, is, subtracts, numberOf, armOf, errorsOf, isArm, FORMULA_DONE, barOpen, barText } from '../find.ts';
+import { effectBy, actorKey, fieldBy, stepsOf, reads, is, subtracts, numberOf, armOf, errorsOf, isArm, FORMULA_DONE, barOpen, barText } from '../find.ts';
 import { problemsClean } from './first-system.ts';
 import seed from '../seeds/combat.json' with { type: 'json' };
 
@@ -18,7 +18,7 @@ const spends = (view: View): boolean => {
   const at = inCombat(view);
   const tag = counter(view);
   return at >= 0 && Boolean(tag) && armOf(steps(view), at).some(step =>
-    step.type === 'apply' && is(step.target, `@действующий.${tag}`) && subtracts(step) && numberOf(step.value) === 1);
+    step.type === 'apply' && is(step.target, `@${actorKey(strike(view)?.[1])}.${tag}`) && subtracts(step) && numberOf(step.value) === 1);
 };
 
 const refuses = (view: View): boolean => {
@@ -30,7 +30,7 @@ const refuses = (view: View): boolean => {
   return list.some((step, at) => {
     if (step.type !== 'stop') return false;
     const text = guards.get(at);
-    return reads(text, COMBAT) && reads(text, `@действующий.${tag}`);
+    return reads(text, COMBAT) && reads(text, `@${actorKey(strike(view)?.[1])}.${tag}`);
   });
 };
 
@@ -81,7 +81,7 @@ export const combat: Lesson = {
         {
           at: { text: 'Какое поле' },
           say: 'В «Какое поле» выберите «Действий осталось».',
-          done: view => Boolean(counter(view) && inCombat(view) >= 0 && armOf(steps(view), inCombat(view)).some(step => step.type === 'apply' && is(step.target, `@действующий.${counter(view)}`))),
+          done: view => Boolean(counter(view) && inCombat(view) >= 0 && armOf(steps(view), inCombat(view)).some(step => step.type === 'apply' && is(step.target, `@${actorKey(strike(view)?.[1])}.${counter(view)}`))),
         },
         { at: { text: 'Сколько' }, say: 'Щёлкните «Сколько» и впишите 1.', done: view => barText(view).trim() === '1' || spends(view) },
         { at: [FORMULA_DONE, { text: 'Сколько' }], say: 'Нажмите Enter или «готово».' },

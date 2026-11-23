@@ -7,7 +7,7 @@ import { readyForSheet } from './table-field.tsx';
 import { blockNames, blockLabel, labelBlock, pageLabel, onSheet, rowKeyOf, fieldsOf, isSingle, recordKinds, pagesOf, cellHead, setWidth, setHeight, GRID, SHEET_LIST_KEYS, SHEET_LISTS, widthWords, splitWords, perRowWords, isRange } from '@vtt/engine';
 import type { System, SheetBlock, SheetPart, SheetList } from '@vtt/schema';
 
-export const SHEET_TABLE = 'лист';
+export const SHEET_TABLE = 'list';
 
 export const partTables = (system: System): [string, string][] =>
   Object.entries(system.tables ?? {})

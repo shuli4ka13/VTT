@@ -2,21 +2,21 @@
   "id": "учебная",
   "name": "Учебная система",
   "effects": {
-    "удар": {
+    "udar": {
       "label": "Удар",
       "params": [
         {
-          "key": "действующий",
+          "key": "deystvuyuschiy",
           "label": "Кто действует",
           "kind": "sheet"
         },
         {
-          "key": "цели",
+          "key": "celi",
           "label": "Цели",
           "kind": "sheet",
           "many": true,
           "item": {
-            "key": "цель",
+            "key": "cel",
             "label": "Цель"
           }
         }
@@ -24,36 +24,38 @@
       "steps": [
         {
           "type": "each",
-          "of": "цели"
+          "of": "celi"
         },
         {
-          "id": "бросок",
+          "id": "brosok",
+          "label": "бросок",
           "type": "roll",
-          "die": "кость",
+          "die": "kost",
           "by": {
-            "expr": "@действующий"
+            "expr": "@deystvuyuschiy"
           }
         },
         {
-          "id": "проверка",
+          "id": "proverka",
+          "label": "проверка",
           "type": "check",
           "value": {
-            "expr": "@бросок"
+            "expr": "@brosok"
           },
           "versus": {
-            "expr": "@цель.класс_брони"
+            "expr": "@cel.klass_broni"
           }
         },
         {
           "type": "branch",
           "if": {
-            "expr": "@проверка.success"
+            "expr": "@proverka.success"
           }
         },
         {
           "type": "apply",
           "target": {
-            "expr": "@цель.хиты"
+            "expr": "@cel.hity"
           },
           "value": {
             "expr": "5"
@@ -66,10 +68,10 @@
     }
   },
   "grants": [
-    "удар"
+    "udar"
   ],
   "constants": {
-    "кость": {
+    "kost": {
       "label": "Кость проверки",
       "kind": "die",
       "dice": [
@@ -80,19 +82,19 @@
     }
   },
   "tables": {
-    "лист": {
+    "list": {
       "label": "Лист",
       "shape": "single",
       "columns": [
         {
-          "key": "хиты",
+          "key": "hity",
           "label": "Хиты",
           "kind": "number",
           "default": 10,
           "min": 0
         },
         {
-          "key": "класс_брони",
+          "key": "klass_broni",
           "label": "Класс брони",
           "kind": "number",
           "default": 12
@@ -102,11 +104,11 @@
   },
   "blocks": [
     {
-      "key": "новый_блок",
+      "key": "novyy_blok",
       "label": "Бой",
       "parts": [
         {
-          "table": "лист"
+          "table": "list"
         }
       ]
     }

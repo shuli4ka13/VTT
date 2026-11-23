@@ -2,7 +2,7 @@ import { emptySystem } from '../../store/world.ts';
 import type { Lesson, View } from '../types.ts';
 import { fieldsOf, blockLabel } from '@vtt/engine';
 import { visible } from '../anchor.ts';
-import { fieldBy, inBlock, columnOf, effectBy, stepsOf, reads, is, subtracts, adds, armOf, numberOf, errorsOf, exprOf, isArm, same, FORMULA_DONE, barOpen, barText } from '../find.ts';
+import { fieldBy, inBlock, columnOf, effectBy, actorKey, aimKey, stepsOf, reads, is, subtracts, adds, armOf, numberOf, errorsOf, exprOf, isArm, same, FORMULA_DONE, barOpen, barText } from '../find.ts';
 
 const hp = (view: View) => fieldBy(view.system, 'Хиты');
 const ac = (view: View) => fieldBy(view.system, 'Класс брони');
@@ -10,7 +10,8 @@ const strike = (view: View) => effectBy(view.system, 'Удар');
 
 const inFight = (view: View) => fieldsOf(view.system).filter(field => !field.cell && inBlock(view.system, field, 'Бой'));
 
-const targetsOf = (view: View) => (strike(view)?.[1].params ?? []).find(param => param.kind === 'sheet' && param.many && same(param.label, 'Цели') && param.item?.key === 'цель');
+const targetsOf = (view: View) => (strike(view)?.[1].params ?? []).find(param => param.kind === 'sheet' && param.many && same(param.label, 'Цели') && same(param.item?.label, 'Цель'));
+const aim = (view: View): string => aimKey(strike(view)?.[1]);
 const checkAt = (view: View): number => stepsOf(strike(view)?.[1]).findIndex(step => step.type === 'check');
 const rollAt = (view: View): number => stepsOf(strike(view)?.[1]).findIndex(step => step.type === 'roll' && (step as { by?: unknown }).by !== undefined);
 
@@ -40,7 +41,7 @@ const rollsCheckDie = (view: View): boolean => {
 
 const versusOk = (view: View): boolean => {
   const key = ac(view)?.tag;
-  return Boolean(key && is(checkOf(view)?.versus, `@цель.${key}`));
+  return Boolean(key && is(checkOf(view)?.versus, `@${aim(view)}.${key}`));
 };
 
 export const PROBLEMS = 'Проблемы системы';
@@ -228,7 +229,7 @@ export const firstSystem: Lesson = {
         {
           at: { guide: 'check-formula' },
           say: 'Начните набирать «класс» — число заменится — и в группе «у «Цель»» выберите «Класс брони».',
-          done: view => is(barText(view), `@цель.${ac(view)?.tag ?? ''}`) || versusOk(view),
+          done: view => is(barText(view), `@${aim(view)}.${ac(view)?.tag ?? ''}`) || versusOk(view),
         },
         { at: [FORMULA_DONE, { guide: 'check-formula' }], say: 'Нажмите Enter или «готово».' },
       ],
@@ -259,7 +260,7 @@ export const firstSystem: Lesson = {
           hint: 'Сначала в «У кого» стоит «Кто действует» — это сам герой. Для удара нужна «Цель».',
           done: view => {
             const key = hp(view)?.tag;
-            return Boolean(key && armApplies(view).some(step => is(step.target, `@цель.${key}`)));
+            return Boolean(key && armApplies(view).some(step => is(step.target, `@${aim(view)}.${key}`)));
           },
         },
         {
@@ -272,12 +273,12 @@ export const firstSystem: Lesson = {
       done: view => {
         const key = hp(view)?.tag;
         return Boolean(key && armApplies(view).some(step =>
-          is(step.target, `@цель.${key}`) && numberOf(step.value) === 5 && subtracts(step)));
+          is(step.target, `@${aim(view)}.${key}`) && numberOf(step.value) === 5 && subtracts(step)));
       },
       traps: [
         { when: view => branchAt(view) >= 0 && applies(view).length > armApplies(view).length, say: '«Изменение» стоит вне развилки — урон будет при любом броске. Перенесите его в ветку «успех».' },
-        { when: view => armApplies(view).some(step => reads(step.target, '@действующий') || exprOf(step.target).startsWith('@действующий.')), say: 'В «У кого» стоит «Кто действует» — удар ранит самого героя. Выберите «Цель».' },
-        { when: view => armApplies(view).some(step => exprOf(step.target).startsWith('@цель.') && !reads(step.target, `@цель.${hp(view)?.tag ?? ''}`)), say: 'Урон идёт не в «Хиты». В «Какое поле» выберите «Хиты».' },
+        { when: view => armApplies(view).some(step => reads(step.target, `@${actorKey(strike(view)?.[1])}`) || exprOf(step.target).startsWith(`@${actorKey(strike(view)?.[1])}.`)), say: 'В «У кого» стоит «Кто действует» — удар ранит самого героя. Выберите «Цель».' },
+        { when: view => armApplies(view).some(step => exprOf(step.target).startsWith(`@${aim(view)}.`) && !reads(step.target, `@${aim(view)}.${hp(view)?.tag ?? ''}`)), say: 'Урон идёт не в «Хиты». В «Какое поле» выберите «Хиты».' },
       ],
       result: view => `При успехе цель теряет ${exprOf(armApplies(view)[0]?.value) || '5'} хитов.`,
     },
@@ -315,7 +316,7 @@ export const firstSystem: Lesson = {
       done: view => {
         const key = hp(view)?.tag;
         return Boolean(key && errorsOf(view.system) === 0 && stepsOf(effectBy(view.system, 'Лечение')?.[1]).some(step =>
-          step.type === 'apply' && adds(step) && is(step.target, `@действующий.${key}`) && numberOf(step.value) === 3));
+          step.type === 'apply' && adds(step) && is(step.target, `@${actorKey(effectBy(view.system, 'Лечение')?.[1])}.${key}`) && numberOf(step.value) === 3));
       },
       result: () => '«Лечение»: +3 хита своему листу.',
     },

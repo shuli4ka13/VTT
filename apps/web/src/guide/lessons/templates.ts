@@ -32,7 +32,8 @@ const fromPreset = (view: View): boolean => {
 const whenHolds = (view: View, condition: unknown): boolean => {
   const tag = presetTag(view);
   const asked = (value: string) => figure(condition, { [tag!]: value });
-  return Boolean(tag && asked('') === false && asked('разведчик') === true && asked('громила') === true);
+  const named = (presets(view)?.[1].rows ?? []).map(row => String(row.value ?? '')).filter(Boolean);
+  return Boolean(tag && named.length > 0 && asked('') === false && named.every(value => asked(value) === true));
 };
 const whenPreset = (view: View): boolean => {
   const found = aimed(view);

@@ -3,20 +3,21 @@
   "name": "Учебная система",
   "blocks": [
     {
-      "key": "Бой",
+      "key": "novyy_blok",
+      "label": "Бой",
       "parts": [
         {
-          "table": "лист"
+          "table": "list"
         }
       ]
     }
   ],
   "tables": {
-    "лист": {
+    "list": {
       "shape": "single",
       "columns": [
         {
-          "key": "хиты",
+          "key": "hity",
           "label": "Хиты",
           "kind": "number",
           "default": 10,
@@ -24,91 +25,91 @@
         }
       ]
     },
-    "сроки": {
+    "sroki": {
       "label": "Сроки",
       "shape": "rows",
       "key": "word",
       "columns": [
         {
-          "key": "держится",
+          "key": "derzhitsya",
           "label": "Держится",
           "kind": "boolean"
         }
       ],
       "rows": [
         {
-          "value": "мгновенное",
+          "value": "mgnovennoe",
           "label": "Мгновенное",
           "cells": {
-            "держится": false
+            "derzhitsya": false
           }
         },
         {
-          "value": "концентрация",
+          "value": "koncentraciya",
           "label": "Концентрация",
           "cells": {
-            "держится": true
+            "derzhitsya": true
           }
         }
       ]
     },
-    "заклинание": {
+    "zaklinanie": {
       "label": "Заклинание",
       "shape": "book",
       "use": "action",
       "columns": [
         {
-          "key": "срок",
+          "key": "srok",
           "label": "Срок",
           "kind": "choice",
-          "from": "сроки"
+          "from": "sroki"
         }
       ]
     }
   },
   "effects": {
-    "поддержание": {
+    "podderzhanie": {
       "label": "Поддержание",
       "activation": "passive"
     },
-    "чары": {
+    "chary_deystvuyut": {
       "label": "Чары действуют",
       "activation": "passive"
     },
-    "сотворить": {
+    "sotvorit": {
       "label": "Сотворить",
       "activation": "manual",
       "params": [
         {
-          "key": "колдун",
+          "key": "koldun",
           "label": "Колдун",
           "kind": "sheet",
           "role": "actor"
         },
         {
-          "key": "срок",
+          "key": "srok",
           "label": "Срок",
           "kind": "choice",
-          "from": "сроки",
+          "from": "sroki",
           "optional": true
         }
       ],
       "steps": [
         {
           "type": "status",
-          "effect": "чары",
+          "effect": "chary_deystvuyut",
           "to": {
-            "expr": "@колдун"
+            "expr": "@koldun"
           }
         }
       ]
     },
-    "прекращение": {
+    "prekratit": {
       "label": "Прекратить",
       "activation": "manual",
       "params": [
         {
-          "key": "колдун",
+          "key": "koldun",
           "label": "Колдун",
           "kind": "sheet",
           "role": "actor"
@@ -118,9 +119,9 @@
         {
           "type": "status",
           "mode": "remove",
-          "effect": "поддержание",
+          "effect": "podderzhanie",
           "to": {
-            "expr": "@колдун"
+            "expr": "@koldun"
           }
         }
       ]

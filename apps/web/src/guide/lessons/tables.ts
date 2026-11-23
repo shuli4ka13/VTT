@@ -1,7 +1,7 @@
 import { ROW, compile, blockLabel } from '@vtt/engine';
 import type { System } from '@vtt/schema';
 import type { Lesson, View, Move } from '../types.ts';
-import { tableBy, columnBy, fieldBy, columnOf, figure, same, exprOf, errorsOf, FORMULA_DONE, barOpen, barText } from '../find.ts';
+import { tableBy, columnBy, rowIs, fieldBy, columnOf, figure, same, exprOf, errorsOf, FORMULA_DONE, barOpen, barText } from '../find.ts';
 import { problemsClean } from './first-system.ts';
 import { visible } from '../anchor.ts';
 import base from '../seeds/base.json' with { type: 'json' };
@@ -56,7 +56,8 @@ const valueRead = (view: View, text: string): boolean => {
 const armorRight = (view: View, formula: unknown): boolean => {
   const found = stats(view);
   const modifier = columnBy(found?.[1], 'Модификатор');
-  return Boolean(found && modifier && equalsAll(formula, sample => ({ [`${found[0]}.ловкость.${modifier.key}`]: sample }), sample => 10 + sample));
+  const dexterity = (found?.[1].rows ?? []).find(row => rowIs(row, 'ловкость'));
+  return Boolean(found && modifier && dexterity && equalsAll(formula, sample => ({ [`${found[0]}.${String(dexterity.value)}.${modifier.key}`]: sample }), sample => 10 + sample));
 };
 
 const armorExpr = (view: View): unknown => columnOf(view.system, fieldBy(view.system, 'Класс брони'))?.expr;
@@ -66,8 +67,8 @@ const squash = (text: string): string => text.replace(/\s+/g, '');
 const FORMULA_HINT = 'Формула открывается строкой наверху экрана. Название целиком не печатайте — начните набирать его и выберите в подсказке. «готово» или Enter сохраняет.';
 
 const hasRows = (view: View, names: string[]): boolean => {
-  const rows = (stats(view)?.[1].rows ?? []).map(row => row.value);
-  return names.every(name => rows.some(value => same(value, name)));
+  const rows = stats(view)?.[1].rows ?? [];
+  return names.every(name => rows.some(row => rowIs(row, name)));
 };
 
 const SAMPLE = 'образец листа';
@@ -157,13 +158,13 @@ export const tables: Lesson = {
       say: 'Добавьте строки «сила» и «ловкость».',
       at: [
         tableOpened('Характеристики'),
-        { at: { input: 'как зовётся строка' }, say: 'В пустой строке впишите «сила» и нажмите Enter.', done: view => (stats(view)?.[1].rows ?? []).some(row => same(row.value, 'сила')) },
+        { at: { input: 'как зовётся строка' }, say: 'В пустой строке впишите «сила» и нажмите Enter.', done: view => (stats(view)?.[1].rows ?? []).some(row => rowIs(row, 'сила')) },
         { at: { text: '+ строка' }, say: 'Нажмите «+ строка».', done: view => (stats(view)?.[1].rows ?? []).length > 1 },
         { at: { input: 'как зовётся строка' }, say: 'В новой строке впишите «ловкость» и нажмите Enter.' },
       ],
       done: view => {
-        const rows = (stats(view)?.[1].rows ?? []).map(row => row.value);
-        return rows.some(value => same(value, 'сила')) && rows.some(value => same(value, 'ловкость'));
+        const rows = stats(view)?.[1].rows ?? [];
+        return rows.some(row => rowIs(row, 'сила')) && rows.some(row => rowIs(row, 'ловкость'));
       },
       result: () => 'Строки: сила и ловкость.',
     },
@@ -259,7 +260,7 @@ export const tables: Lesson = {
         { at: { input: 'как зовётся таблица' }, say: 'Впишите название таблицы «Навыки» и нажмите Enter.', done: view => Boolean(skills(view)) },
         { at: { input: 'как зовётся строка' }, say: 'В пустой строке впишите «атлетика» и нажмите Enter.' },
       ],
-      done: view => onSheetIn(view, skills(view), 'Навыки') && (skills(view)?.[1].rows ?? []).some(row => same(row.value, 'атлетика')),
+      done: view => onSheetIn(view, skills(view), 'Навыки') && (skills(view)?.[1].rows ?? []).some(row => rowIs(row, 'атлетика')),
       result: () => 'Таблица «Навыки» на листе, строка «атлетика». «Значение» навыка вписывает игрок — это вложенные очки.',
     },
     {
@@ -297,8 +298,9 @@ export const tables: Lesson = {
       done: view => {
         const table = skills(view)?.[1];
         const column = columnBy(table, 'Характеристика');
-        const row = (table?.rows ?? []).find(one => same(one.value, 'атлетика'));
-        return Boolean(column && same(row?.cells?.[column.key], 'сила'));
+        const row = (table?.rows ?? []).find(one => rowIs(one, 'атлетика'));
+        const strength = (stats(view)?.[1].rows ?? []).find(one => rowIs(one, 'сила'));
+        return Boolean(column && strength && same(row?.cells?.[column.key], String(strength.value)));
       },
       result: () => 'У атлетики характеристика «сила».',
     },

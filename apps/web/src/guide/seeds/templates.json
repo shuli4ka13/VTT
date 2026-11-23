@@ -3,43 +3,45 @@
   "name": "Учебная система",
   "blocks": [
     {
-      "key": "Основа",
+      "key": "novyy_blok",
+      "label": "Основа",
       "parts": [
         {
-          "table": "лист"
+          "table": "list"
         }
       ]
     },
     {
-      "key": "Навыки",
+      "key": "novyy_blok_2",
+      "label": "Навыки",
       "parts": [
         {
-          "table": "навыки"
+          "table": "navyki"
         }
       ]
     }
   ],
   "effects": {},
   "tables": {
-    "лист": {
+    "list": {
       "shape": "single",
       "columns": [
         {
-          "key": "заготовка",
+          "key": "zagotovka",
           "label": "Заготовка",
           "kind": "choice",
-          "from": "заготовки"
+          "from": "zagotovki"
         }
       ]
     },
-    "навыки": {
+    "navyki": {
       "label": "Навыки",
       "shape": "rows",
       "key": "word",
       "owner": "sheet",
       "columns": [
         {
-          "key": "ранг",
+          "key": "rang",
           "label": "Ранг",
           "kind": "number",
           "default": 0
@@ -47,28 +49,28 @@
       ],
       "rows": [
         {
-          "value": "ближний бой",
+          "value": "blizhniy_boy",
           "label": "Ближний бой"
         },
         {
-          "value": "стрельба",
+          "value": "strelba",
           "label": "Стрельба"
         }
       ]
     },
-    "заготовки": {
+    "zagotovki": {
       "label": "Заготовки",
       "shape": "rows",
       "key": "word",
       "columns": [
         {
-          "key": "ближний_бой",
+          "key": "blizhniy_boy",
           "label": "Ближний бой",
           "kind": "number",
           "default": 0
         },
         {
-          "key": "стрельба",
+          "key": "strelba",
           "label": "Стрельба",
           "kind": "number",
           "default": 0
@@ -76,26 +78,26 @@
       ],
       "rows": [
         {
-          "value": "громила",
+          "value": "gromila",
           "label": "Громила",
           "cells": {
-            "ближний_бой": 4,
-            "стрельба": 2
+            "blizhniy_boy": 4,
+            "strelba": 2
           }
         },
         {
-          "value": "стрелок",
+          "value": "strelok",
           "label": "Стрелок",
           "cells": {
-            "ближний_бой": 1,
-            "стрельба": 5
+            "blizhniy_boy": 1,
+            "strelba": 5
           }
         }
       ]
     }
   },
   "sheets": {
-    "по_заготовке": {
+    "po_zagotovke": {
       "label": "По заготовке"
     }
   }

@@ -1,6 +1,6 @@
 import type { System, Param, Effect } from '@vtt/schema';
 import type { Lesson, View } from '../types.ts';
-import { effectBy, fieldBy, stepsOf, is, subtracts, adds, numberOf, armOf, errorsOf, same, isArm, FORMULA_DONE, barOpen, barText } from '../find.ts';
+import { effectBy, aimKey, fieldBy, stepsOf, is, subtracts, adds, numberOf, armOf, errorsOf, same, isArm, FORMULA_DONE, barOpen, barText } from '../find.ts';
 import { armsOf, stepSaid } from '@vtt/engine';
 import { problemsClean, trialShown } from './first-system.ts';
 import { visible } from '../anchor.ts';
@@ -203,7 +203,7 @@ export const links: Lesson = {
         const arm = successArm(view);
         return Boolean(amount && sheet && calls(view).some(step => {
           const args = (step.args ?? {}) as Record<string, unknown>;
-          return arm.includes(step) && numberOf(args[amount]) === 5 && (args[sheet] === undefined || is(args[sheet], '@цель'));
+          return arm.includes(step) && numberOf(args[amount]) === 5 && (args[sheet] === undefined || is(args[sheet], `@${aimKey(strike(view)?.[1])}`));
         }));
       },
       result: () => 'При успехе «Удар» вызывает «Урон»: цели — 5.',

@@ -1,13 +1,13 @@
 import { emptySystem } from '../../store/world.ts';
 import type { Lesson, View } from '../types.ts';
-import { tableBy, fieldBy, effectBy, errorsOf, same } from '../find.ts';
+import { tableBy, rowIs, fieldBy, effectBy, errorsOf, same } from '../find.ts';
 import { problemsClean } from './first-system.ts';
 import { visible } from '../anchor.ts';
 
 const stats = (view: View) => tableBy(view.system, 'Характеристики');
 
 const hasRow = (view: View, row: string): boolean =>
-  (stats(view)?.[1].rows ?? []).some(one => same(one.value, row));
+  (stats(view)?.[1].rows ?? []).some(one => rowIs(one, row));
 
 const foldOpen = (title: string): boolean =>
   [...document.querySelectorAll<HTMLDetailsElement>('details.fold')].some(fold => fold.open && same(fold.querySelector('.fold__title')?.textContent, title));
