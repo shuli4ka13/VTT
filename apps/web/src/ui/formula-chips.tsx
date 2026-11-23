@@ -9,6 +9,7 @@ import { plainLabel, pickTail, literalSaid, pathSaid } from './formula-labels.ts
 import { formulaWords, useFormulaWords, shownFormula, storedFormula, functionIdOf, localName, localSpec } from './formula-lang.ts';
 import { tablesOf, choiceTableOf, rowLabelOf, picksOf } from './formula-words.ts';
 import { resolveNames, plain, NO_NAME } from './formula-resolve.ts';
+import { t, useT } from '../i18n/index.ts';
 
 function Signature({ at }: { at: { spec: FunctionSpec; index: number } }) {
   const { spec, index } = at;
@@ -55,7 +56,7 @@ function typedPath(text: string, caret: number): { base: string; at: number; nee
 
 export function lookupNames(system: System, value: string): Map<string, string> {
   const out = new Map<string, string>();
-  const call = /(?:таблица|table|строки|rows)\(\s*"([^"]+)"/gu;
+  const call = /(?:\u0442\u0430\u0431\u043b\u0438\u0446\u0430|table|\u0441\u0442\u0440\u043e\u043a\u0438|rows)\(\s*"([^"]+)"/gu;
   for (const found of value.matchAll(call)) {
     const table = system.tables?.[found[1]!];
     if (!table) continue;
@@ -97,7 +98,7 @@ export function pickWords(system: System, part: { tag: string; by?: string; rest
     ? (system.tables?.[table]?.columns ?? []).find(c => c.key === inner.slice(ROW.length + 1))
     : undefined;
   const by = own ? own.label || own.key : inner ? shortLabel(labelOfTag(system, inner, extra, sheets)) : (part.by ?? '').trim();
-  return `${shortLabel(labelOfTag(system, part.tag, extra, sheets))} · колонка по [${by}]${part.rest ? ` · ${pickTail(system, part.tag, part.rest)}` : ''}`;
+  return `${t('ui:chips.pickBy', { name: shortLabel(labelOfTag(system, part.tag, extra, sheets)), by })}${part.rest ? ` · ${pickTail(system, part.tag, part.rest)}` : ''}`;
 }
 
 export function pickOptions(system: System, table: string | undefined): { tag: string; label: string; group: string }[] {
@@ -106,8 +107,8 @@ export function pickOptions(system: System, table: string | undefined): { tag: s
     .filter(field => fieldLinkOf(system, field) === column.from)
     .map(field => ({
       tag: `${field.tag}.[@${ROW}.${column.key}]`,
-      label: `${field.label ?? field.tag} · колонка по [${column.label || column.key}]`,
-      group: 'колонка по значению',
+      label: t('ui:chips.pickBy', { name: field.label ?? field.tag, by: column.label || column.key }),
+      group: t('ui:chips.pickGroup'),
     })));
 }
 
@@ -121,20 +122,20 @@ const fn = (id: string, close: string): Op => {
 const opsOf = (): Op[] => {
   const words = formulaWords();
   return [
-    { label: '+', hint: 'сложить', open: ' + ' },
-    { label: '−', hint: 'вычесть', open: ' - ' },
-    { label: '×', hint: 'умножить', open: ' * ' },
-    { label: '÷', hint: 'поделить', open: ' / ' },
-    { label: '( )', hint: 'скобки: что внутри — считается первым', open: '(', close: ')' },
+    { label: '+', hint: t('ui:chips.op.add'), open: ' + ' },
+    { label: '−', hint: t('ui:chips.op.sub'), open: ' - ' },
+    { label: '×', hint: t('ui:chips.op.mul'), open: ' * ' },
+    { label: '÷', hint: t('ui:chips.op.div'), open: ' / ' },
+    { label: '( )', hint: t('ui:chips.op.parens'), open: '(', close: ')' },
     fn('floor', ')'),
     fn('ceil', ')'),
     fn('max', ', )'),
     fn('min', ', )'),
     fn('if', ', , )'),
-    { label: words.and, hint: 'верно, только если верны обе части', open: ` ${words.and} `, word: true },
-    { label: words.or, hint: 'первая часть, если она задана, иначе вторая: «класс или 1к8», «бой или реакция»', open: ` ${words.or} `, word: true },
-    { label: words.not, hint: 'наоборот: «не пусто(…)» — задано', open: `${words.not} `, word: true },
-    { ...fn('has', ', "")'), label: words.functions.has === 'есть' ? 'есть в списке' : words.functions.has },
+    { label: words.and, hint: t('ui:chips.op.and'), open: ` ${words.and} `, word: true },
+    { label: words.or, hint: t('ui:chips.op.or'), open: ` ${words.or} `, word: true },
+    { label: words.not, hint: t('ui:chips.op.not'), open: `${words.not} `, word: true },
+    { ...fn('has', ', "")'), label: /^\u0435\u0441\u0442\u044c$/u.test(words.functions.has) ? t('ui:chips.inList') : words.functions.has },
   ];
 };
 
@@ -187,7 +188,7 @@ export function lookupLits(system: System, value: string): Map<number, string> {
 
 const CHOICE_LITS = [
   /@([\p{L}\p{N}_.]+)\s*(?:==|!=)\s*(")/gu,
-  /(?:есть|has)\(\s*@([\p{L}\p{N}_.]+)\s*,\s*(")/gu,
+  /(?:\u0435\u0441\u0442\u044c|has)\(\s*@([\p{L}\p{N}_.]+)\s*,\s*(")/gu,
 ];
 
 export function choiceLits(system: System, value: string, tables?: ReadonlyMap<string, string>): Map<number, string> {
@@ -287,22 +288,22 @@ export function namesOf(system: System, scope: { extraNames?: Map<string, string
   const local = [...(extraNames ?? [])].filter(([tag]) => !offered.has(tag) && !viaSheet(tag) && !sheets?.has(tag)).map(([tag, label]) => {
     const owner = ownerOf(tag);
     return owner
-      ? { tag, label: label.endsWith(` (${owner})`) ? label.slice(0, -` (${owner})`.length) : label, group: `у «${owner}»` }
-      : { tag, label, group: 'в этом эффекте' };
+      ? { tag, label: label.endsWith(` (${owner})`) ? label.slice(0, -` (${owner})`.length) : label, group: t('ui:chips.group.owner', { owner }) }
+      : { tag, label, group: t('ui:chips.group.local') };
   }).sort((a, b) => a.label.split(' → ').length - b.label.split(' → ').length);
   const states = statesOf(system);
   if (!sheets?.size) {
     return [
-      ...local, ...pickOptions(system, table), ...sheet.map(f => ({ tag: f.tag, label: f.label, group: f.via ? 'по ссылке' : 'поле листа' })),
-      ...states.map(s => ({ ...s, group: 'висит на листе' })), ...desk,
+      ...local, ...pickOptions(system, table), ...sheet.map(f => ({ tag: f.tag, label: f.label, group: f.via ? t('ui:chips.group.link') : t('ui:chips.group.field') })),
+      ...states.map(s => ({ ...s, group: t('ui:chips.group.state') })), ...desk,
     ];
   }
   const named = [...sheets];
   return [
     ...local,
-    ...named.map(([name, label]) => ({ tag: name, label, group: 'лист целиком' })),
-    ...named.flatMap(([name, label]) => sheet.map(f => ({ tag: `${name}.${f.tag}`, label: f.label, group: `у «${label}»` }))),
-    ...named.flatMap(([name, label]) => states.map(s => ({ tag: `${name}.${s.tag}`, label: s.label, group: `висит у «${label}»` }))),
+    ...named.map(([name, label]) => ({ tag: name, label, group: t('ui:chips.group.sheet') })),
+    ...named.flatMap(([name, label]) => sheet.map(f => ({ tag: `${name}.${f.tag}`, label: f.label, group: t('ui:chips.group.owner', { owner: label }) }))),
+    ...named.flatMap(([name, label]) => states.map(s => ({ tag: `${name}.${s.tag}`, label: s.label, group: t('ui:chips.group.stateOf', { owner: label }) }))),
     ...desk,
   ];
 }
@@ -358,6 +359,7 @@ function LocalChips({ value, onChange, onFinal, system, table, placeholder, onKe
   whole?: boolean;
   notes?: boolean;
 }) {
+  const t = useT('ui');
   const [active, setActive] = useState<number | null>(null);
   const paths = useMemo(() => fieldPaths(system), [system]);
   const marks = useMemo(() => tagWords(system), [system]);
@@ -390,15 +392,15 @@ function LocalChips({ value, onChange, onFinal, system, table, placeholder, onKe
     const owned = onSheet(tag, sheets);
     if (!owned) return null;
     return (
-      <span className={`chips__side chips__side--${owned.head === DESK_ID ? 'desk' : 'sheet'}`} title={owned.head === DESK_ID ? `поле «${NAME_LABELS.desk}»` : `поле листа «${sheets?.get(owned.head) ?? owned.head}»`}>
+      <span className={`chips__side chips__side--${owned.head === DESK_ID ? 'desk' : 'sheet'}`} title={owned.head === DESK_ID ? t('chips.sideDesk', { name: NAME_LABELS.desk }) : t('chips.sideSheet', { name: sheets?.get(owned.head) ?? owned.head })}>
         {owned.head === DESK_ID ? NAME_LABELS.desk : sheets?.get(owned.head) ?? owned.head}
       </span>
     );
   };
   const badge = (tag: string) => (badges?.has(tag)
-    ? <span className="chips__side chips__side--input" title="вход эффекта: значение приносит тот, кто вызывает">{badges.get(tag)}</span>
+    ? <span className="chips__side chips__side--input" title={t('chips.inputTitle')}>{badges.get(tag)}</span>
     : marks.has(tag) && !hasField(system, tag) && !extraNames?.has(tag)
-      ? <span className="chips__side chips__side--mark" title={`метка броска из таблицы «${marks.get(tag)}»: по ней бросок находят правки — преимущество, «Благословение», «Щит»`}>метка</span>
+      ? <span className="chips__side chips__side--mark" title={t('chips.markTitle', { table: marks.get(tag) })}>{t('chips.mark')}</span>
       : null);
 
   const fields = useMemo(() => namesOf(system, { extraNames, extraOptions, sheets, table }), [system, extraNames, extraOptions, paths, sheets, table]);
@@ -713,14 +715,14 @@ function LocalChips({ value, onChange, onFinal, system, table, placeholder, onKe
         {prefix}
         {empty ? <span className="chips__placeholder">{placeholder}</span> : parts.map((part, index) => ('tag' in part ? (
           part.lit ? (
-            <span key={index} className="chips__chip chips__chip--lookup" title="из таблицы">{part.label ?? lookups.get(part.tag) ?? part.tag}</span>
+            <span key={index} className="chips__chip chips__chip--lookup" title={t('chips.fromTable')}>{part.label ?? lookups.get(part.tag) ?? part.tag}</span>
           ) : names?.[part.tag] !== undefined ? (
             <span key={index} className="chips__group">{names[part.tag]}</span>
           ) : (
             <span
               key={index}
               className={`chips__chip${onChipPick ? ' chips__chip--pick' : ''}`}
-              title={onChipPick ? 'откуда это и где видно' : undefined}
+              title={onChipPick ? t('chips.whence') : undefined}
               onClick={onChipPick ? e => { e.stopPropagation(); onChipPick(part.tag, labelOfTag(system, part.tag, extraNames, sheets)); } : undefined}
             >
               {sideOf(part.tag)}
@@ -744,9 +746,9 @@ function LocalChips({ value, onChange, onFinal, system, table, placeholder, onKe
         {prefix}
         {parts.map((part, index) => 'tag' in part ? (
           part.lit ? (
-            <span key={index} className="chips__chip chips__chip--lookup" title="из таблицы">
+            <span key={index} className="chips__chip chips__chip--lookup" title={t('chips.fromTable')}>
               <span>{part.label ?? lookups.get(part.tag) ?? part.tag}</span>
-              <button type="button" className="chips__x" aria-label="убрать"
+              <button type="button" className="chips__x" aria-label={t('common:removeLower')}
                 onMouseDown={e => { e.preventDefault(); dropChip(index); }}>×</button>
             </span>
           ) : names?.[part.tag] !== undefined ? (
@@ -755,7 +757,7 @@ function LocalChips({ value, onChange, onFinal, system, table, placeholder, onKe
           <span key={index} className="chips__chip">
             {sideOf(part.tag)}
             <span
-              title={onChipPick ? `${labelOfTag(system, part.tag, extraNames, sheets)} — откуда это и где видно` : labelOfTag(system, part.tag, extraNames, sheets)}
+              title={onChipPick ? t('chips.whenceOf', { name: labelOfTag(system, part.tag, extraNames, sheets) }) : labelOfTag(system, part.tag, extraNames, sheets)}
               className={onChipPick || (part.by === undefined && baseOf(part.tag)) ? 'chips__name--pick' : undefined}
               onMouseDown={e => {
                 if (part.by !== undefined) { if (onChipPick) { e.preventDefault(); onChipPick(part.tag, labelOfTag(system, part.tag, extraNames, sheets)); } return; }
@@ -769,7 +771,7 @@ function LocalChips({ value, onChange, onFinal, system, table, placeholder, onKe
             </span>
             {badge(part.tag)}
             <button
-              type="button" className="chips__x" aria-label="убрать поле"
+              type="button" className="chips__x" aria-label={t('chips.removeField')}
               onMouseDown={e => { e.preventDefault(); dropChip(index); }}
             >×</button>
           </span>
@@ -871,8 +873,8 @@ function LocalChips({ value, onChange, onFinal, system, table, placeholder, onKe
               onMouseDown={e => { e.preventDefault(); chooseField(f.tag); }}
             >
               <span className="slot__group">{f.group}</span>
-              {dotted && f.tag === dotted ? `${f.label} целиком` : dotted || through ? shortOf(f.label, dotted ?? through!.base, fields.find(one => one.tag === (dotted ?? through!.base))?.label) : f.label}
-              {!dotted && !through && below(f.tag) ? <span className="slot__more" title="наберите точку после имени — откроется список">. ещё {below(f.tag)}</span> : null}
+              {dotted && f.tag === dotted ? t('chips.whole', { label: f.label }) : dotted || through ? shortOf(f.label, dotted ?? through!.base, fields.find(one => one.tag === (dotted ?? through!.base))?.label) : f.label}
+              {!dotted && !through && below(f.tag) ? <span className="slot__more" title={t('chips.dotHint')}>{t('chips.more', { n: below(f.tag) })}</span> : null}
             </button>
           ))}
           {words.map((word, k) => (
@@ -882,7 +884,7 @@ function LocalChips({ value, onChange, onFinal, system, table, placeholder, onKe
               onMouseEnter={() => setHighlight(extras.length + matches.length + k)}
               onMouseDown={e => { e.preventDefault(); pickWord(word); }}
             >
-              <span className="slot__group slot__group--record">формула</span>
+              <span className="slot__group slot__group--record">{t('chips.formula')}</span>
               {word}
             </button>
           ))}

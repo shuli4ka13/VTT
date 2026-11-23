@@ -3,7 +3,7 @@ import { typedChoices, type ChoiceWant as Want } from '@vtt/engine';
 import { Combo, type ComboOption } from '../../ui/combo.tsx';
 import type { SlotContext } from './slots.tsx';
 
-export const BY_FORMULA = ':формула';
+export const BY_FORMULA = ':formula';
 
 const exprOf = (value: unknown): string =>
   (value && typeof value === 'object' && 'expr' in value ? String((value as { expr: unknown }).expr) : value === undefined || value === null ? '' : String(value)).trim();

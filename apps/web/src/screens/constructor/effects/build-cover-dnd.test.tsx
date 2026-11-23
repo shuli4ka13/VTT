@@ -48,7 +48,7 @@ const savingThrow = (root: HTMLElement, at: number, args: readonly (readonly [st
 const marks = (card: HTMLElement, ...tags: string[]): void => {
   for (const tag of tags) {
     if (tag.startsWith('=')) {
-      within(card).select('Метки', ':формула');
+      within(card).select('Метки', ':formula');
       within(card).type('Метки', tag.slice(1));
       within(card).click('добавить');
     } else within(card).select('Метки', tag);

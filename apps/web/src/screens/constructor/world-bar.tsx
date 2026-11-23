@@ -13,7 +13,7 @@ import { FormulaBar } from '../../ui/formula-bar.tsx';
 import { useLocale } from '../../store/locale.ts';
 import { useFormulaBar } from '../../store/formula-bar.ts';
 import { TABS } from '../../words.ts';
-import { Trans, langName, useT } from '../../i18n/index.ts';
+import { Trans, langName, useT } from '../../i18n/author.ts';
 
 export const TAB_LIST = [
   { key: 'sheet' as const, label: TABS.sheet },

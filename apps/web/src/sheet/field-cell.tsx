@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Field, Input, Button, NumInput, Select, TextArea } from '../ui/primitives.tsx';
+import { t as say, useT } from '../i18n/index.ts';
 import { show } from '../engine/use-calc.ts';
 import { VIEWS } from './views/index.tsx';
 import type { Reader } from '../engine/use-calc.ts';
@@ -19,12 +20,13 @@ export function FieldCell({ field, system, sheet, reader, onChange, onShift, onR
   onShift?: (tag: string, by: number) => void;
   onRoll?: (tag: string) => void;
 }) {
+  const t = useT('sheet');
   const named: ReactNode = bare ? <span className="sr-only">{field.label}</span> : field.hint ? <span title={field.hint}>{field.label}</span> : field.label;
   const label: ReactNode = mark ? <>{named}<span className="field__mark">{mark}</span></> : named;
   const roll = field.roll && onRoll
     ? (
-      <Button size="sm" title={field.roll.label ?? `Проверка: ${field.label}`} onClick={() => onRoll(field.tag)}>
-        бросить
+      <Button size="sm" title={field.roll.label ?? t('field.check', { label: field.label })} onClick={() => onRoll(field.tag)}>
+        {t('field.roll')}
       </Button>
     )
     : null;
@@ -82,7 +84,7 @@ export function FieldCell({ field, system, sheet, reader, onChange, onShift, onR
           <Select
             label={field.label}
             value={String(value ?? '')}
-            options={[['', '— не выбрано —'], ...options.map(o => [String(o.value), o.label] as const)] as never}
+            options={[['', t('field.unset')], ...options.map(o => [String(o.value), o.label] as const)] as never}
             onChange={next => {
               const picked = options.find(o => String(o.value) === next);
               editable(field.tag, picked ? picked.value : '');
@@ -178,7 +180,7 @@ function Shown({ label, text, title, bad, roll }: {
 }
 
 function stepsOf(boolean: boolean, min: number | undefined, max: number | undefined, control: { yes?: string; no?: string }): FieldOption[] {
-  if (boolean) return [{ value: false, label: control.no ?? 'нет' }, { value: true, label: control.yes ?? 'да' }];
+  if (boolean) return [{ value: false, label: control.no ?? say('common:no') }, { value: true, label: control.yes ?? say('common:yes') }];
   if (min === undefined || max === undefined || max < min || max - min + 1 > MOST_STEPS) return [];
   return Array.from({ length: max - min + 1 }, (_, at) => ({ value: min + at, label: String(min + at) }));
 }

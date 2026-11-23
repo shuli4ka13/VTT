@@ -1,4 +1,5 @@
 import { useState, type KeyboardEvent } from 'react';
+import { useT } from '../i18n/index.ts';
 
 export interface ComboOption { value: string; label: string; group?: string; hidden?: boolean; checked?: boolean }
 export interface ComboMore { label: string; run: () => void }
@@ -69,7 +70,7 @@ function useMenu(options: readonly ComboOption[], pick: (option: ComboOption) =>
   return { open, menu, input, said };
 }
 
-export function Combo({ value, options, onChange, blank = '— не выбрано —', label, more, className, title, onFocus, look, disabled }: {
+export function Combo({ value, options, onChange, blank, label, more, className, title, onFocus, look, disabled }: {
   value: string;
   look?: 'select';
   disabled?: boolean;
@@ -82,8 +83,10 @@ export function Combo({ value, options, onChange, blank = '— не выбран
   blank?: string;
   label?: string;
 }) {
+  const t = useT('ui');
+  const unset = blank ?? t('combo.unset');
   const current = options.find(option => option.value === value);
-  const shownLabel = current ? current.label : value ? `${value} — такого в списке нет` : '';
+  const shownLabel = current ? current.label : value ? t('combo.missing', { value }) : '';
   const { open, menu, input, said } = useMenu(options, option => { if (option.value !== value) onChange(option.value); }, more);
   return (
     <div className={look ? `select combo combo--select${disabled ? ' is-disabled' : ''}${className ? ` ${className}` : ''}` : 'slot combo'} title={look ? title : undefined}>
@@ -98,7 +101,7 @@ export function Combo({ value, options, onChange, blank = '— не выбран
         data-value={value}
         data-blank={options.some(option => option.value === '') ? '' : undefined}
         value={open ? input.value : shownLabel}
-        placeholder={open ? shownLabel || blank : blank}
+        placeholder={open ? shownLabel || unset : unset}
         onFocus={() => { onFocus?.(); input.onFocus(); }}
         onBlur={e => input.onBlur(e)}
         onChange={e => input.onChange(e.target.value)}
@@ -116,17 +119,18 @@ export function MultiCombo({ value, options, onChange, prompt, more }: {
   onChange: (next: string[]) => void;
   prompt?: string;
 }) {
+  const t = useT('ui');
   const labelOf = (key: string) => options.find(option => option.value === key)?.label ?? key;
   const known = new Set(options.map(option => option.value));
   const marked: ComboOption[] = [
-    ...value.filter(key => !known.has(key)).map(key => ({ value: key, label: `${key} — такого в списке нет`, checked: true })),
+    ...value.filter(key => !known.has(key)).map(key => ({ value: key, label: t('combo.missing', { value: key }), checked: true })),
     ...options.map(option => ({ ...option, checked: value.includes(option.value) })),
   ];
   const { open, menu, input, said } = useMenu(marked, option => (
     onChange(value.includes(option.value) ? value.filter(other => other !== option.value) : [...value, option.value])
   ), more, true);
   const summary = value.map(labelOf).join(', ');
-  const empty = prompt ?? '+ добавить…';
+  const empty = prompt ?? t('combo.add');
   return (
     <div className="select combo combo--select combo--multi" title={summary || undefined}>
       <input
@@ -137,7 +141,7 @@ export function MultiCombo({ value, options, onChange, prompt, more }: {
         aria-expanded={open}
         aria-label={prompt}
         value={open ? input.value : summary}
-        placeholder={open ? 'найти…' : empty}
+        placeholder={open ? t('combo.find') : empty}
         onFocus={input.onFocus}
         onBlur={e => input.onBlur(e)}
         onChange={e => input.onChange(e.target.value)}

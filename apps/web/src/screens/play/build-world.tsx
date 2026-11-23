@@ -3,8 +3,10 @@ import { Button, Card, CardHead, Empty, Input, Verdict } from '../../ui/primitiv
 import { RowsTable } from '../../ui/layout.tsx';
 import { listSystems, listCompendiums, publishWorld } from '../../api/client.ts';
 import type { CompendiumSummary, SystemSummary } from '@vtt/schema';
+import { Trans, useT } from '../../i18n/play.ts';
 
 export function BuildWorld({ onBuilt }: { onBuilt: () => void }) {
+  const t = useT('play');
   const [systems, setSystems] = useState<SystemSummary[]>([]);
   const [system, setSystem] = useState<SystemSummary | null>(null);
   const [books, setBooks] = useState<CompendiumSummary[]>([]);
@@ -45,23 +47,23 @@ export function BuildWorld({ onBuilt }: { onBuilt: () => void }) {
   return (
     <Card>
       <CardHead
-        title="Собрать мир"
-        sub="Мир — это система плюс выбранные компендиумы. Из него потом делается стол."
+        title={t('build.title')}
+        sub={t('build.sub')}
       />
 
       {trouble ? <Verdict tone="bad">{trouble}</Verdict> : null}
-      {done ? <Verdict tone="ok">Мир «{done}» собран — он в списке ниже.</Verdict> : null}
+      {done ? <Verdict tone="ok">{t('build.built', { name: done })}</Verdict> : null}
 
       {system === null ? (
         systems.length === 0
-          ? <Empty title="Опубликованных систем нет" hint="Мир собирается из опубликованной системы — сперва её должен кто-то опубликовать." />
+          ? <Empty title={t('build.noSystems.title')} hint={t('build.noSystems.hint')} />
           : (
             <div className="stack stack--tight">
-              <span className="field__label">Из какой системы</span>
+              <span className="field__label">{t('build.fromSystem')}</span>
               <RowsTable
                 columns={[
-                  { head: 'Система', width: 'minmax(0, 2fr)' },
-                  { head: 'Автор', width: 'minmax(0, 1fr)' },
+                  { head: t('col.system'), width: 'minmax(0, 2fr)' },
+                  { head: t('col.author'), width: 'minmax(0, 1fr)' },
                 ]}
                 rows={[...systems].sort((x, y) => x.title.localeCompare(y.title, 'ru')).map(item => ({
                   key: item.id,
@@ -75,17 +77,17 @@ export function BuildWorld({ onBuilt }: { onBuilt: () => void }) {
         <div className="stack">
           <Verdict tone="ok" action={
             <Button size="sm" variant="ghost" onClick={() => { setSystem(null); setBooks([]); setChosen([]); }}>
-              другая система
+              {t('build.otherSystem')}
             </Button>
           }>
-            Система: <b>{system.title}</b>
+            <Trans i18nKey="play:build.system" values={{ title: system.title }} components={{ b: <b /> }} />
           </Verdict>
 
           <div className="stack stack--tight">
-            <span className="field__label">Какие компендиумы взять</span>
+            <span className="field__label">{t('build.books')}</span>
             {books.length === 0
               ? <span className="faint">
-                  Опубликованных компендиумов для этой системы нет — мир соберётся без вещей.
+                  {t('build.noBooks')}
                 </span>
               : books.map(book => (
                 <label key={book.id} className="inline">
@@ -97,16 +99,16 @@ export function BuildWorld({ onBuilt }: { onBuilt: () => void }) {
                   />
                   <span className="spacer">
                     {book.title}
-                    <span className="faint"> · {book.authorName} · записей: {book.itemCount}</span>
+                    <span className="faint">{t('build.bookMeta', { author: book.authorName, n: book.itemCount })}</span>
                   </span>
                 </label>
               ))}
           </div>
 
           <div className="gate__form">
-            <Input value={title} onChange={setTitle} placeholder="название мира" />
+            <Input value={title} onChange={setTitle} placeholder={t('build.namePlaceholder')} />
             <Button variant="primary" disabled={busy} onClick={() => void build()}>
-              {busy ? 'собираем…' : 'Собрать мир'}
+              {busy ? t('build.busy') : t('build.submit')}
             </Button>
           </div>
         </div>

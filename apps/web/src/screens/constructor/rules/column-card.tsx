@@ -5,6 +5,7 @@ import { Card, CardHead, Field, Button, DangerButton, Fold, Select, LabelInput, 
 import { FormulaField } from '../../../ui/formula-field.tsx';
 import type { System, ValueKind } from '@vtt/schema';
 import { TABS } from '../../../words.ts';
+import { useT } from '../../../i18n/author.ts';
 
 export const BY_FORMULA = '';
 
@@ -31,7 +32,7 @@ export interface ColumnPatch {
 }
 
 
-export function ColumnCard({ column, kinds, tables, rowsOf, many, formulaHint, where, names, system, onChange, onDelete, onClose, lead, extra, preview, bounds = true, hinted = false, table, sub, noun = 'колонка', more = false }: {
+export function ColumnCard({ column, kinds, tables, rowsOf, many, formulaHint, where, names, system, onChange, onDelete, onClose, lead, extra, preview, bounds = true, hinted = false, table, sub, noun = 'column', more = false }: {
   more?: boolean;
   hinted?: boolean;
   table?: string;
@@ -52,60 +53,61 @@ export function ColumnCard({ column, kinds, tables, rowsOf, many, formulaHint, w
   extra?: ReactNode;
   preview?: ReactNode;
   sub?: ReactNode;
-  noun?: string;
+  noun?: 'field' | 'prop' | 'column';
 }) {
+  const t = useT('tables');
   return (
     <Card>
       <CardHead
-        title={<LabelInput value={column.label} placeholder={`как зовётся ${noun}`} onCommit={label => onChange({ label })} />}
+        title={<LabelInput value={column.label} placeholder={t(`common:name.${noun}`)} onCommit={label => onChange({ label })} />}
         sub={sub}
         actions={<>
-          {onDelete ? <DangerButton size="sm" onConfirm={onDelete}>Удалить</DangerButton>
-            : <Button size="sm" variant="danger" disabled title="колонкой пользуются">Удалить</Button>}
-          <Button size="sm" variant="ghost" title="свернуть" onClick={onClose}>×</Button>
+          {onDelete ? <DangerButton size="sm" onConfirm={onDelete}>{t('common:delete')}</DangerButton>
+            : <Button size="sm" variant="danger" disabled title={t('column.inUse')}>{t('common:delete')}</Button>}
+          <Button size="sm" variant="ghost" title={t('common:collapse')} onClick={onClose}>×</Button>
         </>}
       />
       <div className="row">
-        <Field label="Тип">
+        <Field label={t('column.type')}>
           <Select value={column.kind}
-            options={(column.expr !== undefined ? [[BY_FORMULA, 'по формуле'], ...kinds] : kinds) as never}
+            options={(column.expr !== undefined ? [[BY_FORMULA, t('column.byFormula')], ...kinds] : kinds) as never}
             onChange={next => onChange({ kind: next as ValueKind | typeof BY_FORMULA })} />
         </Field>
         {column.kind === 'choice' ? (
           <>
-            <Field label="Из таблицы" needed={!column.from}
+            <Field label={t('column.fromTable')} needed={!column.from}
               error={column.from ? undefined : tables.length
-                ? 'выбирать не из чего, пока не указана таблица'
-                : `выбирать не из чего: сперва заведите таблицу со строками — «${TABS.rules}» → «Таблицы»`}>
+                ? t('column.fromNothing')
+                : t('column.noTables', { tab: TABS.rules })}>
               <Select
                 value={column.from ?? ''}
-                options={[['', '— какая —'], ...tables] as never}
+                options={[['', t('column.which')], ...tables] as never}
                 onChange={next => onChange({ from: next || null })}
               />
             </Field>
             {many ? (
-              <Field label="Сколько значений">
+              <Field label={t('column.howMany')}>
                 <Select
                   value={column.many ? 'many' : 'one'}
-                  options={[['one', 'одно'], ['many', 'несколько']] as const}
+                  options={[['one', t('column.one')], ['many', t('column.several')]] as const}
                   onChange={next => onChange({ many: next === 'many' })}
                 />
               </Field>
             ) : null}
           </>
         ) : column.kind === 'number' && rowsOf?.length ? (
-          <Field label="Строка таблицы">
+          <Field label={t('column.tableRow')}>
             <Select
               value={column.from ?? ''}
-              options={[['', 'нет — просто число'], ...rowsOf] as never}
+              options={[['', t('column.justNumber')], ...rowsOf] as never}
               onChange={next => onChange({ from: next || null })}
             />
           </Field>
         ) : column.kind === 'column' ? (
-          <Field label="Колонки какой таблицы">
+          <Field label={t('column.columnsOf')}>
             <Select
               value={column.from ?? ''}
-              options={[['', '— какой —'], ...tables] as never}
+              options={[['', t('column.whichTable')], ...tables] as never}
               onChange={next => onChange({ from: next || null })}
             />
           </Field>
@@ -118,28 +120,28 @@ export function ColumnCard({ column, kinds, tables, rowsOf, many, formulaHint, w
           where={where}
           {...(table ? { table } : {})}
           {...(names ? { extraNames: names } : {})}
-          placeholder="нет — значение вписывают"
+          placeholder={t('column.formulaPlaceholder')}
           onChange={next => onChange({ expr: next.trim() ? next : null })}
         />
       </Field>
       {preview}
       {lead}
       {(bounds && column.kind === 'number') || extra || hinted ? (
-        <Fold title="ещё" summary="на листе, бросок, границы" open={more}>
+        <Fold title={t('common:more')} summary={t('column.moreSummary')} open={more}>
           {bounds && column.kind === 'number' ? (
             <div className="row">
-              <Field label="Не ниже">
-                <BoundFormula value={column.min} system={system} where={`${where} · не ниже`} {...(table ? { table } : {})} {...(names ? { names } : {})} onChange={next => onChange({ min: next })} />
+              <Field label={t('column.min')}>
+                <BoundFormula value={column.min} system={system} where={t('column.whereMin', { where })} {...(table ? { table } : {})} {...(names ? { names } : {})} onChange={next => onChange({ min: next })} />
               </Field>
-              <Field label="Не выше">
-                <BoundFormula value={column.max} system={system} where={`${where} · не выше`} {...(table ? { table } : {})} {...(names ? { names } : {})} onChange={next => onChange({ max: next })} />
+              <Field label={t('column.max')}>
+                <BoundFormula value={column.max} system={system} where={t('column.whereMax', { where })} {...(table ? { table } : {})} {...(names ? { names } : {})} onChange={next => onChange({ max: next })} />
               </Field>
             </div>
           ) : null}
           {hinted ? (
-            <Field label="Подсказка" hint="видна у подписи на листе">
-              <span data-field="Подсказка">
-                <TextArea value={column.hint ?? ''} placeholder="что это за значение" onChange={next => onChange({ hint: next.trim() ? next : null })} />
+            <Field label={t('column.hint')} hint={t('column.hintNote')}>
+              <span data-field={t('column.hint')}>
+                <TextArea value={column.hint ?? ''} placeholder={t('column.hintPlaceholder')} onChange={next => onChange({ hint: next.trim() ? next : null })} />
               </span>
             </Field>
           ) : null}

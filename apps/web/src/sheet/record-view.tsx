@@ -1,5 +1,6 @@
 import { findRecord, recordKindOf, propsOf, entryKeyOf as keyOf, isFormulaCell, itemExpr, ITEM_NAME, compile, listOf, fieldOf } from '@vtt/engine';
 import { Card, Chip } from '../ui/primitives.tsx';
+import { t, useT } from '../i18n/index.ts';
 import { asDice } from '../words.ts';
 import { formulaWords } from '../ui/formula-words.ts';
 import type { Computed } from '../engine/use-calc.ts';
@@ -19,7 +20,7 @@ const recordLabel = (compendium: Compendium | undefined, id: string): string => 
 };
 
 const alone = (expr: string): Computed => {
-  try { return { ok: true, value: compile(expr).evaluate(name => { throw new Error(`нет листа для «${name}»`); }) }; }
+  try { return { ok: true, value: compile(expr).evaluate(name => { throw new Error(t('sheet:record.noSheet', { name })); }) }; }
   catch (err) { return { ok: false, error: (err as Error).message }; }
 };
 
@@ -49,7 +50,7 @@ export function recordDetails(record: CompendiumRecord, system: System, compendi
   };
   const word = (prop: (typeof columns)[number], value: unknown): string => {
     const kindOf = String(prop.kind ?? 'number');
-    if (typeof value === 'boolean') return value ? 'да' : 'нет';
+    if (typeof value === 'boolean') return value ? t('common:yes') : t('common:no');
     if (Array.isArray(value)) return value.map(one => word(prop, one)).join(', ');
     const raw = String(value);
     return kindOf === 'dice' ? asDice(raw)
@@ -78,7 +79,7 @@ export function recordDetails(record: CompendiumRecord, system: System, compendi
 export function recordButtons(record: CompendiumRecord, system: System): string[] {
   const kind = recordKindOf(system, record.table);
   const bindings = record.bindings?.length ? record.bindings : (kind?.bindings ?? []);
-  return bindings.map(b => b.label ?? system.effects[b.effect]?.label ?? 'Применение');
+  return bindings.map(b => b.label ?? system.effects[b.effect]?.label ?? t('sheet:record.apply'));
 }
 
 export function RecordView({ record, system, compendium }: {
@@ -86,6 +87,7 @@ export function RecordView({ record, system, compendium }: {
   system: System;
   compendium?: Compendium;
 }) {
+  const t = useT('sheet');
   const details = recordDetails(record, system, compendium);
   const buttons = recordButtons(record, system);
   const kind = recordKindOf(system, record.table);
@@ -115,7 +117,7 @@ export function RecordView({ record, system, compendium }: {
         ) : null}
         {record.grants?.length ? (
           <div className="inline inline--tight">
-            <span className="faint">даёт:</span>
+            <span className="faint">{t('record.grants')}</span>
             {record.grants.map(id => <Chip key={id}>{system.effects[id]?.label ?? id}</Chip>)}
           </div>
         ) : null}

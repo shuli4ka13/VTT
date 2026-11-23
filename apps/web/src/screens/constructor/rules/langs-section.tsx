@@ -5,7 +5,7 @@ import type { TextEntry } from '@vtt/engine';
 import { Card, CardHead, Field, Fold, Select, Button, DangerButton, LabelInput, Segmented } from '../../../ui/primitives.tsx';
 import { RowsTable } from '../../../ui/layout.tsx';
 import type { WorldState } from '../../../store/world.ts';
-import { langName, useT } from '../../../i18n/index.ts';
+import { langName, useT } from '../../../i18n/author.ts';
 
 type EditSystem = WorldState['editSystem'];
 

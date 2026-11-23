@@ -37,7 +37,7 @@ const nameStep = (card: HTMLElement, name: string): void => {
 const marksUnder = (label: string, card: HTMLElement, tags: string[]): void => {
   for (const tag of tags) {
     if (tag.startsWith('=')) {
-      within(card).select(label, ':формула');
+      within(card).select(label, ':formula');
       within(card).type(label, tag.slice(1));
       within(card).click('добавить');
     } else within(card).select(label, tag);

@@ -2,9 +2,11 @@ import { useRef, useState } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
 import { MOST_DOTS, clamp, numberOf, signed, shareOf, toneOf, roundTo } from './kit.ts';
 import type { ViewProps } from './kit.ts';
+import { t, useT } from '../../i18n/index.ts';
 
 export function Missing({ label, needs }: { label: string; needs: string }) {
-  return <span className="v-missing" aria-label={label} title={`виду не хватает: ${needs} — задаётся в конструкторе`}>—</span>;
+  const t = useT('sheet');
+  return <span className="v-missing" aria-label={label} title={t('view.missing', { needs })}>—</span>;
 }
 
 function NumberDraft({ value, label, min, max, onChange, show, className }: ViewProps & { show: (n: number) => string; className: string }) {
@@ -54,6 +56,7 @@ const amountOf = (text: string): { by: number } | { to: number } | null => {
 const keepFocus = (event: { preventDefault: () => void }) => event.preventDefault();
 
 function Quick({ value, label, min, max, control, onChange, onShift, asks }: ViewProps & { asks?: boolean }) {
+  const t = useT('sheet');
   const now = numberOf(value);
   const step = control?.step ?? 1;
   const [draft, setDraft] = useState<string | null>(null);
@@ -90,7 +93,7 @@ function Quick({ value, label, min, max, control, onChange, onShift, asks }: Vie
   return (
     <div className="v-stepper" role="group" aria-label={label}>
       <button type="button" className={`v-stepper__btn${asks && control?.minus ? ' v-stepper__btn--named' : ''}`} disabled={low}
-        title={asks ? 'отнять: впишите сколько' : 'минус'}
+        title={asks ? t('view.minus') : t('view.minusPlain')}
         onPointerDown={keepFocus} onMouseDown={keepFocus} onClick={() => press(-1)}>{(asks && control?.minus) || MINUS}</button>
       {onChange ? (
         <input
@@ -110,7 +113,7 @@ function Quick({ value, label, min, max, control, onChange, onShift, asks }: Vie
         />
       ) : <span className="v-stepper__num" aria-label={label}>{shown || '—'}</span>}
       <button type="button" className={`v-stepper__btn${asks && control?.plus ? ' v-stepper__btn--named' : ''}`} disabled={high}
-        title={asks ? 'прибавить: впишите сколько' : 'плюс'}
+        title={asks ? t('view.plus') : t('view.plusPlain')}
         onPointerDown={keepFocus} onMouseDown={keepFocus} onClick={() => press(1)}>{(asks && control?.plus) || '+'}</button>
     </div>
   );
@@ -122,7 +125,7 @@ export function Stepper(props: ViewProps) {
 
 export function Slider({ value, label, min, max, control, onChange }: ViewProps) {
   if (typeof max !== 'number' || typeof min !== 'number') {
-    return <Missing label={label} needs={[typeof min !== 'number' ? 'низ' : '', typeof max !== 'number' ? 'верх' : ''].filter(Boolean).join(' и ')} />;
+    return <Missing label={label} needs={[typeof min !== 'number' ? t('sheet:view.needs.min') : '', typeof max !== 'number' ? t('sheet:view.needs.max') : ''].filter(Boolean).join(t('sheet:view.needs.join'))} />;
   }
   const step = control?.step ?? 1;
   const now = numberOf(value);
@@ -139,7 +142,7 @@ export function Slider({ value, label, min, max, control, onChange }: ViewProps)
 function Dots({ value, label, min = 0, max, onChange, render }: ViewProps & {
   render: (slots: number, now: number, pick: (at: number) => void) => ReactNode;
 }) {
-  if (typeof max !== 'number') return <Missing label={label} needs="верх" />;
+  if (typeof max !== 'number') return <Missing label={label} needs={t('sheet:view.needs.max')} />;
   const now = numberOf(value);
   const slots = Math.max(0, Math.round(max));
   if (slots > MOST_DOTS || slots === 0) return <span className="v-count" aria-label={label}>{now ?? '—'} / {max}</span>;
@@ -158,7 +161,7 @@ export function Pips(props: ViewProps) {
             type="button"
             className={`v-pip${step <= now ? ' v-pip--on' : ''}`}
             aria-pressed={step <= now}
-            aria-label={`${step} из ${slots}`}
+            aria-label={t('sheet:view.of', { n: step, total: slots })}
             disabled={!onChange}
             onClick={() => pick(step)}
           />
@@ -190,7 +193,7 @@ export function Charges(props: ViewProps) {
                 d={sector(at)}
                 className={`v-charges__part${at < now ? ' v-charges__part--on' : ''}`}
                 role="button"
-                aria-label={`${at + 1} из ${slots}`}
+                aria-label={t('sheet:view.of', { n: at + 1, total: slots })}
                 aria-pressed={at < now}
                 aria-disabled={!onChange}
                 tabIndex={onChange ? 0 : -1}
@@ -207,12 +210,12 @@ export function Charges(props: ViewProps) {
 }
 
 export function Bar({ value, label, min = 0, max, control, onChange, onShift }: ViewProps) {
-  if (typeof max !== 'number') return <Missing label={label} needs="верх" />;
+  if (typeof max !== 'number') return <Missing label={label} needs={t('sheet:view.needs.max')} />;
   const now = numberOf(value);
   const share = now === null ? 0 : shareOf(now, min, max);
   return (
     <div className="v-bar">
-      <div className={`v-bar__track v-bar__track--${toneOf(share, control?.worse)}`} title={`${label}: ${now ?? '—'} из ${max}`}>
+      <div className={`v-bar__track v-bar__track--${toneOf(share, control?.worse)}`} title={t('sheet:view.barTitle', { label, now: now ?? '—', max })}>
         <div className="v-bar__fill" style={{ width: `${share * 100}%` }} />
         <span className="v-bar__text">{now ?? '—'} / {max}</span>
       </div>

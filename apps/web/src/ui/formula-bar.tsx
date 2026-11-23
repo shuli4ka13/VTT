@@ -4,8 +4,10 @@ import type { BarApi } from '../store/formula-bar.ts';
 import { FormulaChips } from './formula-chips.tsx';
 import { useLookup } from '../store/lookup.ts';
 import { Button } from './primitives.tsx';
+import { useT } from '../i18n/index.ts';
 
 export function FormulaBar() {
+  const t = useT('ui');
   const target = useFormulaBar(s => s.target);
   const write = useFormulaBar(s => s.write);
   const commit = useFormulaBar(s => s.commit);
@@ -17,7 +19,7 @@ export function FormulaBar() {
   const api: BarApi = { write, dismiss: useFormulaBar.getState().dismiss };
 
   return (
-    <div className="formula-bar" role="region" aria-label="строка формул">
+    <div className="formula-bar" role="region" aria-label={t('formulaBar.region')}>
       <span className="formula-bar__fx" aria-hidden>ƒ</span>
       <span className="formula-bar__where" title={target.where}>{target.where}</span>
       <FormulaChips
@@ -30,7 +32,7 @@ export function FormulaBar() {
         {...(target.badges ? { badges: target.badges } : {})}
         {...(target.sheets ? { sheets: target.sheets } : {})}
         {...(target.whole ? { whole: true } : {})}
-        placeholder={target.placeholder ?? 'формула — начните набирать название'}
+        placeholder={target.placeholder ?? t('formulaBar.placeholder')}
         calculator
         autoFocus
         extraOptions={(target.options ?? []).map(option => ({
@@ -47,7 +49,7 @@ export function FormulaBar() {
           if (e.key === 'Escape') { e.preventDefault(); cancel(); }
         }}
       />
-      <span data-guide="formula-done"><Button size="sm" variant="ghost" onClick={commit}>готово</Button></span>
+      <span data-guide="formula-done"><Button size="sm" variant="ghost" onClick={commit}>{t('formulaBar.done')}</Button></span>
     </div>
   );
 }

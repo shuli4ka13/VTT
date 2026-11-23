@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { Chip } from '../ui/primitives.tsx';
 import { groupsByKind } from './record-view.tsx';
 import type { CompendiumRecord, System } from '@vtt/schema';
+import { useT } from '../i18n/index.ts';
 
 export function ThingsList<T extends CompendiumRecord>({ system, records, row, onPickKind, kinds }: {
   system: System;
@@ -11,13 +12,14 @@ export function ThingsList<T extends CompendiumRecord>({ system, records, row, o
   row: (record: T) => ReactNode;
   onPickKind?: (table: string) => void;
 }) {
+  const t = useT('sheet');
   return (
     <>
       {orderedKinds(groupsByKind(system, records), kinds ?? Object.keys(system.tables ?? {})).map(({ table, title, records: group }) => (
         <Fragment key={table}>
           <h4 className="sheet-section__title">
             {onPickKind
-              ? <button type="button" className="sheet-pick__head" title="что видно в строке" onClick={() => onPickKind(table)}>{title}</button>
+              ? <button type="button" className="sheet-pick__head" title={t('things.rowShows')} onClick={() => onPickKind(table)}>{title}</button>
               : title}
           </h4>
           {group.map(record => <Fragment key={record.id}>{row(record)}</Fragment>)}

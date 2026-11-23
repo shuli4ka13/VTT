@@ -1,4 +1,5 @@
 import { useDragList } from './drag-list.ts';
+import { useT } from '../i18n/index.ts';
 
 export function moveKey(list: readonly string[], key: string, target: string, after: boolean): string[] {
   const next = list.filter(one => one !== key);
@@ -14,15 +15,16 @@ export function PickOrder({ keys, chosen, labelOf, onChange }: {
   labelOf: (key: string) => string;
   onChange: (next: string[]) => void;
 }) {
+  const t = useT('ui');
   const shown = chosen.filter(key => keys.includes(key));
   const rest = keys.filter(key => !shown.includes(key));
   const drag = useDragList((key, to, after) => onChange(moveKey(shown, key, to, after)), 'x');
   return (
     <div className="stack stack--tight">
       <div className="stack stack--tight block-pick">
-        <span className="block-pick__title">показываются{shown.length > 1 ? <span className="faint"> · перетащите, чтобы поменять порядок</span> : null}</span>
+        <span className="block-pick__title">{t('pickOrder.shown')}{shown.length > 1 ? <span className="faint">{t('pickOrder.reorder')}</span> : null}</span>
         <div className="inline inline--tight">
-          {shown.length === 0 ? <span className="faint">ничего</span> : null}
+          {shown.length === 0 ? <span className="faint">{t('pickOrder.nothing')}</span> : null}
           {shown.map(key => (
             <span key={key} className={`inline inline--tight drag-item${drag.mark(key)}`} {...drag.props(key)}>
               <span className="drag-grip" aria-hidden>⋮⋮</span>
@@ -36,7 +38,7 @@ export function PickOrder({ keys, chosen, labelOf, onChange }: {
       </div>
       {rest.length ? (
         <div className="stack stack--tight block-pick">
-          <span className="block-pick__title">не показываются</span>
+          <span className="block-pick__title">{t('pickOrder.hidden')}</span>
           <div className="inline inline--tight">
             {rest.map(key => (
               <label key={key} className="inline inline--tight">

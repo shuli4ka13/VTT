@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Input } from './primitives.tsx';
+import { useT } from '../i18n/index.ts';
 
 export function DiceProp({ value, onChange }: {
   value: string;
   onChange: (next: string) => void;
 }) {
-  const m = /^(\d+)?\s*[dдк]\s*(\d+)$/iu.exec(value.trim());
+  const t = useT('ui');
+  const m = /^(\d+)?\s*[d\u0434\u043a]\s*(\d+)$/iu.exec(value.trim());
   const stored = { count: m ? (m[1] ?? '1') : '', sides: m ? m[2]! : '' };
 
   const [draft, setDraft] = useState<{ count: string; sides: string } | null>(null);
@@ -32,7 +34,7 @@ export function DiceProp({ value, onChange }: {
         <Input mono value={shown.count} placeholder="1"
           onChange={edit('count')} onBlur={() => commit(shown)} />
       </span>
-      <span className="dice-term__d">к</span>
+      <span className="dice-term__d">{t('dice.d')}</span>
       <span className="dice-term__num">
         <Input mono value={shown.sides} placeholder="8"
           onChange={edit('sides')} onBlur={() => commit(shown)} />

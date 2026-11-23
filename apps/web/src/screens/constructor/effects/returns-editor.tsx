@@ -13,11 +13,12 @@ import type { SlotContext, EarlierStep } from '../slots.tsx';
 import { sheetsAt } from './names.ts';
 import type { Effect, Step, System, ValueKind } from '@vtt/schema';
 import { focusNew } from '../../../ui/focus-new.ts';
+import { dataT, useT } from '../../../i18n/author.ts';
+import { KEYS } from '../factory.ts';
 
 type Return = NonNullable<Effect['returns']>[number];
 
-const KINDS = [['boolean', 'да или нет'], ['number', 'число'], ['text', 'текст'], ['choice', 'выбор']] as const;
-const BY_FORMULA = ':формула';
+const BY_FORMULA = ':formula';
 
 interface Source { expr: string; label: string; kind: string }
 
@@ -61,6 +62,8 @@ export function ReturnsEditor({ id, effect, system, onEdit }: {
   system: System;
   onEdit: (change: (draft: Effect) => void) => void;
 }) {
+  const t = useT('params');
+  const td = dataT(system);
   const columns = (effect.returns ?? []) as Return[];
   const [opened, setOpened] = useState<string[]>([]);
   const sources = sourcesOf(system, effect);
@@ -74,9 +77,9 @@ export function ReturnsEditor({ id, effect, system, onEdit }: {
   });
   const add = () => {
     focusNew();
-    const key = freeId(keys, 'итог');
+    const key = freeId(keys, KEYS.result);
     setOpened(now => [...now, key]);
-    onEdit(draft => { (draft.returns ??= []).push({ key, label: 'Новый итог', kind: 'boolean' } as Return); });
+    onEdit(draft => { (draft.returns ??= []).push({ key, label: td('params:new.result'), kind: 'boolean' } as Return); });
   };
   const drop = (key: string) => onEdit(draft => {
     draft.returns = (draft.returns ?? []).filter(column => column.key !== key);
@@ -99,26 +102,26 @@ export function ReturnsEditor({ id, effect, system, onEdit }: {
   };
   const relabel = (column: Return, next: string) => {
     const used = isUsed(column);
-    const key = followKey({ used, key: column.key, base: 'итог', before: column.label ?? '', after: next, taken: keys });
+    const key = followKey({ used, key: column.key, base: KEYS.result, before: column.label ?? '', after: next, taken: keys });
     if (key !== column.key) setOpened(now => now.map(one => (one === column.key ? key : one)));
     change(column.key, target => { target.key = key; target.label = next; });
   };
   const summary = (column: Return) => {
     const source = sources.find(one => one.expr === exprOf(column));
-    const from = source ? source.label : exprOf(column) ? formulaAsLabels(system, exprOf(column), names) : 'не сказано, откуда';
+    const from = source ? source.label : exprOf(column) ? formulaAsLabels(system, exprOf(column), names) : t('returns.unknown');
     const table = column.kind === 'choice' && column.from ? system.tables?.[column.from] : undefined;
-    const kind = column.kind === 'boolean' ? (column.no ? `да / «${column.no}»` : 'да или нет')
-      : table ? `выбор из «${table.label || column.from}»` : kindWord(String(column.kind ?? 'number'));
+    const kind = column.kind === 'boolean' ? (column.no ? t('returns.yesNo', { no: column.no }) : t('returns.kind.boolean'))
+      : table ? t('returns.choiceFrom', { name: table.label || column.from }) : kindWord(String(column.kind ?? 'number'));
     return `${kind} ← ${from}`;
   };
 
   return (
     <Card>
-      <CardHead title="Что получит тот, кто вызвал" />
+      <CardHead title={t('card.returnsTitle')} />
       {columns.length === 0 ? (
         <div className="inline inline--tight">
-          <span className="faint">Ничего не отдаёт.</span>
-          <Button size="sm" onClick={add}>+ итог</Button>
+          <span className="faint">{t('returns.empty')}</span>
+          <Button size="sm" onClick={add}>{t('returns.add')}</Button>
         </div>
       ) : (
         <>
@@ -128,16 +131,16 @@ export function ReturnsEditor({ id, effect, system, onEdit }: {
             onToggle={key => setOpened(now => (now.includes(key) ? now.filter(one => one !== key) : [...now, key]))}
             onDrop={drop}
             onMove={move}
-            dropTitle="убрать итог"
+            dropTitle={t('returns.drop')}
             summary={summary}
             form={column => (
-              <ReturnForm column={column} sources={sources} system={system} context={context} names={names} sheets={sheets} where={`${id} · что отдаёт`}
+              <ReturnForm column={column} sources={sources} system={system} context={context} names={names} sheets={sheets} where={t('returns.where', { id })}
                 keys={keys} locked={isUsed(column)} onKey={next => rekey(column, next)}
                 onLabel={next => relabel(column, next)} change={fn => change(column.key, fn)} />
             )}
           />
           <div className="inline inline--tight">
-            <Button size="sm" onClick={add}>+ итог</Button>
+            <Button size="sm" onClick={add}>{t('returns.add')}</Button>
           </div>
         </>
       )}
@@ -159,7 +162,9 @@ function ReturnForm({ column, sources, system, context, names, sheets, where, ke
   onLabel: (next: string) => void;
   change: (fn: (target: Return) => void) => void;
 }) {
+  const t = useT('params');
   const kind = String(column.kind ?? 'number');
+  const kinds = [['boolean', t('returns.kind.boolean')], ['number', t('returns.kind.number')], ['text', t('returns.kind.text')], ['choice', t('returns.kind.choice')]] as const;
   const expr = exprOf(column);
   const fitting = sources.filter(one => one.kind === kind || kind === 'text');
   const tables = choiceTables(system).map(([key, list]) => [key, list.label || key] as const);
@@ -169,22 +174,22 @@ function ReturnForm({ column, sources, system, context, names, sheets, where, ke
   return (
     <div className="param-form">
       <div className="param-form__row">
-        <Field label="Название"><LabelInput value={column.label ?? ''} onCommit={onLabel} /></Field>
-        <Field label="Вид">
+        <Field label={t('field.name')}><LabelInput value={column.label ?? ''} onCommit={onLabel} /></Field>
+        <Field label={t('field.kind')}>
           <Select<string>
             value={kind}
-            options={KINDS as never}
+            options={kinds as never}
             onChange={next => change(target => { target.kind = next as ValueKind; if (next !== 'boolean') delete (target as { no?: string }).no; if (next !== 'choice') delete target.from; })}
           />
         </Field>
-        <Field label="Откуда">
+        <Field label={t('field.from')}>
           {formula ? (
             <FormulaField value={expr} system={system} where={where} extraNames={names} sheets={sheets} badges={inputBadges(context)}
               onCommit={next => change(target => { if (next.trim()) target.expr = { expr: next.trim() }; else delete target.expr; })} />
           ) : (
             <Select<string>
               value={known ? expr : ''}
-              options={[['', '— какой итог шага —'], ...fitting.map(one => [one.expr, one.label] as const), [BY_FORMULA, 'формулой…']]}
+              options={[['', t('returns.pickResult')], ...fitting.map(one => [one.expr, one.label] as const), [BY_FORMULA, t('returns.byFormula')]]}
               onChange={next => {
                 if (next === BY_FORMULA) { setFormula(true); return; }
                 change(target => { if (next) target.expr = { expr: next }; else delete target.expr; });
@@ -193,30 +198,30 @@ function ReturnForm({ column, sources, system, context, names, sheets, where, ke
           )}
         </Field>
         {kind === 'choice' ? (
-          <Field label="Таблица">
+          <Field label={t('field.table')}>
             <Select
               value={String(column.from ?? '')}
-              options={[['', '— какая —'], ...tables] as never}
+              options={[['', t('pick.which')], ...tables] as never}
               onChange={next => change(target => { if (next) target.from = next; else delete target.from; })}
             />
           </Field>
         ) : null}
         {kind === 'boolean' ? (
-          <Field label="Как назвать «нет»" hint="подпись второй ветки: «промах», «не спасся»">
-            <Input value={(column as { no?: string }).no ?? ''} placeholder={`не ${column.label ?? ''}`}
+          <Field label={t('returns.no.label')} hint={t('returns.no.hint')}>
+            <Input value={(column as { no?: string }).no ?? ''} placeholder={t('returns.no.placeholder', { label: column.label ?? '' })}
               onChange={next => change(target => { const t = target as { no?: string }; if (next.trim()) t.no = next; else delete t.no; })} />
           </Field>
         ) : null}
       </div>
       {more ? (
         <div className="param-form__row">
-          <Field label="Имя в формулах" hint="как итог зовётся у вызвавшего. Идёт за названием, пока на него никто не ссылается">
+          <Field label={t('field.key')} hint={t('keyHint.result')}>
             <KeyField value={column.key} locked={locked} taken={keys} onChange={onKey} />
           </Field>
         </div>
       ) : null}
       <div className="inline inline--tight">
-        <Button size="sm" variant="ghost" onClick={() => setMore(!more)}>{more ? 'меньше' : 'ещё'}</Button>
+        <Button size="sm" variant="ghost" onClick={() => setMore(!more)}>{more ? t('less') : t('common:more')}</Button>
       </div>
     </div>
   );

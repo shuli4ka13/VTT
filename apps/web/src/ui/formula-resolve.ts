@@ -1,6 +1,7 @@
 import { lex, FUNCTION_NAMES, BOOLEANS, AND, OR, NOT } from '@vtt/engine';
 import type { Token } from '@vtt/engine';
 import { formulaWords } from './formula-lang.ts';
+import { t } from '../i18n/index.ts';
 
 export interface KnownName { tag: string; label: string }
 
@@ -15,7 +16,7 @@ const wordsNow = (): Set<string> => {
   return set;
 };
 
-export const plain = (text: string): string => text.toLowerCase().replace(/ё/gu, 'е').replace(/_/gu, ' ').replace(/\s+/gu, ' ').trim();
+export const plain = (text: string): string => text.toLowerCase().replace(/\u0451/gu, String.fromCharCode(0x435)).replace(/_/gu, ' ').replace(/\s+/gu, ' ').trim();
 
 interface Index { byLabel: Map<string, Set<string>>; byTag: Map<string, string>; all: readonly KnownName[] }
 
@@ -157,5 +158,5 @@ export function resolveNames(text: string, known: readonly KnownName[], options:
 export const unknownWords = (text: string, known: readonly KnownName[]): Unknown[] => resolveNames(text, known, { final: true }).unknown;
 
 export const NO_NAME = (one: Unknown): string => (one.several
-  ? `«${one.word}» есть у нескольких — выберите в списке, чьё`
-  : one.near ? `нет имени «${one.word}» — ближайшее: «${one.near}»` : `нет имени «${one.word}»`);
+  ? t('ui:resolve.several', { word: one.word })
+  : one.near ? t('ui:resolve.near', { word: one.word, near: one.near }) : t('ui:resolve.none', { word: one.word }));

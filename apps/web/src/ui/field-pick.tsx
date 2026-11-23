@@ -4,12 +4,11 @@ import { readableFields, NO_BLOCK, blockLabel } from '@vtt/engine';
 import type { Field } from '@vtt/engine';
 import { byBlock } from '../screens/constructor/field-groups.ts';
 import { Combo, type ComboOption } from './combo.tsx';
-
-const UNNAMED = 'без названия';
+import { t, useT } from '../i18n/index.ts';
 
 type Option = readonly [string, string, string];
 
-const nameOf = (field: Field): string => (field.label && field.label !== field.tag ? field.label : UNNAMED);
+const nameOf = (field: Field): string => (field.label && field.label !== field.tag ? field.label : t('ui:fieldPick.unnamed'));
 
 export function fieldOptions(system: System, fields: readonly Field[]): Option[] {
   const groupOf = (field: Field) => field.placements?.[0]?.group ?? NO_BLOCK;
@@ -26,7 +25,7 @@ export function fieldOptions(system: System, fields: readonly Field[]): Option[]
   }));
 }
 
-export function FieldPick({ system, value, onChange, fields, extra = [], blank = '— какое поле —', label }: {
+export function FieldPick({ system, value, onChange, fields, extra = [], blank, label }: {
   system: System;
   value: string;
   onChange: (tag: string) => void;
@@ -35,6 +34,8 @@ export function FieldPick({ system, value, onChange, fields, extra = [], blank =
   blank?: string;
   label?: string;
 }) {
+  const t = useT('ui');
+  const unset = blank ?? t('fieldPick.blank');
   const [opened, setOpened] = useState(false);
   const all = fieldOptions(system, fields ?? readableFields(system));
   const service = all.filter(option => option[2] === NO_BLOCK);
@@ -44,7 +45,7 @@ export function FieldPick({ system, value, onChange, fields, extra = [], blank =
     ({ value: option[0], label: option[1], ...(group ? { group } : {}) });
 
   const options: ComboOption[] = [
-    ...(value ? [item(['', blank])] : []),
+    ...(value ? [item(['', unset])] : []),
     ...placed.map(option => item(option, blockLabel(system, option[2]))),
     ...service.map(option => ({ ...item(option, blockLabel(system, option[2])), ...(showService ? {} : { hidden: true }) })),
     ...extra.map(option => item(option)),
@@ -53,10 +54,10 @@ export function FieldPick({ system, value, onChange, fields, extra = [], blank =
   return (
     <Combo
       value={value}
-      blank={blank}
+      blank={unset}
       {...(label ? { label } : {})}
       options={options}
-      more={!showService && service.length ? { label: `служебные поля (${service.length})…`, run: () => setOpened(true) } : undefined}
+      more={!showService && service.length ? { label: t('fieldPick.service', { n: service.length }), run: () => setOpened(true) } : undefined}
       onChange={onChange}
     />
   );

@@ -8,6 +8,7 @@ import type { Sheet, System, StoredValue, SheetList } from '@vtt/schema';
 import { fieldsOf, rowKeyOf, fieldOf, optionsOf, fieldsByBlock, blockShown, pagesOf, topPage, tabPages, pageOfBlock, isNoteField, blockLabel, pageLabel } from '@vtt/engine';
 import type { Field as FieldModel } from '@vtt/engine';
 import { SheetGrid } from './sheet-grid.tsx';
+import { t as say, useT } from '../i18n/index.ts';
 import type { GridEdit } from './sheet-grid.tsx';
 
 export function SheetView({ system, sheet, reader, onChange, onShift, mayEdit, marks, onRoll, badge, only, fields, onPick, picked, onPickBlock, onPickRow, pages, lists, edit }: {
@@ -30,6 +31,7 @@ export function SheetView({ system, sheet, reader, onChange, onShift, mayEdit, m
   onPick?: (tag: string, block?: string) => void;
   picked?: string | null;
 }) {
+  const t = useT('sheet');
   const all = fields ?? fieldsOf(system);
   const visibleBlock = blockShown(system, sheet);
   const byFields = fieldsByBlock(system, only ? all.filter(f => only.includes(f.tag)) : all, visibleBlock);
@@ -53,7 +55,7 @@ export function SheetView({ system, sheet, reader, onChange, onShift, mayEdit, m
         onShift={open ? onShift : undefined}
         onRoll={onRoll}
         bare={bare}
-        {...(marks && field.sees ? { mark: SEES_MARKS[field.sees] } : {})}
+        {...(marks && field.sees ? { mark: t(`sees.${field.sees}`) } : {})}
       />
     );
     return onPick ? (
@@ -67,7 +69,7 @@ export function SheetView({ system, sheet, reader, onChange, onShift, mayEdit, m
     const own = (system.blocks ?? []).find(block => block.key === group);
     return (
     <Card key={group}>
-      <CardHead title={onPickBlock ? <button type="button" className="sheet-pick__head" title="настройки блока" onClick={() => onPickBlock(group)}>{blockLabel(system, group)}</button> : blockLabel(system, group)} />
+      <CardHead title={onPickBlock ? <button type="button" className="sheet-pick__head" title={t('view.blockSettings')} onClick={() => onPickBlock(group)}>{blockLabel(system, group)}</button> : blockLabel(system, group)} />
       {piecesOf(fields).map(piece => (piece.table ? (
         <TableBlock key={piece.table} system={system} tableId={piece.table!} split={own?.split} sections={sectionsOf(piece.fields, system, reader)} cell={cell} {...(onPickRow ? { onPickRow } : {})} />
       ) : (
@@ -116,12 +118,10 @@ export function SheetView({ system, sheet, reader, onChange, onShift, mayEdit, m
       {visible.length ? (
         <Tabs value={current?.key ?? ''} options={visible.map(page => ({ key: page.key, label: pageLabel(system, page.key) }))} onChange={pages.onAt} />
       ) : null}
-      {current ? <div className="sheet-page">{filled(current.key) ? body(current) : <span className="faint">На этой странице пока пусто — выберите блок и укажите ему эту страницу.</span>}</div> : null}
+      {current ? <div className="sheet-page">{filled(current.key) ? body(current) : <span className="faint">{t('view.emptyPage')}</span>}</div> : null}
     </div>
   );
 }
-
-const SEES_MARKS: Record<string, string> = { owner: 'владелец и ведущий', gm: 'только ведущий', none: 'служебное' };
 
 interface Piece { table: string | null; fields: FieldModel[] }
 
@@ -160,7 +160,7 @@ function sectionTitle(field: FieldModel, system: System, reader: Reader): [strin
   if (at >= 0) return [options[at]!.label, at];
   const part = (system.blocks ?? []).find(block => block.key === field.group)?.parts.find(p => p.table === field.home && p.by);
   const view = part?.by ? part.views?.[part.by] : undefined;
-  if (typeof value === 'boolean') return [value ? view?.yes ?? 'да' : view?.no ?? 'нет', value ? 1 : 0];
+  if (typeof value === 'boolean') return [value ? view?.yes ?? say('common:yes') : view?.no ?? say('common:no'), value ? 1 : 0];
   return [value === undefined || value === null || value === '' ? '—' : String(value), Number.MAX_SAFE_INTEGER];
 }
 
@@ -192,6 +192,7 @@ function TableBlock({ system, tableId, sections, cell, onPickRow, split }: {
   sections: Section[];
   cell: (field: FieldModel, bare?: boolean) => ReactNode;
 }) {
+  const t = useT('sheet');
   const table = system.tables?.[tableId];
   const fields = sections.flatMap(part => part.fields);
   const columns = [...new Set(fields.map(f => f.cell!.column))];
@@ -214,7 +215,7 @@ function TableBlock({ system, tableId, sections, cell, onPickRow, split }: {
           {part.rows.map(row => (
             <Fragment key={row}>
               {onPickRow
-                ? <button type="button" className="sheet-table__row sheet-pick__head" title="эта строка таблицы" onClick={() => onPickRow(tableId, row)}>{rowLabel(row)}</button>
+                ? <button type="button" className="sheet-table__row sheet-pick__head" title={t('view.rowOfTable')} onClick={() => onPickRow(tableId, row)}>{rowLabel(row)}</button>
                 : <span className="sheet-table__row">{rowLabel(row)}</span>}
               {columns.map(column => {
                 const field = at.get(`${row}.${column}`);

@@ -1,1 +1,134 @@
-{}
+{
+  "card": {
+    "title": "What comes in",
+    "returnsTitle": "What the caller gets back"
+  },
+  "empty": "No inputs — the effect takes everything from the sheets.",
+  "add": {
+    "first": "+ input",
+    "more": "+ another"
+  },
+  "drop": "remove input",
+  "head": {
+    "input": "Input",
+    "what": "What it is"
+  },
+  "kind": {
+    "sheets": "list of sheets",
+    "sheet": "sheet",
+    "eachNamed": "several sheets, each one — “{{name}}”",
+    "row": "table row",
+    "rows": "table rows",
+    "rowNamed": "row of the “{{name}}” table",
+    "rowsNamed": "rows of the “{{name}}” table"
+  },
+  "each": {
+    "name": "Each",
+    "label": "Each",
+    "hint": "what one sheet from the list is called in the steps after “For each of”",
+    "placeholder": "Target"
+  },
+  "nothing": "nothing",
+  "mode": {
+    "must": "required",
+    "empty": "may be empty",
+    "value": "default",
+    "actor": "ask the player",
+    "gm": "ask the game master"
+  },
+  "ask": {
+    "empty": ", may be left out",
+    "value": ", if not given — {{value}}",
+    "actor": ", if not given — ask the player",
+    "gm": ", if not given — ask the game master"
+  },
+  "new": {
+    "param": "New input",
+    "result": "New result"
+  },
+  "field": {
+    "name": "Name",
+    "kind": "Kind",
+    "table": "Table",
+    "from": "Taken from",
+    "key": "Name in formulas",
+    "record": {
+      "label": "Record type",
+      "hint": "the effect receives the item whose button was pressed and reads its properties by the input name",
+      "pick": "— which type —"
+    }
+  },
+  "pick": {
+    "which": "— which one —",
+    "any": "— any —"
+  },
+  "who": {
+    "label": "Who is it",
+    "hint": "who to put here if no sheet is passed",
+    "given": "whoever is passed",
+    "target": "target — the one chosen at the table or the current one",
+    "actor": "the one who acts"
+  },
+  "missing": {
+    "label": "If not passed",
+    "title": "“required” — the system check will not let it pass without it; “default” — the given value is used; “may be empty” — the input is optional; or ask at the table",
+    "aria": "“{{name}}” — if not passed"
+  },
+  "hint": {
+    "label": "Hint at the table",
+    "hint": "what the asked person will see",
+    "placeholder": "what to hint"
+  },
+  "askIf": {
+    "title": "Ask only if",
+    "where": "input “{{name}}” · asking",
+    "placeholder": "for example: difficulty > 0"
+  },
+  "measure": {
+    "label": "Fill in with distance to the target",
+    "hint": "the asked person is shown the distance to each target; the row whose bounds contain it is picked",
+    "aria": "“{{name}}” — fill in with distance to the target"
+  },
+  "sheetType": {
+    "label": "Only sheets of type",
+    "hint": "empty — any sheet will do"
+  },
+  "amount": {
+    "label": "Amount",
+    "hint": "hanging effects can modify this number — by the stages you declare. One per effect",
+    "aria": "“{{name}}” — amount"
+  },
+  "bounds": {
+    "label": "Bounds",
+    "hint": "not lower and not higher — a number or a formula, for example luck",
+    "min": "not lower",
+    "max": "not higher"
+  },
+  "keyHint": {
+    "param": "what the input is called in formulas. It follows the name until someone refers to it",
+    "result": "what the result is called for the caller. It follows the name until someone refers to it"
+  },
+  "less": "less",
+  "returns": {
+    "empty": "Gives nothing back.",
+    "add": "+ result",
+    "drop": "remove result",
+    "unknown": "source not set",
+    "yesNo": "yes / “{{no}}”",
+    "choiceFrom": "choice from “{{name}}”",
+    "where": "{{id}} · what it returns",
+    "pickResult": "— which step result —",
+    "byFormula": "by formula…",
+    "no": {
+      "label": "Name of “no”",
+      "hint": "label of the second branch: “miss”, “did not save”",
+      "placeholder": "not {{label}}"
+    },
+    "kind": {
+      "boolean": "yes or no",
+      "number": "number",
+      "text": "text",
+      "choice": "choice"
+    }
+  }
+}

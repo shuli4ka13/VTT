@@ -15,6 +15,7 @@ import { HealthSection } from './health-section.tsx';
 import { LangsSection } from './langs-section.tsx';
 import { critOf, armorOf, calledOf, rowTables, langsOf } from '@vtt/engine';
 import type { System } from '@vtt/schema';
+import { t as tg, useT } from '../../../i18n/author.ts'
 
 type SectionKey = 'rolls' | 'tables' | 'tags' | 'combat' | 'vitals' | 'toggles' | 'langs';
 
@@ -26,24 +27,25 @@ interface Section {
 }
 
 const SECTIONS: Section[] = [
-  { key: 'rolls', label: 'Броски', lint: 'roll_edits', count: system => dieEntries(system).length + Object.keys(system.rolls ?? {}).length + Object.keys(system.roll_edits ?? {}).length },
-  { key: 'tables', label: 'Таблицы', count: system => rowTables(system).length },
-  { key: 'tags', label: 'Метки', count: system => Object.keys(system.tags ?? {}).length },
-  { key: 'combat', label: 'Бой', count: system => (system.initiative ? 1 : 0) },
-  { key: 'vitals', label: 'Здоровье', count: system => (system.health ? 1 : 0) },
+  { key: 'rolls', get label() { return tg('tables:section.rolls'); }, lint: 'roll_edits', count: system => dieEntries(system).length + Object.keys(system.rolls ?? {}).length + Object.keys(system.roll_edits ?? {}).length },
+  { key: 'tables', get label() { return tg('tables:section.tables'); }, count: system => rowTables(system).length },
+  { key: 'tags', get label() { return tg('tables:section.tags'); }, count: system => Object.keys(system.tags ?? {}).length },
+  { key: 'combat', get label() { return tg('tables:section.combat'); }, count: system => (system.initiative ? 1 : 0) },
+  { key: 'vitals', get label() { return tg('tables:section.vitals'); }, count: system => (system.health ? 1 : 0) },
   {
-    key: 'toggles', label: 'Быстрые настройки',
+    key: 'toggles', get label() { return tg('tables:section.toggles'); },
     count: system => [
       critOf(system) !== 'off',
       calledOf(system).some(([key]) => armorOf(system, key).choice !== 'none'),
     ].filter(Boolean).length,
   },
-  { key: 'langs', label: 'Языки', count: system => langsOf(system).length - 1 },
+  { key: 'langs', get label() { return tg('tables:section.langs'); }, count: system => langsOf(system).length - 1 },
 ];
 
 export function RulesTab() {
   const system = useWorld(s => s.system);
   const editSystem = useWorld(s => s.editSystem);
+  const t = useT('tables');
   const usage = useUsage();
   const problems = useProblems();
   const [section, setSection] = useState<SectionKey>('tables');
@@ -53,14 +55,14 @@ export function RulesTab() {
   );
 
   const right = useLookupPane({
-    head: 'Готовое',
+    head: t('section.ready'),
     body: <AdvantagePalette system={system} editSystem={editSystem} onAdded={() => setSection('rolls')} />,
   });
 
   return (
     <Columns
       left={{
-        head: 'Разделы правил',
+        head: t('section.title'),
         body: (
           <List>
             {SECTIONS.map(item => (
@@ -68,7 +70,7 @@ export function RulesTab() {
                 key={item.key}
                 icon={(item.lint && broken.has(item.lint)) || broken.has(item.key) ? '!' : undefined}
                 name={item.label}
-                meta={`записей: ${item.count(system)}`}
+                meta={t('section.count', { n: item.count(system) })}
                 active={item.key === section}
                 onClick={() => setSection(item.key)}
               />

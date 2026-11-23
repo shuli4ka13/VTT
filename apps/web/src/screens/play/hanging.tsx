@@ -1,5 +1,6 @@
 import type { RoomState, Sheet } from '@vtt/schema';
 import { expiryWords } from './clock-words.ts';
+import { useT } from '../../i18n/play.ts';
 
 type Worn = NonNullable<Sheet['effects']>[number];
 
@@ -18,8 +19,9 @@ export function Hanging({ room, sheet, compact, onRemove }: {
   compact?: boolean;
   onRemove?: (entry: Worn) => void;
 }) {
+  const t = useT('play');
   const list = hangingOf(room, sheet);
-  if (!list.length) return compact ? null : <span className="faint">Ничего не висит.</span>;
+  if (!list.length) return compact ? null : <span className="faint">{t('hanging.none')}</span>;
   if (compact) {
     return (
       <span className="hang hang--compact">
@@ -37,9 +39,9 @@ export function Hanging({ room, sheet, compact, onRemove }: {
       {list.map(one => (
         <div key={one.key} className="hang__row">
           <span className="hang__name">{one.label}</span>
-          <span className="hang__left">{one.left ?? 'пока не снимут'}</span>
+          <span className="hang__left">{one.left ?? t('hanging.forever')}</span>
           {onRemove ? (
-            <button type="button" className="hang__x" title="снять" aria-label={`снять «${one.label}»`} onClick={() => onRemove(one.entry)}>×</button>
+            <button type="button" className="hang__x" title={t('hanging.remove')} aria-label={t('hanging.removeNamed', { name: one.label })} onClick={() => onRemove(one.entry)}>×</button>
           ) : null}
         </div>
       ))}

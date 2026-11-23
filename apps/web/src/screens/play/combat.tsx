@@ -6,6 +6,7 @@ import { mayTurn } from '../../engine/rights.ts';
 import { useSession } from '../../store/session.ts';
 import { Card, CardHead, Button, Drawer, Segmented, Select, Input } from '../../ui/primitives.tsx';
 import { dayTime, UNITS } from './clock-words.ts';
+import { useT } from '../../i18n/play.ts';
 
 type Op = TurnIntent['op'];
 
@@ -13,6 +14,7 @@ export const fightersOf = (room: RoomState) =>
   room.sheets.filter(sheet => !isDesk(sheet) && !isGroup(sheet, room.sheets));
 
 export function CombatBar({ room, onError }: { room: RoomState; onError: (message: string | null) => void }) {
+  const t = useT('play');
   const userId = useSession(s => s.userId);
   const clock = room.clock;
   const nameOf = (id: string) => room.sheets.find(s => s.id === id)?.name ?? id;
@@ -27,7 +29,7 @@ export function CombatBar({ room, onError }: { room: RoomState; onError: (messag
   };
   const fighting = Boolean(clock && clock.round > 0 && clock.active);
   const waiting = Boolean(room.pending);
-  const why = waiting ? 'стол ждёт ответа на вопрос' : undefined;
+  const why = waiting ? t('combat.waiting') : undefined;
   const may = (op: Op) => mayTurn(room, userId, op);
   const outside = fightersOf(room).filter(sheet => !clock?.order.includes(sheet.id));
   const seconds = Number(amount) * (UNITS.find(([key]) => key === unit)?.[2] ?? 60);
@@ -36,19 +38,19 @@ export function CombatBar({ room, onError }: { room: RoomState; onError: (messag
   return (
     <Card className="fight">
       <CardHead
-        title={fighting ? <>Раунд {clock!.round} · ходит {nameOf(String(clock!.active))}</> : 'Бой не идёт'}
-        actions={<span className="fight__time num" title="игровое время">{dayTime(Number(clock?.sec ?? 0))}</span>}
+        title={fighting ? t('combat.turnOf', { round: clock!.round, name: nameOf(String(clock!.active)) }) : t('combat.idle')}
+        actions={<span className="fight__time num" title={t('combat.gameTime')}>{dayTime(Number(clock?.sec ?? 0))}</span>}
       />
       {fighting ? (
-        <ol className="fight__order" aria-label="порядок ходов">
+        <ol className="fight__order" aria-label={t('combat.order')}>
           {clock!.order.map(id => (
             <li key={id} className={`fight__turn${id === clock!.active ? ' fight__turn--now' : ''}`}>
               <span className="fight__name">{nameOf(id)}</span>
-              {id in scores ? <span className="fight__score num" title="инициатива">{scores[id]}</span> : null}
+              {id in scores ? <span className="fight__score num" title={t('combat.initiative')}>{scores[id]}</span> : null}
               {may('leave') ? (
                 <button
                   type="button" className="fight__out" disabled={waiting}
-                  title={`${nameOf(id)} выходит из боя`} aria-label={`${nameOf(id)}: выйти из боя`}
+                  title={t('combat.leaveTitle', { name: nameOf(id) })} aria-label={t('combat.leaveLabel', { name: nameOf(id) })}
                   onClick={() => send('leave', { who: [id] })}
                 >×</button>
               ) : null}
@@ -59,32 +61,32 @@ export function CombatBar({ room, onError }: { room: RoomState; onError: (messag
       <div className="fight__tools">
         {fighting ? (
           <>
-            {may('next') ? <Button size="sm" variant="primary" disabled={waiting} title={why} onClick={() => send('next')}>Следующий ход</Button> : null}
-            {may('join') && outside.length ? <Button size="sm" disabled={waiting} title={why} onClick={() => setDialog('join')}>Вступить…</Button> : null}
-            {may('stop') ? <Button size="sm" disabled={waiting} title={why} onClick={() => send('stop')}>Конец боя</Button> : null}
+            {may('next') ? <Button size="sm" variant="primary" disabled={waiting} title={why} onClick={() => send('next')}>{t('combat.next')}</Button> : null}
+            {may('join') && outside.length ? <Button size="sm" disabled={waiting} title={why} onClick={() => setDialog('join')}>{t('combat.join')}</Button> : null}
+            {may('stop') ? <Button size="sm" disabled={waiting} title={why} onClick={() => send('stop')}>{t('combat.stop')}</Button> : null}
           </>
         ) : may('start') ? (
-          <Button size="sm" variant="primary" disabled={waiting} title={why} onClick={() => setDialog('start')}>Начать бой…</Button>
+          <Button size="sm" variant="primary" disabled={waiting} title={why} onClick={() => setDialog('start')}>{t('combat.start')}</Button>
         ) : null}
         {may('time') ? (
           <span className="fight__span">
             <Input type="number" value={amount} onChange={setAmount} />
-            <Select value={unit} options={UNITS.map(([key, label]) => [key, label] as const)} onChange={setUnit} label="единица времени" />
-            <Button size="sm" disabled={waiting || !(seconds > 0)} title={why} onClick={() => send('time', { seconds })}>Прошло время</Button>
+            <Select value={unit} options={UNITS.map(([key, label]) => [key, label] as const)} onChange={setUnit} label={t('combat.unit')} />
+            <Button size="sm" disabled={waiting || !(seconds > 0)} title={why} onClick={() => send('time', { seconds })}>{t('combat.pass')}</Button>
           </span>
         ) : null}
-        {may('scene') ? <Button size="sm" disabled={waiting} title={why} onClick={() => send('scene')}>Закрыть сцену</Button> : null}
-        {!fighting && heard.has('short-rest') && may('short-rest') ? <Button size="sm" variant="ghost" disabled={waiting} title={why} onClick={() => send('short-rest')}>Короткий отдых</Button> : null}
-        {!fighting && heard.has('long-rest') && may('long-rest') ? <Button size="sm" variant="ghost" disabled={waiting} title={why} onClick={() => send('long-rest')}>Долгий отдых</Button> : null}
+        {may('scene') ? <Button size="sm" disabled={waiting} title={why} onClick={() => send('scene')}>{t('combat.scene')}</Button> : null}
+        {!fighting && heard.has('short-rest') && may('short-rest') ? <Button size="sm" variant="ghost" disabled={waiting} title={why} onClick={() => send('short-rest')}>{t('combat.shortRest')}</Button> : null}
+        {!fighting && heard.has('long-rest') && may('long-rest') ? <Button size="sm" variant="ghost" disabled={waiting} title={why} onClick={() => send('long-rest')}>{t('combat.longRest')}</Button> : null}
       </div>
       {dialog === 'start' ? (
         <StartDialog room={room} onClose={() => setDialog(null)} onStart={extra => { send('start', extra); setDialog(null); }} />
       ) : null}
       {dialog === 'join' ? (
         <PickDialog
-          title="Вступить в бой" sub="Кто вступает — бросят инициативу и встанут в порядок ходов"
+          title={t('combat.joinTitle')} sub={t('combat.joinSub')}
           sheets={outside.map(sheet => [sheet.id, sheet.name ?? sheet.id] as const)}
-          go="Вступить" onClose={() => setDialog(null)}
+          go={t('combat.joinGo')} onClose={() => setDialog(null)}
           onPick={who => { send('join', { who }); setDialog(null); }}
         />
       ) : null}
@@ -97,6 +99,7 @@ function StartDialog({ room, onClose, onStart }: {
   onClose: () => void;
   onStart: (extra: Partial<TurnIntent>) => void;
 }) {
+  const t = useT('play');
   const rolls = Boolean(room.system.initiative);
   const [mode, setMode] = useState<'roll' | 'order'>(rolls ? 'roll' : 'order');
   const [rows, setRows] = useState(() => fightersOf(room).map(sheet => ({ id: sheet.id, name: sheet.name ?? sheet.id, on: true })));
@@ -111,18 +114,18 @@ function StartDialog({ room, onClose, onStart }: {
 
   return (
     <Drawer
-      open title="Начать бой" onClose={onClose}
-      sub={mode === 'roll' ? 'Отмеченные бросят инициативу — порядок по броску' : 'Порядок ходов сверху вниз, без броска'}
+      open title={t('combat.startTitle')} onClose={onClose}
+      sub={mode === 'roll' ? t('combat.startRollSub') : t('combat.startOrderSub')}
       footer={
         <Button variant="primary" disabled={!chosen.length} onClick={() => onStart(mode === 'roll' ? { who: chosen } : { order: chosen })}>
-          {mode === 'roll' ? 'Бросить инициативу' : 'Начать по порядку'}
+          {mode === 'roll' ? t('combat.rollInitiative') : t('combat.startInOrder')}
         </Button>
       }
     >
       {rolls ? (
         <Segmented
           value={mode}
-          options={[{ key: 'roll', label: 'Бросить инициативу' }, { key: 'order', label: 'Задать порядок' }]}
+          options={[{ key: 'roll', label: t('combat.rollInitiative') }, { key: 'order', label: t('combat.setOrder') }]}
           onChange={setMode}
         />
       ) : null}
@@ -135,8 +138,8 @@ function StartDialog({ room, onClose, onStart }: {
             </label>
             {mode === 'order' ? (
               <span className="inline inline--tight">
-                <Button size="sm" variant="ghost" disabled={at === 0} ariaLabel={`${row.name} выше`} onClick={() => move(at, -1)}>↑</Button>
-                <Button size="sm" variant="ghost" disabled={at === rows.length - 1} ariaLabel={`${row.name} ниже`} onClick={() => move(at, 1)}>↓</Button>
+                <Button size="sm" variant="ghost" disabled={at === 0} ariaLabel={t('combat.up', { name: row.name })} onClick={() => move(at, -1)}>↑</Button>
+                <Button size="sm" variant="ghost" disabled={at === rows.length - 1} ariaLabel={t('combat.down', { name: row.name })} onClick={() => move(at, 1)}>↓</Button>
               </span>
             ) : null}
           </div>

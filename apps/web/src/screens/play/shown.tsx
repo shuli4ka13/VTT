@@ -5,7 +5,7 @@ import type { RoomState } from '@vtt/schema';
 import { useRoom } from '../../store/room.ts';
 import { useLocale, viewerLang } from '../../store/locale.ts';
 import { Select } from '../../ui/primitives.tsx';
-import { langName, useT } from '../../i18n/index.ts';
+import { langName, useT } from '../../i18n/play.ts';
 
 export function shownRoom(room: RoomState | null, lang: string): RoomState | null {
   if (!room) return null;

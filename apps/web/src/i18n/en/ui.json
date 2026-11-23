@@ -1,1 +1,110 @@
-{}
+{
+  "combo": {
+    "unset": "— not chosen —",
+    "missing": "{{value}} — not in the list",
+    "add": "+ add…",
+    "find": "find…"
+  },
+  "dice": {
+    "d": "d"
+  },
+  "fieldPick": {
+    "unnamed": "unnamed",
+    "blank": "— which field —",
+    "service": "internal fields ({{n}})…"
+  },
+  "formulaBar": {
+    "region": "formula bar",
+    "placeholder": "formula — start typing a name",
+    "done": "done"
+  },
+  "resolve": {
+    "several": "«{{word}}» belongs to several — pick whose in the list",
+    "near": "no name «{{word}}» — closest: «{{near}}»",
+    "none": "no name «{{word}}»"
+  },
+  "formula": {
+    "empty": "the formula is empty",
+    "where": "formula",
+    "placeholder": "start typing a field name",
+    "ok": "the rule is valid · depends on {{n}}",
+    "pos": " · position {{pos}}"
+  },
+  "keyField": {
+    "locked": "this name is already referenced — renaming will come later",
+    "busy": "the name «{{name}}» is already taken"
+  },
+  "pickOrder": {
+    "shown": "shown",
+    "reorder": " · drag to change the order",
+    "nothing": "nothing",
+    "hidden": "not shown"
+  },
+  "restore": {
+    "file": "vtt-draft.json",
+    "kept": "a copy is left from last time",
+    "download": "Download the copy",
+    "ok": "Got it",
+    "text": "The draft in this browser is left over from an old version of the builder and did not open. What is saved on the server is intact — open the system through «switch»."
+  },
+  "layout": {
+    "panel": "panel"
+  },
+  "field": {
+    "needed": "·fill in"
+  },
+  "danger": {
+    "withSteps": "with its steps",
+    "sure": "really remove"
+  },
+  "grid": {
+    "resize": "width of column «{{name}}»"
+  },
+  "value": {
+    "cell": "cell",
+    "numberOrFormula": "number or formula",
+    "effect": "— which effect —",
+    "record": "— which record —",
+    "table": "— which table —",
+    "column": "— which column —",
+    "noTable": "— no table chosen —",
+    "word": "word"
+  },
+  "chips": {
+    "pickBy": "{{name}} · column by [{{by}}]",
+    "pickGroup": "column by value",
+    "op": {
+      "add": "add",
+      "sub": "subtract",
+      "mul": "multiply",
+      "div": "divide",
+      "parens": "parentheses: what is inside is counted first",
+      "and": "true only if both parts are true",
+      "or": "the first part if it is set, otherwise the second: «class or 1d8», «combat or reaction»",
+      "not": "the opposite: «not empty(…)» — is set"
+    },
+    "inList": "is in the list",
+    "group": {
+      "local": "in this effect",
+      "owner": "of «{{owner}}»",
+      "link": "by link",
+      "field": "sheet field",
+      "state": "hanging on the sheet",
+      "sheet": "the whole sheet",
+      "stateOf": "hanging on «{{owner}}»"
+    },
+    "sideDesk": "field «{{name}}»",
+    "sideSheet": "sheet field «{{name}}»",
+    "inputTitle": "effect input: the value is brought by whoever calls it",
+    "markTitle": "roll tag from the table «{{table}}»: roll edits find the roll by it — advantage, «Bless», «Shield»",
+    "mark": "tag",
+    "fromTable": "from a table",
+    "whence": "where this comes from and where it shows",
+    "whenceOf": "{{name}} — where this comes from and where it shows",
+    "removeField": "remove the field",
+    "whole": "{{label}} as a whole",
+    "dotHint": "type a dot after the name — a list opens",
+    "more": ". {{n}} more",
+    "formula": "formula"
+  }
+}

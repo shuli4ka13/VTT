@@ -8,6 +8,7 @@ import { namesOf } from './formula-chips.tsx';
 import type { SheetNames } from './formula-chips.tsx';
 import { resolveNames, NO_NAME } from './formula-resolve.ts';
 import type { BarOption } from '../store/formula-bar.ts';
+import { t, useT } from '../i18n/index.ts';
 
 export { columnPaths, fieldPaths } from './paths.ts';
 export { labelOfTag, formulaAsLabels } from './formula-labels.ts';
@@ -21,7 +22,7 @@ export interface Parsed {
 
 export function parseFormula(source: string): Parsed {
   const text = source.trim();
-  if (!text) return { ok: false, deps: [], error: 'формула пуста' };
+  if (!text) return { ok: false, deps: [], error: t('ui:formula.empty') };
   try {
     const formula = compile(text);
     return { ok: true, deps: [...formula.deps] };
@@ -31,7 +32,7 @@ export function parseFormula(source: string): Parsed {
   }
 }
 
-export function FormulaInput({ system, value, onChange, placeholder, where = 'формула', names, extraNames, meanings, badges, sheets, options, problem }: {
+export function FormulaInput({ system, value, onChange, placeholder, where, names, extraNames, meanings, badges, sheets, options, problem }: {
   system: System;
   names?: Record<string, ReactNode>;
   extraNames?: Map<string, string>;
@@ -45,6 +46,7 @@ export function FormulaInput({ system, value, onChange, placeholder, where = 'ф
   options?: BarOption[];
   problem?: string | null;
 }) {
+  const t = useT('ui');
   const known = useMemo(() => namesOf(system, { extraNames, extraOptions: options, sheets }), [system, extraNames, options, sheets]);
   const settled = useMemo(() => resolveNames(value, known, { final: true }), [value, known]);
   const parsed = useMemo(() => parseFormula(settled.text), [settled.text]);
@@ -55,14 +57,14 @@ export function FormulaInput({ system, value, onChange, placeholder, where = 'ф
       <FormulaField
         value={value}
         system={system}
-        where={where}
+        where={where ?? t('formula.where')}
         {...(names ? { names } : {})}
         {...(extraNames ? { extraNames } : {})}
         {...(meanings ? { meanings } : {})}
         {...(badges ? { badges } : {})}
         {...(sheets ? { sheets } : {})}
         {...(options ? { options } : {})}
-        placeholder={placeholder ?? 'начните набирать название поля'}
+        placeholder={placeholder ?? t('formula.placeholder')}
         notes={false}
         onChange={onChange}
       />
@@ -71,12 +73,12 @@ export function FormulaInput({ system, value, onChange, placeholder, where = 'ф
         parsed.ok && problem
           ? <Verdict tone="bad">{problem}</Verdict>
           : parsed.ok
-          ? <Verdict tone="ok">правило верное · зависит от {parsed.deps.length}</Verdict>
+          ? <Verdict tone="ok">{t('formula.ok', { n: parsed.deps.length })}</Verdict>
           : lost
           ? <Verdict tone="bad">{NO_NAME(lost)}</Verdict>
           : <Verdict tone="bad">
               {parsed.error}
-              {parsed.pos === undefined ? null : <span className="faint"> · позиция {parsed.pos}</span>}
+              {parsed.pos === undefined ? null : <span className="faint">{t('formula.pos', { pos: parsed.pos })}</span>}
             </Verdict>
       ) : null}
     </div>

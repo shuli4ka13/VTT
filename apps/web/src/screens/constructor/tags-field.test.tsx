@@ -27,13 +27,13 @@ describe('одно поле меток', () => {
   it('вычисляемая метка пишется формулой только там, где разрешено', () => {
     let got: TagValue[] = [];
     render(<TagsField system={system} value={[]} computed onChange={next => { got = next; }} />);
-    pickCombo(add(), ':формула');
+    pickCombo(add(), ':formula');
     fireEvent.change(screen.getByPlaceholderText(/если\(рейтинг/), { target: { value: 'if(@rating == 0, "нулевой", "")' } });
     fireEvent.click(screen.getByText('добавить'));
     expect(got).toEqual([{ expr: 'if(@rating == 0, "нулевой", "")' }]);
     cleanup();
     render(<TagsField system={system} value={[]} onChange={() => {}} />);
-    expect(comboOptions(add()).some(o => o.value === ':формула')).toBe(false);
+    expect(comboOptions(add()).some(o => o.value === ':formula')).toBe(false);
   });
 
   it('метка не из словаря помечена; своя метка — только пунктом «новая метка…», ключ ей делается из названия, название — подписью', () => {

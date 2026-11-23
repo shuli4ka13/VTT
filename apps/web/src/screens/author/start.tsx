@@ -7,7 +7,7 @@ import { stampOf } from '../../ui/stamp.ts';
 import { listSystems, getSystem, createSystem, deleteSystem } from '../../api/client.ts';
 import { rememberVersion, markClean } from '../../store/autosave.ts';
 import type { SystemSummary } from '@vtt/schema';
-import { t, useT } from '../../i18n/index.ts';
+import { t, useT } from '../../i18n/author.ts';
 
 type Mode = 'edit' | 'copy' | 'blank' | null;
 

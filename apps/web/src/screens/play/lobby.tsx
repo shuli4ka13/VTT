@@ -6,22 +6,23 @@ import { listRooms, listWorlds, createRoom, closeRoom, deleteWorld } from '../..
 import { BuildWorld } from './build-world.tsx';
 import { stampOf } from '../../ui/stamp.ts';
 import type { RoomSummary, WorldSummary } from '@vtt/schema';
+import { t as tx, useT } from '../../i18n/play.ts';
 
 export { stampOf };
 
 type Tab = 'rooms' | 'worlds' | 'build';
 type Order = 'time' | 'world' | 'system';
 
-const TABS = [
-  { key: 'rooms', label: 'Столы' },
-  { key: 'worlds', label: 'Миры' },
-  { key: 'build', label: 'Собрать мир' },
+const tabs = () => [
+  { key: 'rooms', label: tx('play:lobby.tab.rooms') },
+  { key: 'worlds', label: tx('play:lobby.tab.worlds') },
+  { key: 'build', label: tx('play:lobby.tab.build') },
 ] as const;
 
-const ORDERS = [
-  { key: 'time', label: 'по времени' },
-  { key: 'world', label: 'по миру' },
-  { key: 'system', label: 'по системе' },
+const orders = () => [
+  { key: 'time', label: tx('play:lobby.order.time') },
+  { key: 'world', label: tx('play:lobby.order.world') },
+  { key: 'system', label: tx('play:lobby.order.system') },
 ] as const;
 
 const byText = (x: string, y: string): number => x.localeCompare(y, 'ru');
@@ -45,6 +46,7 @@ export function sortWorlds(worlds: readonly WorldSummary[], order: Order): World
 }
 
 export function Lobby() {
+  const t = useT('play');
   const join = useRoom(s => s.join);
   const error = useRoom(s => s.error);
   const setError = useRoom(s => s.setError);
@@ -73,32 +75,32 @@ export function Lobby() {
         <>
           {error ? <Verdict tone="bad">{error}</Verdict> : null}
 
-          <Segmented value={tab} options={TABS} onChange={setTab} />
+          <Segmented value={tab} options={tabs()} onChange={setTab} />
 
           {tab === 'rooms' ? <Card>
             <CardHead
-              title="Столы"
+              title={t('lobby.rooms.title')}
               actions={<>
-                <Segmented value={roomOrder} options={ORDERS} onChange={setRoomOrder} />
-                <Button size="sm" onClick={refresh}>Обновить</Button>
+                <Segmented value={roomOrder} options={orders()} onChange={setRoomOrder} />
+                <Button size="sm" onClick={refresh}>{t('lobby.rooms.refresh')}</Button>
               </>}
             />
             {rooms.length === 0
               ? <Empty
-                  title="Столов пока нет"
-                  hint="Создайте стол из собранного мира — во вкладке «Миры»."
+                  title={t('lobby.rooms.none')}
+                  hint={t('lobby.rooms.noneHint')}
                 />
               : (
                 <>
-                  <span className="faint">Удалить стол может его ведущий</span>
+                  <span className="faint">{t('lobby.rooms.gmDeletes')}</span>
                   <RowsTable
                     columns={[
-                      { head: 'Стол', width: 'minmax(0, 2fr)' },
-                      { head: 'Мир', width: 'minmax(0, 1fr)', minor: true },
-                      { head: 'Система', width: 'minmax(0, 1fr)', minor: true },
-                      { head: 'Ведущий', width: 'minmax(0, 1fr)', minor: true },
-                      { head: 'За столом', width: '88px', minor: true },
-                      { head: 'Создан', width: '132px', minor: true },
+                      { head: t('col.table'), width: 'minmax(0, 2fr)' },
+                      { head: t('col.world'), width: 'minmax(0, 1fr)', minor: true },
+                      { head: t('col.system'), width: 'minmax(0, 1fr)', minor: true },
+                      { head: t('col.gm'), width: 'minmax(0, 1fr)', minor: true },
+                      { head: t('col.atTable'), width: '88px', minor: true },
+                      { head: t('col.created'), width: '132px', minor: true },
                       { head: '', width: 'auto' },
                     ]}
                     rows={sortRooms(rooms, worlds, roomOrder).map(room => ({
@@ -112,14 +114,14 @@ export function Lobby() {
                         room.memberCount,
                         stampOf(room.createdAt),
                         <>
-                          <Button size="sm" onClick={() => join(room.id)}>Войти</Button>
+                          <Button size="sm" onClick={() => join(room.id)}>{t('lobby.rooms.enter')}</Button>
                           {room.gm ? (
                             <DangerButton size="sm" onConfirm={() => {
                               closeRoom(room.id)
                                 .then(() => refresh())
                                 .catch(err => setError((err as Error).message));
                             }}>
-                              Удалить
+                              {t('common:delete')}
                             </DangerButton>
                           ) : null}
                         </>,
@@ -134,20 +136,20 @@ export function Lobby() {
 
           {tab === 'worlds' ? <Card>
             <CardHead
-              title="Собранные миры"
-              actions={<Segmented value={worldOrder} options={ORDERS} onChange={setWorldOrder} />}
+              title={t('lobby.worlds.title')}
+              actions={<Segmented value={worldOrder} options={orders()} onChange={setWorldOrder} />}
             />
             {worlds.length === 0
               ? <span className="faint">
-                  Миров нет. Соберите первый во вкладке «Собрать мир» — из опубликованной системы и компендиумов к ней.
+                  {t('lobby.worlds.none')}
                 </span>
               : (
                 <RowsTable
                   columns={[
-                    { head: 'Мир', width: 'minmax(0, 2fr)' },
-                    { head: 'Система', width: 'minmax(0, 1fr)', minor: true },
-                    { head: 'Автор', width: 'minmax(0, 1fr)', minor: true },
-                    { head: 'Изменён', width: '132px', minor: true },
+                    { head: t('col.world'), width: 'minmax(0, 2fr)' },
+                    { head: t('col.system'), width: 'minmax(0, 1fr)', minor: true },
+                    { head: t('col.author'), width: 'minmax(0, 1fr)', minor: true },
+                    { head: t('col.changed'), width: '132px', minor: true },
                     { head: '', width: 'auto' },
                   ]}
                   rows={sortWorlds(worlds, worldOrder).map(world => ({
@@ -160,12 +162,12 @@ export function Lobby() {
                       <>
                         <Button size="sm" onClick={async () => {
                           try {
-                            const room = await createRoom(world.id, `Стол «${world.title}»`);
+                            const room = await createRoom(world.id, t('lobby.worlds.roomTitle', { title: world.title }));
                             void refresh();
                             join(room.id);
                           } catch (err) { setError((err as Error).message); }
                         }}>
-                          Создать стол
+                          {t('lobby.worlds.createRoom')}
                         </Button>
                         {world.mine ? (
                           <DangerButton size="sm" onConfirm={() => {
@@ -173,7 +175,7 @@ export function Lobby() {
                               .then(() => refresh())
                               .catch(err => setError((err as Error).message));
                           }}>
-                            Удалить
+                            {t('common:delete')}
                           </DangerButton>
                         ) : null}
                       </>,

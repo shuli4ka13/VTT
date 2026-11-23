@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
+import { useT } from '../i18n/index.ts';
 
 export interface Pane {
 
@@ -43,11 +44,12 @@ export function Columns({ left, main, right }: { left?: Pane; main: { body: Reac
 }
 
 function Column({ kind, pane, folded, onFold }: { kind: 'side' | 'right'; pane: Pane; folded: boolean; onFold: () => void }) {
-  const title = typeof pane.head === 'string' ? pane.head : 'панель';
+  const t = useT('ui');
+  const title = typeof pane.head === 'string' ? pane.head : t('layout.panel');
   const arrow = (kind === 'side') === folded ? '»' : '«';
   const fold = pane.pinned ? null : (
     <button type="button" className="column__fold" onClick={onFold}
-      aria-label={folded ? `развернуть «${title}»` : `свернуть «${title}»`} title={folded ? 'развернуть' : 'свернуть'}>
+      aria-label={folded ? t('common:fold.expand', { name: title }) : t('common:fold.collapse', { name: title })} title={folded ? t('common:expand') : t('common:collapse')}>
       {arrow}
     </button>
   );

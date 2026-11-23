@@ -106,15 +106,15 @@ export function within(root: ParentNode = document) {
       const menu = [...(typed.closest('.combo')!).querySelectorAll<HTMLElement>('.slot__option')];
       const hit = menu.find(o => o.dataset.value === text.trim());
       act(() => { fireEvent.blur(typed); });
-      pickCombo(typed, hit ? text.trim() : ':формула', String(label));
+      pickCombo(typed, hit ? text.trim() : ':formula', String(label));
       openAll();
       if (hit) return;
     }
-    const byList = [...box.querySelectorAll('select')].find(el => [...el.options].some(o => o.value === ':формула'));
-    if (byList && !box.querySelector('.chips')) { act(() => { fireEvent.change(byList, { target: { value: ':формула' } }); }); openAll(); }
+    const byList = [...box.querySelectorAll('select')].find(el => [...el.options].some(o => o.value === ':formula'));
+    if (byList && !box.querySelector('.chips')) { act(() => { fireEvent.change(byList, { target: { value: ':formula' } }); }); openAll(); }
     if (!box.querySelector('.chips') && !box.classList.contains('chips')) {
-      const byCombo = [...box.querySelectorAll<HTMLElement>('[role="combobox"]')].find(el => comboOptions(el).some(o => o.value === ':формула'));
-      if (byCombo) { pickCombo(byCombo, ':формула', String(label)); openAll(); }
+      const byCombo = [...box.querySelectorAll<HTMLElement>('[role="combobox"]')].find(el => comboOptions(el).some(o => o.value === ':formula'));
+      if (byCombo) { pickCombo(byCombo, ':formula', String(label)); openAll(); }
     }
     const chips = box.classList.contains('chips') ? box : box.querySelector('.chips');
     if (!chips) throw new Error(`в «${String(label)}» нет поля формулы`);

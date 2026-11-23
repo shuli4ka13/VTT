@@ -1,5 +1,5 @@
 import { slugOf, freeId } from '../../store/world.ts';
-import { t } from '../../i18n/index.ts';
+import { t } from '../../i18n/author.ts';
 import { usageIndex, inUse } from './usage.ts';
 import type { System, Compendium } from '@vtt/schema';
 import { splitsTargets, NAMES, NAME_LABELS, nameLabel, stepSaid } from '@vtt/engine';

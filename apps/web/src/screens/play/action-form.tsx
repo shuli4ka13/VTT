@@ -3,6 +3,7 @@ import { Button, Field, Input, Select, Verdict } from '../../ui/primitives.tsx';
 import { asksOf, askKindOf, checkInputs, choicesOf, isPerTarget, normalizeInputs, YES_NO, newPass, distanceOf, distanceWords, measuredValue } from '@vtt/engine';
 import type { AskedParam, Inputs } from '@vtt/engine';
 import type { System, Compendium, Sheet, Places } from '@vtt/schema';
+import { useT } from '../../i18n/play.ts';
 
 export interface ActionRequest {
   actionId: string;
@@ -25,6 +26,7 @@ export function ActionForm({ system, compendium, actor, targets = [], actionId, 
   expect?: (request: ActionRequest) => string | null;
   places?: Places;
 }) {
+  const t = useT('play');
   const asked = useMemo<AskedParam[]>(() => {
     try { return asksOf(actionId, { system, compendium }); } catch { return []; }
   }, [system, compendium, actionId]);
@@ -99,7 +101,7 @@ export function ActionForm({ system, compendium, actor, targets = [], actionId, 
     const given = collect();
     if (problemOf(given)) { setTip(null); return; }
     const text = expect({ actionId, ...(asked.length ? { inputs: normalizeInputs(asked, given) } : {}) });
-    setTip(text ? `Ожидание — кости по среднему, на вопросы «нет»:\n${text}` : null);
+    setTip(text ? t('form.expect', { text }) : null);
   };
 
   if (!asked.length) {
@@ -110,7 +112,7 @@ export function ActionForm({ system, compendium, actor, targets = [], actionId, 
     return (
       <Button
         variant="primary" disabled={disabled || Boolean(blocked)}
-        title={blocked ?? `спросит перед броском: ${asked.map(p => p.label ?? p.key).join(', ')}`}
+        title={blocked ?? t('form.willAsk', { list: asked.map(p => p.label ?? p.key).join(', ') })}
         onClick={() => setOpen(true)}
       >
         {label}…
@@ -124,14 +126,15 @@ export function ActionForm({ system, compendium, actor, targets = [], actionId, 
   return (
     <div className="stack stack--tight action-form">
       <div className="inline inline--tight">
-        <span className="field__label spacer">{label} · перед броском</span>
-        <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>свернуть</Button>
+        <span className="field__label spacer">{t('form.beforeRoll', { label })}</span>
+        <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>{t('common:collapse')}</Button>
       </div>
       {asked.map(param => {
-        const title = `${param.label ?? param.key}${param.ask.by === 'gm' ? ' · говорит ведущий' : ''}`;
+        const base = param.label ?? param.key;
+        const title = param.ask.by === 'gm' ? t('form.titleGm', { label: base }) : base;
         const hintFor = (key: string): string | undefined => {
           const words = measured[param.key]?.words[key];
-          return [param.ask.hint, words ? `по полю: ${words}` : ''].filter(Boolean).join(' · ') || undefined;
+          return [param.ask.hint, words ? t('form.byField', { words }) : ''].filter(Boolean).join(' · ') || undefined;
         };
         if (!isPerTarget(param)) {
           return (
@@ -142,7 +145,7 @@ export function ActionForm({ system, compendium, actor, targets = [], actionId, 
           );
         }
         if (!targets.length) {
-          return <Field key={param.key} label={title} hint="спросит для каждой цели — сначала выберите цели">{null}</Field>;
+          return <Field key={param.key} label={title} hint={t('form.perTargetFirst')}>{null}</Field>;
         }
         const each = (answerOf(param) as Record<string, string> | undefined) ?? {};
         return targets.map(target => (
@@ -162,13 +165,14 @@ export function ActionForm({ system, compendium, actor, targets = [], actionId, 
 function AskInput({ system, param, value, onChange }: {
   system: System; param: AskedParam; value: string; onChange: (next: string) => void;
 }) {
+  const t = useT('play');
   const kind = askKindOf(param);
   const said = new Map((system.tables?.[String(param.from ?? '')]?.rows ?? []).map(row => [String(row.value), row.label || String(row.value)] as const));
   return kind === 'choice' || kind === 'boolean'
     ? (
       <Select
         value={value}
-        options={[['', '— какой вариант —'],
+        options={[['', t('form.pickOption')],
           ...(kind === 'boolean' ? [...YES_NO] : choicesOf(system, param)).map((option: string) => [option, said.get(option) ?? option] as const)] as never}
         onChange={onChange}
       />

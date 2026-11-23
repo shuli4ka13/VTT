@@ -39,7 +39,7 @@ const lonely = (value: unknown): string | null => {
   return /^@[\p{L}\p{N}_]+$/u.test(text) ? text.slice(1) : null;
 };
 
-const BY_FORMULA = ':формула';
+const BY_FORMULA = ':formula';
 
 const FROM_NAME = /^@([\p{L}\p{N}_.]+)$/u;
 

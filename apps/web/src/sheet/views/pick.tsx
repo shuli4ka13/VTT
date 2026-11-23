@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { labelOf, listOf, same } from './kit.ts';
 import type { ViewProps } from './kit.ts';
 import type { FieldOption } from '@vtt/schema';
+import { useT } from '../../i18n/index.ts';
 
 export function Toggle({ value, label, control, onChange }: ViewProps) {
+  const t = useT('common');
   const on = value === true;
   return (
     <button
@@ -17,14 +19,15 @@ export function Toggle({ value, label, control, onChange }: ViewProps) {
       onClick={() => onChange?.(!on)}
     >
       <span className="v-toggle__track"><span className="v-toggle__knob" /></span>
-      <span className="v-toggle__text">{on ? control?.yes ?? 'да' : control?.no ?? 'нет'}</span>
+      <span className="v-toggle__text">{on ? control?.yes ?? t('yes') : control?.no ?? t('no')}</span>
     </button>
   );
 }
 
 export function Ring({ value, label, options, onChange }: ViewProps) {
+  const t = useT('sheet');
   const steps = options ?? [];
-  if (!steps.length) return <span className="v-empty" title="ступени — строки таблицы вариантов; задаются в конструкторе">вариантов ещё нет</span>;
+  if (!steps.length) return <span className="v-empty" title={t('view.steps')}>{t('view.noOptions')}</span>;
   const at = steps.findIndex(step => same(step.value, value));
   const share = at < 0 ? 0 : steps.length > 1 ? at / (steps.length - 1) : 1;
   const length = 2 * Math.PI * 8;
@@ -34,7 +37,7 @@ export function Ring({ value, label, options, onChange }: ViewProps) {
     <button
       type="button"
       className={`v-ring${at > 0 ? ' v-ring--on' : ''}`}
-      title={`${label}: ${name}. Клик — следующая ступень.`}
+      title={t('view.ringTitle', { label, name })}
       disabled={!onChange}
       onClick={() => onChange?.(next.value)}
     >
@@ -50,8 +53,9 @@ export function Ring({ value, label, options, onChange }: ViewProps) {
 }
 
 export function Choice({ value, label, options, onChange }: ViewProps) {
+  const t = useT('sheet');
   const list = options ?? [];
-  if (!list.length) return <span className="v-empty">вариантов ещё нет</span>;
+  if (!list.length) return <span className="v-empty">{t('view.noOptions')}</span>;
   return (
     <div className="v-segments" role="radiogroup" aria-label={label}>
       {list.map(option => (
@@ -72,6 +76,7 @@ export function Choice({ value, label, options, onChange }: ViewProps) {
 }
 
 export function Chips({ value, label, options, onChange }: ViewProps) {
+  const t = useT('sheet');
   const picked = listOf(value);
   const list = options?.length ? options : picked.map(item => ({ value: item as FieldOption['value'], label: String(item) }));
   if (!onChange) {
@@ -79,7 +84,7 @@ export function Chips({ value, label, options, onChange }: ViewProps) {
       ? <div className="v-chips" aria-label={label}>{picked.map(item => <span key={String(item)} className="v-chip v-chip--on">{labelOf(options, item)}</span>)}</div>
       : <span className="v-empty">—</span>;
   }
-  if (!list.length) return <span className="v-empty">вариантов ещё нет</span>;
+  if (!list.length) return <span className="v-empty">{t('view.noOptions')}</span>;
   const flip = (item: FieldOption['value']) => {
     const on = picked.some(p => same(p, item));
     const next = on ? picked.filter(p => !same(p, item)) : [...picked, item];

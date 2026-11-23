@@ -3,6 +3,8 @@ import type { System, TagContract } from '@vtt/schema';
 import { tagWords } from '@vtt/engine';
 import { Card, CardHead, Field, Fold, Select, Button, DangerButton, Chip, LabelInput } from '../../../ui/primitives.tsx';
 import { freeId, slugOf } from '../../../store/world.ts';
+import { KEYS } from '../factory.ts';
+import { dataT, useT } from '../../../i18n/author.ts';
 import { rowSaid } from '../tag-said.ts';
 import { TagsField } from '../tags-field.tsx';
 import type { WorldState } from '../../../store/world.ts';
@@ -10,6 +12,8 @@ import type { WorldState } from '../../../store/world.ts';
 type EditSystem = WorldState['editSystem'];
 
 export function TagsSection({ system, editSystem }: { system: System; editSystem: EditSystem }) {
+  const t = useT('tables');
+  const td = dataT(system);
   const tags = Object.entries(system.tags ?? {});
   const rows = [...tagWords(system)];
   const [open, setOpen] = useState<string | null>(null);
@@ -22,13 +26,13 @@ export function TagsSection({ system, editSystem }: { system: System; editSystem
     <>
       <Card>
         <CardHead
-          title="Метки"
-          sub="Метка действия — например, «атака»: подписки слушают «всё с меткой», правки правят «по метке». Договор метки — что обязано быть у каждого действия с ней."
+          title={t('tag.title')}
+          sub={t('tag.sub')}
           actions={<Button size="sm" onClick={() => editSystem(draft => {
-            const key = freeId(Object.keys(draft.tags ?? {}), 'метка');
-            (draft.tags ??= {})[key] = { label: 'Новая метка' };
+            const key = freeId(Object.keys(draft.tags ?? {}), KEYS.tag);
+            (draft.tags ??= {})[key] = { label: td('tables:tag.new') };
             setOpen(key);
-          })}>+ метка</Button>}
+          })}>{t('tag.add')}</Button>}
         />
         {tags.length ? (
           <div className="inline inline--tight">
@@ -36,12 +40,12 @@ export function TagsSection({ system, editSystem }: { system: System; editSystem
               <Chip key={key} active={open === key} onClick={() => setOpen(open === key ? null : key)}>{tag.label ?? key}</Chip>
             ))}
           </div>
-        ) : <span className="faint">Меток с договором нет.</span>}
+        ) : <span className="faint">{t('tag.empty')}</span>}
         {rows.length ? (
-          <Fold title="Метки бросков" summary={`из таблиц: ${rows.length}`}>
-            <span className="faint">Метки бросков — строки таблиц; заводятся в «Таблицах».</span>
+          <Fold title={t('tag.rolls')} summary={t('tag.rollsSummary', { n: rows.length })}>
+            <span className="faint">{t('tag.rollsNote')}</span>
             <div className="inline inline--tight">
-              {rows.map(([word, table]) => <Chip key={`${table}:${word}`} title={`из таблицы «${table}»`}>{rowSaid(system, word)}</Chip>)}
+              {rows.map(([word, table]) => <Chip key={`${table}:${word}`} title={t('tag.fromTable', { table })}>{rowSaid(system, word)}</Chip>)}
             </div>
           </Fold>
         ) : null}
@@ -60,9 +64,9 @@ export function TagsSection({ system, editSystem }: { system: System; editSystem
 
 const namesOf = (tag: TagContract): string[] => [...(tag.inputs ?? []).map(input => input.key), ...(tag.each ? [tag.each] : []), ...(tag.outputs ?? [])];
 
-function keyed(draft: TagContract, typed: string): string {
+function keyed(draft: TagContract, typed: string, fixed?: string): string {
   const text = typed.trim().replace(/\s+/g, ' ');
-  const key = slugOf(text) || text;
+  const key = fixed ?? (slugOf(text) || text);
   if (key && key !== text) draft.said = { ...(draft.said ?? {}), [key]: text };
   return key;
 }
@@ -80,18 +84,20 @@ function Contract({ id, tag, system, edit, onDelete }: {
   edit: (change: (tag: TagContract) => void) => void;
   onDelete: () => void;
 }) {
+  const t = useT('tables');
+  const td = dataT(system);
   const inputs = tag.inputs ?? [];
   return (
     <Card>
       <CardHead
-        title={<LabelInput value={tag.label ?? id} placeholder="как зовётся метка" onCommit={label => edit(draft => { draft.label = label; })} />}
-        actions={<DangerButton size="sm" onConfirm={onDelete}>Удалить</DangerButton>}
+        title={<LabelInput value={tag.label ?? id} placeholder={t('common:name.tag')} onCommit={label => edit(draft => { draft.label = label; })} />}
+        actions={<DangerButton size="sm" onConfirm={onDelete}>{t('common:delete')}</DangerButton>}
       />
-      <Field label="Что есть у действия с этой меткой" hint="Входы, которые обязан объявить каждый эффект с этой меткой: подписка на метку может на них опереться.">
+      <Field label={t('tag.has')} hint={t('tag.hasHint')}>
         <div className="stack stack--tight">
           {inputs.map((input, index) => (
             <div key={index} className="inline inline--tight">
-              <LabelInput value={saidOf(tag, input.key)} placeholder="имя входа" onCommit={next => edit(draft => {
+              <LabelInput value={saidOf(tag, input.key)} placeholder={t('tag.inputName')} onCommit={next => edit(draft => {
                 const one = draft.inputs?.[index];
                 if (!one || !next.trim()) return;
                 one.key = keyed(draft, next);
@@ -99,7 +105,7 @@ function Contract({ id, tag, system, edit, onDelete }: {
               })} />
               <Select<string>
                 value={input.kind === 'sheet' ? (input.many ? 'sheets' : 'sheet') : String(input.kind)}
-                options={[['sheet', 'лист'], ['sheets', 'список листов'], ['number', 'число'], ['choice', 'выбор']]}
+                options={[['sheet', t('tag.sheet')], ['sheets', t('tag.sheets')], ['number', t('tag.number')], ['choice', t('tag.choice')]]}
                 onChange={next => edit(draft => {
                   const one = draft.inputs?.[index];
                   if (!one) return;
@@ -107,7 +113,7 @@ function Contract({ id, tag, system, edit, onDelete }: {
                   if (next === 'sheets') one.many = true; else delete one.many;
                 })}
               />
-              <Button size="sm" variant="ghost" title="убрать вход" onClick={() => edit(draft => {
+              <Button size="sm" variant="ghost" title={t('tag.removeInput')} onClick={() => edit(draft => {
                 draft.inputs = (draft.inputs ?? []).filter((_, at) => at !== index);
                 if (!draft.inputs.length) delete draft.inputs;
                 tidySaid(draft);
@@ -115,28 +121,28 @@ function Contract({ id, tag, system, edit, onDelete }: {
             </div>
           ))}
           <Button size="sm" onClick={() => edit(draft => {
-            const key = keyed(draft, inputs.length ? `вход ${inputs.length + 1}` : 'действующий');
+            const key = inputs.length ? keyed(draft, td('tables:tag.input', { n: inputs.length + 1 }), `vhod_${inputs.length + 1}`) : keyed(draft, td('tables:tag.actor'), KEYS.actor);
             (draft.inputs ??= []).push({ key, kind: 'sheet' });
-          })}>+ вход</Button>
+          })}>{t('tag.addInput')}</Button>
         </div>
       </Field>
-      <Fold title="ещё" summary="цикл, выходы, что включает">
+      <Fold title={t('common:more')} summary={t('tag.moreSummary')}>
         <div className="row">
-          <Field label="Имя каждого в цикле" hint="Если действие перебирает цели: «для каждого» обязан звать каждого этим именем.">
-            <LabelInput value={tag.each ? saidOf(tag, tag.each) : ''} placeholder="например: цель" onCommit={next => edit(draft => {
+          <Field label={t('tag.each')} hint={t('tag.eachHint')}>
+            <LabelInput value={tag.each ? saidOf(tag, tag.each) : ''} placeholder={t('tag.eachPlaceholder')} onCommit={next => edit(draft => {
               if (next.trim()) draft.each = keyed(draft, next); else delete draft.each;
               tidySaid(draft);
             })} />
           </Field>
-          <Field label="Выходы" hint="Имена шагов внутри цикла, которые обязаны быть: «hit» — попал ли.">
-            <LabelInput value={(tag.outputs ?? []).map(one => saidOf(tag, one)).join(', ')} placeholder="через запятую"
+          <Field label={t('tag.outputs')} hint={t('tag.outputsHint')}>
+            <LabelInput value={(tag.outputs ?? []).map(one => saidOf(tag, one)).join(', ')} placeholder={t('tag.outputsPlaceholder')}
               onCommit={next => edit(draft => {
                 const list = next.split(',').map(one => one.trim()).filter(Boolean).map(one => keyed(draft, one));
                 if (list.length) draft.outputs = list; else delete draft.outputs;
                 tidySaid(draft);
               })} />
           </Field>
-          <Field label="Включает" hint="Метки, договор которых входит в этот: «рукопашная» включает «атаку».">
+          <Field label={t('tag.includes')} hint={t('tag.includesHint')}>
             <TagsField
               system={{ ...system, tables: {} }}
               value={tag.includes}

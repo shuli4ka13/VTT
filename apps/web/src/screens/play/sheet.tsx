@@ -16,8 +16,10 @@ import { Hanging } from './hanging.tsx';
 import type { Sheet, System, RoomState, Owned, CompendiumRecord, SheetList } from '@vtt/schema';
 import { ThingsList, ThingLine } from '../../sheet/things-list.tsx';
 import { FieldCell } from '../../sheet/field-cell.tsx';
+import { useT } from '../../i18n/play.ts';
 
 export function SheetScreen() {
+  const t = useT('play');
   const room = useShownRoom();
   const mySheetId = useRoom(s => s.mySheetId);
   const pickSheet = useRoom(s => s.pickSheet);
@@ -40,14 +42,14 @@ export function SheetScreen() {
   return (
     <Columns
       left={{
-        head: 'Листы стола',
+        head: t('sheet.tableSheets'),
         tools: <LangSwitch />,
         body: (
           <>
             {room.sheets.length === 0
               ? <Empty
-                  title="Листов ещё нет"
-                  hint="Мир приехал без персонажей — заведите первого ниже."
+                  title={t('sheet.none')}
+                  hint={t('sheet.noneHint')}
                 />
               : (
                 <List>
@@ -55,7 +57,7 @@ export function SheetScreen() {
                     <ListItem
                       key={item.id}
                       name={item.name ?? item.id}
-                      meta={atDesk(item) ? 'общий для всех' : isGroup(item, room.sheets) ? 'группа' : sheetKindOf(room.system as System, item)?.label ?? 'лист'}
+                      meta={atDesk(item) ? t('sheet.shared') : isGroup(item, room.sheets) ? t('sheet.group') : sheetKindOf(room.system as System, item)?.label ?? t('sheet.badge.sheet')}
                       active={item.id === mySheetId}
                       onClick={() => pickSheet(item.id)}
                     />
@@ -63,16 +65,16 @@ export function SheetScreen() {
                 </List>
               )}
             <div className="stack stack--tight">
-              <Input value={newName} onChange={setNewName} placeholder="имя нового листа"
+              <Input value={newName} onChange={setNewName} placeholder={t('sheet.newName')}
                 onKeyDown={e => { if (e.key === 'Enter' && newName.trim()) create(); }} />
               {kinds.length ? (
                 <Select
                   value={newOf}
-                  options={[['', '— без типа —'], ...kinds.map(([key, k]) => [key, k.label ?? key] as const)] as never}
+                  options={[['', t('sheet.noKind')], ...kinds.map(([key, k]) => [key, k.label ?? key] as const)] as never}
                   onChange={setNewOf}
                 />
               ) : null}
-              <Button size="sm" wide onClick={create} disabled={!newName.trim()}>+ лист</Button>
+              <Button size="sm" wide onClick={create} disabled={!newName.trim()}>{t('sheet.add')}</Button>
             </div>
           </>
         ),
@@ -80,14 +82,15 @@ export function SheetScreen() {
       main={{
         body: sheet
           ? <SheetBody key={sheet.id} room={room} sheet={sheet} />
-          : <Empty title="Выберите лист слева" hint="Тот, которым играете." />,
+          : <Empty title={t('sheet.pickLeft')} hint={t('sheet.pickLeftHint')} />,
       }}
-      right={sheet && !atDesk(sheet) && rest.length ? { head: 'Снаряжение и действия', body: <SidePanel room={room} sheet={sheet} lists={rest} /> } : undefined}
+      right={sheet && !atDesk(sheet) && rest.length ? { head: t('sheet.side'), body: <SidePanel room={room} sheet={sheet} lists={rest} /> } : undefined}
     />
   );
 }
 
 function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
+  const t = useT('play');
   const me = useSession(s => s.userId);
   const isDesk = atDesk(sheet);
   const asGroup = !isDesk && isGroup(sheet, room.sheets);
@@ -118,42 +121,42 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
 
   return (
     <>
-      {isDesk ? <span className="faint">общий стол комнаты — видят все, правит ведущий</span> : (
+      {isDesk ? <span className="faint">{t('sheet.deskNote')}</span> : (
         <div className="inline">
           <ClaimRow room={room} sheet={sheet} />
           {mayDrop ? (
             <>
               <span className="spacer" />
-              <DangerButton size="sm" onConfirm={() => tableSocket.dropSheet(room.id, sheet.id)}>Удалить лист</DangerButton>
+              <DangerButton size="sm" onConfirm={() => tableSocket.dropSheet(room.id, sheet.id)}>{t('sheet.drop')}</DangerButton>
             </>
           ) : null}
         </div>
       )}
       {!isDesk && editable && (claimable.length || pairs.length || openRolls) ? (
         <div className="inline inline--tight roll-claims">
-          {claimable.length ? <span className="faint">заявить к броску с листа:</span> : null}
+          {claimable.length ? <span className="faint">{t('sheet.claimsFor')}</span> : null}
           {claimable.map(([key, label]) => (
             <Chip key={key} active={claims.includes(key)} onClick={() => setClaims(claims.includes(key) ? claims.filter(one => one !== key) : [...claims, key])}>{label}</Chip>
           ))}
           {pairs.length ? (
             <>
-              <span className="faint">вторая характеристика:</span>
-              <Select value={second} options={[['', 'та же'], ...pairs.map(field => [field.tag, field.label ?? field.tag] as const)] as never} onChange={setSecond} />
+              <span className="faint">{t('sheet.second')}</span>
+              <Select value={second} options={[['', t('sheet.same')], ...pairs.map(field => [field.tag, field.label ?? field.tag] as const)] as never} onChange={setSecond} />
             </>
           ) : null}
           {openRolls ? (
             <>
-              <span className="faint">сложность:</span>
+              <span className="faint">{t('sheet.difficulty')}</span>
               <Input type="number" value={versus} onChange={setVersus} />
             </>
           ) : null}
         </div>
       ) : null}
       {!isDesk && !asGroup && hasGroups && mine?.role === 'gm' ? (
-        <Field label="Группа">
+        <Field label={t('sheet.groupLabel')}>
           <Select
             value={sheet.group ?? ''}
-            options={[['', '— не в группе —'], ...room.sheets
+            options={[['', t('sheet.noGroup')], ...room.sheets
               .filter(other => other.id !== sheet.id && !atDesk(other) && !other.group)
               .map(other => [other.id, other.name ?? other.id] as const)] as never}
             onChange={next => tableSocket.setSheetGroup(room.id, sheet.id, next || null)}
@@ -161,10 +164,10 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
         </Field>
       ) : null}
       {!isDesk && kinds.length && editable ? (
-        <Field label="Тип листа">
+        <Field label={t('sheet.kind')}>
           <Select
             value={sheet.of ?? ''}
-            options={[['', '— без типа —'], ...kinds.map(([key, k]) => [key, k.label ?? key] as const)] as never}
+            options={[['', t('sheet.noKind')], ...kinds.map(([key, k]) => [key, k.label ?? key] as const)] as never}
             onChange={next => tableSocket.setSheetKind(room.id, sheet.id, next || null)}
           />
         </Field>
@@ -178,7 +181,7 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
         only={only}
         {...(paged ? { pages: { at, onAt: setAt } } : {})}
         {...(own ? { lists: pieces.bare } : {})}
-        badge={isDesk ? 'стол' : kind?.label ?? 'лист'}
+        badge={isDesk ? t('sheet.badge.desk') : kind?.label ?? t('sheet.badge.sheet')}
         onChange={editable ? (tag, value) => tableSocket.setValue(room.id, sheet.id, tag, value) : undefined}
         onShift={editable ? (tag, by) => tableSocket.shiftValue(room.id, sheet.id, tag, by) : undefined}
         mayEdit={tag => mayField(room, me, sheet.id, tag)}
@@ -197,27 +200,28 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
 }
 
 function ClaimRow({ room, sheet }: { room: RoomState; sheet: Sheet }) {
+  const t = useT('play');
   const userId = useSession(s => s.userId);
   const me = room.members.find(m => m.userId === userId);
   const holder = room.members.find(m => m.sheetId === sheet.id);
   if (me?.role === 'gm') {
     return holder
-      ? <span className="faint">играет: {holder.name}</span>
-      : <span className="faint">лист никем не закреплён — ведущий правит любой</span>;
+      ? <span className="faint">{t('sheet.claim.playing', { name: holder.name })}</span>
+      : <span className="faint">{t('sheet.claim.unclaimed')}</span>;
   }
   if (holder && holder.userId === userId) {
     return (
       <div className="inline inline--tight">
-        <Chip active>ваш лист</Chip>
-        <Button size="sm" variant="ghost" onClick={() => tableSocket.claimSheet(room.id, null)}>отпустить</Button>
+        <Chip active>{t('sheet.claim.yours')}</Chip>
+        <Button size="sm" variant="ghost" onClick={() => tableSocket.claimSheet(room.id, null)}>{t('sheet.claim.release')}</Button>
       </div>
     );
   }
-  if (holder) return <span className="faint">играет: {holder.name} — правит только он и ведущий</span>;
+  if (holder) return <span className="faint">{t('sheet.claim.playingOnly', { name: holder.name })}</span>;
   return (
     <div className="inline inline--tight">
-      <span className="faint">лист свободен</span>
-      <Button size="sm" onClick={() => tableSocket.claimSheet(room.id, sheet.id)}>играю этим листом</Button>
+      <span className="faint">{t('sheet.claim.free')}</span>
+      <Button size="sm" onClick={() => tableSocket.claimSheet(room.id, sheet.id)}>{t('sheet.claim.take')}</Button>
     </div>
   );
 }
@@ -258,6 +262,7 @@ function SidePanel({ room, sheet, lists }: { room: RoomState; sheet: Sheet; list
 }
 
 function useSheetPieces(room: RoomState, sheet: Sheet): { hangingNow: ReactNode; hangable: ReactNode; hanging: ReactNode; things: ReactNode; actions: ReactNode; bare: Record<SheetList, ReactNode> } {
+  const t = useT('play');
   const me = useSession(s => s.userId);
   const [query, setQuery] = useState('');
   const available = actionsOf(sheet, room);
@@ -313,7 +318,7 @@ function useSheetPieces(room: RoomState, sheet: Sheet): { hangingNow: ReactNode;
 
   const hangingNow = (sheet.effects ?? []).length ? (
     <Card>
-      <CardHead title="Висит сейчас" />
+      <CardHead title={t('sheet.hangingNow')} />
       <Hanging
         room={room} sheet={sheet}
         {...(editable ? { onRemove: entry => tableSocket.setBelonging(room.id, sheet.id, 'effects', entry.effectId, false) } : {})}
@@ -321,9 +326,9 @@ function useSheetPieces(room: RoomState, sheet: Sheet): { hangingNow: ReactNode;
     </Card>
   ) : null;
   const hangFold = editable ? (
-      <Fold title="Повесить…" count={hangable.length}>
+      <Fold title={t('sheet.hang')} count={hangable.length}>
         {hangable.length === 0
-          ? <span className="faint">В системе нет эффектов, которые можно повесить.</span>
+          ? <span className="faint">{t('sheet.noHangable')}</span>
           : (
             <div className="inline inline--tight">
               {hangable.filter(([id]) => !wornOf(id)).map(([id, effect]) => (
@@ -338,7 +343,7 @@ function useSheetPieces(room: RoomState, sheet: Sheet): { hangingNow: ReactNode;
   const thingsBody = (
     <>
         {items.length === 0
-          ? <span className="faint">В компендиуме мира нет предметов.</span>
+          ? <span className="faint">{t('sheet.noItems')}</span>
           : (
             <div className="stack stack--tight">
               <ThingsList system={system} kinds={thingsKinds} records={items.filter(item => copies(item.id).length)} row={item => copies(item.id).map((entry, at) => {
@@ -348,7 +353,7 @@ function useSheetPieces(room: RoomState, sheet: Sheet): { hangingNow: ReactNode;
                 return (
                   <ThingLine key={keyOf(entry)} label={labelOf(keyOf(entry))} active={!entry.off} details={itemDetails(item, entry)}
                     more={may ? (
-                      <Fold title="Значения" count={cells.length}>
+                      <Fold title={t('sheet.values')} count={cells.length}>
                         <div className="stack stack--tight">
                           {cells.map(cell => (
                             <FieldCell
@@ -361,23 +366,23 @@ function useSheetPieces(room: RoomState, sheet: Sheet): { hangingNow: ReactNode;
                       </Fold>
                     ) : null}
                     actions={<>
-                      <Chip onClick={() => belong(item.id, entry, { on: true, off: !entry.off })}>{entry.off ? 'в сумке' : 'надето'}</Chip>
-                      <Chip onClick={() => belong(item.id, entry, { on: false })}>✕ убрать</Chip>
-                      {at === 0 ? <Chip onClick={() => add(item.id)}>+ ещё один</Chip> : null}
+                      <Chip onClick={() => belong(item.id, entry, { on: true, off: !entry.off })}>{entry.off ? t('sheet.bag') : t('sheet.worn')}</Chip>
+                      <Chip onClick={() => belong(item.id, entry, { on: false })}>{t('sheet.dropItem')}</Chip>
+                      {at === 0 ? <Chip onClick={() => add(item.id)}>{t('sheet.another')}</Chip> : null}
                       {hosts.length ? (
                         <Select
                           value={entry.in ?? ''}
-                          options={[['', 'стоит отдельно'], ...hosts.map(one => [keyOf(one), `в: ${labelOf(keyOf(one))}`] as const)] as never}
+                          options={[['', t('sheet.standsAlone')], ...hosts.map(one => [keyOf(one), t('sheet.inside', { name: labelOf(keyOf(one)) })] as const)] as never}
                           onChange={next => belong(item.id, entry, { on: true, off: Boolean(entry.off), in: next || null })}
                         />
                       ) : null}
                     </>} />
                 );
               })} />
-              <span className="field__label">Добавить вещь</span>
-              <Input value={query} onChange={setQuery} placeholder="найти по названию" />
+              <span className="field__label">{t('sheet.addItem')}</span>
+              <Input value={query} onChange={setQuery} placeholder={t('sheet.findByName')} />
               {shelves.length === 0
-                ? <span className="faint">Ничего не нашлось.</span>
+                ? <span className="faint">{t('sheet.nothingFound')}</span>
                 : shelves.map(([block, list]) => (
                   <Fold key={`${block}${found ? ' ·' : ''}`} title={blockLabel(room.system, block)} count={list.length} open={found}>
                     <div className="inline inline--tight">
@@ -393,22 +398,22 @@ function useSheetPieces(room: RoomState, sheet: Sheet): { hangingNow: ReactNode;
           )}
     </>
   );
-  const things = <Fold title="Снаряжение" count={carried}>{thingsBody}</Fold>;
+  const things = <Fold title={t('sheet.gear')} count={carried}>{thingsBody}</Fold>;
   const actionsList = (
     <>
-      <Fold title="Что применить" count={available.length} open>
+      <Fold title={t('sheet.apply')} count={available.length} open>
         {available.length === 0
-          ? <span className="faint">Нечего: наденьте предмет или выучите действие ниже.</span>
+          ? <span className="faint">{t('sheet.nothingToApply')}</span>
           : available.map(action => (
             <Card key={action.id} tone="flat">
-              <span className="nowrap" title="применяется за столом">{action.label}</span>
+              <span className="nowrap" title={t('sheet.appliesAtTable')}>{action.label}</span>
             </Card>
           ))}
       </Fold>
 
-      <Fold title="Известные действия" count={known}>
+      <Fold title={t('sheet.known')} count={known}>
         {actions.length === 0
-          ? <span className="faint">В компендиуме мира нет действий.</span>
+          ? <span className="faint">{t('sheet.noActions')}</span>
           : (
             <div className="inline inline--tight">
               {actions.map(action => (
@@ -430,7 +435,7 @@ function useSheetPieces(room: RoomState, sheet: Sheet): { hangingNow: ReactNode;
       <>
         {(sheet.effects ?? []).length
           ? <Hanging room={room} sheet={sheet} {...(editable ? { onRemove: entry => tableSocket.setBelonging(room.id, sheet.id, 'effects', entry.effectId, false) } : {})} />
-          : <span className="faint">Ничего не висит.</span>}
+          : <span className="faint">{t('hanging.none')}</span>}
         {hangFold}
       </>
     ),

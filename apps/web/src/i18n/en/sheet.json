@@ -1,1 +1,69 @@
-{}
+{
+  "field": {
+    "check": "Check: {{label}}",
+    "roll": "roll",
+    "unset": "— not chosen —"
+  },
+  "record": {
+    "noSheet": "no sheet for «{{name}}»",
+    "apply": "Apply",
+    "grants": "gives:"
+  },
+  "grid": {
+    "grip": "drag the block: onto the left or right half of another to stand beside it, onto its bottom edge to go under it",
+    "height": "drag to make taller or shorter; double-click to fit the content",
+    "points": "{{n}} px",
+    "width": "drag to make wider or narrower"
+  },
+  "view": {
+    "blockSettings": "block settings",
+    "emptyPage": "This page is empty for now — pick a block and assign it to this page.",
+    "rowOfTable": "this table row",
+    "sample": {
+      "none": "none",
+      "weak": "weak",
+      "strong": "strong",
+      "one": "one",
+      "two": "two",
+      "three": "three",
+      "die": "1d8"
+    },
+    "hint": {
+      "signed": "signed number: +3, −1",
+      "big": "the main number, large",
+      "stepper": "exact count with buttons",
+      "slider": "smooth pick from bottom to top",
+      "pips": "how many are marked out of the top",
+      "charges": "supply around a circle",
+      "bar": "supply as a bar, colour by what is left",
+      "toggle": "yes or no",
+      "ring": "steps around a circle: options, yes/no or numbers",
+      "choice": "one step with buttons",
+      "chips": "several options at once",
+      "die": "die as written text"
+    },
+    "missing": "the view lacks: {{needs}} — set in the builder",
+    "needs": {
+      "min": "bottom",
+      "max": "top",
+      "join": " and "
+    },
+    "minus": "subtract: type how much",
+    "minusPlain": "minus",
+    "plus": "add: type how much",
+    "plusPlain": "plus",
+    "of": "{{n}} of {{total}}",
+    "steps": "steps are the rows of an options table; set in the builder",
+    "noOptions": "no options yet",
+    "ringTitle": "{{label}}: {{name}}. Click — next step.",
+    "barTitle": "{{label}}: {{now}} of {{max}}"
+  },
+  "sees": {
+    "owner": "owner and game master",
+    "gm": "game master only",
+    "none": "internal"
+  },
+  "things": {
+    "rowShows": "what shows in the row"
+  }
+}

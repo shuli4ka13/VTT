@@ -122,7 +122,7 @@ export function FlowHead({ word, step, context, earlier, required, edit, actions
   );
 }
 
-const BY_FORMULA = ':формула';
+const BY_FORMULA = ':formula';
 
 export function OutcomePick({ quick, value, onPick, onFormula }: {
   quick: readonly QuickRef[];

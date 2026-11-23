@@ -154,10 +154,31 @@ describe('вид отделён от логики', () => {
   });
 });
 
+const NOT_AUTHOR = ['common', 'app', 'gate', 'ui', 'sheet', 'play'];
+
+const dictionariesOf = (wanted: (area: string) => boolean): string =>
+  readdirSync(join(src, 'i18n', 'ru')).filter(name => name.endsWith('.json') && wanted(name.replace(/\.json$/, '')))
+    .map(name => JSON.stringify(JSON.parse(read(`i18n/ru/${name}`)))).join('\n');
+
+describe('словари идут за своей стороной', () => {
+  it('стол и общие части не берут авторские словари, конструктор — словарь стола', () => {
+    const wrong: string[] = [];
+    for (const file of walk(src)) {
+      if (file.endsWith('.test.ts') || file.endsWith('.test.tsx')) continue;
+      const rel = file.slice(src.length);
+      const code = readFileSync(file, 'utf8');
+      const shared = rel.startsWith('ui/') || rel.startsWith('sheet/') || rel.startsWith('screens/gate/') || rel === 'app.tsx';
+      if ((rel.startsWith('screens/play/') || shared) && code.includes('i18n/author.ts')) wrong.push(rel);
+      if ((rel.startsWith('screens/constructor/') || rel.startsWith('screens/compendium/') || shared) && code.includes('i18n/play.ts')) wrong.push(rel);
+    }
+    expect(wrong).toEqual([]);
+  });
+});
+
 describe('граница держится СБОРКОЙ, а не только импортами', () => {
   it('маркеры живые: каждый встречается в исходниках своей стороны', () => {
-    const author = sourceOf(['screens/constructor', 'screens/compendium']);
-    const play = sourceOf(['screens/play']);
+    const author = sourceOf(['screens/constructor', 'screens/compendium']) + dictionariesOf(area => !NOT_AUTHOR.includes(area));
+    const play = sourceOf(['screens/play']) + dictionariesOf(area => area === 'play');
     for (const trace of AUTHOR_MARKERS) expect(author.includes(trace), `маркер автора «${trace}» мёртв`).toBe(true);
     for (const trace of PLAY_MARKERS) expect(play.includes(trace), `маркер партии «${trace}» мёртв`).toBe(true);
   });

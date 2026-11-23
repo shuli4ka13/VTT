@@ -1,3 +1,239 @@
 {
-  "shownLang": "display language"
+  "shownLang": "display language",
+  "form": {
+    "expect": "Expected — dice at average, questions answered “no”:\n{{text}}",
+    "willAsk": "will ask before the roll: {{list}}",
+    "beforeRoll": "{{label}} · before the roll",
+    "titleGm": "{{label}} · the game master says",
+    "byField": "from the field: {{words}}",
+    "perTargetFirst": "asks for each target — choose targets first",
+    "pickOption": "— which option —"
+  },
+  "col": {
+    "system": "System",
+    "author": "Author",
+    "world": "World",
+    "table": "Table",
+    "gm": "Game master",
+    "atTable": "At the table",
+    "created": "Created",
+    "changed": "Changed"
+  },
+  "build": {
+    "title": "Build a world",
+    "sub": "A world is a system plus the chosen books. A table is made from it later.",
+    "built": "World “{{name}}” is built — it is in the list below.",
+    "noSystems": {
+      "title": "No published systems",
+      "hint": "A world is built from a published system — someone has to publish one first."
+    },
+    "fromSystem": "From which system",
+    "otherSystem": "another system",
+    "system": "System: <b>{{title}}</b>",
+    "books": "Which books to take",
+    "noBooks": "No published books for this system — the world will be built without items.",
+    "bookMeta": " · {{author}} · records: {{n}}",
+    "namePlaceholder": "world name",
+    "submit": "Build a world",
+    "busy": "building…"
+  },
+  "combat": {
+    "waiting": "the table is waiting for an answer",
+    "turnOf": "Round {{round}} · {{name}}'s turn",
+    "idle": "No combat",
+    "gameTime": "game time",
+    "order": "turn order",
+    "initiative": "initiative",
+    "leaveTitle": "{{name}} leaves combat",
+    "leaveLabel": "{{name}}: leave combat",
+    "next": "Next turn",
+    "join": "Join…",
+    "stop": "End combat",
+    "start": "Start combat…",
+    "unit": "time unit",
+    "pass": "Time passed",
+    "scene": "Close the scene",
+    "shortRest": "Short rest",
+    "longRest": "Long rest",
+    "joinTitle": "Join combat",
+    "joinSub": "Those who join roll initiative and take their place in the turn order",
+    "joinGo": "Join",
+    "startTitle": "Start combat",
+    "startRollSub": "The marked roll initiative — order by the roll",
+    "startOrderSub": "Turn order from top to bottom, no roll",
+    "rollInitiative": "Roll initiative",
+    "startInOrder": "Start in this order",
+    "setOrder": "Set the order",
+    "up": "{{name}} up",
+    "down": "{{name}} down"
+  },
+  "hanging": {
+    "none": "Nothing is hanging.",
+    "forever": "until removed",
+    "remove": "remove",
+    "removeNamed": "remove “{{name}}”"
+  },
+  "journal": {
+    "empty": "Everything that happens at the table will appear here.",
+    "secret": "visible to the game master only",
+    "secretLabel": "secret"
+  },
+  "pending": {
+    "mine": "Waiting for your answer · <b>{{question}}</b>",
+    "other": "The table is waiting for a decision · {{question}}",
+    "go": "to the question"
+  },
+  "lobby": {
+    "tab": {
+      "rooms": "Tables",
+      "worlds": "Worlds",
+      "build": "Build a world"
+    },
+    "order": {
+      "time": "by time",
+      "world": "by world",
+      "system": "by system"
+    },
+    "rooms": {
+      "title": "Tables",
+      "refresh": "Refresh",
+      "none": "No tables yet",
+      "noneHint": "Create a table from a built world — in the “Worlds” tab.",
+      "gmDeletes": "Only its game master can delete a table",
+      "enter": "Enter"
+    },
+    "worlds": {
+      "title": "Built worlds",
+      "none": "No worlds. Build the first one in the “Build a world” tab — from a published system and its books.",
+      "createRoom": "Create a table",
+      "roomTitle": "Table “{{title}}”"
+    }
+  },
+  "sheet": {
+    "tableSheets": "Table sheets",
+    "shared": "shared by all",
+    "group": "group",
+    "badge": {
+      "sheet": "sheet",
+      "desk": "table"
+    },
+    "none": "No sheets yet",
+    "noneHint": "The world came without characters — add the first one below.",
+    "newName": "new sheet name",
+    "noKind": "— no type —",
+    "add": "+ sheet",
+    "pickLeft": "Choose a sheet on the left",
+    "pickLeftHint": "The one you play.",
+    "side": "Gear and actions",
+    "deskNote": "the shared table of the room — everyone sees it, the game master edits it",
+    "drop": "Delete sheet",
+    "claimsFor": "claim for the roll from the sheet:",
+    "second": "second ability:",
+    "same": "the same",
+    "difficulty": "difficulty:",
+    "groupLabel": "Group",
+    "noGroup": "— not in a group —",
+    "kind": "Sheet type",
+    "claim": {
+      "playing": "played by: {{name}}",
+      "unclaimed": "the sheet is not taken by anyone — the game master edits any",
+      "yours": "your sheet",
+      "release": "release",
+      "playingOnly": "played by: {{name}} — only they and the game master edit it",
+      "free": "the sheet is free",
+      "take": "I play this sheet"
+    },
+    "hangingNow": "Hanging now",
+    "hang": "Hang…",
+    "noHangable": "The system has no effects that can be hung.",
+    "noItems": "The world's book has no items.",
+    "values": "Values",
+    "bag": "in the bag",
+    "worn": "worn",
+    "dropItem": "✕ remove",
+    "another": "+ one more",
+    "standsAlone": "stands alone",
+    "inside": "in: {{name}}",
+    "addItem": "Add an item",
+    "findByName": "find by name",
+    "nothingFound": "Nothing found.",
+    "gear": "Gear",
+    "apply": "What to use",
+    "nothingToApply": "Nothing: wear an item or learn an action below.",
+    "appliesAtTable": "used at the table",
+    "known": "Known actions",
+    "noActions": "The world's book has no actions."
+  },
+  "table": {
+    "tab": {
+      "table": "Table",
+      "log": "Journal",
+      "logCount": "Journal · {{n}}"
+    },
+    "leave": "leave",
+    "atTable": "At the table",
+    "tokens": "Tokens",
+    "show": "show:",
+    "nothing": "— nothing —",
+    "nobody": "Nobody at the table yet",
+    "nobodyHint": "Add the first sheet below.",
+    "offField": "not on the field — drag to a cell; drag here to take off the field",
+    "journal": "Journal",
+    "piece": {
+      "turnOf": "{{name}} — has the turn",
+      "actor": "actor",
+      "target": "target — click to remove",
+      "click": "click: target; if nobody acts — becomes the actor",
+      "turn": "turn"
+    },
+    "field": {
+      "aim": "{{name}}: to {{from}} — {{words}}",
+      "where": "Where to put {{name}}? Click a cell",
+      "move": "Move {{name}}",
+      "remove": "Take off the field",
+      "label": "Field"
+    },
+    "newSheet": {
+      "name": "name",
+      "kind": "sheet type",
+      "create": "Add",
+      "done": "done"
+    },
+    "desk": {
+      "title": "Table",
+      "mine": "shared by all — you edit it",
+      "gm": "shared by all — the game master edits it"
+    },
+    "prompt": {
+      "who": "the sheet owner or the game master answers",
+      "cancel": "Cancel the action",
+      "apply": "Apply",
+      "skip": "Skip"
+    },
+    "actions": {
+      "who": "Who acts?",
+      "whoHint": "Click a token — that sheet will act.",
+      "acts": "{{name}} acts",
+      "at": "at {{name}}",
+      "noTargets": "no targets — choose a target, several are allowed",
+      "self": "on self",
+      "clear": "clear choice",
+      "edits": "Roll edits",
+      "theirs": "targets: {{word}}",
+      "nothingClaimed": "nothing claimed",
+      "rollsOf": "{{name}}'s rolls",
+      "rollsTargets": "targets' rolls",
+      "secret": "🔒 secret",
+      "secretOn": "only you see the rolls and actions, players see “The game master rolls in secret”",
+      "secretOff": "everyone sees the rolls",
+      "none": "This sheet has no usable actions — wear an item or learn a move on the character sheet.",
+      "wontWork": "won't work: {{why}}"
+    },
+    "items": {
+      "byGm": "items edited by: game master",
+      "toggle": "allow or forbid editing item values",
+      "byList": "items edited by: {{names}}",
+      "gm": "game master"
+    }
+  }
 }

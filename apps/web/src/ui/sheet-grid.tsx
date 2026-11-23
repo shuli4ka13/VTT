@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
+import { useT } from '../i18n/index.ts';
 
 export interface GridColumn {
   key: string;
@@ -27,6 +28,7 @@ function useWidths(id: string) {
 }
 
 function HeadCell({ column, width, onResize }: { column: GridColumn; width: number; onResize: (width: number) => void }) {
+  const t = useT('ui');
   const drag = (e: React.PointerEvent) => {
     e.preventDefault();
     const start = e.clientX;
@@ -42,7 +44,7 @@ function HeadCell({ column, width, onResize }: { column: GridColumn; width: numb
           {column.label}{column.sub ? <span className="sheet-grid__sub">{column.sub}</span> : null}
         </button>
       ) : <span className="sheet-grid__title">{column.label}</span>}
-      <span className="sheet-grid__grip" role="separator" aria-label={`ширина колонки «${column.label}»`} onPointerDown={drag} />
+      <span className="sheet-grid__grip" role="separator" aria-label={t('grid.resize', { name: column.label })} onPointerDown={drag} />
     </div>
   );
 }

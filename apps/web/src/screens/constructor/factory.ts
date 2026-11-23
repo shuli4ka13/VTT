@@ -6,7 +6,7 @@ import type { System, Effect, Handler, Binding, Step, SystemConstant, RollEdit, 
 import type { SheetNames } from '../../ui/formula-chips.tsx';
 import { filledStep } from './effects/call-args.ts';
 import { isThrow } from './cards-kind.ts';
-import { dataT, t } from '../../i18n/index.ts';
+import { dataT, t } from '../../i18n/author.ts';
 
 export interface Made<T> { key: string; value: T }
 

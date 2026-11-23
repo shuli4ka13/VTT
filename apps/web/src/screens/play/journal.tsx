@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { LogEntry } from '@vtt/schema';
+import { useT } from '../../i18n/play.ts';
 
 const timeOf = (at: string): string => {
   const stamp = new Date(at);
@@ -9,11 +10,12 @@ const timeOf = (at: string): string => {
 };
 
 export function Journal({ log }: { log: LogEntry[] }) {
+  const t = useT('play');
   const end = useRef<HTMLDivElement>(null);
   const last = log.at(-1)?.id;
   useEffect(() => { end.current?.scrollIntoView?.({ block: 'end' }); }, [last]);
 
-  if (!log.length) return <span className="faint">Здесь появится всё, что происходит за столом.</span>;
+  if (!log.length) return <span className="faint">{t('journal.empty')}</span>;
   return (
     <div className="log">
       {log.slice(-200).map(entry => <Line key={entry.id} entry={entry} />)}
@@ -23,6 +25,7 @@ export function Journal({ log }: { log: LogEntry[] }) {
 }
 
 function Line({ entry }: { entry: LogEntry }) {
+  const t = useT('play');
   const lines = entry.lines?.length ? entry.lines : null;
   const head = lines ? lines[0]! : entry.text;
   const rest = lines ? lines.slice(1) : [];
@@ -33,12 +36,12 @@ function Line({ entry }: { entry: LogEntry }) {
       <span className="log-line__at">{timeOf(entry.at)}</span>
       <div className="log-line__body">
         <span className="log-line__head">
-          {entry.hidden ? <span title="видно только ведущему" aria-label="втайне">🔒 </span> : null}{head}
+          {entry.hidden ? <span title={t('journal.secret')} aria-label={t('journal.secretLabel')}>🔒 </span> : null}{head}
         </span>
         {outcome ? <span className="log-line__outcome">{outcome}</span> : null}
         {details.length ? (
           <details className="log-line__more">
-            <summary>ещё</summary>
+            <summary>{t('common:more')}</summary>
             {details.map((line, i) => <div key={i} className="log-line__detail">{line}</div>)}
           </details>
         ) : null}

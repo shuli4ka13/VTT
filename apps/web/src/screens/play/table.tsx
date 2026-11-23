@@ -17,6 +17,7 @@ import { CombatBar } from './combat.tsx';
 import { Journal } from './journal.tsx';
 import { Hanging } from './hanging.tsx';
 import { QUESTION_ID } from './pending-bar.tsx';
+import { useT } from '../../i18n/play.ts';
 import './table.css';
 
 export function TableScreen() {
@@ -25,6 +26,7 @@ export function TableScreen() {
 }
 
 function RoomTable({ room }: { room: RoomState }) {
+  const t = useT('play');
   const log = useRoom(s => s.log);
   const error = useRoom(s => s.error);
   const setError = useRoom(s => s.setError);
@@ -63,15 +65,15 @@ function RoomTable({ room }: { room: RoomState }) {
   return (
     <div className={`at-table at-table--${tab}`}>
       <div className="at-table__tabs">
-        <Tabs value={tab} options={[{ key: 'table', label: 'Стол' }, { key: 'log', label: `Журнал${log.length ? ` · ${log.length}` : ''}` }]} onChange={setTab} />
+        <Tabs value={tab} options={[{ key: 'table', label: t('table.tab.table') }, { key: 'log', label: log.length ? t('table.tab.logCount', { n: log.length }) : t('table.tab.log') }]} onChange={setTab} />
       </div>
       <Columns
         left={{
           head: room.title,
-          tools: <><LangSwitch /><Button size="sm" variant="ghost" onClick={leave}>выйти</Button></>,
+          tools: <><LangSwitch /><Button size="sm" variant="ghost" onClick={leave}>{t('table.leave')}</Button></>,
           body: (
             <div className="stack stack--tight">
-              <span className="faint">За столом</span>
+              <span className="faint">{t('table.atTable')}</span>
               <div className="inline inline--tight">
                 {room.members.map(member => <Chip key={member.userId}>{member.name}</Chip>)}
               </div>
@@ -89,16 +91,16 @@ function RoomTable({ room }: { room: RoomState }) {
 
               <Card>
                 <CardHead
-                  title="Фишки"
+                  title={t('table.tokens')}
                   actions={
                     <>
-                      <span className="faint">показывать:</span>
+                      <span className="faint">{t('table.show')}</span>
                       <select
                         className="select tokens__pin"
                         value={pinned}
                         onChange={e => setPinned(e.target.value)}
                       >
-                        <option value="">— ничего —</option>
+                        <option value="">{t('table.nothing')}</option>
                         {fieldsOf(room.system)
                           .filter(f => f.lives !== 'desk' && f.value.kind === 'stored' && f.value.type === 'number')
                           .filter(f => !isService(f) && (gm || !isSecret(f)))
@@ -107,7 +109,7 @@ function RoomTable({ room }: { room: RoomState }) {
                     </>
                   }
                 />
-                {people.length ? null : <Empty title="За столом пока никого" hint="Заведите первый лист ниже." />}
+                {people.length ? null : <Empty title={t('table.nobody')} hint={t('table.nobodyHint')} />}
                 {grid ? (
                   <Field
                     room={room}
@@ -129,7 +131,7 @@ function RoomTable({ room }: { room: RoomState }) {
                     if (id && room.places?.[id]) tableSocket.placePiece(room.id, id, null);
                   }) : undefined}
                 >
-                  {grid ? <span className="faint tokens__label">не на поле — перетащите на клетку; сюда — убрать с поля</span> : null}
+                  {grid ? <span className="faint tokens__label">{t('table.offField')}</span> : null}
                   {(grid ? off : people).map(sheet => <Piece key={sheet.id} sheet={sheet} room={room} pick={pick} pinned={pinned} fixed={!grid || isGroup(sheet, room.sheets)} />)}
                 </div>
                 <NewSheet room={room} />
@@ -151,7 +153,7 @@ function RoomTable({ room }: { room: RoomState }) {
             </>
           ),
         }}
-        right={{ head: 'Журнал', pinned: true, body: <Journal key={tab} log={log} /> }}
+        right={{ head: t('table.journal'), pinned: true, body: <Journal key={tab} log={log} /> }}
       />
     </div>
   );
@@ -168,6 +170,7 @@ interface Pick {
 function Piece({ sheet, room, pick, pinned, field, fixed }: {
   sheet: Sheet; room: RoomState; pick: Pick; pinned: string; field?: boolean; fixed?: boolean;
 }) {
+  const t = useT('play');
   const { from, to, turn, party } = pick;
   const name = sheet.name ?? sheet.id;
   const shown = useMemo(() => {
@@ -181,8 +184,8 @@ function Piece({ sheet, room, pick, pinned, field, fixed }: {
       onDragStart={fixed ? undefined : e => { e.dataTransfer.setData('text/plain', sheet.id); e.dataTransfer.effectAllowed = 'move'; }}
       className={`token ${field ? 'token--field' : ''} ${party.size ? (party.has(sheet.id) ? 'token--ally' : 'token--foe') : ''} ${sheet.id === from ? 'token--from' : ''} ${to.includes(sheet.id) ? 'token--to' : ''} ${sheet.id === turn ? 'token--turn' : ''}`}
       title={field
-        ? `${name}${sheet.id === turn ? ' — ходит' : ''}`
-        : sheet.id === from ? 'действует' : to.includes(sheet.id) ? 'цель — клик снимает' : 'клик: цель; если никто не действует — станет действующим'}
+        ? (sheet.id === turn ? t('table.piece.turnOf', { name }) : name)
+        : sheet.id === from ? t('table.piece.actor') : to.includes(sheet.id) ? t('table.piece.target') : t('table.piece.click')}
       onClick={() => pick.onPick(sheet.id)}
     >
       <span className="token__face" aria-hidden="true">
@@ -190,7 +193,7 @@ function Piece({ sheet, room, pick, pinned, field, fixed }: {
         {to.includes(sheet.id) ? <span className="token__aim">◎</span> : null}
       </span>
       {field ? null : <span className="token__name">{name}</span>}
-      {field ? null : sheet.id === turn ? <span className="token__turn">ходит</span> : null}
+      {field ? null : sheet.id === turn ? <span className="token__turn">{t('table.piece.turn')}</span> : null}
       {field || !pinned ? null : <span className="token__hp num">{String(shown ?? '—')}</span>}
       {field ? null : <Hanging room={room} sheet={sheet} compact />}
     </button>
@@ -210,6 +213,7 @@ function Field({ room, people, pick, pinned, sender, targets, moving, setMoving 
   moving: boolean;
   setMoving: (on: boolean) => void;
 }) {
+  const t = useT('play');
   const system = room.system as System;
   const places = room.places ?? {};
   const standing = people.filter(sheet => places[sheet.id]);
@@ -223,7 +227,7 @@ function Field({ room, people, pick, pinned, sender, targets, moving, setMoving 
   const aims = sender && places[sender.id]
     ? targets.filter(sheet => sheet.id !== sender.id).flatMap(sheet => {
       const distance = distanceOf(system, places, sender.id, sheet.id);
-      return distance === null ? [] : [`${sheet.name}: до ${sender.name} — ${distanceWords(system, distance)}`];
+      return distance === null ? [] : [t('table.field.aim', { name: sheet.name, from: sender.name, words: distanceWords(system, distance) })];
     })
     : [];
   return (
@@ -231,12 +235,12 @@ function Field({ room, people, pick, pinned, sender, targets, moving, setMoving 
       {sender ? (
         <div className="inline inline--tight">
           <Button size="sm" variant={moving ? 'primary' : 'ghost'} onClick={() => setMoving(!moving)}>
-            {moving ? `Куда ставим ${sender.name}? Щёлкните клетку` : `Переставить ${sender.name}`}
+            {moving ? t('table.field.where', { name: sender.name }) : t('table.field.move', { name: sender.name })}
           </Button>
-          {places[sender.id] ? <Button size="sm" variant="ghost" onClick={() => { tableSocket.placePiece(room.id, sender.id, null); setMoving(false); }}>Убрать с поля</Button> : null}
+          {places[sender.id] ? <Button size="sm" variant="ghost" onClick={() => { tableSocket.placePiece(room.id, sender.id, null); setMoving(false); }}>{t('table.field.remove')}</Button> : null}
         </div>
       ) : null}
-      <div className="field-board" aria-label="Поле">
+      <div className="field-board" aria-label={t('table.field.label')}>
         <div className="field-board__grid" style={{ gridTemplateColumns: `repeat(${cols}, 40px)`, gridTemplateRows: `repeat(${rows}, 40px)` }}>
           {Array.from({ length: rows * cols }, (_, i) => {
             const x = i % cols;
@@ -268,6 +272,7 @@ function Field({ room, people, pick, pinned, sender, targets, moving, setMoving 
 }
 
 function NewSheet({ room }: { room: RoomState }) {
+  const t = useT('play');
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const kinds = sheetKinds(room.system as System);
@@ -278,33 +283,34 @@ function NewSheet({ room }: { room: RoomState }) {
     tableSocket.createSheet(room.id, trimmed, of || undefined);
     setName('');
   };
-  if (!open) return <div><Button size="sm" variant="ghost" onClick={() => setOpen(true)}>+ лист</Button></div>;
+  if (!open) return <div><Button size="sm" variant="ghost" onClick={() => setOpen(true)}>{t('sheet.add')}</Button></div>;
   return (
     <div className="new-sheet">
-      <Input value={name} onChange={setName} placeholder="имя" autoFocus
+      <Input value={name} onChange={setName} placeholder={t('table.newSheet.name')} autoFocus
         onKeyDown={e => { if (e.key === 'Enter') create(); if (e.key === 'Escape') setOpen(false); }} />
       {kinds.length ? (
         <Select
           value={of}
-          label="тип листа"
-          options={[['', '— без типа —'], ...kinds.map(([key, kind]) => [key, kind.label ?? key] as const)] as never}
+          label={t('table.newSheet.kind')}
+          options={[['', t('sheet.noKind')], ...kinds.map(([key, kind]) => [key, kind.label ?? key] as const)] as never}
           onChange={setOf}
         />
       ) : null}
-      <Button size="sm" variant="primary" disabled={!name.trim()} onClick={create}>Завести</Button>
-      <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>готово</Button>
+      <Button size="sm" variant="primary" disabled={!name.trim()} onClick={create}>{t('table.newSheet.create')}</Button>
+      <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>{t('table.newSheet.done')}</Button>
     </div>
   );
 }
 
 function DeskPanel({ room, desk }: { room: RoomState; desk: Sheet }) {
+  const t = useT('play');
   const userId = useSession(s => s.userId);
   const gm = room.members.some(m => m.userId === userId && m.role === 'gm');
   const system = room.system as System;
   const reader = useReader(system, desk, room.compendium, null, 'desk');
   return (
     <Card>
-      <CardHead title="Стол" actions={<span className="faint">{gm ? 'общий для всех — правите вы' : 'общий для всех — правит ведущий'}</span>} />
+      <CardHead title={t('table.desk.title')} actions={<span className="faint">{gm ? t('table.desk.mine') : t('table.desk.gm')}</span>} />
       <div className="row">
         {fieldsFor(system, 'desk').filter(field => seesField(room, userId, desk.id, field)).map(field => {
           const open = gm && mayField(room, userId, desk.id, field.tag);
@@ -324,11 +330,12 @@ function DeskPanel({ room, desk }: { room: RoomState; desk: Sheet }) {
 export { mayAnswer };
 
 function Prompt({ room, onError }: { room: RoomState; onError: (message: string | null) => void }) {
+  const t = useT('play');
   const pending = room.pending!;
   const userId = useSession(s => s.userId);
   const gm = room.members.some(m => m.userId === userId && m.role === 'gm');
   const may = mayAnswer(room, userId, pending.sheetId);
-  const why = may ? undefined : 'отвечает владелец листа или ведущий';
+  const why = may ? undefined : t('table.prompt.who');
   const [chosen, setChosen] = useState<string[]>([]);
   const reply = (ids: string[]) => {
     onError(null);
@@ -346,7 +353,7 @@ function Prompt({ room, onError }: { room: RoomState; onError: (message: string 
           ))}
           {gm ? (
             <DangerButton size="sm" onConfirm={() => { onError(null); tableSocket.cancel({ roomId: room.id, pendingId: pending.id }); }}>
-              Отменить действие
+              {t('table.prompt.cancel')}
             </DangerButton>
           ) : null}
           {may ? null : <span className="faint">{why}</span>}
@@ -366,11 +373,11 @@ function Prompt({ room, onError }: { room: RoomState; onError: (message: string 
         ))}
       </div>
       <div className="inline inline--tight">
-        <Button size="sm" variant="primary" disabled={!chosen.length || !may} title={why} onClick={() => reply(chosen)}>Применить</Button>
-        <Button size="sm" disabled={!may} title={why} onClick={() => reply([])}>Пропустить</Button>
+        <Button size="sm" variant="primary" disabled={!chosen.length || !may} title={why} onClick={() => reply(chosen)}>{t('table.prompt.apply')}</Button>
+        <Button size="sm" disabled={!may} title={why} onClick={() => reply([])}>{t('table.prompt.skip')}</Button>
         {gm ? (
           <DangerButton size="sm" onConfirm={() => { onError(null); tableSocket.cancel({ roomId: room.id, pendingId: pending.id }); }}>
-            Отменить действие
+            {t('table.prompt.cancel')}
           </DangerButton>
         ) : null}
         {may ? null : <span className="faint">{why}</span>}
@@ -424,6 +431,7 @@ function Actions({ room, sender, targets, places, refused, onError, onClear, onS
   onSelf: () => void;
   onError: (message: string | null) => void;
 }) {
+  const t = useT('play');
   const [mine, setMine] = useState<string[]>([]);
   const [theirs, setTheirs] = useState<string[]>([]);
   const said = useRef<HTMLDivElement>(null);
@@ -449,7 +457,7 @@ function Actions({ room, sender, targets, places, refused, onError, onClear, onS
     (list.includes(key) ? list.filter(k => k !== key) : [...list, key]);
 
   if (!sender) {
-    return <Empty title="Кто действует?" hint="Кликните фишку — этот лист и будет действовать." />;
+    return <Empty title={t('table.actions.who')} hint={t('table.actions.whoHint')} />;
   }
 
   let available: { id: string; label: string }[] = [];
@@ -485,7 +493,7 @@ function Actions({ room, sender, targets, places, refused, onError, onClear, onS
             ...(request.inputs ? { inputs: request.inputs } : {}),
             ...claimsOf(sender.id, targets, mine, theirs),
           });
-        return found.trouble ? `не выйдет: ${found.trouble}` : found.lines.join('\n');
+        return found.trouble ? t('table.actions.wontWork', { why: found.trouble }) : found.lines.join('\n');
       }}
       onAct={request => {
         onError(null);
@@ -505,38 +513,38 @@ function Actions({ room, sender, targets, places, refused, onError, onClear, onS
   return (
     <Card>
       <CardHead
-        title={`${sender.name} действует`}
+        title={t('table.actions.acts', { name: sender.name })}
         badge={targets.length
-          ? <span className="inline inline--tight">{targets.map(sheet => <Chip key={sheet.id}>по {sheet.name}</Chip>)}</span>
-          : <span className="faint">без целей — выберите цель, можно несколько</span>}
+          ? <span className="inline inline--tight">{targets.map(sheet => <Chip key={sheet.id}>{t('table.actions.at', { name: sheet.name })}</Chip>)}</span>
+          : <span className="faint">{t('table.actions.noTargets')}</span>}
         actions={<>
-          {targets.some(sheet => sheet.id === sender.id) ? null : <Button size="sm" variant="ghost" onClick={onSelf}>на себя</Button>}
-          <Button size="sm" variant="ghost" onClick={onClear}>сбросить выбор</Button>
+          {targets.some(sheet => sheet.id === sender.id) ? null : <Button size="sm" variant="ghost" onClick={onSelf}>{t('table.actions.self')}</Button>}
+          <Button size="sm" variant="ghost" onClick={onClear}>{t('table.actions.clear')}</Button>
         </>}
       />
       {claimable.length && available.length ? (
         <Fold
-          title="Правки броска"
+          title={t('table.actions.edits')}
           summary={[...mine, ...theirs].length
-            ? [...mine.map(k => `${sender.name}: ${wordOf(k)}`), ...theirs.map(k => `цели: ${wordOf(k)}`)].join(', ')
-            : 'ничего не заявлено'}
+            ? [...mine.map(k => `${sender.name}: ${wordOf(k)}`), ...theirs.map(k => t('table.actions.theirs', { word: wordOf(k) }))].join(', ')
+            : t('table.actions.nothingClaimed')}
         >
           <div className="stack stack--tight">
-            <ClaimRow label={`броски ${sender.name}`} words={claimable} picked={mine} onToggle={key => setMine(flip(mine, key))} />
-            {targets.length ? <ClaimRow label="броски целей" words={claimable} picked={theirs} onToggle={key => setTheirs(flip(theirs, key))} /> : null}
+            <ClaimRow label={t('table.actions.rollsOf', { name: sender.name })} words={claimable} picked={mine} onToggle={key => setMine(flip(mine, key))} />
+            {targets.length ? <ClaimRow label={t('table.actions.rollsTargets')} words={claimable} picked={theirs} onToggle={key => setTheirs(flip(theirs, key))} /> : null}
           </div>
         </Fold>
       ) : null}
       {leading ? (
         <div className="inline inline--tight">
-          <Chip active={secret} onClick={() => setSecret(!secret)}>🔒 втайне</Chip>
-          <span className="faint">{secret ? 'броски и действия видите только вы, игрокам — «Ведущий бросает втайне»' : 'броски видят все'}</span>
+          <Chip active={secret} onClick={() => setSecret(!secret)}>{t('table.actions.secret')}</Chip>
+          <span className="faint">{secret ? t('table.actions.secretOn') : t('table.actions.secretOff')}</span>
         </div>
       ) : null}
       {refused ? <div ref={said}><Verdict tone="bad">{refused}</Verdict></div> : null}
       {available.length === 0
         ? <span className="faint">
-            У этого листа нет применимых действий — наденьте предмет или выучите приём на листе персонажа.
+            {t('table.actions.none')}
           </span>
         : (
           <>
@@ -557,18 +565,19 @@ const initialsOf = (name: string): string =>
   name.split(/[\s-]+/u).filter(Boolean).slice(0, 2).map(word => word[0]!.toUpperCase()).join('');
 
 function ItemRights({ room }: { room: RoomState }) {
+  const t = useT('play');
   const myId = useSession(s => s.userId);
   const players = room.members.filter(member => member.role !== 'gm');
   const allowers = players.filter(member => mayAllowItems(room, myId, member.userId));
   if (allowers.length) {
     return (
       <div className="inline inline--tight">
-        <span className="faint">вещи меняют: ведущий</span>
+        <span className="faint">{t('table.items.byGm')}</span>
         {players.map(member => (
           <Chip
             key={member.userId}
             active={Boolean(member.editsItems)}
-            title="разрешить или запретить менять значения вещей"
+            title={t('table.items.toggle')}
             onClick={() => tableSocket.allowItems(room.id, member.userId, !member.editsItems)}
           >
             {member.name}
@@ -577,6 +586,6 @@ function ItemRights({ room }: { room: RoomState }) {
       </div>
     );
   }
-  const names = ['ведущий', ...players.filter(member => member.editsItems).map(member => member.name)];
-  return <span className="faint">вещи меняют: {names.join(', ')}</span>;
+  const names = [t('table.items.gm'), ...players.filter(member => member.editsItems).map(member => member.name)];
+  return <span className="faint">{t('table.items.byList', { names: names.join(', ') })}</span>;
 }

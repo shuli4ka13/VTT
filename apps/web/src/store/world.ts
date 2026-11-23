@@ -8,7 +8,7 @@ import { lazyStorage } from './lazy-storage.ts';
 import { useFormulaBar } from './formula-bar.ts';
 import { useLookup } from './lookup.ts';
 import { useLocale } from './locale.ts';
-import { dataT, t } from '../i18n/index.ts';
+import { dataT, t } from '../i18n/author.ts';
 
 const fresh = (system: System): System => { forgetFields(system); return system; };
 

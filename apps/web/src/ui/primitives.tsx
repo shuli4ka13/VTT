@@ -3,6 +3,7 @@ import { Combo } from './combo.tsx';
 import { createPortal } from 'react-dom';
 import type { ReactNode, ChangeEvent, FocusEvent, KeyboardEvent } from 'react';
 import { useFocusNew } from './focus-new.ts';
+import { useT } from '../i18n/index.ts';
 
 export function Card({ children, tone, className = '', label }: {
   children: ReactNode;
@@ -38,9 +39,10 @@ export function Field({ label, hint, tip, error, needed, children }: {
   needed?: boolean;
   children: ReactNode;
 }) {
+  const t = useT('ui');
   return (
     <label className={`field ${needed ? 'field--needed' : ''}`} {...(tip ? { title: tip } : {})}>
-      <span className="field__label">{label}{needed ? <span aria-hidden>·заполнить</span> : null}</span>
+      <span className="field__label">{label}{needed ? <span aria-hidden>{t('field.needed')}</span> : null}</span>
       {children}
       {hint ? <span className="field__hint">{hint}</span> : null}
       {error ? <span className="field__error">{error}</span> : null}
@@ -221,6 +223,8 @@ export function DangerButton({ children, onConfirm, size, title, keep }: {
   title?: string;
   keep?: { label: string; run: () => void } | undefined;
 }) {
+  const t = useT('ui');
+  const common = useT('common');
   const [armed, setArmed] = useState(false);
   if (!armed) {
     return (
@@ -231,9 +235,9 @@ export function DangerButton({ children, onConfirm, size, title, keep }: {
   }
   return (
     <span className="danger-confirm">
-      <Button size={size} variant="danger" onClick={onConfirm}>{keep ? 'вместе с шагами' : 'точно убрать'}</Button>
+      <Button size={size} variant="danger" onClick={onConfirm}>{keep ? t('danger.withSteps') : t('danger.sure')}</Button>
       {keep ? <Button size={size} variant="ghost" onClick={keep.run}>{keep.label}</Button> : null}
-      <Button size={size} variant="ghost" onClick={() => setArmed(false)}>отмена</Button>
+      <Button size={size} variant="ghost" onClick={() => setArmed(false)}>{common('cancel')}</Button>
     </span>
   );
 }
@@ -269,6 +273,7 @@ export function Chip({ children, onClick, onRemove, active, title }: {
   active?: boolean;
   title?: string;
 }) {
+  const t = useT('common');
   const classes = ['chip'];
   if (onClick) classes.push('chip--action');
   if (active) classes.push('chip--on');
@@ -282,7 +287,7 @@ export function Chip({ children, onClick, onRemove, active, title }: {
     >
       <span className="nowrap">{children}</span>
       {onRemove ? (
-        <button type="button" className="chip__x" aria-label="убрать" onClick={e => { e.stopPropagation(); onRemove(); }}>
+        <button type="button" className="chip__x" aria-label={t('removeLower')} onClick={e => { e.stopPropagation(); onRemove(); }}>
           ×
         </button>
       ) : null}
@@ -348,6 +353,7 @@ export function Drawer({ open, title, sub, onClose, children, footer }: {
   children: ReactNode;
   footer?: ReactNode;
 }) {
+  const t = useT('common');
   const [leaving, setLeaving] = useState(false);
 
   const leave = useCallback(() => {
@@ -376,7 +382,7 @@ export function Drawer({ open, title, sub, onClose, children, footer }: {
             <span className="drawer__title">{title}</span>
             {sub ? <span className="faint">{sub}</span> : null}
           </div>
-          <button type="button" className="drawer__x" aria-label="закрыть" onClick={leave}>×</button>
+          <button type="button" className="drawer__x" aria-label={t('close')} onClick={leave}>×</button>
         </header>
         <div className="drawer__body">{children}</div>
         {footer ? <footer className="drawer__foot">{footer}</footer> : null}

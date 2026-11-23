@@ -1,7 +1,7 @@
 import type { System } from '@vtt/schema';
 import { fieldsOf, NO_BLOCK, blockNames, blockLabel } from '@vtt/engine';
 import { freeId } from '../../store/world.ts';
-import { dataT } from '../../i18n/index.ts';
+import { dataT } from '../../i18n/author.ts';
 import type { Field } from '@vtt/engine';
 
 export interface GroupNode {

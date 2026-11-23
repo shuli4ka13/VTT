@@ -72,7 +72,7 @@ const returns = (rows: readonly (readonly [string, string, string, string, strin
     box.select(box.cell('Вид', row), kind);
     if (table) within(card()).select(within(card()).cell('Таблица', row), table);
     if (from.startsWith('=')) {
-      box.select(box.cell('Откуда', row), ':формула');
+      box.select(box.cell('Откуда', row), ':formula');
       within(card()).formula(within(card()).cell('Откуда', row), from.slice(1));
     } else box.select(box.cell('Откуда', row), from);
     if (no) within(card()).type(within(card()).cell('Как назвать «нет»', row), no);
@@ -125,7 +125,7 @@ describe('вызываемые блоки D&D собираются руками'
     ui.click('+ бросок');
     within(at(1)()).select('Что бросает', 'field:harakteristika.save');
     within(at(1)()).select('Ещё метки', 'spasbrosok');
-    within(at(1)()).select('Ещё метки', ':формула');
+    within(at(1)()).select('Ещё метки', ':formula');
     within(at(1)()).type('Ещё метки', '@harakteristika');
     within(at(1)()).click('добавить');
     nameStep(at(1)(), 'бросок');

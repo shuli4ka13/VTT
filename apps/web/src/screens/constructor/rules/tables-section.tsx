@@ -15,7 +15,8 @@ import { SheetGrid } from '../../../ui/sheet-grid.tsx';
 import { FieldRow } from '../../../ui/field-row.tsx';
 import type { GridColumn } from '../../../ui/sheet-grid.tsx';
 import { ValueEditor } from '../../../ui/value-editor.tsx';
-import { newTable } from '../factory.ts';
+import { newTable, KEYS } from '../factory.ts';
+import { t as tg, useT } from '../../../i18n/author.ts';
 import { usersOf, useUsage, insideTable } from '../usage.ts';
 import type { UsageIndex } from '../usage.ts';
 import { freeId, slugOf, useBook } from '../../../store/world.ts';
@@ -32,12 +33,6 @@ import { instanceOf, followInstance, columnAddress } from '../instance.ts';
 
 type EditSystem = WorldState['editSystem'];
 interface Props { system: System; editSystem: EditSystem; usage: UsageIndex }
-
-const ROW_KEYS = [
-  ['word', 'слово'],
-  ['number', 'число'],
-  ['range', 'диапазон'],
-] as const;
 
 const freeNumber = (rows: TableRow[]): number => {
   const used = rows.map(row => row.value).filter((value): value is number => typeof value === 'number');
@@ -66,7 +61,7 @@ const rangesBroken = (rows: TableRow[]): boolean => {
 };
 
 const addTable = (editSystem: EditSystem) => {
-  focusNew('как зовётся таблица');
+  focusNew(tg('common:name.table'));
   let key = '';
   editSystem(draft => {
     const made = newTable(draft);
@@ -79,7 +74,7 @@ const addTable = (editSystem: EditSystem) => {
 export function renameTable(system: System, id: string, label: string, world: { compendium?: unknown; sheets?: unknown }): string {
   const table = system.tables?.[id];
   if (!table) return id;
-  const auto = new RegExp(`^${slugOf('таблица')}(_\\d+)?$`, 'u').test(id) || id === slugOf(table.label ?? '');
+  const auto = new RegExp(`^${KEYS.table}(_\\d+)?$`, 'u').test(id) || id === slugOf(table.label ?? '');
   const { [id]: _self, ...others } = system.tables ?? {};
   const rest = JSON.stringify({ s: { ...system, blocks: undefined, tables: others }, c: world.compendium, sh: world.sheets });
   const named = new RegExp(`(?<![\\p{L}\\p{N}_])${id}(?![\\p{L}\\p{N}_])`, 'u').test(rest);
@@ -96,16 +91,16 @@ export function moveTable(draft: System, from: string, to: string): void {
   forgetFields(draft);
 }
 
-const OWNER_GROUPS: [string | undefined, string][] = [
-  ['sheet', 'Своё у каждого листа'],
-  ['group', 'Общее у группы'],
-  ['desk', 'Общее на столе'],
-  [undefined, 'Справочники'],
+const ownerGroups = (): [string | undefined, string][] => [
+  ['sheet', tg('tables:group.sheet')],
+  ['group', tg('tables:group.group')],
+  ['desk', tg('tables:group.desk')],
+  [undefined, tg('tables:group.ref')],
 ];
 
 export function groupsOfTables(entries: [string, Table][]): [string, [string, Table][]][] {
   const name = ([key, table]: [string, Table]) => table.label || key;
-  return OWNER_GROUPS
+  return ownerGroups()
     .map(([owner, title]) => [title, entries
       .filter(([, table]) => (table.owner ?? undefined) === owner)
       .sort((a, b) => name(a).localeCompare(name(b), 'ru'))] as [string, [string, Table][]])
@@ -127,38 +122,40 @@ export function foldersInGroup(list: [string, Table][]): [string, [string, Table
 }
 
 function FolderInput({ value, folders, onChange }: { value: string; folders: string[]; onChange: (next: string) => void }) {
+  const t = useT('tables');
   const list = useId();
   return (
     <>
-      <input className="input" list={list} value={value} placeholder="без папки" onChange={e => onChange(e.target.value)} />
+      <input className="input" list={list} value={value} placeholder={t('folder.none')} onChange={e => onChange(e.target.value)} />
       <datalist id={list}>{folders.map(folder => <option key={folder} value={folder} />)}</datalist>
     </>
   );
 }
 
 export function TablesSection({ system, editSystem, usage }: Props) {
+  const t = useT('tables');
   const entries = rowTables(system);
 
   return (
     <Card>
       <CardHead
-        title="Таблицы"
-        actions={entries.length ? <Button size="sm" onClick={() => addTable(editSystem)}>+ таблица</Button> : null}
+        title={t('list.title')}
+        actions={entries.length ? <Button size="sm" onClick={() => addTable(editSystem)}>{t('list.add')}</Button> : null}
       />
       <div className="stack stack--tight">
         {entries.length === 0 ? (
           <Empty
-            title="Таблиц ещё нет"
-            hint="Справочники, прогрессия по уровню, списки выбора — всё это таблицы."
-            action={<Button size="sm" onClick={() => addTable(editSystem)}>+ таблица</Button>}
+            title={t('list.emptyTitle')}
+            hint={t('list.emptyHint')}
+            action={<Button size="sm" onClick={() => addTable(editSystem)}>{t('list.add')}</Button>}
           />
         ) : groupsOfTables(entries).flatMap(([title, list]) => {
           const folders = foldersInGroup(list);
           const foldered = folders.some(([folder]) => folder !== NO_FOLDER);
           return [
-            <span key={`группа|${title}`} className="table-group__title">{title}</span>,
+            <span key={`group|${title}`} className="table-group__title">{title}</span>,
             ...folders.flatMap(([folder, items]) => [
-              ...(foldered ? [<span key={`папка|${title}|${folder}`} className="table-folder__title">{folder || 'без папки'}</span>] : []),
+              ...(foldered ? [<span key={`folder|${title}|${folder}`} className="table-folder__title">{folder || t('folder.none')}</span>] : []),
               ...items.map(([key, table]) => (
                 <TableCard key={instanceOf('table', key)} id={key} table={table} system={system} editSystem={editSystem} usage={usage} />
               )),
@@ -171,10 +168,11 @@ export function TablesSection({ system, editSystem, usage }: Props) {
 }
 
 export function TableCard({ id, table, system, editSystem, usage, opened, onRekey, onClose }: Props & { id: string; table: Table; opened?: boolean; onRekey?: (key: string) => void; onClose?: () => void }) {
+  const t = useT('tables');
   const byRange = isRange(table);
   const rows = table.rows ?? [];
   const columns = table.columns ?? [];
-  const blocks = (system.blocks ?? []).filter(block => block.parts.some(part => part.table === id)).map(block => `блок «${blockLabel(system, block.key)}»`);
+  const blocks = (system.blocks ?? []).filter(block => block.parts.some(part => part.table === id)).map(block => t('card.block', { name: blockLabel(system, block.key) }));
   const users = [...new Set([...listUsers(system, id), ...usersOf(usage, 'table', id, system, insideTable(id)), ...blocks])];
   const wanted = useWorld(s => s.activeTableId) === id;
   const [openAtStart] = useState(wanted || Boolean(opened));
@@ -219,38 +217,38 @@ export function TableCard({ id, table, system, editSystem, usage, opened, onReke
 
   const summary = users.length
     ? (users.length > 3
-      ? `берут отсюда: ${users.slice(0, 3).join(', ')} и ещё ${users.length - 3}`
-      : `берут отсюда: ${users.join(', ')}`)
-    : 'пока никто не берёт';
+      ? t('card.takenMore', { list: users.slice(0, 3).join(', '), n: users.length - 3 })
+      : t('card.taken', { list: users.join(', ') }))
+    : t('card.nobody');
 
   return (
     <div ref={ref}>
     <Fold
       title={table.label || id} count={rows.length} open={openAtStart || undefined}
-      rename={{ value: table.label ?? '', placeholder: 'как зовётся таблица', onCommit: relabel }}
+      rename={{ value: table.label ?? '', placeholder: t('common:name.table'), onCommit: relabel }}
       actions={(
         <>
           {held ? (
-            <Button size="sm" variant="danger" disabled title={`нельзя удалить: ${summary}`}>Удалить</Button>
+            <Button size="sm" variant="danger" disabled title={t('card.cannotDelete', { why: summary })}>{t('common:delete')}</Button>
           ) : (
-            <DangerButton size="sm" title="удалить таблицу из системы" onConfirm={() => editSystem(draft => { delete draft.tables?.[id]; })}>
-              Удалить
+            <DangerButton size="sm" title={t('card.deleteTitle')} onConfirm={() => editSystem(draft => { delete draft.tables?.[id]; })}>
+              {t('common:delete')}
             </DangerButton>
           )}
-          {onClose ? <Button size="sm" variant="ghost" title="закрыть таблицу" onClick={onClose}>×</Button> : null}
+          {onClose ? <Button size="sm" variant="ghost" title={t('card.closeTitle')} onClick={onClose}>×</Button> : null}
         </>
       )}
     >
-      <Fold title="ещё" summary={`чьи значения, ключ строки, подсказка · ${summary}`}>
+      <Fold title={t('common:more')} summary={t('card.moreSummary', { summary })}>
       <FieldRow
         id="table-head"
         fields={[
           {
-            key: 'key', label: 'Ключ строки', width: 150,
+            key: 'key', label: t('card.rowKey'), width: 150,
             node: (
               <Select
                 value={keyOf(table)}
-                options={ROW_KEYS}
+                options={[['word', t('rowKey.word')], ['number', t('rowKey.number')], ['range', t('rowKey.range')]] as const}
                 onChange={next => {
                   const wipes = (keyOf(table) === 'range') !== (next === 'range') && rows.some(row => row.value !== undefined && row.value !== '' || Object.keys(row.cells ?? {}).length);
                   if (wipes) setRekey(next); else applyKey(next);
@@ -259,40 +257,40 @@ export function TableCard({ id, table, system, editSystem, usage, opened, onReke
             ),
           },
           {
-            key: 'owner', label: 'Чьи значения', width: 170,
-            hint: 'Справочник — значения одни на всех; у листа, группы или стола — у каждого свои.',
+            key: 'owner', label: t('card.owner'), width: 170,
+            hint: t('card.ownerHint'),
             node: (
               <Select<string>
                 value={table.owner ?? ''}
-                options={[['', 'справочник'], ...HOLDERS]}
+                options={[['', t('card.ownerRef')], ...holders()]}
                 onChange={next => edit(draft => { if (next) draft.owner = next as Table['owner']; else delete draft.owner; })}
               />
             ),
           },
           {
-            key: 'icon', label: 'Значок', width: 80,
+            key: 'icon', label: t('card.icon'), width: 80,
             node: <Input value={table.icon ?? ''} placeholder="⚔" onChange={next => edit(draft => { if (next.trim()) draft.icon = next.trim(); else delete draft.icon; })} />,
           },
           {
-            key: 'hint', label: 'Подсказка', width: 220,
-            node: <TextArea value={table.hint ?? ''} placeholder="что это за таблица" onChange={next => edit(draft => { if (next.trim()) draft.hint = next; else delete draft.hint; })} />,
+            key: 'hint', label: t('card.hint'), width: 220,
+            node: <TextArea value={table.hint ?? ''} placeholder={t('card.hintPlaceholder')} onChange={next => edit(draft => { if (next.trim()) draft.hint = next; else delete draft.hint; })} />,
           },
           {
-            key: 'group', label: 'Папка', width: 180,
-            hint: 'Таблицы с одной папкой в списке идут вместе.',
+            key: 'group', label: t('card.folder'), width: 180,
+            hint: t('card.folderHint'),
             node: <FolderInput value={table.group ?? ''} folders={foldersOf(system)} onChange={next => edit(draft => { if (next.trim()) draft.group = next.trim(); else delete draft.group; })} />,
           },
           {
-            key: 'note', label: 'Заметка автора', width: 260,
-            hint: 'Видна только здесь, игроку не показывается.',
-            node: <TextArea value={table.note ?? ''} placeholder="для себя" onChange={next => edit(draft => { if (next.trim()) draft.note = next; else delete draft.note; })} />,
+            key: 'note', label: t('card.note'), width: 260,
+            hint: t('card.noteHint'),
+            node: <TextArea value={table.note ?? ''} placeholder={t('card.notePlaceholder')} onChange={next => edit(draft => { if (next.trim()) draft.note = next; else delete draft.note; })} />,
           },
           ...(columns.length ? [{
-            key: 'otherwise', label: 'Если ничего не совпало', width: 180,
+            key: 'otherwise', label: t('card.otherwise'), width: 180,
             node: (
               <Input
                 value={table.otherwise === undefined ? '' : String(table.otherwise)}
-                placeholder="оставить пустым"
+                placeholder={t('card.otherwisePlaceholder')}
                 mono
                 onChange={next => edit(draft => {
                   if (next === '') delete draft.otherwise; else draft.otherwise = parseFree(next);
@@ -303,20 +301,20 @@ export function TableCard({ id, table, system, editSystem, usage, opened, onReke
         ]}
       />
 
-      <UsageRow title="Где используется:" items={users.map(text => ({ key: text, text }))} />
+      <UsageRow title={t('card.usedIn')} items={users.map(text => ({ key: text, text }))} />
       </Fold>
 
       {rekey ? (
         <Verdict tone="warn" action={(
           <>
-            <Button size="sm" variant="danger" onClick={() => { applyKey(rekey); setRekey(null); }}>сменить и стереть строки</Button>
-            <Button size="sm" variant="ghost" onClick={() => setRekey(null)}>отмена</Button>
+            <Button size="sm" variant="danger" onClick={() => { applyKey(rekey); setRekey(null); }}>{t('card.rekeyApply')}</Button>
+            <Button size="sm" variant="ghost" onClick={() => setRekey(null)}>{t('common:cancel')}</Button>
           </>
         )}>
-          {rekey === 'range' ? 'Диапазоны' : 'Слова и числа'} — другой вид строк: старые строки сотрутся.
+          {rekey === 'range' ? t('card.rekeyRange') : t('card.rekeyWords')}
         </Verdict>
       ) : null}
-      {broken ? <Verdict tone="warn">диапазоны перекрываются или дырявы</Verdict> : null}
+      {broken ? <Verdict tone="warn">{t('card.ranges')}</Verdict> : null}
 
       {picked && columns.some(c => c.key === picked) ? (
         <TableColumnCard key={`${instanceOf('column', columnAddress(id, picked, false))}:${general}`} id={id} table={table} column={columns.find(c => c.key === picked)!} system={system} edit={edit} more={general} onClose={() => pick(null)} onRekey={key => pick(key)} />
@@ -330,12 +328,12 @@ export function TableCard({ id, table, system, editSystem, usage, opened, onReke
 
 
 const kindLabel = (column: TableColumn): string =>
-  (column.kind === undefined && column.expr !== undefined ? 'по формуле' : `${kindWord(column.kind)}${column.expr !== undefined ? ' · формула' : ''}`);
+  (column.kind === undefined && column.expr !== undefined ? tg('tables:column.byFormula') : column.expr !== undefined ? tg('tables:column.withFormula', { kind: kindWord(column.kind) }) : kindWord(column.kind));
 
-const HOLDERS = [
-  ['sheet', 'своё у каждого листа'],
-  ['group', 'общее у группы — отряда, банды'],
-  ['desk', 'общее на столе — одно на комнату'],
+const holders = () => [
+  ['sheet', tg('tables:holder.sheet')],
+  ['group', tg('tables:holder.group')],
+  ['desk', tg('tables:holder.desk')],
 ] as const;
 
 export function renameColumn(draft: System, tableId: string, key: string, label: string, fresh: string): void {
@@ -363,14 +361,15 @@ export function moveColumn(draft: System, tableId: string, key: string, holder: 
   draft.tables = withColumn(draft, column, holder).tables;
 }
 
-const HOLDER_WORDS: Record<Holder, string> = { sheet: 'у каждого героя своё', group: 'общее у группы', desk: 'одно на весь стол' };
+const holderWord = (holder: Holder): string => tg(`tables:holderWord.${holder}`);
 
 export function whose(table: Table, column: TableColumn, id: string): string {
   const holder = holderOf(table);
-  if (isSingle(table)) return column.expr !== undefined ? 'поле · считается по формуле' : `поле · ${HOLDER_WORDS[holder ?? 'sheet']}`;
-  if (table.shape === 'book') return `свойство «${table.label || id}» · у каждой записи своё`;
-  const value = column.expr !== undefined ? 'одна формула на все строки' : holder ? `в каждой строке ${HOLDER_WORDS[holder]}` : 'у каждой строки своё значение';
-  return `колонка таблицы «${table.label || id}» · ${value}`;
+  const name = table.label || id;
+  if (isSingle(table)) return column.expr !== undefined ? tg('tables:whose.fieldFormula') : tg('tables:whose.field', { holder: holderWord(holder ?? 'sheet') });
+  if (table.shape === 'book') return tg('tables:whose.book', { name });
+  if (column.expr !== undefined) return tg('tables:whose.columnFormula', { name });
+  return holder ? tg('tables:whose.columnHolder', { name, holder: holderWord(holder) }) : tg('tables:whose.columnOwn', { name });
 }
 
 export function TableColumnCard({ id, table, column, system, edit, onClose, onRekey, onOpenTable, extra, lead, bounds = true, more = false }: {
@@ -387,6 +386,7 @@ export function TableColumnCard({ id, table, column, system, edit, onClose, onRe
   edit: (change: (draft: Table) => void) => void;
   onClose: () => void;
 }) {
+  const t = useT('tables');
   const single = isSingle(table);
   const book = table.shape === 'book';
   const usage = useUsage();
@@ -406,7 +406,7 @@ export function TableColumnCard({ id, table, column, system, edit, onClose, onRe
     const state = useWorld.getState();
     const key = column.key;
     const world = JSON.stringify({ s: { ...state.system, blocks: undefined }, c: state.compendium, sh: state.sheets });
-    const auto = new RegExp(`^(field|${slugOf('колонка')})(_\\d+)?$`, 'u').test(key) || key === slugOf(column.label ?? '');
+    const auto = new RegExp(`^(field|${KEYS.column})(_\\d+)?$`, 'u').test(key) || key === slugOf(column.label ?? '');
     const named = new RegExp(`[@#.]${key}(?![\\p{L}\\p{N}_])`, 'u').test(world);
     const filled = (table.rows ?? []).some(row => row.cells && key in row.cells);
     const virgin = !book && auto && !named && (single ? world.split(`"${key}"`).length - 1 <= 1 : !filled);
@@ -430,10 +430,10 @@ export function TableColumnCard({ id, table, column, system, edit, onClose, onRe
       tables={others}
       rowsOf={numberTables(system).filter(([key]) => key !== id).map(([key, t]) => [key, t.label || key] as [string, string])}
       many
-      formulaHint={single ? 'Формула для всех листов' : book ? 'Формула для всех записей' : 'Формула для всех строк'}
+      formulaHint={single ? t('column.formulaSheets') : book ? t('column.formulaRecords') : t('column.formulaRows')}
       where={`${table.label || id} · ${name}`}
-      noun={single ? 'поле' : book ? 'свойство' : 'колонка'}
-      sub={<>{whose(table, column, id)}{onOpenTable && !single && !book ? <> <Button size="sm" variant="ghost" onClick={onOpenTable}>открыть таблицу</Button></> : null}</>}
+      noun={single ? 'field' : book ? 'prop' : 'column'}
+      sub={<>{whose(table, column, id)}{onOpenTable && !single && !book ? <> <Button size="sm" variant="ghost" onClick={onOpenTable}>{t('column.openTable')}</Button></> : null}</>}
       {...(single ? {} : { names: rowNames(system, id) })}
       system={system}
       onChange={patch => (patch.label !== undefined ? rename(patch.label) : set(c => applyPatch(c, patch)))}
@@ -457,33 +457,33 @@ export function TableColumnCard({ id, table, column, system, edit, onClose, onRe
           <StagesEditor stages={column.stages} onChange={next => set(c => { if (next) c.stages = next; else delete c.stages; })} />
         ) : null}
         {book ? (
-          <Field label="Обязательна">
+          <Field label={t('column.required')}>
             <Select
               value={column.optional ? 'no' : 'yes'}
-              options={[['yes', 'да — запись без неё неполна'], ['no', 'нет — можно оставить пустой']] as const}
+              options={[['yes', t('column.requiredYes')], ['no', t('column.requiredNo')]] as const}
               onChange={next => set(c => { if (next === 'no') c.optional = true; else delete c.optional; })}
             />
           </Field>
         ) : null}
         {!single && !book && !table.owner && (column.kind ?? 'number') === 'number' ? (
-          <Field label="Граница дистанции" hint="полоса дистанции в таблице: «от» и «до» в единицах клетки поля боя">
+          <Field label={t('column.bound')} hint={t('column.boundHint')}>
             <Select
               value={column.bound ?? ''}
-              options={[['', 'нет'], ['from', 'от'], ['to', 'до']] as const}
+              options={[['', t('column.boundNo')], ['from', t('column.boundFrom')], ['to', t('column.boundTo')]] as const}
               onChange={next => set(c => { if (next) c.bound = next as 'from' | 'to'; else delete c.bound; })}
             />
           </Field>
         ) : null}
-        {single ? <Field label="Чьё значение">
+        {single ? <Field label={t('column.whose')}>
           <Select
             value={holderOf(table) ?? 'sheet'}
-            options={HOLDERS}
+            options={holders()}
             onChange={next => editSystem(draft => moveColumn(draft, id, column.key, next))}
           />
         </Field> : null}
         {single && users.length ? (
           <div className="inline inline--tight">
-            <span className="faint">смотрят:</span>
+            <span className="faint">{t('column.watching')}</span>
             {users.map(user => <Chip key={user}>{user}</Chip>)}
           </div>
         ) : null}
@@ -526,6 +526,7 @@ function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
   edit: (change: (draft: Table) => void) => void;
   editSystem: EditSystem;
 }) {
+  const t = useT('tables');
   const compendium = useBook();
   const editCompendium = useWorld(s => s.editCompendium);
   const rename = (from: unknown, to: unknown) => {
@@ -547,9 +548,9 @@ function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
   });
 
   const placed = onSheet(table);
-  const lead = byRange ? ['от', 'до'] : key === 'number' ? ['число', 'подпись'] : ['строка'];
+  const lead: [string, string][] = byRange ? [['from', t('rows.from')], ['to', t('rows.to')]] : key === 'number' ? [['number', t('rows.number')], ['label', t('rows.label')]] : [['word', t('rows.word')]];
   const gridColumns: GridColumn[] = [
-    ...lead.map(name => ({ key: `:${name}`, label: name, width: byRange ? 90 : defaultWidth() })),
+    ...lead.map(([name, word]) => ({ key: `:${name}`, label: word, width: byRange ? 90 : defaultWidth() })),
     ...columns.map(c => ({
       key: c.key, label: c.label || c.key, sub: kindLabel(c), width: defaultWidth(c),
       active: picked === c.key, onClick: () => onPick(picked === c.key ? null : c.key),
@@ -568,8 +569,8 @@ function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
     });
   };
   const addColumn = () => {
-    focusNew('как зовётся колонка');
-    const key = freeId(columns.map(c => c.key), 'колонка');
+    focusNew(t('common:name.column'));
+    const key = freeId(columns.map(c => c.key), KEYS.column);
     edit(draft => { (draft.columns ??= []).push({ key, label: '', kind: 'number' }); });
     onPick(key);
   };
@@ -578,9 +579,9 @@ function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
   const [own, setOwn] = useState(() => rows.some(row => tuned.some(c => row.view?.[c.key] && ('min' in row.view[c.key]! || 'max' in row.view[c.key]! || 'default' in row.view[c.key]!))));
   const showOwn = own && tuned.length > 0;
   const shown = tuned.some(c => c.key === picked) ? tuned.filter(c => c.key === picked) : tuned;
-  const VIEW_PARTS: [RowViewKey, string][] = [['default', 'в новом листе'], ['min', 'не ниже'], ['max', 'не выше']];
+  const VIEW_PARTS: [RowViewKey, string][] = [['default', t('rows.inNew')], ['min', t('rows.notBelow')], ['max', t('rows.notAbove')]];
   const ownColumns: GridColumn[] = showOwn ? shown.flatMap(c => VIEW_PARTS.map(([part, word]) => ({
-    key: `:${c.key}:${part}`, label: `${c.label || c.key}: ${word}`, sub: 'своё у строки · общее — щелчком', width: defaultWidth(),
+    key: `:${c.key}:${part}`, label: `${c.label || c.key}: ${word}`, sub: t('rows.ownSub'), width: defaultWidth(),
     active: picked === c.key, onClick: () => onPick(c.key, true),
   }))) : [];
   const generalOf = (column: TableColumn, part: RowViewKey): unknown => (part === 'default' ? column.default ?? 0 : column[part]);
@@ -593,13 +594,13 @@ function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
 
   return (
     <div className="stack stack--tight">
-      <span className="field__label">Строки</span>
+      <span className="field__label">{t('rows.title')}</span>
       {tuned.length ? (
-        <Button size="sm" variant="ghost" title="у колонки — общее; строка может перебить своим: пустая клетка — как у колонки"
-          onClick={() => setOwn(!own)}>{showOwn ? 'скрыть «в новом листе» и границы строк' : 'ещё: «в новом листе» и границы строк'}</Button>
+        <Button size="sm" variant="ghost" title={t('rows.ownTitle')}
+          onClick={() => setOwn(!own)}>{showOwn ? t('rows.ownHide') : t('rows.ownShow')}</Button>
       ) : null}
 
-      <SheetGrid id={`table.${id}`} columns={[...gridColumns, ...ownColumns]} tailHead={<span data-guide="add-column"><Button size="sm" variant="ghost" title="добавить колонку" onClick={addColumn}>+</Button></span>}>
+      <SheetGrid id={`table.${id}`} columns={[...gridColumns, ...ownColumns]} tailHead={<span data-guide="add-column"><Button size="sm" variant="ghost" title={t('rows.addColumn')} onClick={addColumn}>+</Button></span>}>
           {rows.map((row, i) => (
             <RowCells
               key={i} tableId={id} row={row} at={i} rowKey={key} columns={columns} system={system} placed={placed}
@@ -626,7 +627,7 @@ function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
           ))}
       </SheetGrid>
 
-      <Button size="sm" onClick={addRow}>{byRange ? '+ ступень' : '+ строка'}</Button>
+      <Button size="sm" onClick={addRow}>{byRange ? t('rows.addRange') : t('rows.add')}</Button>
 
     </div>
   );
@@ -635,9 +636,9 @@ function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
 const TYPED = ['number', 'text', 'dice'];
 
 const generalWord = (value: unknown): string => {
-  if (value === undefined || value === null || value === '') return 'как у колонки: нет';
-  if (typeof value === 'object' && 'expr' in (value as object)) return 'как у колонки: формула';
-  return `как у колонки: ${String(value)}`;
+  if (value === undefined || value === null || value === '') return tg('tables:rows.likeColumnNone');
+  if (typeof value === 'object' && 'expr' in (value as object)) return tg('tables:rows.likeColumnFormula');
+  return tg('tables:rows.likeColumn', { value: String(value) });
 };
 
 export const spoken = (system: System, tableId: string, row: TableRow, expr: string): RowPiece[] | undefined => {
@@ -655,6 +656,7 @@ export function CellEditor({ column, value, system, where, names, placed, inheri
   placed: boolean;
   onChange: (value: unknown) => void;
 }) {
+  const t = useT('tables');
   const [draft, setDraft] = useState<string | null>(null);
   if (isFormulaCell(value)) {
     return (
@@ -663,15 +665,15 @@ export function CellEditor({ column, value, system, where, names, placed, inheri
         system={system}
         where={where}
         extraNames={names}
-        placeholder="пусто — клетка очистится"
+        placeholder={t('cell.clear')}
         onChange={next => onChange(next.trim() ? { expr: next } : undefined)}
       />
     );
   }
   const empty = value === undefined || value === '';
-  const hint = placeholder ?? (column.expr !== undefined ? '= как у колонки' : placed ? 'вводит игрок' : '');
+  const hint = placeholder ?? (column.expr !== undefined ? t('cell.likeColumn') : placed ? t('cell.playerTypes') : '');
   if (!TYPED.includes(column.kind ?? 'text')) {
-    return <ValueEditor type={column} value={empty ? '' : value} system={system} blank={hint || '— нет —'} onChange={next => onChange(next === '' ? undefined : next)} />;
+    return <ValueEditor type={column} value={empty ? '' : value} system={system} blank={hint || t('cell.none')} onChange={next => onChange(next === '' ? undefined : next)} />;
   }
   const commit = () => {
     if (draft === null) return;
@@ -685,7 +687,7 @@ export function CellEditor({ column, value, system, where, names, placed, inheri
   if (column.expr !== undefined && empty && draft === null && inherited) {
     return (
       <button type="button" className="row-formula"
-        title={`${inherited.map(piece => ('chip' in piece ? piece.chip : piece.text)).join('')} — формула колонки для этой строки; щёлкните, чтобы вписать строке своё`}
+        title={t('cell.inherited', { formula: inherited.map(piece => ('chip' in piece ? piece.chip : piece.text)).join('') })}
         onClick={() => setDraft('')}>
         {inherited.map((piece, at) => ('chip' in piece
           ? <span key={at} className="chips__chip">{piece.chip}</span>
@@ -723,6 +725,7 @@ function RowCells({ tableId, row, at, rowKey, columns, system, edit, setCell, us
   setCell: (i: number, column: string, value: unknown) => void;
   where: (column: TableColumn) => string;
 }) {
+  const t = useT('tables');
   const cells = row.cells ?? {};
   const set = (change: (r: TableRow) => void) => edit(draft => { const r = draft.rows?.[at]; if (r) change(r); });
   return (
@@ -737,7 +740,7 @@ function RowCells({ tableId, row, at, rowKey, columns, system, edit, setCell, us
           {rowKey === 'number' ? (
             <>
               <KeyInput value={row.value} numeric taken={taken} onRename={onRename} />
-              <Input value={row.label ?? ''} placeholder="как показать" onChange={next => set(r => { if (next.trim()) r.label = next; else delete r.label; })} />
+              <Input value={row.label ?? ''} placeholder={t('row.show')} onChange={next => set(r => { if (next.trim()) r.label = next; else delete r.label; })} />
             </>
           ) : (
             <RowName row={row} taken={taken} onRename={onRename}
@@ -761,9 +764,9 @@ function RowCells({ tableId, row, at, rowKey, columns, system, edit, setCell, us
       ))}
       {own}
       {users.length ? (
-        <Button size="sm" variant="ghost" disabled title={`строку используют: ${users.slice(0, 4).join('; ')}${users.length > 4 ? ` и ещё ${users.length - 4}` : ''}`}>×</Button>
+        <Button size="sm" variant="ghost" disabled title={users.length > 4 ? t('row.usedByMore', { list: users.slice(0, 4).join('; '), n: users.length - 4 }) : t('row.usedBy', { list: users.slice(0, 4).join('; ') })}>×</Button>
       ) : (
-        <Button size="sm" variant="ghost" title="убрать строку" onClick={() => edit(draft => { draft.rows?.splice(at, 1); })}>×</Button>
+        <Button size="sm" variant="ghost" title={t('row.remove')} onClick={() => edit(draft => { draft.rows?.splice(at, 1); })}>×</Button>
       )}
     </>
   );
@@ -776,6 +779,7 @@ function RowName({ row, taken, onRename, onLabel, onFirst }: {
   onLabel: (label: string | undefined) => void;
   onFirst: (value: string, label: string | undefined) => void;
 }) {
+  const t = useT('tables');
   const [draft, setDraft] = useState<string | null>(null);
   const [trouble, setTrouble] = useState<string | null>(null);
   const key = row.value === undefined ? '' : String(row.value);
@@ -788,9 +792,9 @@ function RowName({ row, taken, onRename, onLabel, onFirst }: {
     setDraft(null);
     if (!name || name === (row.label ?? key)) { setTrouble(null); return; }
     const slug = slugOf(name);
-    if (!slug) { setTrouble('нужны буквы или цифры'); return; }
+    if (!slug) { setTrouble(t('row.needChars')); return; }
     if (!key) {
-      if (taken(slug)) { setTrouble(`«${name}» уже есть`); return; }
+      if (taken(slug)) { setTrouble(t('row.taken', { name })); return; }
       setTrouble(null);
       onFirst(slug, labelFor(name, slug));
       return;
@@ -809,7 +813,7 @@ function RowName({ row, taken, onRename, onLabel, onFirst }: {
       <Input
         value={shown}
         invalid={Boolean(trouble)}
-        placeholder="как зовётся строка"
+        placeholder={t('common:name.row')}
         onChange={setDraft}
         onBlur={commit}
         onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
@@ -825,6 +829,7 @@ function KeyInput({ value, numeric, taken, onRename }: {
   taken: (next: unknown) => boolean;
   onRename: (next: unknown) => void;
 }) {
+  const t = useT('tables');
   const [draft, setDraft] = useState<string | null>(null);
   const [trouble, setTrouble] = useState<string | null>(null);
   const shown = draft ?? (value === undefined ? '' : String(value));
@@ -833,9 +838,9 @@ function KeyInput({ value, numeric, taken, onRename }: {
     if (draft === null) return;
     const next = numeric ? Number(draft) : draft.trim();
     setDraft(null);
-    if (numeric && (draft.trim() === '' || !Number.isFinite(next as number))) { setTrouble('нужно число'); return; }
+    if (numeric && (draft.trim() === '' || !Number.isFinite(next as number))) { setTrouble(t('row.needNumber')); return; }
     if (String(next) === String(value ?? '')) { setTrouble(null); return; }
-    if (taken(next)) { setTrouble(`«${String(next)}» уже есть`); return; }
+    if (taken(next)) { setTrouble(t('row.taken', { name: String(next) })); return; }
     setTrouble(null);
     onRename(next);
   };
@@ -846,7 +851,7 @@ function KeyInput({ value, numeric, taken, onRename }: {
         value={shown}
         mono
         invalid={Boolean(trouble)}
-        placeholder={numeric ? '0' : 'слово'}
+        placeholder={numeric ? '0' : t('row.keyWord')}
         onChange={setDraft}
         onBlur={commit}
         onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}

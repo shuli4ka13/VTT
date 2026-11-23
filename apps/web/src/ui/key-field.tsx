@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Input } from './primitives.tsx';
 import { keyOf } from '../screens/constructor/keys.ts';
+import { useT } from '../i18n/index.ts';
 
 export function KeyField({ value, locked, taken, onChange, optional = false }: {
   value: string;
@@ -9,9 +10,10 @@ export function KeyField({ value, locked, taken, onChange, optional = false }: {
   taken: readonly string[];
   onChange: (next: string) => void;
 }) {
+  const t = useT('ui');
   const [draft, setDraft] = useState<string | null>(null);
   if (locked) {
-    return <span className="faint" title="на это имя уже ссылаются — переименование появится позже">{value}</span>;
+    return <span className="faint" title={t('keyField.locked')}>{value}</span>;
   }
   const next = keyOf(draft ?? value);
   const busy = next !== value && taken.includes(next);
@@ -28,7 +30,7 @@ export function KeyField({ value, locked, taken, onChange, optional = false }: {
           setDraft(null);
         }}
       />
-      {busy ? <span className="field__error">имя «{next}» уже занято</span> : null}
+      {busy ? <span className="field__error">{t('keyField.busy', { name: next })}</span> : null}
     </>
   );
 }
