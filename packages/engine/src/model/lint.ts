@@ -210,7 +210,7 @@ function stepProblems(steps: Step[], whereOf: (index: number) => Where): Problem
     const unknownChoice = new Set(slots
       .filter(slot => slot.kind === 'choice' && slot.options && valueOf(slot.key) !== null && valueOf(slot.key) !== undefined && !slot.options.includes(valueOf(slot.key)))
       .map(slot => slot.key));
-    const declared = new Set(['type', 'id', 'if', ...slots.map(slot => slot.key.split('.')[0]!)]);
+    const declared = new Set(['type', 'id', 'label', 'asLabel', 'if', ...slots.map(slot => slot.key.split('.')[0]!)]);
     for (const key of Object.keys(step)) {
       if (!declared.has(key)) out.push({ where, level: 'error', text: `у ${STEP.gen} «${mod.label}» нет поля «${key}» — уберите` });
     }
@@ -1949,7 +1949,7 @@ function shapeProblems(system: System, compendium?: Compendium): Problem[] {
       chain.steps.forEach((step, index) => {
         const words = (STEP_WORDS as Record<string, { slots?: readonly { key: string }[] }>)[step.type];
         if (!words) return;
-        const known = new Set(['id', 'type', 'if', ...(words.slots ?? []).map(slot => slot.key)]);
+        const known = new Set(['id', 'label', 'asLabel', 'type', 'if', ...(words.slots ?? []).map(slot => slot.key)]);
         for (const key of Object.keys(step)) {
           if (!known.has(key)) out.push({ where: chain.where(index), level: 'error', text: `у шага «${words === undefined ? step.type : (words as { label?: string }).label ?? step.type}» нет поля «${key}»` });
         }

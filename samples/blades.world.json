@@ -4,9 +4,13 @@
     "id": "blades",
     "name": "Blades in the Dark",
     "groups": {
-      "Банда": {},
-      "Ремесло": {},
-      "Приёмы": {}
+      "Banda": {},
+      "Remeslo": {
+        "label": "Ремесло"
+      },
+      "Priemy": {
+        "label": "Приёмы"
+      }
     },
     "constants": {
       "pool": {
@@ -62,7 +66,7 @@
       }
     },
     "tables": {
-      "лист": {
+      "who": {
         "label": "Лист",
         "shape": "single",
         "columns": [
@@ -167,7 +171,7 @@
           }
         ]
       },
-      "стол": {
+      "stol": {
         "label": "Стол",
         "shape": "single",
         "owner": "desk",
@@ -181,7 +185,7 @@
           }
         ]
       },
-      "группа": {
+      "gruppa": {
         "label": "Группа",
         "shape": "single",
         "owner": "group",
@@ -259,13 +263,16 @@
         "key": "word",
         "rows": [
           {
-            "value": "действие"
+            "value": "deystvie",
+            "label": "действие"
           },
           {
-            "value": "нулевой"
+            "value": "nulevoy",
+            "label": "нулевой"
           },
           {
-            "value": "сопротивление"
+            "value": "soprotivlenie",
+            "label": "сопротивление"
           }
         ]
       },
@@ -275,7 +282,7 @@
         "hint": "Какое действие бросается — формула рейтинга по листу.",
         "shape": "book",
         "use": "action",
-        "block": "Приёмы",
+        "block": "Priemy",
         "columns": [],
         "bindings": []
       },
@@ -285,7 +292,7 @@
         "hint": "Общие ходы банды.",
         "shape": "book",
         "use": "action",
-        "block": "Банда"
+        "block": "Banda"
       },
       "crit": {
         "label": "Критический успех",
@@ -311,21 +318,21 @@
     "effects": {
       "risky_action": {
         "label": "Рискованное действие",
-        "group": "Ремесло",
+        "group": "Remeslo",
         "description": "Пул к6 по рейтингу действия, берётся лучшая кость: 1–3 провал, 4–5 успех с последствием, 6 успех. При рейтинге 0 — две кости, берётся худшая. Последствия крутят часы тревоги на столе. Две и более шестёрки при ненулевом рейтинге — критический успех.",
         "params": [
           {
-            "key": "действующий",
+            "key": "deystvuyuschiy",
             "label": "Кто действует",
             "kind": "sheet"
           },
           {
-            "key": "цели",
+            "key": "aims",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
             "item": {
-              "key": "цель",
+              "key": "aim",
               "label": "Цель"
             }
           },
@@ -337,7 +344,8 @@
         ],
         "steps": [
           {
-            "id": "бросок_бросок",
+            "id": "brosok_brosok",
+            "label": "бросок бросок",
             "type": "roll",
             "field": {
               "expr": "@rating"
@@ -345,13 +353,14 @@
           },
           {
             "type": "each",
-            "of": "цели"
+            "of": "aims"
           },
           {
-            "id": "бросок",
+            "id": "brosok",
+            "label": "бросок",
             "type": "check",
             "value": {
-              "expr": "@бросок_бросок"
+              "expr": "@brosok_brosok"
             },
             "versus": {
               "expr": "4"
@@ -363,14 +372,14 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@rating > 0 and count(@бросок.dice.rolls, 6) >= 2"
+              "expr": "@rating > 0 and count(@brosok.dice.rolls, 6) >= 2"
             }
           },
           {
             "type": "table",
             "table": "crit",
             "value": {
-              "expr": "count(@бросок.dice.rolls, 6)"
+              "expr": "count(@brosok.dice.rolls, 6)"
             }
           },
           {
@@ -379,7 +388,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@бросок.degree == \"успех с последствием\""
+              "expr": "@brosok.degree == \"успех с последствием\""
             }
           },
           {
@@ -395,7 +404,7 @@
           {
             "type": "orElse",
             "if": {
-              "expr": "@бросок.degree == \"провал\""
+              "expr": "@brosok.degree == \"провал\""
             }
           },
           {
@@ -415,32 +424,34 @@
       },
       "resist": {
         "label": "Сопротивление",
-        "group": "Ремесло",
+        "group": "Remeslo",
         "description": "Сопротивление: кости по Воле, стресс = 6 минус лучшая кость; две шестёрки — критический успех, снимает 1 стресс. При нулевой Воле две кости, берётся худшая.",
         "steps": [
           {
-            "id": "бросок_бросок",
+            "id": "brosok_brosok",
+            "label": "бросок бросок",
             "type": "roll",
             "die": "resist_pool",
             "tags": [
-              "сопротивление",
+              "soprotivlenie",
               {
-                "expr": "if(@действующий.resolve == 0, \"нулевой\", \"\")"
+                "expr": "if(@deystvuyuschiy.resolve == 0, \"nulevoy\", \"\")"
               }
             ],
             "by": {
-              "expr": "@действующий"
+              "expr": "@deystvuyuschiy"
             }
           },
           {
             "type": "each",
-            "of": "цели"
+            "of": "aims"
           },
           {
-            "id": "бросок",
+            "id": "brosok",
+            "label": "бросок",
             "type": "check",
             "value": {
-              "expr": "@бросок_бросок"
+              "expr": "@brosok_brosok"
             },
             "versus": {
               "expr": "4"
@@ -449,14 +460,14 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@действующий.resolve > 0 and count(@бросок.dice.rolls, 6) >= 2"
+              "expr": "@deystvuyuschiy.resolve > 0 and count(@brosok.dice.rolls, 6) >= 2"
             }
           },
           {
             "type": "table",
             "table": "crit",
             "value": {
-              "expr": "count(@бросок.dice.rolls, 6)"
+              "expr": "count(@brosok.dice.rolls, 6)"
             }
           },
           {
@@ -465,27 +476,27 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@цель.stress"
+              "expr": "@aim.stress"
             },
             "direction": "add",
             "value": {
-              "expr": "if(@действующий.resolve > 0 and count(@бросок.dice.rolls, 6) >= 2, -1, 6 - @бросок.natural)"
+              "expr": "if(@deystvuyuschiy.resolve > 0 and count(@brosok.dice.rolls, 6) >= 2, -1, 6 - @brosok.natural)"
             }
           }
         ],
         "params": [
           {
-            "key": "действующий",
+            "key": "deystvuyuschiy",
             "label": "Кто действует",
             "kind": "sheet"
           },
           {
-            "key": "цели",
+            "key": "aims",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
             "item": {
-              "key": "цель",
+              "key": "aim",
               "label": "Цель"
             }
           }
@@ -494,32 +505,34 @@
       },
       "lay_low": {
         "label": "Залечь на дно",
-        "group": "Банда",
+        "group": "Banda",
         "description": "Бросок действия, которым прикрываете следы (при рейтинге 0 — две кости, худшая): жар банды снижается — 1–3 на 1, 4–5 на 2, 6 на 3, крит (две шестёрки) на 5; не ниже 0.",
         "steps": [
           {
-            "id": "бросок_бросок",
+            "id": "brosok_brosok",
+            "label": "бросок бросок",
             "type": "roll",
             "die": "pool",
             "tags": [
-              "действие",
+              "deystvie",
               {
-                "expr": "if(@rating == 0, \"нулевой\", \"\")"
+                "expr": "if(@rating == 0, \"nulevoy\", \"\")"
               }
             ],
             "by": {
-              "expr": "@действующий"
+              "expr": "@deystvuyuschiy"
             }
           },
           {
             "type": "each",
-            "of": "цели"
+            "of": "aims"
           },
           {
-            "id": "бросок",
+            "id": "brosok",
+            "label": "бросок",
             "type": "check",
             "value": {
-              "expr": "@бросок_бросок"
+              "expr": "@brosok_brosok"
             },
             "versus": {
               "expr": "4"
@@ -531,27 +544,27 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@цель.heat"
+              "expr": "@aim.heat"
             },
             "direction": "set",
             "value": {
-              "expr": "max(0, @действующий.heat - if(@rating > 0 and count(@бросок.dice.rolls, 6) >= 2, 5, if(@бросок.natural >= 6, 3, if(@бросок.natural >= 4, 2, 1))))"
+              "expr": "max(0, @deystvuyuschiy.heat - if(@rating > 0 and count(@brosok.dice.rolls, 6) >= 2, 5, if(@brosok.natural >= 6, 3, if(@brosok.natural >= 4, 2, 1))))"
             }
           }
         ],
         "params": [
           {
-            "key": "действующий",
+            "key": "deystvuyuschiy",
             "label": "Кто действует",
             "kind": "sheet"
           },
           {
-            "key": "цели",
+            "key": "aims",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
             "item": {
-              "key": "цель",
+              "key": "aim",
               "label": "Цель"
             }
           },
@@ -579,13 +592,13 @@
         "modifiers": [
           {
             "tags": [
-              "действие"
+              "deystvie"
             ],
             "kind": "edit",
             "call": "roll",
             "param": "tags",
             "value": {
-              "expr": "\"нулевой\""
+              "expr": "\"nulevoy\""
             },
             "if": {
               "expr": "@roller == @holder and @number == 0"
@@ -593,7 +606,7 @@
           },
           {
             "tags": [
-              "действие"
+              "deystvie"
             ],
             "kind": "edit",
             "call": "roll",
@@ -608,7 +621,7 @@
           },
           {
             "tags": [
-              "нулевой"
+              "nulevoy"
             ],
             "kind": "edit",
             "call": "roll",
@@ -626,10 +639,11 @@
     ],
     "blocks": [
       {
-        "key": "Действия",
+        "key": "Deystviya",
+        "label": "Действия",
         "parts": [
           {
-            "table": "лист",
+            "table": "who",
             "columns": [
               "hunt",
               "study",
@@ -687,10 +701,11 @@
         ]
       },
       {
-        "key": "Состояние",
+        "key": "Sostoyanie",
+        "label": "Состояние",
         "parts": [
           {
-            "table": "лист",
+            "table": "who",
             "columns": [
               "stress"
             ],
@@ -703,10 +718,11 @@
         ]
       },
       {
-        "key": "Стол",
+        "key": "Stol",
+        "label": "Стол",
         "parts": [
           {
-            "table": "стол",
+            "table": "stol",
             "views": {
               "alarm": {
                 "kind": "pips"
@@ -716,10 +732,11 @@
         ]
       },
       {
-        "key": "Банда",
+        "key": "Banda",
+        "label": "Банда",
         "parts": [
           {
-            "table": "группа",
+            "table": "gruppa",
             "views": {
               "heat": {
                 "kind": "stepper"
@@ -730,63 +747,74 @@
       }
     ],
     "rolls": {
-      "действие": {
+      "deystvie": {
         "label": "Действие",
         "die": "action_pool",
         "number": "count",
         "tags": [
-          "действие"
+          "deystvie"
         ],
         "fields": [
           {
-            "table": "лист",
+            "table": "who",
             "column": "hunt"
           },
           {
-            "table": "лист",
+            "table": "who",
             "column": "study"
           },
           {
-            "table": "лист",
+            "table": "who",
             "column": "survey"
           },
           {
-            "table": "лист",
+            "table": "who",
             "column": "tinker"
           },
           {
-            "table": "лист",
+            "table": "who",
             "column": "finesse"
           },
           {
-            "table": "лист",
+            "table": "who",
             "column": "prowl"
           },
           {
-            "table": "лист",
+            "table": "who",
             "column": "skirmish"
           },
           {
-            "table": "лист",
+            "table": "who",
             "column": "wreck"
           },
           {
-            "table": "лист",
+            "table": "who",
             "column": "attune"
           },
           {
-            "table": "лист",
+            "table": "who",
             "column": "command"
           },
           {
-            "table": "лист",
+            "table": "who",
             "column": "consort"
           },
           {
-            "table": "лист",
+            "table": "who",
             "column": "sway"
           }
         ]
+      }
+    },
+    "tags": {
+      "deystvie": {
+        "label": "действие"
+      },
+      "nulevoy": {
+        "label": "нулевой"
+      },
+      "soprotivlenie": {
+        "label": "сопротивление"
       }
     }
   },

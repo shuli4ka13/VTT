@@ -5,41 +5,43 @@
     "name": "Warhammer 40,000 Imperium Maledictum",
     "blocks": [
       {
-        "key": "Биография",
+        "key": "Biografiya",
+        "label": "Биография",
         "parts": [
           {
-            "table": "лист",
+            "table": "who",
             "columns": [
-              "имя",
-              "происхождение",
-              "фракция_2",
-              "роль"
+              "imya",
+              "proishozhdenie",
+              "frakciya_2",
+              "rol"
             ]
           },
           {
-            "table": "фракция"
+            "table": "frakciya"
           },
           {
-            "table": "роли"
+            "table": "roli"
           }
         ]
       },
       {
-        "key": "Характеристики",
+        "key": "Harakteristiki",
+        "label": "Характеристики",
         "parts": [
           {
-            "table": "характеристики",
+            "table": "harakteristiki",
             "views": {
-              "шаг_развития": {
+              "shag_razvitiya": {
                 "kind": "signed"
               },
-              "модификаторы": {
+              "modifikatory": {
                 "kind": "signed"
               },
-              "бонус_характеристики": {
+              "bonus_harakteristiki": {
                 "kind": "big"
               },
-              "итог": {
+              "total": {
                 "kind": "big"
               }
             }
@@ -47,21 +49,22 @@
         ]
       },
       {
-        "key": "Навыки",
+        "key": "Navyki",
+        "label": "Навыки",
         "parts": [
           {
-            "table": "навыки",
+            "table": "navyki",
             "views": {
-              "развитие": {
+              "razvitie": {
                 "kind": "pips"
               },
-              "развитие_специализации": {
+              "razvitie_specializacii": {
                 "kind": "pips"
               },
-              "итог": {
+              "total": {
                 "kind": "big"
               },
-              "итог_специализации": {
+              "itog_specializacii": {
                 "kind": "big"
               }
             }
@@ -69,140 +72,142 @@
         ]
       },
       {
-        "key": "Бой",
+        "key": "Boy",
+        "label": "Бой",
         "parts": [
           {
-            "table": "лист",
+            "table": "who",
             "columns": [
-              "раны",
-              "раны_макс"
+              "rany",
+              "rany_maks"
             ],
             "views": {
-              "раны": {
+              "rany": {
                 "kind": "stepper"
               },
-              "раны_макс": {
+              "rany_maks": {
                 "kind": "big"
               }
             }
           },
           {
-            "table": "броня",
+            "table": "armor",
             "columns": [
-              "бонус_брони",
-              "бонусы_талантов",
-              "итоговое_поглощение"
+              "bonus_broni",
+              "bonusy_talantov",
+              "itogovoe_pogloschenie"
             ],
             "views": {
-              "голова.бонус_брони": {
+              "golova.bonus_broni": {
                 "kind": "stepper"
               },
-              "тело.бонус_брони": {
+              "telo.bonus_broni": {
                 "kind": "stepper"
               },
-              "правая_рука.бонус_брони": {
+              "pravaya_ruka.bonus_broni": {
                 "kind": "stepper"
               },
-              "левая_рука.бонус_брони": {
+              "levaya_ruka.bonus_broni": {
                 "kind": "stepper"
               },
-              "правая_нога.бонус_брони": {
+              "pravaya_noga.bonus_broni": {
                 "kind": "stepper"
               },
-              "левая_нога.бонус_брони": {
+              "levaya_noga.bonus_broni": {
                 "kind": "stepper"
               },
-              "голова.бонусы_талантов": {
+              "golova.bonusy_talantov": {
                 "kind": "signed"
               },
-              "тело.бонусы_талантов": {
+              "telo.bonusy_talantov": {
                 "kind": "signed"
               },
-              "правая_рука.бонусы_талантов": {
+              "pravaya_ruka.bonusy_talantov": {
                 "kind": "signed"
               },
-              "левая_рука.бонусы_талантов": {
+              "levaya_ruka.bonusy_talantov": {
                 "kind": "signed"
               },
-              "правая_нога.бонусы_талантов": {
+              "pravaya_noga.bonusy_talantov": {
                 "kind": "signed"
               },
-              "левая_нога.бонусы_талантов": {
+              "levaya_noga.bonusy_talantov": {
                 "kind": "signed"
               },
-              "голова.итоговое_поглощение": {
+              "golova.itogovoe_pogloschenie": {
                 "kind": "big"
               },
-              "тело.итоговое_поглощение": {
+              "telo.itogovoe_pogloschenie": {
                 "kind": "big"
               },
-              "правая_рука.итоговое_поглощение": {
+              "pravaya_ruka.itogovoe_pogloschenie": {
                 "kind": "big"
               },
-              "левая_рука.итоговое_поглощение": {
+              "levaya_ruka.itogovoe_pogloschenie": {
                 "kind": "big"
               },
-              "правая_нога.итоговое_поглощение": {
+              "pravaya_noga.itogovoe_pogloschenie": {
                 "kind": "big"
               },
-              "левая_нога.итоговое_поглощение": {
+              "levaya_noga.itogovoe_pogloschenie": {
                 "kind": "big"
               }
             }
           },
           {
-            "table": "атаки"
+            "table": "ataki"
           }
         ]
       },
       {
-        "key": "Психосилы",
+        "key": "Psihosily",
+        "label": "Психосилы",
         "parts": [
           {
-            "table": "психосилы",
+            "table": "psihosily",
             "views": {
-              "варп_рейтинг": {
+              "varp_reyting": {
                 "kind": "pips"
               }
             }
           },
           {
-            "table": "тип_сил"
+            "table": "tip_sil"
           },
           {
-            "table": "варп_рейтинг"
+            "table": "varp_reyting"
           },
           {
-            "table": "дистанции"
+            "table": "distancii"
           },
           {
-            "table": "длительности"
+            "table": "dlitelnosti"
           }
         ]
       }
     ],
     "effects": {
-      "выстрел": {
+      "vystrel": {
         "label": "Выстрел",
         "description": "Обычная проверка Стрельбы. Попал — урон оружия плюс степени успеха, минус броня места попадания; остаток — раны. Место — по цифре единиц броска.",
         "params": [
           {
             "kind": "sheet",
-            "key": "действующий",
+            "key": "deystvuyuschiy",
             "label": "Кто действует"
           },
           {
             "kind": "sheet",
             "many": true,
-            "key": "цели",
+            "key": "aims",
             "label": "Цели",
             "item": {
-              "key": "цель",
+              "key": "aim",
               "label": "Цель"
             }
           },
           {
-            "key": "урон",
+            "key": "damage",
             "label": "Урон оружия",
             "kind": "number"
           }
@@ -210,44 +215,47 @@
         "steps": [
           {
             "type": "each",
-            "of": "цели"
+            "of": "aims"
           },
           {
-            "id": "бросок",
+            "id": "brosok",
+            "label": "бросок",
             "type": "roll",
             "field": {
-              "expr": "@действующий.навыки.стрельба.итог"
+              "expr": "@deystvuyuschiy.navyki.strelba.total"
             }
           },
           {
             "type": "branch",
             "if": {
-              "expr": "@бросок.success"
+              "expr": "@brosok.success"
             }
           },
           {
-            "id": "место",
+            "id": "mesto",
+            "label": "место",
             "type": "table",
-            "table": "места",
+            "table": "mesta",
             "value": {
-              "expr": "@бросок.natural - floor(@бросок.natural / 10) * 10"
+              "expr": "@brosok.natural - floor(@brosok.natural / 10) * 10"
             }
           },
           {
-            "id": "прошло",
+            "id": "proshlo",
+            "label": "прошло",
             "type": "roll",
             "fixed": {
-              "expr": "max(0, @урон + @бросок.margin - @цель.броня.[@место].бонус_брони)"
+              "expr": "max(0, @damage + @brosok.margin - @aim.armor.[@mesto].bonus_broni)"
             }
           },
           {
             "type": "apply",
             "target": {
-              "expr": "@цель.раны"
+              "expr": "@aim.rany"
             },
             "direction": "add",
             "value": {
-              "expr": "@прошло"
+              "expr": "@proshlo"
             }
           },
           {
@@ -255,35 +263,35 @@
           }
         ]
       },
-      "удар": {
+      "udar": {
         "label": "Удар",
         "description": "Встречная проверка: Ближний бой бьющего против Ближнего боя или Рефлексов защитника. Побеждает больший запас степеней; при равных — больший навык; при полном равенстве решает ведущий. Урон — урон оружия, бонус Силы и разница степеней, минус броня места; защитник урона не наносит.",
         "params": [
           {
             "kind": "sheet",
-            "key": "действующий",
+            "key": "deystvuyuschiy",
             "label": "Кто действует"
           },
           {
             "kind": "sheet",
             "many": true,
-            "key": "цели",
+            "key": "aims",
             "label": "Цели",
             "item": {
-              "key": "цель",
+              "key": "aim",
               "label": "Цель"
             }
           },
           {
-            "key": "урон",
+            "key": "damage",
             "label": "Урон оружия",
             "kind": "number"
           },
           {
-            "key": "чем",
+            "key": "chem",
             "label": "Чем защищается",
             "kind": "choice",
-            "from": "чем_защищается",
+            "from": "chem_zaschischaetsya",
             "ask": {
               "by": "gm",
               "hint": "Ближний бой или Рефлексы (Уклонение) — выбирает ведущий."
@@ -293,30 +301,32 @@
         "steps": [
           {
             "type": "each",
-            "of": "цели"
+            "of": "aims"
           },
           {
-            "id": "удар",
+            "id": "udar",
+            "label": "удар",
             "type": "roll",
             "field": {
-              "expr": "@действующий.навыки.рукопашный_бой.итог"
+              "expr": "@deystvuyuschiy.navyki.rukopashnyy_boy.total"
             }
           },
           {
-            "id": "защита",
+            "id": "defense",
+            "label": "защита",
             "type": "roll",
             "field": {
-              "expr": "@цель.навыки.[@чем.навык].итог"
+              "expr": "@aim.navyki.[@chem.skill].total"
             }
           },
           {
             "type": "branch",
             "if": {
-              "expr": "@удар.margin == @защита.margin and @действующий.навыки.рукопашный_бой.итог == @цель.навыки.[@чем.навык].итог"
+              "expr": "@udar.margin == @defense.margin and @deystvuyuschiy.navyki.rukopashnyy_boy.total == @aim.navyki.[@chem.skill].total"
             }
           },
           {
-            "id": "решение",
+            "id": "reshenie",
             "type": "ask",
             "label": "Ничья. Кто победил?",
             "yes": "Бьющий",
@@ -325,7 +335,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "not(@решение)"
+              "expr": "not(@reshenie)"
             }
           },
           {
@@ -338,41 +348,44 @@
             "type": "end"
           },
           {
-            "id": "победа",
+            "id": "pobeda",
+            "label": "победа",
             "type": "roll",
             "fixed": {
-              "expr": "if(@удар.margin > @защита.margin or (@удар.margin == @защита.margin and @действующий.навыки.рукопашный_бой.итог >= @цель.навыки.[@чем.навык].итог), 1, 0)"
+              "expr": "if(@udar.margin > @defense.margin or (@udar.margin == @defense.margin and @deystvuyuschiy.navyki.rukopashnyy_boy.total >= @aim.navyki.[@chem.skill].total), 1, 0)"
             }
           },
           {
             "type": "branch",
             "if": {
-              "expr": "@победа == 1"
+              "expr": "@pobeda == 1"
             }
           },
           {
-            "id": "место",
+            "id": "mesto",
+            "label": "место",
             "type": "table",
-            "table": "места",
+            "table": "mesta",
             "value": {
-              "expr": "@удар.natural - floor(@удар.natural / 10) * 10"
+              "expr": "@udar.natural - floor(@udar.natural / 10) * 10"
             }
           },
           {
-            "id": "прошло",
+            "id": "proshlo",
+            "label": "прошло",
             "type": "roll",
             "fixed": {
-              "expr": "max(0, @урон + @действующий.характеристики.сила.бонус_характеристики + @удар.margin - @защита.margin - @цель.броня.[@место].бонус_брони)"
+              "expr": "max(0, @damage + @deystvuyuschiy.harakteristiki.strength.bonus_harakteristiki + @udar.margin - @defense.margin - @aim.armor.[@mesto].bonus_broni)"
             }
           },
           {
             "type": "apply",
             "target": {
-              "expr": "@цель.раны"
+              "expr": "@aim.rany"
             },
             "direction": "add",
             "value": {
-              "expr": "@прошло"
+              "expr": "@proshlo"
             }
           },
           {
@@ -380,27 +393,27 @@
           }
         ]
       },
-      "первая_помощь": {
+      "pervaya_pomosch": {
         "label": "Первая помощь",
         "description": "Проверка Медицины: вне боя Простая (+20), в бою Обычная (+0). Нужно хотя бы одно развитие навыка. Успех снимает раны: степени успеха плюс бонус Интеллекта лечащего.",
         "params": [
           {
             "kind": "sheet",
-            "key": "действующий",
+            "key": "deystvuyuschiy",
             "label": "Кто действует"
           },
           {
             "kind": "sheet",
             "many": true,
-            "key": "цели",
+            "key": "aims",
             "label": "Цели",
             "item": {
-              "key": "цель",
+              "key": "aim",
               "label": "Цель"
             }
           },
           {
-            "key": "сложность",
+            "key": "slozhnost",
             "label": "Поправка сложности",
             "kind": "number",
             "ask": {
@@ -413,7 +426,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@действующий.навыки.медицина.развитие < 1"
+              "expr": "@deystvuyuschiy.navyki.medicina.razvitie < 1"
             }
           },
           {
@@ -427,31 +440,32 @@
           },
           {
             "type": "each",
-            "of": "цели"
+            "of": "aims"
           },
           {
-            "id": "бросок",
+            "id": "brosok",
+            "label": "бросок",
             "type": "roll",
             "field": {
-              "expr": "@действующий.навыки.медицина.итог"
+              "expr": "@deystvuyuschiy.navyki.medicina.total"
             },
             "shift": {
-              "expr": "@сложность"
+              "expr": "@slozhnost"
             }
           },
           {
             "type": "branch",
             "if": {
-              "expr": "@бросок.success"
+              "expr": "@brosok.success"
             }
           },
           {
             "type": "apply",
             "target": {
-              "expr": "@цель.раны"
+              "expr": "@aim.rany"
             },
             "value": {
-              "expr": "@бросок.margin + @действующий.характеристики.интеллект.бонус_характеристики"
+              "expr": "@brosok.margin + @deystvuyuschiy.harakteristiki.intelligence.bonus_harakteristiki"
             }
           },
           {
@@ -462,7 +476,7 @@
     },
     "grants": [],
     "constants": {
-      "кость": {
+      "kost": {
         "label": "Основная Кость",
         "kind": "die",
         "dice": [
@@ -474,433 +488,433 @@
       }
     },
     "tables": {
-      "лист": {
+      "who": {
         "label": "Лист",
         "shape": "single",
         "columns": [
           {
             "kind": "text",
-            "key": "имя",
+            "key": "imya",
             "label": "Имя"
           },
           {
             "kind": "text",
-            "key": "происхождение",
+            "key": "proishozhdenie",
             "label": "Происхождение"
           },
           {
             "kind": "choice",
-            "from": "фракция",
-            "key": "фракция_2",
+            "from": "frakciya",
+            "key": "frakciya_2",
             "label": "Фракция"
           },
           {
             "kind": "choice",
-            "from": "роли",
-            "key": "роль",
+            "from": "roli",
+            "key": "rol",
             "label": "Роль"
           },
           {
             "kind": "number",
-            "key": "раны",
+            "key": "rany",
             "label": "Раны",
             "min": 0,
             "max": {
-              "expr": "@раны_макс"
+              "expr": "@rany_maks"
             }
           },
           {
             "kind": "number",
-            "key": "раны_макс",
+            "key": "rany_maks",
             "label": "Максимум ран",
             "expr": {
-              "expr": "@характеристики.сила.бонус_характеристики + 2 * @характеристики.выносливость.бонус_характеристики + @характеристики.воля.бонус_характеристики"
+              "expr": "@harakteristiki.strength.bonus_harakteristiki + 2 * @harakteristiki.vynoslivost.bonus_harakteristiki + @harakteristiki.will.bonus_harakteristiki"
             }
           }
         ]
       },
-      "навыки": {
+      "navyki": {
         "label": "Навыки",
         "owner": "sheet",
         "key": "word",
         "columns": [
           {
             "kind": "choice",
-            "from": "характеристики",
-            "key": "характеристика",
+            "from": "harakteristiki",
+            "key": "harakteristika",
             "label": "Характеристика"
           },
           {
             "kind": "number",
             "min": 0,
             "max": 5,
-            "key": "развитие",
+            "key": "razvitie",
             "label": "Развитие"
           },
           {
             "kind": "number",
             "expr": {
-              "expr": "@row.характеристика.итог +@row.развитие*5"
+              "expr": "@row.harakteristika.total +@row.razvitie*5"
             },
-            "key": "итог",
+            "key": "total",
             "label": "Итог"
           },
           {
             "kind": "text",
-            "key": "специализация",
+            "key": "specializaciya",
             "label": "Специализация"
           },
           {
             "kind": "number",
             "min": 0,
             "max": 5,
-            "key": "развитие_специализации",
+            "key": "razvitie_specializacii",
             "label": "Развитие Специализации"
           },
           {
             "kind": "number",
             "expr": {
-              "expr": "@row.характеристика.итог +@row.развитие*5 +@row.развитие_специализации*5"
+              "expr": "@row.harakteristika.total +@row.razvitie*5 +@row.razvitie_specializacii*5"
             },
-            "key": "итог_специализации",
+            "key": "itog_specializacii",
             "label": "Итог Специализации"
           }
         ],
         "rows": [
           {
-            "value": "атлетика",
+            "value": "atletika",
             "label": "Атлетика",
             "cells": {},
             "view": {
-              "характеристика": {
-                "default": "сила"
+              "harakteristika": {
+                "default": "strength"
               }
             }
           },
           {
-            "value": "наблюдательность",
+            "value": "nablyudatelnost",
             "label": "Наблюдательность",
             "cells": {},
             "view": {
-              "характеристика": {
-                "default": "восприятие"
+              "harakteristika": {
+                "default": "vospriyatie"
               }
             }
           },
           {
-            "value": "сноровка",
+            "value": "snorovka",
             "label": "Сноровка",
             "cells": {},
             "view": {
-              "характеристика": {
-                "default": "ловкость"
+              "harakteristika": {
+                "default": "dexterity"
               }
             }
           },
           {
-            "value": "дисциплина",
+            "value": "disciplina",
             "label": "Дисциплина",
             "cells": {},
             "view": {
-              "характеристика": {
-                "default": "воля"
+              "harakteristika": {
+                "default": "will"
               }
             }
           },
           {
-            "value": "живучесть",
+            "value": "zhivuchest",
             "label": "Живучесть",
             "cells": {},
             "view": {
-              "характеристика": {
-                "default": "выносливость"
+              "harakteristika": {
+                "default": "vynoslivost"
               }
             }
           },
           {
-            "value": "интуиция",
+            "value": "intuiciya",
             "label": "Интуиция",
             "cells": {},
             "view": {
-              "характеристика": {
-                "default": "восприятие"
+              "harakteristika": {
+                "default": "vospriyatie"
               }
             }
           },
           {
-            "value": "лингвистика",
+            "value": "lingvistika",
             "label": "Лингвистика",
             "cells": {},
             "view": {
-              "характеристика": {
-                "default": "интеллект"
+              "harakteristika": {
+                "default": "intelligence"
               }
             }
           },
           {
-            "value": "логика",
+            "value": "logika",
             "label": "Логика",
             "cells": {},
             "view": {
-              "характеристика": {
-                "default": "интеллект"
+              "harakteristika": {
+                "default": "intelligence"
               }
             }
           },
           {
-            "value": "знания",
+            "value": "znaniya",
             "label": "Знания",
             "cells": {},
             "view": {
-              "характеристика": {
-                "default": "интеллект"
+              "harakteristika": {
+                "default": "intelligence"
               }
             }
           },
           {
-            "value": "медицина",
+            "value": "medicina",
             "label": "Медицина",
             "cells": {},
             "view": {
-              "характеристика": {
-                "default": "интеллект"
+              "harakteristika": {
+                "default": "intelligence"
               }
             }
           },
           {
-            "value": "рукопашный_бой",
+            "value": "rukopashnyy_boy",
             "label": "Рукопашный Бой",
             "cells": {},
             "view": {
-              "характеристика": {
-                "default": "ближний_бой"
+              "harakteristika": {
+                "default": "blizhniy_boy"
               }
             }
           },
           {
-            "value": "ориентирование",
+            "value": "orientirovanie",
             "label": "Ориентирование",
             "cells": {},
             "view": {
-              "характеристика": {
-                "default": "интеллект"
+              "harakteristika": {
+                "default": "intelligence"
               }
             }
           },
           {
-            "value": "авторитет",
+            "value": "avtoritet",
             "label": "Авторитет",
             "cells": {},
             "view": {
-              "характеристика": {
-                "default": "воля"
+              "harakteristika": {
+                "default": "will"
               }
             }
           },
           {
-            "value": "пилотирование",
+            "value": "pilotirovanie",
             "label": "Пилотирование",
             "cells": {},
             "view": {
-              "характеристика": {
-                "default": "ловкость"
+              "harakteristika": {
+                "default": "dexterity"
               }
             }
           },
           {
-            "value": "психическое_мастерство",
+            "value": "psihicheskoe_masterstvo",
             "label": "Психическое Мастерство",
             "cells": {},
             "view": {
-              "характеристика": {
-                "default": "воля"
+              "harakteristika": {
+                "default": "will"
               }
             }
           },
           {
-            "value": "стрельба",
+            "value": "strelba",
             "label": "Стрельба",
             "cells": {},
             "view": {
-              "характеристика": {
-                "default": "дальний_бой"
+              "harakteristika": {
+                "default": "dalniy_boy"
               }
             }
           },
           {
-            "value": "убеждение",
+            "value": "ubezhdenie",
             "label": "Убеждение",
             "cells": {},
             "view": {
-              "характеристика": {
-                "default": "харизма"
+              "harakteristika": {
+                "default": "charisma"
               }
             }
           },
           {
-            "value": "рефлексы",
+            "value": "refleksy",
             "label": "Рефлексы",
             "cells": {},
             "view": {
-              "характеристика": {
-                "default": "ловкость"
+              "harakteristika": {
+                "default": "dexterity"
               }
             }
           },
           {
-            "value": "скрытность",
+            "value": "skrytnost",
             "label": "Скрытность",
             "cells": {},
             "view": {
-              "характеристика": {
-                "default": "ловкость"
+              "harakteristika": {
+                "default": "dexterity"
               }
             }
           },
           {
-            "value": "техника",
+            "value": "tehnika",
             "label": "Техника",
             "cells": {},
             "view": {
-              "характеристика": {
-                "default": "интеллект"
+              "harakteristika": {
+                "default": "intelligence"
               }
             }
           }
         ]
       },
-      "характеристики": {
+      "harakteristiki": {
         "label": "Характеристики",
         "owner": "sheet",
         "key": "word",
         "columns": [
           {
             "kind": "number",
-            "key": "значение",
+            "key": "znachenie",
             "label": "Значение"
           },
           {
             "kind": "number",
-            "key": "модификаторы",
+            "key": "modifikatory",
             "label": "Модификаторы"
           },
           {
             "kind": "number",
             "min": 0,
-            "key": "шаг_развития",
+            "key": "shag_razvitiya",
             "label": "Шаг Развития"
           },
           {
             "kind": "number",
             "expr": {
-              "expr": "@row.значение+@row.модификаторы+@row.шаг_развития"
+              "expr": "@row.znachenie+@row.modifikatory+@row.shag_razvitiya"
             },
-            "key": "итог",
+            "key": "total",
             "label": "Итог"
           },
           {
             "kind": "number",
             "expr": {
-              "expr": "floor(@row.итог/10)"
+              "expr": "floor(@row.total/10)"
             },
-            "key": "бонус_характеристики",
+            "key": "bonus_harakteristiki",
             "label": "Бонус характеристики"
           }
         ],
         "rows": [
           {
-            "value": "ближний_бой",
+            "value": "blizhniy_boy",
             "label": "Ближний Бой",
             "cells": {},
             "view": {
-              "значение": {
+              "znachenie": {
                 "default": 20
               }
             }
           },
           {
-            "value": "дальний_бой",
+            "value": "dalniy_boy",
             "label": "Дальний Бой",
             "cells": {},
             "view": {
-              "значение": {
+              "znachenie": {
                 "default": 20
               }
             }
           },
           {
-            "value": "сила",
+            "value": "strength",
             "label": "Сила",
             "cells": {},
             "view": {
-              "значение": {
+              "znachenie": {
                 "default": 20
               }
             }
           },
           {
-            "value": "выносливость",
+            "value": "vynoslivost",
             "label": "Выносливость",
             "cells": {},
             "view": {
-              "значение": {
+              "znachenie": {
                 "default": 20
               }
             }
           },
           {
-            "value": "ловкость",
+            "value": "dexterity",
             "label": "Ловкость",
             "cells": {},
             "view": {
-              "значение": {
+              "znachenie": {
                 "default": 20
               }
             }
           },
           {
-            "value": "интеллект",
+            "value": "intelligence",
             "label": "Интеллект",
             "cells": {},
             "view": {
-              "значение": {
+              "znachenie": {
                 "default": 20
               }
             }
           },
           {
-            "value": "восприятие",
+            "value": "vospriyatie",
             "label": "Восприятие",
             "cells": {},
             "view": {
-              "значение": {
+              "znachenie": {
                 "default": 20
               }
             }
           },
           {
-            "value": "воля",
+            "value": "will",
             "label": "Воля",
             "cells": {},
             "view": {
-              "значение": {
+              "znachenie": {
                 "default": 20
               }
             }
           },
           {
-            "value": "харизма",
+            "value": "charisma",
             "label": "Харизма",
             "cells": {},
             "view": {
-              "значение": {
+              "znachenie": {
                 "default": 20
               }
             }
           }
         ]
       },
-      "броня": {
+      "armor": {
         "label": "Броня",
         "owner": "sheet",
         "key": "word",
@@ -908,126 +922,126 @@
           {
             "kind": "number",
             "min": 0,
-            "key": "бонус_брони",
+            "key": "bonus_broni",
             "label": "Бонусы Брони"
           },
           {
             "kind": "number",
             "expr": {
-              "expr": "@row.бонус_брони+@характеристики.выносливость.бонус_характеристики+@row.бонусы_талантов"
+              "expr": "@row.bonus_broni+@harakteristiki.vynoslivost.bonus_harakteristiki+@row.bonusy_talantov"
             },
-            "key": "итоговое_поглощение",
+            "key": "itogovoe_pogloschenie",
             "label": "Итоговое поглощение"
           },
           {
             "kind": "number",
             "min": 0,
-            "key": "бонусы_талантов",
+            "key": "bonusy_talantov",
             "label": "Бонусы Талантов"
           }
         ],
         "rows": [
           {
-            "value": "голова",
+            "value": "golova",
             "label": "Голова"
           },
           {
-            "value": "тело",
+            "value": "telo",
             "label": "Тело",
             "cells": {}
           },
           {
-            "value": "правая_рука",
+            "value": "pravaya_ruka",
             "label": "Правая Рука",
             "cells": {}
           },
           {
-            "value": "левая_рука",
+            "value": "levaya_ruka",
             "label": "Левая Рука",
             "cells": {}
           },
           {
-            "value": "правая_нога",
+            "value": "pravaya_noga",
             "label": "Правая Нога",
             "cells": {}
           },
           {
-            "value": "левая_нога",
+            "value": "levaya_noga",
             "label": "Левая Нога",
             "cells": {}
           }
         ]
       },
-      "атаки": {
+      "ataki": {
         "label": "Атаки",
         "owner": "sheet",
         "key": "word",
         "columns": [
           {
             "kind": "text",
-            "key": "название",
+            "key": "nazvanie",
             "label": "Название"
           },
           {
             "kind": "choice",
-            "from": "дальность",
-            "default": "рукопашный_бой",
-            "key": "тип_оружия",
+            "from": "dalnost",
+            "default": "rukopashnyy_boy",
+            "key": "tip_oruzhiya",
             "label": "Тип Оружия"
           }
         ],
         "rows": [
           {
-            "value": "оружие",
+            "value": "weapon",
             "label": "Оружие",
             "view": {
-              "тип_оружия": {
-                "default": "ближний"
+              "tip_oruzhiya": {
+                "default": "blizhniy"
               }
             }
           }
         ]
       },
-      "дальность": {
+      "dalnost": {
         "label": "Дальность",
         "key": "word",
         "columns": [
           {
             "kind": "number",
-            "key": "значение",
+            "key": "znachenie",
             "label": "Дальность"
           }
         ],
         "rows": [
           {
-            "value": "ближний",
+            "value": "blizhniy",
             "label": "Ближний",
             "cells": {
-              "значение": 0
+              "znachenie": 0
             }
           },
           {
-            "value": "дальний",
+            "value": "dalniy",
             "label": "Дальний",
             "cells": {
-              "значение": 1
+              "znachenie": 1
             }
           }
         ]
       },
-      "биография": {
+      "biografiya": {
         "label": "Биография",
         "owner": "sheet",
         "key": "word",
         "columns": [],
         "rows": [
           {
-            "value": "имя",
+            "value": "imya",
             "label": "Имя"
           }
         ]
       },
-      "фракция": {
+      "frakciya": {
         "label": "Фракции",
         "owner": "sheet",
         "key": "word",
@@ -1080,7 +1094,7 @@
           }
         ]
       },
-      "роли": {
+      "roli": {
         "label": "Роли",
         "owner": "sheet",
         "key": "word",
@@ -1117,15 +1131,15 @@
           }
         ]
       },
-      "психосилы": {
+      "psihosily": {
         "label": "Психосилы",
         "owner": "sheet",
         "key": "word",
         "columns": [
           {
             "kind": "choice",
-            "from": "тип_сил",
-            "key": "тип",
+            "from": "tip_sil",
+            "key": "tip",
             "label": "Тип"
           },
           {
@@ -1133,83 +1147,83 @@
             "default": 1,
             "min": 1,
             "max": 5,
-            "key": "варп_рейтинг",
+            "key": "varp_reyting",
             "label": "Варп Рейтинг"
           },
           {
             "kind": "choice",
-            "from": "дистанции",
-            "key": "дистанция",
+            "from": "distancii",
+            "key": "distanciya",
             "label": "Дистанция"
           },
           {
             "kind": "text",
-            "key": "цели",
+            "key": "aims",
             "label": "Цели"
           },
           {
             "kind": "choice",
-            "from": "длительности",
-            "key": "длительность",
+            "from": "dlitelnosti",
+            "key": "dlitelnost",
             "label": "Длительность"
           }
         ],
         "rows": [
           {
-            "value": "название",
+            "value": "nazvanie",
             "label": "Название",
             "view": {
-              "дистанция": {
-                "default": "дальняя"
+              "distanciya": {
+                "default": "dalnyaya"
               },
-              "длительность": {
-                "default": "мгновенная"
+              "dlitelnost": {
+                "default": "mgnovennaya"
               },
-              "тип": {
-                "default": "малые_силы"
+              "tip": {
+                "default": "malye_sily"
               }
             }
           }
         ]
       },
-      "тип_сил": {
+      "tip_sil": {
         "label": "Тип Сил",
         "owner": "sheet",
         "key": "word",
         "columns": [],
         "rows": [
           {
-            "value": "малые_силы",
+            "value": "malye_sily",
             "label": "Малые Силы"
           },
           {
-            "value": "биомантия",
+            "value": "biomantiya",
             "label": "Биомантия",
             "cells": {}
           },
           {
-            "value": "прорицание",
+            "value": "proricanie",
             "label": "Прорицание",
             "cells": {}
           },
           {
-            "value": "пиромантия",
+            "value": "piromantiya",
             "label": "Пиромантия",
             "cells": {}
           },
           {
-            "value": "телекинезис",
+            "value": "telekinezis",
             "label": "Телекинезис",
             "cells": {}
           },
           {
-            "value": "телепатия",
+            "value": "telepatiya",
             "label": "Телепатия",
             "cells": {}
           }
         ]
       },
-      "варп_рейтинг": {
+      "varp_reyting": {
         "label": "Варп Рейтинг",
         "owner": "sheet",
         "key": "word",
@@ -1220,7 +1234,7 @@
           }
         ]
       },
-      "дистанции": {
+      "distancii": {
         "label": "Дистанции",
         "owner": "sheet",
         "key": "word",
@@ -1233,42 +1247,42 @@
         ],
         "rows": [
           {
-            "value": "вплотную",
+            "value": "vplotnuyu",
             "label": "Вплотную",
             "cells": {
               "value": "2 Метра (Рядом)"
             }
           },
           {
-            "value": "ближняя",
+            "value": "blizhnyaya",
             "label": "Ближняя",
             "cells": {
               "value": "6 Метров (Текущая Зона)"
             }
           },
           {
-            "value": "короткая",
+            "value": "korotkaya",
             "label": "Короткая",
             "cells": {
               "value": "12 Метров (Текущая Зона)"
             }
           },
           {
-            "value": "средняя",
+            "value": "srednyaya",
             "label": "Средняя",
             "cells": {
               "value": "24 Метра (Соседняя Зона)"
             }
           },
           {
-            "value": "дальняя",
+            "value": "dalnyaya",
             "label": "Дальняя",
             "cells": {
               "value": "36 Метров (Две Зоны)"
             }
           },
           {
-            "value": "экстремальная",
+            "value": "ekstremalnaya",
             "label": "Экстремальная",
             "cells": {
               "value": "72+ Метра (Три и больше зон)"
@@ -1276,29 +1290,29 @@
           }
         ]
       },
-      "длительности": {
+      "dlitelnosti": {
         "label": "Длительности",
         "owner": "sheet",
         "key": "word",
         "columns": [],
         "rows": [
           {
-            "value": "мгновенная",
+            "value": "mgnovennaya",
             "label": "Мгновенная"
           },
           {
-            "value": "поддерживаемая",
+            "value": "podderzhivaemaya",
             "label": "Поддерживаемая",
             "cells": {}
           },
           {
-            "value": "перманентная",
+            "value": "permanentnaya",
             "label": "Перманентная",
             "cells": {}
           }
         ]
       },
-      "места": {
+      "mesta": {
         "label": "Места попадания",
         "key": "range",
         "columns": [
@@ -1306,7 +1320,7 @@
             "key": "value",
             "label": "Место",
             "kind": "choice",
-            "from": "броня"
+            "from": "armor"
           }
         ],
         "rows": [
@@ -1314,89 +1328,89 @@
             "from": 0,
             "to": 0,
             "cells": {
-              "value": "тело"
+              "value": "telo"
             }
           },
           {
             "from": 1,
             "to": 1,
             "cells": {
-              "value": "голова"
+              "value": "golova"
             }
           },
           {
             "from": 2,
             "to": 2,
             "cells": {
-              "value": "левая_рука"
+              "value": "levaya_ruka"
             }
           },
           {
             "from": 3,
             "to": 3,
             "cells": {
-              "value": "правая_рука"
+              "value": "pravaya_ruka"
             }
           },
           {
             "from": 4,
             "to": 4,
             "cells": {
-              "value": "левая_нога"
+              "value": "levaya_noga"
             }
           },
           {
             "from": 5,
             "to": 5,
             "cells": {
-              "value": "правая_нога"
+              "value": "pravaya_noga"
             }
           },
           {
             "from": 6,
             "to": 9,
             "cells": {
-              "value": "тело"
+              "value": "telo"
             }
           }
         ]
       },
-      "стрелковое": {
+      "strelkovoe": {
         "label": "Стрелковое оружие",
         "shape": "book",
         "use": "item",
         "columns": [
           {
-            "key": "урон",
+            "key": "damage",
             "label": "Урон",
             "kind": "number"
           },
           {
-            "key": "дальность",
+            "key": "dalnost",
             "label": "Дальность",
             "kind": "choice",
-            "from": "дистанции"
+            "from": "distancii"
           }
         ],
         "bindings": [
           {
             "label": "Выстрелить",
-            "effect": "выстрел",
+            "effect": "vystrel",
             "args": {
-              "урон": {
-                "expr": "@урон"
+              "damage": {
+                "expr": "@damage"
               }
             }
           }
         ]
       },
-      "ближнее": {
+      "blizhnee": {
         "label": "Оружие ближнего боя",
         "shape": "book",
         "use": "item",
         "columns": [
           {
-            "key": "урон",
+            "key": "damage",
             "label": "Урон",
             "kind": "number"
           }
@@ -1404,43 +1418,43 @@
         "bindings": [
           {
             "label": "Ударить",
-            "effect": "удар",
+            "effect": "udar",
             "args": {
-              "урон": {
-                "expr": "@урон"
+              "damage": {
+                "expr": "@damage"
               }
             }
           }
         ]
       },
-      "чем_защищается": {
+      "chem_zaschischaetsya": {
         "label": "Чем защищается",
         "key": "word",
         "columns": [
           {
             "kind": "text",
-            "key": "навык",
+            "key": "skill",
             "label": "Навык защитника"
           }
         ],
         "rows": [
           {
-            "value": "ближний_бой",
+            "value": "blizhniy_boy",
             "label": "Ближний бой",
             "cells": {
-              "навык": "рукопашный_бой"
+              "skill": "rukopashnyy_boy"
             }
           },
           {
-            "value": "рефлексы",
+            "value": "refleksy",
             "label": "Рефлексы",
             "cells": {
-              "навык": "рефлексы"
+              "skill": "refleksy"
             }
           }
         ]
       },
-      "действие": {
+      "deystvie": {
         "label": "Действие",
         "shape": "book",
         "use": "action",
@@ -1449,7 +1463,7 @@
       }
     },
     "roll_edits": {
-      "преимущество": {
+      "preimuschestvo": {
         "label": "Преимущество",
         "ops": [
           {
@@ -1458,10 +1472,10 @@
           }
         ],
         "cancels": [
-          "помеха"
+          "pomeha"
         ]
       },
-      "помеха": {
+      "pomeha": {
         "label": "Помеха",
         "ops": [
           {
@@ -1470,10 +1484,10 @@
           }
         ],
         "cancels": [
-          "преимущество"
+          "preimuschestvo"
         ]
       },
-      "очень_лёгкая": {
+      "ochen_legkaya": {
         "label": "Очень лёгкая (+60)",
         "ops": [
           {
@@ -1482,7 +1496,7 @@
           }
         ]
       },
-      "лёгкая": {
+      "legkaya": {
         "label": "Лёгкая (+40)",
         "ops": [
           {
@@ -1491,7 +1505,7 @@
           }
         ]
       },
-      "простая": {
+      "prostaya": {
         "label": "Простая (+20)",
         "ops": [
           {
@@ -1500,7 +1514,7 @@
           }
         ]
       },
-      "трудная": {
+      "trudnaya": {
         "label": "Трудная (−10)",
         "ops": [
           {
@@ -1509,7 +1523,7 @@
           }
         ]
       },
-      "тяжёлая": {
+      "tyazhelaya": {
         "label": "Тяжёлая (−20)",
         "ops": [
           {
@@ -1518,7 +1532,7 @@
           }
         ]
       },
-      "очень_тяжёлая": {
+      "ochen_tyazhelaya": {
         "label": "Очень тяжёлая (−30)",
         "ops": [
           {
@@ -1529,9 +1543,9 @@
       }
     },
     "rolls": {
-      "проверка": {
+      "check": {
         "label": "Проверка",
-        "die": "кость",
+        "die": "kost",
         "number": "under",
         "success": {
           "expr": "@rolled <= 5 or (@rolled <= 95 and @rolled <= @threshold)"
@@ -1591,16 +1605,16 @@
         ],
         "fields": [
           {
-            "table": "характеристики",
-            "column": "итог"
+            "table": "harakteristiki",
+            "column": "total"
           },
           {
-            "table": "навыки",
-            "column": "итог"
+            "table": "navyki",
+            "column": "total"
           },
           {
-            "table": "навыки",
-            "column": "итог_специализации"
+            "table": "navyki",
+            "column": "itog_specializacii"
           }
         ]
       }
@@ -1610,63 +1624,63 @@
     "records": [
       {
         "id": "laspistol",
-        "table": "стрелковое",
+        "table": "strelkovoe",
         "label": "Лазпистолет",
         "cells": {
-          "урон": 5,
-          "дальность": "средняя"
+          "damage": 5,
+          "dalnost": "srednyaya"
         }
       },
       {
         "id": "lasgun",
-        "table": "стрелковое",
+        "table": "strelkovoe",
         "label": "Лазган",
         "cells": {
-          "урон": 6,
-          "дальность": "дальняя"
+          "damage": 6,
+          "dalnost": "dalnyaya"
         }
       },
       {
         "id": "autogun",
-        "table": "стрелковое",
+        "table": "strelkovoe",
         "label": "Автоган",
         "cells": {
-          "урон": 6,
-          "дальность": "дальняя"
+          "damage": 6,
+          "dalnost": "dalnyaya"
         }
       },
       {
         "id": "knife",
-        "table": "ближнее",
+        "table": "blizhnee",
         "label": "Нож",
         "cells": {
-          "урон": 0
+          "damage": 0
         }
       },
       {
         "id": "sword",
-        "table": "ближнее",
+        "table": "blizhnee",
         "label": "Меч",
         "cells": {
-          "урон": 2
+          "damage": 2
         }
       },
       {
         "id": "chainsword",
-        "table": "ближнее",
+        "table": "blizhnee",
         "label": "Цепной меч",
         "cells": {
-          "урон": 3
+          "damage": 3
         }
       },
       {
         "id": "first_aid",
-        "table": "действие",
+        "table": "deystvie",
         "label": "Первая помощь",
         "bindings": [
           {
             "label": "Перевязать",
-            "effect": "первая_помощь"
+            "effect": "pervaya_pomosch"
           }
         ]
       }
@@ -1674,25 +1688,25 @@
   },
   "sheets": [
     {
-      "id": "ваал",
+      "id": "vaal",
       "systemId": "imperium-maledictum",
       "name": "Сержант Ваал",
       "values": {
-        "имя": "Сержант Ваал",
-        "характеристики.ближний_бой.значение": 45,
-        "характеристики.дальний_бой.значение": 35,
-        "характеристики.сила.значение": 40,
-        "характеристики.выносливость.значение": 35,
-        "характеристики.ловкость.значение": 30,
-        "характеристики.интеллект.значение": 25,
-        "характеристики.восприятие.значение": 30,
-        "характеристики.воля.значение": 35,
-        "характеристики.харизма.значение": 25,
-        "навыки.атлетика.развитие": 1,
-        "навыки.стрельба.развитие": 1,
-        "навыки.медицина.развитие": 1,
-        "броня.тело.бонус_брони": 3,
-        "броня.голова.бонус_брони": 2
+        "imya": "Сержант Ваал",
+        "harakteristiki.blizhniy_boy.znachenie": 45,
+        "harakteristiki.dalniy_boy.znachenie": 35,
+        "harakteristiki.strength.znachenie": 40,
+        "harakteristiki.vynoslivost.znachenie": 35,
+        "harakteristiki.dexterity.znachenie": 30,
+        "harakteristiki.intelligence.znachenie": 25,
+        "harakteristiki.vospriyatie.znachenie": 30,
+        "harakteristiki.will.znachenie": 35,
+        "harakteristiki.charisma.znachenie": 25,
+        "navyki.atletika.razvitie": 1,
+        "navyki.strelba.razvitie": 1,
+        "navyki.medicina.razvitie": 1,
+        "armor.telo.bonus_broni": 3,
+        "armor.golova.bonus_broni": 2
       },
       "has": [
         {
@@ -1708,21 +1722,21 @@
       "effects": []
     },
     {
-      "id": "культист",
+      "id": "kultist",
       "systemId": "imperium-maledictum",
       "name": "Культист",
       "values": {
-        "имя": "Культист",
-        "характеристики.ближний_бой.значение": 30,
-        "характеристики.дальний_бой.значение": 25,
-        "характеристики.сила.значение": 30,
-        "характеристики.выносливость.значение": 30,
-        "характеристики.ловкость.значение": 30,
-        "характеристики.интеллект.значение": 20,
-        "характеристики.восприятие.значение": 25,
-        "характеристики.воля.значение": 20,
-        "характеристики.харизма.значение": 15,
-        "броня.тело.бонус_брони": 1
+        "imya": "Культист",
+        "harakteristiki.blizhniy_boy.znachenie": 30,
+        "harakteristiki.dalniy_boy.znachenie": 25,
+        "harakteristiki.strength.znachenie": 30,
+        "harakteristiki.vynoslivost.znachenie": 30,
+        "harakteristiki.dexterity.znachenie": 30,
+        "harakteristiki.intelligence.znachenie": 20,
+        "harakteristiki.vospriyatie.znachenie": 25,
+        "harakteristiki.will.znachenie": 20,
+        "harakteristiki.charisma.znachenie": 15,
+        "armor.telo.bonus_broni": 1
       },
       "has": [
         {

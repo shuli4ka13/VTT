@@ -4,14 +4,30 @@
     "id": "13age",
     "name": "13th Age",
     "groups": {
-      "Атака": {},
-      "Бой": {},
-      "Броски и проверки": {},
-      "Что случается": {},
-      "Плата": {},
-      "Снаряжение": {},
-      "Приёмы": {},
-      "Общие правила": {}
+      "Ataka": {
+        "label": "Атака"
+      },
+      "Boy": {
+        "label": "Бой"
+      },
+      "Broski_i_proverki": {
+        "label": "Броски и проверки"
+      },
+      "Chto_sluchaetsya": {
+        "label": "Что случается"
+      },
+      "Plata": {
+        "label": "Плата"
+      },
+      "Snaryazhenie": {
+        "label": "Снаряжение"
+      },
+      "Priemy": {
+        "label": "Приёмы"
+      },
+      "Obschie_pravila": {
+        "label": "Общие правила"
+      }
     },
     "constants": {
       "lead_die": {
@@ -26,7 +42,7 @@
     },
     "roll_edits": {},
     "tables": {
-      "лист": {
+      "list": {
         "label": "Лист",
         "shape": "single",
         "columns": [
@@ -92,7 +108,7 @@
           }
         ]
       },
-      "стол": {
+      "stol": {
         "label": "Стол",
         "shape": "single",
         "owner": "desk",
@@ -106,7 +122,7 @@
           }
         ]
       },
-      "группа": {
+      "gruppa": {
         "label": "Группа",
         "shape": "single",
         "owner": "group",
@@ -156,10 +172,10 @@
             "value": "ближний бой — Сила",
             "cells": {
               "attack": {
-                "expr": "@abilities.сила.mod"
+                "expr": "@abilities.strength.mod"
               },
               "damage": {
-                "expr": "@abilities.сила.mod"
+                "expr": "@abilities.strength.mod"
               }
             }
           },
@@ -167,10 +183,10 @@
             "value": "дальний бой — Ловкость",
             "cells": {
               "attack": {
-                "expr": "@abilities.ловкость.mod"
+                "expr": "@abilities.dexterity.mod"
               },
               "damage": {
-                "expr": "@abilities.ловкость.mod"
+                "expr": "@abilities.dexterity.mod"
               }
             }
           }
@@ -181,7 +197,8 @@
         "key": "word",
         "rows": [
           {
-            "value": "атака"
+            "value": "ataka",
+            "label": "атака"
           }
         ]
       },
@@ -210,27 +227,27 @@
         ],
         "rows": [
           {
-            "value": "сила",
+            "value": "strength",
             "label": "Сила"
           },
           {
-            "value": "телосложение",
+            "value": "constitution",
             "label": "Телосложение"
           },
           {
-            "value": "ловкость",
+            "value": "dexterity",
             "label": "Ловкость"
           },
           {
-            "value": "интеллект",
+            "value": "intelligence",
             "label": "Интеллект"
           },
           {
-            "value": "мудрость",
+            "value": "wisdom",
             "label": "Мудрость"
           },
           {
-            "value": "харизма",
+            "value": "charisma",
             "label": "Харизма"
           }
         ],
@@ -242,7 +259,7 @@
         "hint": "Кость оружия и способ атаки свои у каждого.",
         "shape": "book",
         "use": "item",
-        "block": "Снаряжение",
+        "block": "Snaryazhenie",
         "columns": [
           {
             "key": "weapon_die",
@@ -280,7 +297,7 @@
         "hint": "Бонус атаки и урон вписаны числами.",
         "shape": "book",
         "use": "action",
-        "block": "Приёмы",
+        "block": "Priemy",
         "columns": [
           {
             "key": "to_hit",
@@ -325,21 +342,24 @@
         ],
         "rows": [
           {
-            "value": "промах",
+            "value": "promah",
+            "label": "промах",
             "cells": {
               "dice_mul": 0,
               "hit": false
             }
           },
           {
-            "value": "попадание",
+            "value": "popadanie",
+            "label": "попадание",
             "cells": {
               "dice_mul": 1,
               "hit": true
             }
           },
           {
-            "value": "крит",
+            "value": "krit",
+            "label": "крит",
             "cells": {
               "dice_mul": 2,
               "hit": true
@@ -351,22 +371,22 @@
     "initiative": {
       "die": "lead_die",
       "bonus": {
-        "expr": "@abilities.ловкость.mod + @level"
+        "expr": "@abilities.dexterity.mod + @level"
       }
     },
     "effects": {
       "damage": {
         "label": "Урон",
-        "group": "Что случается",
+        "group": "Chto_sluchaetsya",
         "params": [
           {
-            "key": "лист",
+            "key": "list",
             "label": "Лист",
             "kind": "sheet",
             "role": "target"
           },
           {
-            "key": "источник",
+            "key": "source",
             "label": "Источник",
             "kind": "sheet",
             "optional": true,
@@ -383,7 +403,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@лист.hp"
+              "expr": "@list.hp"
             },
             "value": {
               "expr": "@amount"
@@ -393,21 +413,21 @@
       },
       "hero_attack": {
         "label": "Атака героя",
-        "group": "Атака",
+        "group": "Ataka",
         "description": "к20 + модификатор + уровень + кость эскалации против КЗ. Попал — кость оружия за каждый уровень, на 20 вдвое. Промах — урон, равный уровню.",
         "params": [
           {
-            "key": "действующий",
+            "key": "deystvuyuschiy",
             "label": "Кто действует",
             "kind": "sheet"
           },
           {
-            "key": "цели",
+            "key": "aims",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
             "item": {
-              "key": "цель",
+              "key": "aim",
               "label": "Цель"
             }
           },
@@ -430,55 +450,57 @@
         "steps": [
           {
             "type": "each",
-            "of": "цели"
+            "of": "aims"
           },
           {
-            "id": "бросок",
+            "id": "brosok",
+            "label": "бросок",
             "type": "emit",
             "effect": "attack_roll",
             "args": {
-              "бонус": {
-                "expr": "@attack_with + @действующий.level + @desk.escalation"
+              "bonus_2": {
+                "expr": "@attack_with + @deystvuyuschiy.level + @desk.escalation"
               },
-              "кто": {
-                "expr": "@действующий"
+              "who": {
+                "expr": "@deystvuyuschiy"
               },
-              "против": {
-                "expr": "@цель"
+              "protiv": {
+                "expr": "@aim"
               }
             }
           },
           {
             "type": "branch",
             "if": {
-              "expr": "@бросок.исход.hit"
+              "expr": "@brosok.ishod.hit"
             }
           },
           {
+            "id": "uron",
+            "label": "урон",
             "type": "roll",
             "die": {
               "expr": "@weapon_die"
             },
             "times": {
-              "expr": "@действующий.level * @бросок.исход.dice_mul"
+              "expr": "@deystvuyuschiy.level * @brosok.ishod.dice_mul"
             },
             "bonus": {
               "expr": "@damage_with"
-            },
-            "id": "урон"
+            }
           },
           {
             "type": "emit",
             "effect": "damage",
             "args": {
               "amount": {
-                "expr": "@урон.total"
+                "expr": "@uron.total"
               },
-              "лист": {
-                "expr": "@цель"
+              "list": {
+                "expr": "@aim"
               },
-              "источник": {
-                "expr": "@действующий"
+              "source": {
+                "expr": "@deystvuyuschiy"
               }
             }
           },
@@ -490,13 +512,13 @@
             "effect": "damage",
             "args": {
               "amount": {
-                "expr": "@действующий.level"
+                "expr": "@deystvuyuschiy.level"
               },
-              "лист": {
-                "expr": "@цель"
+              "list": {
+                "expr": "@aim"
               },
-              "источник": {
-                "expr": "@действующий"
+              "source": {
+                "expr": "@deystvuyuschiy"
               }
             }
           },
@@ -509,36 +531,36 @@
             "type": "emit",
             "effect": "cost_standard",
             "args": {
-              "лист": {
-                "expr": "@действующий"
+              "list": {
+                "expr": "@deystvuyuschiy"
               },
-              "источник": {
-                "expr": "@действующий"
+              "source": {
+                "expr": "@deystvuyuschiy"
               }
             }
           }
         ],
         "tags": [
-          "атака"
+          "ataka"
         ]
       },
       "monster_attack": {
         "label": "Атака монстра",
-        "group": "Атака",
+        "group": "Ataka",
         "description": "Монстры бьют фиксированным уроном и кость эскалации не получают.",
         "params": [
           {
-            "key": "действующий",
+            "key": "deystvuyuschiy",
             "label": "Кто действует",
             "kind": "sheet"
           },
           {
-            "key": "цели",
+            "key": "aims",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
             "item": {
-              "key": "цель",
+              "key": "aim",
               "label": "Цель"
             }
           },
@@ -556,28 +578,29 @@
         "steps": [
           {
             "type": "each",
-            "of": "цели"
+            "of": "aims"
           },
           {
-            "id": "бросок",
+            "id": "brosok",
+            "label": "бросок",
             "type": "emit",
             "effect": "attack_roll",
             "args": {
-              "бонус": {
+              "bonus_2": {
                 "expr": "@to_hit"
               },
-              "кто": {
-                "expr": "@действующий"
+              "who": {
+                "expr": "@deystvuyuschiy"
               },
-              "против": {
-                "expr": "@цель"
+              "protiv": {
+                "expr": "@aim"
               }
             }
           },
           {
             "type": "branch",
             "if": {
-              "expr": "@бросок.исход.hit"
+              "expr": "@brosok.ishod.hit"
             }
           },
           {
@@ -587,11 +610,11 @@
               "amount": {
                 "expr": "@hit_damage"
               },
-              "лист": {
-                "expr": "@цель"
+              "list": {
+                "expr": "@aim"
               },
-              "источник": {
-                "expr": "@действующий"
+              "source": {
+                "expr": "@deystvuyuschiy"
               }
             }
           },
@@ -604,32 +627,32 @@
             "type": "emit",
             "effect": "cost_standard",
             "args": {
-              "лист": {
-                "expr": "@действующий"
+              "list": {
+                "expr": "@deystvuyuschiy"
               },
-              "источник": {
-                "expr": "@действующий"
+              "source": {
+                "expr": "@deystvuyuschiy"
               }
             }
           }
         ],
         "tags": [
-          "атака"
+          "ataka"
         ]
       },
       "cost_standard": {
         "label": "Стоимость: стандартное",
-        "group": "Плата",
+        "group": "Plata",
         "description": "Списывается только в бою. Не хватило — действие не состоялось.",
         "params": [
           {
-            "key": "лист",
+            "key": "list",
             "label": "Лист",
             "kind": "sheet",
             "role": "actor"
           },
           {
-            "key": "источник",
+            "key": "source",
             "label": "Источник",
             "kind": "sheet",
             "optional": true,
@@ -646,7 +669,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@лист.turn_standard < 1"
+              "expr": "@list.turn_standard < 1"
             }
           },
           {
@@ -661,7 +684,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@лист.turn_standard"
+              "expr": "@list.turn_standard"
             },
             "value": {
               "expr": "1"
@@ -674,7 +697,7 @@
       },
       "battle_start": {
         "label": "Начало боя",
-        "group": "Общие правила",
+        "group": "Obschie_pravila",
         "description": "Бой пошёл: траты хода считаются, у всех полный запас.",
         "activation": "passive",
         "duration": {
@@ -720,7 +743,7 @@
       },
       "turn_refresh": {
         "label": "Начало хода",
-        "group": "Общие правила",
+        "group": "Obschie_pravila",
         "description": "Траты хода — снова полные.",
         "activation": "passive",
         "duration": {
@@ -769,7 +792,7 @@
       },
       "escalation_round": {
         "label": "Эскалация раунда",
-        "group": "Общие правила",
+        "group": "Obschie_pravila",
         "description": "В начале каждого раунда, кроме первого, кость эскалации растёт на единицу (не выше 6); в первом раунде — 0. Висит на столе — срабатывает раз за раунд.",
         "activation": "passive",
         "duration": {
@@ -795,23 +818,23 @@
       },
       "attack_roll": {
         "label": "Бросок атаки",
-        "group": "Броски и проверки",
+        "group": "Broski_i_proverki",
         "description": "Бросок к20 + бонус против защиты (КД) цели; 20 на кости — крит.",
         "params": [
           {
-            "key": "кто",
+            "key": "who",
             "label": "Кто бросает",
             "kind": "sheet",
             "role": "actor"
           },
           {
-            "key": "против",
+            "key": "protiv",
             "label": "Против кого",
             "kind": "sheet",
             "role": "target"
           },
           {
-            "key": "бонус",
+            "key": "bonus_2",
             "label": "Бонус атаки",
             "kind": "number",
             "default": 0
@@ -819,46 +842,48 @@
         ],
         "returns": [
           {
-            "key": "исход",
+            "key": "ishod",
             "label": "исход",
             "kind": "choice",
             "from": "attack_outcomes",
             "expr": {
-              "expr": "if(not @проверка.success, \"промах\", if(@проверка.natural >= 20, \"крит\", \"попадание\"))"
+              "expr": "if(not @proverka.success, \"promah\", if(@proverka.natural >= 20, \"krit\", \"popadanie\"))"
             }
           },
           {
-            "key": "на_костях",
+            "key": "na_kostyah",
             "label": "на костях",
             "kind": "number",
             "expr": {
-              "expr": "@проверка.natural"
+              "expr": "@proverka.natural"
             }
           }
         ],
         "steps": [
           {
-            "id": "бросок",
+            "id": "brosok",
+            "label": "бросок",
             "type": "roll",
             "die": "lead_die",
             "bonus": {
-              "expr": "@бонус"
+              "expr": "@bonus_2"
             },
             "tags": [
-              "атака"
+              "ataka"
             ],
             "by": {
-              "expr": "@кто"
+              "expr": "@who"
             }
           },
           {
-            "id": "проверка",
+            "id": "proverka",
+            "label": "проверка",
             "type": "check",
             "value": {
-              "expr": "@бросок"
+              "expr": "@brosok"
             },
             "versus": {
-              "expr": "@против.ac"
+              "expr": "@protiv.ac"
             }
           }
         ]
@@ -869,12 +894,12 @@
       "turn_refresh"
     ],
     "sheets": {
-      "персонаж": {
+      "personazh": {
         "label": "Персонаж",
         "icon": "🧙",
         "hint": "Лист героя."
       },
-      "противник": {
+      "protivnik": {
         "label": "Противник",
         "icon": "👹",
         "hint": "Лист противника."
@@ -889,31 +914,32 @@
       }
     },
     "tags": {
-      "атака": {
+      "ataka": {
         "label": "Атака",
         "inputs": [
           {
-            "key": "действующий",
+            "key": "deystvuyuschiy",
             "kind": "sheet"
           },
           {
-            "key": "цели",
+            "key": "aims",
             "kind": "sheet",
             "many": true
           }
         ],
-        "each": "цель",
+        "each": "aim",
         "outputs": [
-          "бросок"
+          "brosok"
         ]
       }
     },
     "blocks": [
       {
-        "key": "Характеристики",
+        "key": "Harakteristiki",
+        "label": "Характеристики",
         "parts": [
           {
-            "table": "лист",
+            "table": "list",
             "columns": [
               "level"
             ],
@@ -932,7 +958,8 @@
         ]
       },
       {
-        "key": "Модификаторы",
+        "key": "Modifikatory",
+        "label": "Модификаторы",
         "parts": [
           {
             "table": "abilities",
@@ -948,10 +975,11 @@
         ]
       },
       {
-        "key": "Защита",
+        "key": "Zaschita",
+        "label": "Защита",
         "parts": [
           {
-            "table": "лист",
+            "table": "list",
             "columns": [
               "ac",
               "pd",
@@ -961,16 +989,17 @@
         ]
       },
       {
-        "key": "Здоровье",
+        "key": "Zdorove",
+        "label": "Здоровье",
         "parts": [
           {
-            "table": "лист",
+            "table": "list",
             "columns": [
               "hp_max"
             ]
           },
           {
-            "table": "группа",
+            "table": "gruppa",
             "columns": [
               "hp"
             ],
@@ -983,10 +1012,11 @@
         ]
       },
       {
-        "key": "Стол",
+        "key": "Stol",
+        "label": "Стол",
         "parts": [
           {
-            "table": "стол",
+            "table": "stol",
             "views": {
               "escalation": {
                 "kind": "stepper"
@@ -999,7 +1029,7 @@
         "key": "В бою",
         "parts": [
           {
-            "table": "лист",
+            "table": "list",
             "columns": [
               "turn_standard",
               "turn_move",
@@ -1020,10 +1050,11 @@
         ]
       },
       {
-        "key": "Толпа",
+        "key": "Tolpa",
+        "label": "Толпа",
         "parts": [
           {
-            "table": "группа",
+            "table": "gruppa",
             "columns": [
               "mook_hp",
               "mooks_left"
@@ -1081,15 +1112,15 @@
     {
       "id": "kai",
       "systemId": "13age",
-      "of": "персонаж",
+      "of": "personazh",
       "name": "Кай",
       "values": {
-        "abilities.сила.score": 18,
-        "abilities.телосложение.score": 14,
-        "abilities.ловкость.score": 12,
-        "abilities.интеллект.score": 10,
-        "abilities.мудрость.score": 12,
-        "abilities.харизма.score": 10,
+        "abilities.strength.score": 18,
+        "abilities.constitution.score": 14,
+        "abilities.dexterity.score": 12,
+        "abilities.intelligence.score": 10,
+        "abilities.wisdom.score": 12,
+        "abilities.charisma.score": 10,
         "level": 2,
         "ac": 17,
         "pd": 14,
@@ -1107,15 +1138,15 @@
     {
       "id": "leya",
       "systemId": "13age",
-      "of": "персонаж",
+      "of": "personazh",
       "name": "Лея",
       "values": {
-        "abilities.сила.score": 10,
-        "abilities.телосложение.score": 12,
-        "abilities.ловкость.score": 18,
-        "abilities.интеллект.score": 12,
-        "abilities.мудрость.score": 14,
-        "abilities.харизма.score": 10,
+        "abilities.strength.score": 10,
+        "abilities.constitution.score": 12,
+        "abilities.dexterity.score": 18,
+        "abilities.intelligence.score": 12,
+        "abilities.wisdom.score": 14,
+        "abilities.charisma.score": 10,
         "level": 2,
         "ac": 15,
         "pd": 15,
@@ -1136,11 +1167,11 @@
     {
       "id": "goblin",
       "systemId": "13age",
-      "of": "противник",
+      "of": "protivnik",
       "name": "Гоблин",
       "values": {
-        "abilities.сила.score": 10,
-        "abilities.ловкость.score": 14,
+        "abilities.strength.score": 10,
+        "abilities.dexterity.score": 14,
         "level": 1,
         "ac": 16,
         "pd": 14,
@@ -1158,11 +1189,11 @@
     {
       "id": "orc",
       "systemId": "13age",
-      "of": "противник",
+      "of": "protivnik",
       "name": "Орк-берсерк",
       "values": {
-        "abilities.сила.score": 16,
-        "abilities.ловкость.score": 10,
+        "abilities.strength.score": 16,
+        "abilities.dexterity.score": 10,
         "level": 2,
         "ac": 16,
         "pd": 15,
@@ -1187,11 +1218,11 @@
     {
       "id": "goblin_mook_1",
       "systemId": "13age",
-      "of": "противник",
+      "of": "protivnik",
       "name": "Гоблин из толпы №1",
       "values": {
-        "abilities.сила.score": 10,
-        "abilities.ловкость.score": 14,
+        "abilities.strength.score": 10,
+        "abilities.dexterity.score": 14,
         "level": 1,
         "ac": 16,
         "pd": 14,
@@ -1208,11 +1239,11 @@
     {
       "id": "goblin_mook_2",
       "systemId": "13age",
-      "of": "противник",
+      "of": "protivnik",
       "name": "Гоблин из толпы №2",
       "values": {
-        "abilities.сила.score": 10,
-        "abilities.ловкость.score": 14,
+        "abilities.strength.score": 10,
+        "abilities.dexterity.score": 14,
         "level": 1,
         "ac": 16,
         "pd": 14,

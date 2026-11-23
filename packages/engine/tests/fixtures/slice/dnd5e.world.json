@@ -4,7 +4,7 @@
     "id": "dnd5e-slice",
     "name": "D&D 5e",
     "tables": {
-      "лист": {
+      "list_2": {
         "label": "Лист",
         "shape": "single",
         "columns": [
@@ -389,7 +389,7 @@
             "default": 10,
             "stages": [
               {
-                "key": "основа",
+                "key": "osnova",
                 "label": "основа",
                 "combine": {
                   "set": "max"
@@ -505,7 +505,7 @@
           }
         ]
       },
-      "стол": {
+      "stol": {
         "label": "Стол",
         "shape": "single",
         "owner": "desk",
@@ -570,27 +570,27 @@
         "key": "word",
         "rows": [
           {
-            "value": "рубящий",
+            "value": "rubyaschiy",
             "label": "рубящий"
           },
           {
-            "value": "колющий",
+            "value": "kolyuschiy",
             "label": "колющий"
           },
           {
-            "value": "дробящий",
+            "value": "drobyaschiy",
             "label": "дробящий"
           },
           {
-            "value": "огонь",
+            "value": "fire",
             "label": "огонь"
           },
           {
-            "value": "холод",
+            "value": "cold",
             "label": "холод"
           },
           {
-            "value": "яд",
+            "value": "yad",
             "label": "яд"
           }
         ]
@@ -600,11 +600,11 @@
         "key": "word",
         "rows": [
           {
-            "value": "немагический",
+            "value": "nemagicheskiy",
             "label": "немагический"
           },
           {
-            "value": "магический",
+            "value": "magicheskiy",
             "label": "магический"
           }
         ]
@@ -614,13 +614,16 @@
         "key": "word",
         "rows": [
           {
-            "value": "атака"
+            "value": "ataka",
+            "label": "атака"
           },
           {
-            "value": "спасбросок"
+            "value": "spasbrosok",
+            "label": "спасбросок"
           },
           {
-            "value": "проверка"
+            "value": "proverka",
+            "label": "проверка"
           }
         ]
       },
@@ -630,7 +633,7 @@
         "hint": "Кость урона — и атака появляется у владельца сама.",
         "shape": "book",
         "use": "item",
-        "block": "Снаряжение",
+        "block": "Snaryazhenie",
         "columns": [
           {
             "key": "damage_dice",
@@ -664,7 +667,7 @@
         "hint": "Носимая вещь с бонусами к полям листа. Действий не даёт.",
         "shape": "book",
         "use": "item",
-        "block": "Снаряжение",
+        "block": "Snaryazhenie",
         "columns": []
       },
       "action": {
@@ -673,7 +676,7 @@
         "hint": "Приём без предмета: сам выбирает эффект.",
         "shape": "book",
         "use": "action",
-        "block": "Приёмы",
+        "block": "Priemy",
         "columns": []
       },
       "attack-spell": {
@@ -682,7 +685,7 @@
         "hint": "Цель спасается; при провале — урон и, если задано, состояние.",
         "shape": "book",
         "use": "action",
-        "block": "Заклинания",
+        "block": "Zaklinaniya",
         "columns": [
           {
             "key": "damage_dice",
@@ -732,7 +735,7 @@
         "hint": "Восполняет хиты и, если задано, снимает состояние.",
         "shape": "book",
         "use": "action",
-        "block": "Заклинания",
+        "block": "Zaklinaniya",
         "columns": [
           {
             "key": "heal_dice",
@@ -766,7 +769,7 @@
         "hint": "Чистые данные: род без привязок ничего не автоматизирует.",
         "shape": "book",
         "use": "action",
-        "block": "Заклинания",
+        "block": "Zaklinaniya",
         "columns": []
       },
       "support-spell": {
@@ -775,7 +778,7 @@
         "hint": "Вешает состояние на цель и держится концентрацией: снял — спало со всех.",
         "shape": "book",
         "use": "action",
-        "block": "Заклинания",
+        "block": "Zaklinaniya",
         "columns": [],
         "bindings": [
           {
@@ -790,7 +793,7 @@
         "hint": "Бьёт по нескольким целям сразу: кости урона кидаются один раз, спасбросок — у каждого.",
         "shape": "book",
         "use": "action",
-        "block": "Заклинания",
+        "block": "Zaklinaniya",
         "columns": [
           {
             "key": "save_by",
@@ -846,17 +849,17 @@
         "activation": "manual",
         "params": [
           {
-            "key": "действующий",
+            "key": "deystvuyuschiy",
             "label": "Кто действует",
             "kind": "sheet"
           },
           {
-            "key": "цели",
+            "key": "aims",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
             "item": {
-              "key": "цель",
+              "key": "aim",
               "label": "Цель"
             }
           },
@@ -873,17 +876,18 @@
         ],
         "steps": [
           {
-            "id": "hit_бросок",
+            "id": "hit_brosok",
+            "label": "hit бросок",
             "type": "roll",
             "die": "lead_die",
             "bonus": {
-              "expr": "@действующий.attack_bonus"
+              "expr": "@deystvuyuschiy.attack_bonus"
             },
             "tags": [
-              "атака"
+              "ataka"
             ],
             "by": {
-              "expr": "@действующий"
+              "expr": "@deystvuyuschiy"
             }
           },
           {
@@ -892,25 +896,25 @@
               "expr": "@damage_dice"
             },
             "times": {
-              "expr": "if((@hit_бросок.natural >= 20), 2, 1)"
+              "expr": "if((@hit_brosok.natural >= 20), 2, 1)"
             },
             "bonus": {
-              "expr": "@действующий.str_mod"
+              "expr": "@deystvuyuschiy.str_mod"
             },
             "id": "dmg"
           },
           {
             "type": "each",
-            "of": "цели"
+            "of": "aims"
           },
           {
             "id": "hit",
             "type": "check",
             "value": {
-              "expr": "@hit_бросок"
+              "expr": "@hit_brosok"
             },
             "versus": {
-              "expr": "@цель.ac"
+              "expr": "@aim.ac"
             }
           },
           {
@@ -938,17 +942,17 @@
               "damage_type": {
                 "expr": "@damage_type"
               },
-              "лист": {
-                "expr": "@цель"
+              "list_2": {
+                "expr": "@aim"
               },
-              "источник": {
-                "expr": "@действующий"
+              "istochnik": {
+                "expr": "@deystvuyuschiy"
               }
             }
           }
         ],
         "description": "Удар оружием: попадание против класса брони, урон костью оружия и модификатором Силы. На двадцатке кости урона удваиваются. Посчитанное уходит в общий эффект «Урон».",
-        "group": "Атака",
+        "group": "Ataka",
         "cost": [
           {
             "type": "branch",
@@ -960,7 +964,7 @@
             "id": "check",
             "type": "check",
             "value": {
-              "expr": "@действующий.turn_action"
+              "expr": "@deystvuyuschiy.turn_action"
             },
             "versus": {
               "expr": "1"
@@ -984,7 +988,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@действующий.turn_action"
+              "expr": "@deystvuyuschiy.turn_action"
             },
             "direction": "subtract",
             "value": {
@@ -996,7 +1000,7 @@
           }
         ],
         "tags": [
-          "атака"
+          "ataka"
         ]
       },
       "save": {
@@ -1005,17 +1009,17 @@
         "activation": "manual",
         "params": [
           {
-            "key": "действующий",
+            "key": "deystvuyuschiy",
             "label": "Кто действует",
             "kind": "sheet"
           },
           {
-            "key": "цели",
+            "key": "aims",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
             "item": {
-              "key": "цель",
+              "key": "aim",
               "label": "Цель"
             }
           },
@@ -1050,30 +1054,31 @@
           },
           {
             "type": "each",
-            "of": "цели"
+            "of": "aims"
           },
           {
-            "id": "save_бросок",
+            "id": "save_brosok",
+            "label": "save бросок",
             "type": "roll",
             "die": "lead_die",
             "bonus": {
               "expr": "@save"
             },
             "tags": [
-              "спасбросок"
+              "spasbrosok"
             ],
             "by": {
-              "expr": "@цель"
+              "expr": "@aim"
             }
           },
           {
             "id": "save",
             "type": "check",
             "value": {
-              "expr": "@save_бросок"
+              "expr": "@save_brosok"
             },
             "versus": {
-              "expr": "@действующий.spell_dc"
+              "expr": "@deystvuyuschiy.spell_dc"
             }
           },
           {
@@ -1101,11 +1106,11 @@
               "damage_type": {
                 "expr": "@damage_type"
               },
-              "лист": {
-                "expr": "@цель"
+              "list_2": {
+                "expr": "@aim"
               },
-              "источник": {
-                "expr": "@действующий"
+              "istochnik": {
+                "expr": "@deystvuyuschiy"
               }
             }
           },
@@ -1116,16 +1121,16 @@
               "expr": "@status"
             },
             "to": {
-              "expr": "@цель"
+              "expr": "@aim"
             },
             "args": {
-              "наложил": {
-                "expr": "@действующий"
+              "nalozhil": {
+                "expr": "@deystvuyuschiy"
               }
             }
           }
         ],
-        "group": "Атака",
+        "group": "Ataka",
         "cost": [
           {
             "type": "branch",
@@ -1137,7 +1142,7 @@
             "id": "check",
             "type": "check",
             "value": {
-              "expr": "@действующий.turn_action"
+              "expr": "@deystvuyuschiy.turn_action"
             },
             "versus": {
               "expr": "1"
@@ -1161,7 +1166,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@действующий.turn_action"
+              "expr": "@deystvuyuschiy.turn_action"
             },
             "direction": "subtract",
             "value": {
@@ -1179,17 +1184,17 @@
         "activation": "manual",
         "params": [
           {
-            "key": "действующий",
+            "key": "deystvuyuschiy",
             "label": "Кто действует",
             "kind": "sheet"
           },
           {
-            "key": "цели",
+            "key": "aims",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
             "item": {
-              "key": "цель",
+              "key": "aim",
               "label": "Цель"
             }
           },
@@ -1211,18 +1216,18 @@
               "expr": "@heal_dice"
             },
             "bonus": {
-              "expr": "@действующий.cha_mod"
+              "expr": "@deystvuyuschiy.cha_mod"
             },
             "id": "amt"
           },
           {
             "type": "each",
-            "of": "цели"
+            "of": "aims"
           },
           {
             "type": "apply",
             "target": {
-              "expr": "@цель.hp_current"
+              "expr": "@aim.hp_current"
             },
             "direction": "add",
             "value": {
@@ -1236,12 +1241,12 @@
               "expr": "@cure"
             },
             "to": {
-              "expr": "@цель"
+              "expr": "@aim"
             }
           }
         ],
         "description": "Тратит ячейку 1-го круга: восполняет хиты и, если задано, снимает состояние.",
-        "group": "Лечение",
+        "group": "Lechenie",
         "cost": [
           {
             "type": "branch",
@@ -1253,7 +1258,7 @@
             "id": "check",
             "type": "check",
             "value": {
-              "expr": "@действующий.turn_action"
+              "expr": "@deystvuyuschiy.turn_action"
             },
             "versus": {
               "expr": "1"
@@ -1277,7 +1282,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@действующий.turn_action"
+              "expr": "@deystvuyuschiy.turn_action"
             },
             "direction": "subtract",
             "value": {
@@ -1290,7 +1295,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@действующий.slots_1"
+              "expr": "@deystvuyuschiy.slots_1"
             },
             "direction": "subtract",
             "value": {
@@ -1305,34 +1310,35 @@
         "activation": "manual",
         "params": [
           {
-            "key": "действующий",
+            "key": "deystvuyuschiy",
             "label": "Кто действует",
             "kind": "sheet"
           },
           {
-            "key": "цели",
+            "key": "aims",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
             "item": {
-              "key": "цель",
+              "key": "aim",
               "label": "Цель"
             }
           }
         ],
         "steps": [
           {
-            "id": "hit_бросок",
+            "id": "hit_brosok",
+            "label": "hit бросок",
             "type": "roll",
             "die": "lead_die",
             "bonus": {
-              "expr": "@действующий.attack_bonus"
+              "expr": "@deystvuyuschiy.attack_bonus"
             },
             "tags": [
-              "атака"
+              "ataka"
             ],
             "by": {
-              "expr": "@действующий"
+              "expr": "@deystvuyuschiy"
             }
           },
           {
@@ -1344,16 +1350,16 @@
           },
           {
             "type": "each",
-            "of": "цели"
+            "of": "aims"
           },
           {
             "id": "hit",
             "type": "check",
             "value": {
-              "expr": "@hit_бросок"
+              "expr": "@hit_brosok"
             },
             "versus": {
-              "expr": "@цель.ac"
+              "expr": "@aim.ac"
             }
           },
           {
@@ -1379,21 +1385,21 @@
                 "expr": "@dmg"
               },
               "damage_type": {
-                "expr": "\"огонь\""
+                "expr": "\"fire\""
               },
               "damage_source": {
-                "expr": "\"магический\""
+                "expr": "\"magicheskiy\""
               },
-              "лист": {
-                "expr": "@цель"
+              "list_2": {
+                "expr": "@aim"
               },
-              "источник": {
-                "expr": "@действующий"
+              "istochnik": {
+                "expr": "@deystvuyuschiy"
               }
             }
           }
         ],
-        "group": "Атака",
+        "group": "Ataka",
         "cost": [
           {
             "type": "branch",
@@ -1405,7 +1411,7 @@
             "id": "check",
             "type": "check",
             "value": {
-              "expr": "@действующий.turn_action"
+              "expr": "@deystvuyuschiy.turn_action"
             },
             "versus": {
               "expr": "1"
@@ -1429,7 +1435,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@действующий.turn_action"
+              "expr": "@deystvuyuschiy.turn_action"
             },
             "direction": "subtract",
             "value": {
@@ -1441,7 +1447,7 @@
           }
         ],
         "tags": [
-          "атака"
+          "ataka"
         ]
       },
       "bless": {
@@ -1451,21 +1457,21 @@
         "activation": "manual",
         "bond": {
           "effect": "concentration",
-          "by": "действующий"
+          "by": "deystvuyuschiy"
         },
         "params": [
           {
-            "key": "действующий",
+            "key": "deystvuyuschiy",
             "label": "Кто действует",
             "kind": "sheet"
           },
           {
-            "key": "цели",
+            "key": "aims",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
             "item": {
-              "key": "цель",
+              "key": "aim",
               "label": "Цель"
             }
           }
@@ -1473,18 +1479,18 @@
         "steps": [
           {
             "type": "each",
-            "of": "цели"
+            "of": "aims"
           },
           {
             "type": "status",
             "mode": "apply",
             "effect": "blessed",
             "to": {
-              "expr": "@цель"
+              "expr": "@aim"
             }
           }
         ],
-        "group": "Поддержка",
+        "group": "Podderzhka",
         "cost": [
           {
             "type": "branch",
@@ -1496,7 +1502,7 @@
             "id": "check",
             "type": "check",
             "value": {
-              "expr": "@действующий.turn_action"
+              "expr": "@deystvuyuschiy.turn_action"
             },
             "versus": {
               "expr": "1"
@@ -1520,7 +1526,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@действующий.turn_action"
+              "expr": "@deystvuyuschiy.turn_action"
             },
             "direction": "subtract",
             "value": {
@@ -1533,7 +1539,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@действующий.slots_1"
+              "expr": "@deystvuyuschiy.slots_1"
             },
             "direction": "subtract",
             "value": {
@@ -1549,17 +1555,17 @@
         "activation": "manual",
         "params": [
           {
-            "key": "действующий",
+            "key": "deystvuyuschiy",
             "label": "Кто действует",
             "kind": "sheet"
           },
           {
-            "key": "цели",
+            "key": "aims",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
             "item": {
-              "key": "цель",
+              "key": "aim",
               "label": "Цель"
             }
           },
@@ -1581,38 +1587,40 @@
         ],
         "steps": [
           {
+            "id": "dmg_vsego",
+            "label": "dmg всего",
             "type": "roll",
             "die": {
               "expr": "@damage_dice"
-            },
-            "id": "dmg_всего"
+            }
           },
           {
             "type": "each",
-            "of": "цели"
+            "of": "aims"
           },
           {
-            "id": "save_бросок",
+            "id": "save_brosok",
+            "label": "save бросок",
             "type": "roll",
             "die": "lead_die",
             "bonus": {
               "expr": "@save_by"
             },
             "tags": [
-              "спасбросок"
+              "spasbrosok"
             ],
             "by": {
-              "expr": "@цель"
+              "expr": "@aim"
             }
           },
           {
             "id": "save",
             "type": "check",
             "value": {
-              "expr": "@save_бросок"
+              "expr": "@save_brosok"
             },
             "versus": {
-              "expr": "@действующий.spell_dc"
+              "expr": "@deystvuyuschiy.spell_dc"
             },
             "successWhen": "atLeast"
           },
@@ -1620,7 +1628,7 @@
             "id": "dmg",
             "type": "roll",
             "fixed": {
-              "expr": "if(@save.success, floor((@dmg_всего) * (0.5)), @dmg_всего)"
+              "expr": "if(@save.success, floor((@dmg_vsego) * (0.5)), @dmg_vsego)"
             }
           },
           {
@@ -1634,18 +1642,18 @@
                 "expr": "@damage_type"
               },
               "damage_source": {
-                "expr": "\"магический\""
+                "expr": "\"magicheskiy\""
               },
-              "лист": {
-                "expr": "@цель"
+              "list_2": {
+                "expr": "@aim"
               },
-              "источник": {
-                "expr": "@действующий"
+              "istochnik": {
+                "expr": "@deystvuyuschiy"
               }
             }
           }
         ],
-        "group": "Атака",
+        "group": "Ataka",
         "cost": [
           {
             "type": "branch",
@@ -1657,7 +1665,7 @@
             "id": "check",
             "type": "check",
             "value": {
-              "expr": "@действующий.turn_action"
+              "expr": "@deystvuyuschiy.turn_action"
             },
             "versus": {
               "expr": "1"
@@ -1681,7 +1689,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@действующий.turn_action"
+              "expr": "@deystvuyuschiy.turn_action"
             },
             "direction": "subtract",
             "value": {
@@ -1694,7 +1702,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@действующий.slots_1"
+              "expr": "@deystvuyuschiy.slots_1"
             },
             "direction": "subtract",
             "value": {
@@ -1707,10 +1715,11 @@
         "label": "Урон",
         "steps": [
           {
+            "id": "po_vremennym",
+            "label": "по временным",
             "type": "apply",
-            "id": "по_временным",
             "target": {
-              "expr": "@лист.hp_temp"
+              "expr": "@list_2.hp_temp"
             },
             "direction": "subtract",
             "value": {
@@ -1720,22 +1729,22 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@лист.hp_current"
+              "expr": "@list_2.hp_current"
             },
             "direction": "subtract",
             "value": {
-              "expr": "@по_временным.overkill"
+              "expr": "@po_vremennym.overkill"
             }
           }
         ],
         "params": [
           {
-            "key": "лист",
+            "key": "list_2",
             "label": "Лист",
             "kind": "sheet"
           },
           {
-            "key": "источник",
+            "key": "istochnik",
             "label": "Источник",
             "kind": "sheet",
             "optional": true
@@ -1747,17 +1756,17 @@
             "role": "amount",
             "stages": [
               {
-                "key": "прибавки",
+                "key": "pribavki",
                 "label": "прибавки",
                 "atLeast": 0
               },
               {
-                "key": "половина",
+                "key": "polovina",
                 "label": "половина",
                 "round": "down"
               },
               {
-                "key": "сопротивление",
+                "key": "soprotivlenie",
                 "label": "сопротивление",
                 "combine": {
                   "mul": "min"
@@ -1765,7 +1774,7 @@
                 "round": "down"
               },
               {
-                "key": "уязвимость",
+                "key": "uyazvimost",
                 "label": "уязвимость",
                 "combine": {
                   "mul": "max"
@@ -1801,7 +1810,7 @@
         "modifiers": [
           {
             "tags": [
-              "атака"
+              "ataka"
             ],
             "kind": "edit",
             "call": "roll",
@@ -1813,7 +1822,7 @@
           }
         ],
         "steps": [],
-        "group": "Состояния",
+        "group": "Sostoyaniya",
         "reapply": "refresh"
       },
       "stoneskin": {
@@ -1831,19 +1840,19 @@
               "expr": "0.5"
             },
             "notTags": [
-              "магический"
+              "magicheskiy"
             ],
             "kind": "edit",
             "call": "damage",
             "param": "amount",
             "if": {
-              "expr": "@лист == @holder"
+              "expr": "@list_2 == @holder"
             },
-            "stage": "сопротивление"
+            "stage": "soprotivlenie"
           }
         ],
         "steps": [],
-        "group": "Состояния"
+        "group": "Sostoyaniya"
       },
       "fire_resistance": {
         "label": "Сопротивление огню",
@@ -1863,16 +1872,16 @@
             "call": "damage",
             "param": "amount",
             "anyTags": [
-              "огонь"
+              "fire"
             ],
             "if": {
-              "expr": "@лист == @holder"
+              "expr": "@list_2 == @holder"
             },
-            "stage": "сопротивление"
+            "stage": "soprotivlenie"
           }
         ],
         "steps": [],
-        "group": "Состояния"
+        "group": "Sostoyaniya"
       },
       "blessed": {
         "label": "Благословлён",
@@ -1897,7 +1906,7 @@
           }
         ],
         "steps": [],
-        "group": "Состояния"
+        "group": "Sostoyaniya"
       },
       "shield": {
         "label": "Щит",
@@ -1910,9 +1919,9 @@
         "params": [],
         "on": [
           {
-            "on": "before:атака",
+            "on": "before:ataka",
             "if": {
-              "expr": "@цель == @holder and @hit.success"
+              "expr": "@aim == @holder and @hit.success"
             },
             "confirm": true,
             "cost": [
@@ -1973,7 +1982,7 @@
             ]
           }
         ],
-        "group": "Реакции"
+        "group": "Reakcii"
       },
       "shield_up": {
         "label": "Под щитом",
@@ -1995,7 +2004,7 @@
           }
         ],
         "steps": [],
-        "group": "Состояния"
+        "group": "Sostoyaniya"
       },
       "inspire": {
         "label": "Героическое вдохновение",
@@ -2031,7 +2040,7 @@
             ]
           }
         ],
-        "group": "Реакции"
+        "group": "Reakcii"
       },
       "prone": {
         "label": "Лежит",
@@ -2044,7 +2053,7 @@
         "modifiers": [
           {
             "tags": [
-              "атака"
+              "ataka"
             ],
             "kind": "edit",
             "call": "roll",
@@ -2056,7 +2065,7 @@
           },
           {
             "tags": [
-              "атака"
+              "ataka"
             ],
             "kind": "edit",
             "call": "roll",
@@ -2068,7 +2077,7 @@
           }
         ],
         "steps": [],
-        "group": "Состояния"
+        "group": "Sostoyaniya"
       },
       "heavy_armor_rule": {
         "label": "Тяжёлый доспех мешает ловким проверкам",
@@ -2080,7 +2089,7 @@
         "modifiers": [
           {
             "tags": [
-              "проверка"
+              "proverka"
             ],
             "kind": "edit",
             "call": "roll",
@@ -2104,7 +2113,7 @@
         "modifiers": [
           {
             "tags": [
-              "проверка"
+              "proverka"
             ],
             "kind": "edit",
             "call": "roll",
@@ -2132,7 +2141,7 @@
           {
             "on": "after:strike",
             "if": {
-              "expr": "@цель == @holder and @hit.success and not empty(@действующий)"
+              "expr": "@aim == @holder and @hit.success and not empty(@deystvuyuschiy)"
             },
             "steps": [
               {
@@ -2150,15 +2159,15 @@
                     "expr": "@back"
                   },
                   "damage_type": {
-                    "expr": "\"колющий\""
+                    "expr": "\"kolyuschiy\""
                   },
                   "damage_source": {
-                    "expr": "\"магический\""
+                    "expr": "\"magicheskiy\""
                   },
-                  "лист": {
-                    "expr": "@действующий"
+                  "list_2": {
+                    "expr": "@deystvuyuschiy"
                   },
-                  "источник": {
+                  "istochnik": {
                     "expr": "@holder"
                   }
                 }
@@ -2166,7 +2175,7 @@
             ]
           }
         ],
-        "group": "Состояния"
+        "group": "Sostoyaniya"
       },
       "dying": {
         "label": "При смерти",
@@ -2185,21 +2194,23 @@
             },
             "steps": [
               {
-                "id": "спас_бросок",
+                "id": "spas_brosok",
+                "label": "спас бросок",
                 "type": "roll",
                 "die": "lead_die",
                 "tags": [
-                  "спасбросок"
+                  "spasbrosok"
                 ],
                 "by": {
                   "expr": "@holder"
                 }
               },
               {
-                "id": "спас",
+                "id": "spas",
+                "label": "спас",
                 "type": "check",
                 "value": {
-                  "expr": "@спас_бросок"
+                  "expr": "@spas_brosok"
                 },
                 "versus": {
                   "expr": "10"
@@ -2209,7 +2220,7 @@
               {
                 "type": "branch",
                 "if": {
-                  "expr": "@спас.success"
+                  "expr": "@spas.success"
                 }
               },
               {
@@ -2228,7 +2239,7 @@
               {
                 "type": "branch",
                 "if": {
-                  "expr": "not @спас.success"
+                  "expr": "not @spas.success"
                 }
               },
               {
@@ -2247,7 +2258,7 @@
               {
                 "type": "branch",
                 "if": {
-                  "expr": "@спас.natural <= 1"
+                  "expr": "@spas.natural <= 1"
                 }
               },
               {
@@ -2266,7 +2277,7 @@
             ]
           }
         ],
-        "group": "Состояния"
+        "group": "Sostoyaniya"
       },
       "unconscious": {
         "label": "Без сознания",
@@ -2277,7 +2288,7 @@
         },
         "description": "Хиты на нуле: лежит, пока не поднимут.",
         "modifiers": [],
-        "group": "Состояния"
+        "group": "Sostoyaniya"
       },
       "fall": {
         "label": "Падение",
@@ -2314,7 +2325,7 @@
             ]
           }
         ],
-        "group": "Состояния"
+        "group": "Sostoyaniya"
       },
       "wake": {
         "label": "Подъём",
@@ -2371,7 +2382,7 @@
             ]
           }
         ],
-        "group": "Состояния"
+        "group": "Sostoyaniya"
       },
       "hellish_rebuke": {
         "label": "Адское возмездие",
@@ -2386,7 +2397,7 @@
           {
             "on": "after:damage",
             "if": {
-              "expr": "@лист == @holder and not empty(@источник)"
+              "expr": "@list_2 == @holder and not empty(@istochnik)"
             },
             "confirm": true,
             "cost": [
@@ -2437,24 +2448,25 @@
             ],
             "steps": [
               {
-                "id": "save_бросок",
+                "id": "save_brosok",
+                "label": "save бросок",
                 "type": "roll",
                 "die": "lead_die",
                 "bonus": {
-                  "expr": "@источник.dex_save"
+                  "expr": "@istochnik.dex_save"
                 },
                 "tags": [
-                  "спасбросок"
+                  "spasbrosok"
                 ],
                 "by": {
-                  "expr": "@источник"
+                  "expr": "@istochnik"
                 }
               },
               {
                 "id": "save",
                 "type": "check",
                 "value": {
-                  "expr": "@save_бросок"
+                  "expr": "@save_brosok"
                 },
                 "versus": {
                   "expr": "@holder.spell_dc"
@@ -2462,17 +2474,18 @@
                 "successWhen": "atLeast"
               },
               {
+                "id": "dmg_vsego",
+                "label": "dmg всего",
                 "type": "roll",
                 "die": {
                   "expr": "2d10"
-                },
-                "id": "dmg_всего"
+                }
               },
               {
                 "id": "dmg",
                 "type": "roll",
                 "fixed": {
-                  "expr": "if(@save.success, floor((@dmg_всего) * (0.5)), @dmg_всего)"
+                  "expr": "if(@save.success, floor((@dmg_vsego) * (0.5)), @dmg_vsego)"
                 }
               },
               {
@@ -2483,15 +2496,15 @@
                     "expr": "@dmg"
                   },
                   "damage_type": {
-                    "expr": "\"огонь\""
+                    "expr": "\"fire\""
                   },
                   "damage_source": {
-                    "expr": "\"магический\""
+                    "expr": "\"magicheskiy\""
                   },
-                  "лист": {
-                    "expr": "@источник"
+                  "list_2": {
+                    "expr": "@istochnik"
                   },
-                  "источник": {
+                  "istochnik": {
                     "expr": "@holder"
                   }
                 }
@@ -2499,7 +2512,7 @@
             ]
           }
         ],
-        "group": "Реакции"
+        "group": "Reakcii"
       },
       "battle_start": {
         "label": "Начало боя",
@@ -2628,29 +2641,52 @@
       "wake"
     ],
     "groups": {
-      "Личное дело": {},
-      "Характеристики": {},
-      "Модификаторы": {},
-      "Прогрессия": {},
-      "Навыки от силы": {
-        "parent": "Навыки"
+      "Lichnoe_delo": {},
+      "Harakteristiki": {},
+      "Modifikatory": {},
+      "Progressiya": {},
+      "Navyki_ot_sily": {
+        "parent": "Navyki"
       },
-      "Навыки от ловкости": {
-        "parent": "Навыки"
+      "Navyki_ot_lovkosti": {
+        "parent": "Navyki"
       },
-      "Навыки от интеллекта": {
-        "parent": "Навыки"
+      "Navyki_ot_intellekta": {
+        "parent": "Navyki"
       },
-      "Навыки от мудрости": {
-        "parent": "Навыки"
+      "Navyki_ot_mudrosti": {
+        "parent": "Navyki"
       },
-      "Навыки от харизмы": {
-        "parent": "Навыки"
+      "Navyki_ot_harizmy": {
+        "parent": "Navyki"
       },
-      "Защита": {},
-      "Здоровье": {},
-      "Атака": {},
-      "Навыки": {}
+      "Zaschita": {},
+      "Zdorove": {},
+      "Ataka": {},
+      "Navyki": {
+        "label": "Навыки"
+      },
+      "Zaklinaniya": {
+        "label": "Заклинания"
+      },
+      "Lechenie": {
+        "label": "Лечение"
+      },
+      "Podderzhka": {
+        "label": "Поддержка"
+      },
+      "Priemy": {
+        "label": "Приёмы"
+      },
+      "Reakcii": {
+        "label": "Реакции"
+      },
+      "Snaryazhenie": {
+        "label": "Снаряжение"
+      },
+      "Sostoyaniya": {
+        "label": "Состояния"
+      }
     },
     "roll_edits": {
       "disadvantage": {
@@ -2686,47 +2722,60 @@
         "expr": "#dex_mod"
       },
       "tags": [
-        "проверка"
+        "proverka"
       ]
     },
     "sheets": {
-      "персонаж": {
+      "personazh": {
         "label": "Персонаж",
         "icon": "🧙",
         "hint": "Лист героя."
       },
-      "противник": {
+      "protivnik": {
         "label": "Противник",
         "icon": "👹",
         "hint": "Лист противника."
       }
     },
     "tags": {
-      "атака": {
+      "ataka": {
         "label": "Атака",
         "inputs": [
           {
-            "key": "действующий",
+            "key": "deystvuyuschiy",
             "kind": "sheet"
           },
           {
-            "key": "цели",
+            "key": "aims",
             "kind": "sheet",
             "many": true
           }
         ],
-        "each": "цель",
+        "each": "aim",
         "outputs": [
           "hit"
         ]
+      },
+      "magicheskiy": {
+        "label": "магический"
+      },
+      "fire": {
+        "label": "огонь"
+      },
+      "proverka": {
+        "label": "проверка"
+      },
+      "spasbrosok": {
+        "label": "спасбросок"
       }
     },
     "blocks": [
       {
-        "key": "Личное дело",
+        "key": "Lichnoe_delo",
+        "label": "Личное дело",
         "parts": [
           {
-            "table": "лист",
+            "table": "list_2",
             "columns": [
               "race",
               "class_name",
@@ -2736,10 +2785,11 @@
         ]
       },
       {
-        "key": "Характеристики",
+        "key": "Harakteristiki",
+        "label": "Характеристики",
         "parts": [
           {
-            "table": "лист",
+            "table": "list_2",
             "columns": [
               "str",
               "dex",
@@ -2752,10 +2802,11 @@
         ]
       },
       {
-        "key": "Модификаторы",
+        "key": "Modifikatory",
+        "label": "Модификаторы",
         "parts": [
           {
-            "table": "лист",
+            "table": "list_2",
             "columns": [
               "str_mod",
               "dex_mod",
@@ -2768,10 +2819,11 @@
         ]
       },
       {
-        "key": "Прогрессия",
+        "key": "Progressiya",
+        "label": "Прогрессия",
         "parts": [
           {
-            "table": "лист",
+            "table": "list_2",
             "columns": [
               "level",
               "inspiration",
@@ -2790,10 +2842,11 @@
         ]
       },
       {
-        "key": "Навыки от силы",
+        "key": "Navyki_ot_sily",
+        "label": "Навыки от силы",
         "parts": [
           {
-            "table": "лист",
+            "table": "list_2",
             "columns": [
               "athletics_prof",
               "athletics"
@@ -2807,10 +2860,11 @@
         ]
       },
       {
-        "key": "Навыки от ловкости",
+        "key": "Navyki_ot_lovkosti",
+        "label": "Навыки от ловкости",
         "parts": [
           {
-            "table": "лист",
+            "table": "list_2",
             "columns": [
               "acrobatics_prof",
               "acrobatics",
@@ -2834,10 +2888,11 @@
         ]
       },
       {
-        "key": "Навыки от интеллекта",
+        "key": "Navyki_ot_intellekta",
+        "label": "Навыки от интеллекта",
         "parts": [
           {
-            "table": "лист",
+            "table": "list_2",
             "columns": [
               "arcana_prof",
               "arcana",
@@ -2871,10 +2926,11 @@
         ]
       },
       {
-        "key": "Навыки от мудрости",
+        "key": "Navyki_ot_mudrosti",
+        "label": "Навыки от мудрости",
         "parts": [
           {
-            "table": "лист",
+            "table": "list_2",
             "columns": [
               "animal_handling_prof",
               "animal_handling",
@@ -2908,10 +2964,11 @@
         ]
       },
       {
-        "key": "Навыки от харизмы",
+        "key": "Navyki_ot_harizmy",
+        "label": "Навыки от харизмы",
         "parts": [
           {
-            "table": "лист",
+            "table": "list_2",
             "columns": [
               "deception_prof",
               "deception",
@@ -2940,10 +2997,11 @@
         ]
       },
       {
-        "key": "Защита",
+        "key": "Zaschita",
+        "label": "Защита",
         "parts": [
           {
-            "table": "лист",
+            "table": "list_2",
             "columns": [
               "ac_base",
               "armor_heavy",
@@ -2963,10 +3021,11 @@
         ]
       },
       {
-        "key": "Здоровье",
+        "key": "Zdorove",
+        "label": "Здоровье",
         "parts": [
           {
-            "table": "лист",
+            "table": "list_2",
             "columns": [
               "hp_max",
               "hp_current",
@@ -2994,10 +3053,11 @@
         ]
       },
       {
-        "key": "Атака",
+        "key": "Ataka",
+        "label": "Атака",
         "parts": [
           {
-            "table": "лист",
+            "table": "list_2",
             "columns": [
               "attack_bonus",
               "spell_dc"
@@ -3007,114 +3067,114 @@
       }
     ],
     "rolls": {
-      "проверка": {
+      "proverka": {
         "label": "Проверка",
         "die": "lead_die",
         "fields": [
           {
-            "table": "лист",
+            "table": "list_2",
             "column": "str"
           },
           {
-            "table": "лист",
+            "table": "list_2",
             "column": "dex"
           },
           {
-            "table": "лист",
+            "table": "list_2",
             "column": "con"
           },
           {
-            "table": "лист",
+            "table": "list_2",
             "column": "int"
           },
           {
-            "table": "лист",
+            "table": "list_2",
             "column": "wis"
           },
           {
-            "table": "лист",
+            "table": "list_2",
             "column": "cha"
           },
           {
-            "table": "лист",
+            "table": "list_2",
             "column": "athletics"
           },
           {
-            "table": "лист",
+            "table": "list_2",
             "column": "acrobatics"
           },
           {
-            "table": "лист",
+            "table": "list_2",
             "column": "sleight_of_hand"
           },
           {
-            "table": "лист",
+            "table": "list_2",
             "column": "stealth"
           },
           {
-            "table": "лист",
+            "table": "list_2",
             "column": "arcana"
           },
           {
-            "table": "лист",
+            "table": "list_2",
             "column": "history"
           },
           {
-            "table": "лист",
+            "table": "list_2",
             "column": "investigation"
           },
           {
-            "table": "лист",
+            "table": "list_2",
             "column": "nature"
           },
           {
-            "table": "лист",
+            "table": "list_2",
             "column": "religion"
           },
           {
-            "table": "лист",
+            "table": "list_2",
             "column": "animal_handling"
           },
           {
-            "table": "лист",
+            "table": "list_2",
             "column": "insight"
           },
           {
-            "table": "лист",
+            "table": "list_2",
             "column": "medicine"
           },
           {
-            "table": "лист",
+            "table": "list_2",
             "column": "perception"
           },
           {
-            "table": "лист",
+            "table": "list_2",
             "column": "survival"
           },
           {
-            "table": "лист",
+            "table": "list_2",
             "column": "deception"
           },
           {
-            "table": "лист",
+            "table": "list_2",
             "column": "intimidation"
           },
           {
-            "table": "лист",
+            "table": "list_2",
             "column": "performance"
           },
           {
-            "table": "лист",
+            "table": "list_2",
             "column": "persuasion"
           }
         ]
       },
-      "спасбросок": {
+      "spasbrosok": {
         "label": "Спасбросок",
         "die": "lead_die",
         "fields": [
           {
-            "table": "лист",
+            "table": "list_2",
             "column": "dex_save"
           }
         ]
@@ -3226,7 +3286,7 @@
     {
       "id": "arven",
       "systemId": "dnd5e-slice",
-      "of": "персонаж",
+      "of": "personazh",
       "name": "Арвен",
       "values": {
         "race": "Человек",
@@ -3272,7 +3332,7 @@
     {
       "id": "mirra",
       "systemId": "dnd5e-slice",
-      "of": "противник",
+      "of": "protivnik",
       "name": "Мирра",
       "values": {
         "race": "Полуэльф",

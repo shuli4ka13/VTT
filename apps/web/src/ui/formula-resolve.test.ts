@@ -82,7 +82,17 @@ describe('разбор не трогает то, что не набирали', 
     let seen = 0;
     for (const world of [...SAMPLE_WORLDS, ...LITE_WORLDS]) {
       const system = world.system;
+      const keys = new Set<string>();
+      const collect = (value: unknown): void => {
+        if (!value || typeof value !== 'object') return;
+        for (const [name, inner] of Object.entries(value)) {
+          if ((name === 'id' || name === 'key' || name === 'as') && typeof inner === 'string') keys.add(inner);
+          collect(inner);
+        }
+      };
+      collect(system);
       const known = [
+        ...[...keys].map(tag => ({ tag, label: tag })),
         ...fieldsOf(system).map(field => ({ tag: field.tag, label: field.label })),
         ...Object.entries(system.effects ?? {}).flatMap(([, effect]) => (effect.params ?? []).map(param => ({ tag: param.key, label: param.label ?? param.key }))),
       ];
@@ -101,5 +111,18 @@ describe('разбор не трогает то, что не набирали', 
     }
     expect(seen).toBeGreaterThan(1000);
     expect(changed.slice(0, 10)).toEqual([]);
+  });
+
+  it('«@подпись» при сохранении становится «@ключ», хвост пути остаётся', () => {
+    const names = [{ tag: 'roll_2', label: 'Бросок атаки' }, { tag: 'dmg', label: 'Урон' }];
+    expect(resolveNames('@Бросок_атаки + 1', names, { final: true }).text).toBe('@roll_2 + 1');
+    expect(resolveNames('@урон', names, { final: true }).text).toBe('@dmg');
+    expect(resolveNames('@бросок_атаки.total * 2', names, { final: true }).text).toBe('@roll_2.total * 2');
+  });
+
+  it('совпавший ключ не трогают, двусмысленную подпись не меняют', () => {
+    const names = [{ tag: 'a', label: 'b' }, { tag: 'b', label: 'Второй' }, { tag: 'c', label: 'Дубль' }, { tag: 'd', label: 'Дубль' }];
+    expect(resolveNames('@b + @дубль', names, { final: true }).text).toBe('@b + @дубль');
+    expect(resolveNames('@Второй', names, { final: true }).text).toBe('@b');
   });
 });

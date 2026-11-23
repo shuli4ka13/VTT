@@ -4,13 +4,13 @@
     "id": "fabula-ultima",
     "name": "Fabula Ultima",
     "tables": {
-      "лист": {
+      "who": {
         "label": "Лист",
         "shape": "single",
         "owner": "sheet",
         "columns": [
           {
-            "key": "ловкость",
+            "key": "dexterity",
             "label": "Ловкость",
             "kind": "number",
             "default": 8,
@@ -18,7 +18,7 @@
             "max": 12
           },
           {
-            "key": "восприятие",
+            "key": "vospriyatie",
             "label": "Восприятие",
             "kind": "number",
             "default": 8,
@@ -26,7 +26,7 @@
             "max": 12
           },
           {
-            "key": "сила",
+            "key": "strength",
             "label": "Сила",
             "kind": "number",
             "default": 8,
@@ -34,7 +34,7 @@
             "max": 12
           },
           {
-            "key": "воля",
+            "key": "will",
             "label": "Воля",
             "kind": "number",
             "default": 8,
@@ -42,129 +42,129 @@
             "max": 12
           },
           {
-            "key": "защита",
+            "key": "defense",
             "label": "Защита",
             "kind": "number",
             "default": 10
           },
           {
-            "key": "маг_защита",
+            "key": "mag_zaschita",
             "label": "Магическая защита",
             "kind": "number",
             "default": 10
           },
           {
-            "key": "оз_макс",
+            "key": "oz_maks",
             "label": "Очки здоровья, максимум",
             "kind": "number",
             "default": 40,
             "min": 0
           },
           {
-            "key": "оз",
+            "key": "oz",
             "label": "Очки здоровья",
             "kind": "number",
             "default": 40,
             "min": 0,
             "max": {
-              "expr": "@оз_макс"
+              "expr": "@oz_maks"
             }
           },
           {
-            "key": "ом_макс",
+            "key": "om_maks",
             "label": "Очки маны, максимум",
             "kind": "number",
             "default": 40,
             "min": 0
           },
           {
-            "key": "ом",
+            "key": "om",
             "label": "Очки маны",
             "kind": "number",
             "default": 40,
             "min": 0,
             "max": {
-              "expr": "@ом_макс"
+              "expr": "@om_maks"
             }
           }
         ]
       },
-      "характеристики": {
+      "harakteristiki": {
         "label": "Характеристики",
         "key": "word",
         "columns": [
           {
-            "key": "поле",
+            "key": "pole",
             "label": "Поле листа",
             "kind": "text"
           }
         ],
         "rows": [
           {
-            "value": "ловкость",
+            "value": "dexterity",
             "label": "Ловкость",
             "cells": {
-              "поле": "ловкость"
+              "pole": "dexterity"
             }
           },
           {
-            "value": "восприятие",
+            "value": "vospriyatie",
             "label": "Восприятие",
             "cells": {
-              "поле": "восприятие"
+              "pole": "vospriyatie"
             }
           },
           {
-            "value": "сила",
+            "value": "strength",
             "label": "Сила",
             "cells": {
-              "поле": "сила"
+              "pole": "strength"
             }
           },
           {
-            "value": "воля",
+            "value": "will",
             "label": "Воля",
             "cells": {
-              "поле": "воля"
+              "pole": "will"
             }
           }
         ]
       },
-      "броски": {
+      "broski": {
         "label": "Броски",
         "key": "word",
         "columns": [],
         "rows": [
           {
-            "value": "проверка",
+            "value": "proverka",
             "label": "Проверка"
           }
         ]
       },
-      "оружие": {
+      "weapon": {
         "label": "Оружие",
         "shape": "book",
         "use": "item",
         "columns": [
           {
-            "key": "первая",
+            "key": "pervaya",
             "label": "Первая характеристика",
             "kind": "choice",
-            "from": "характеристики"
+            "from": "harakteristiki"
           },
           {
-            "key": "вторая",
+            "key": "vtoraya",
             "label": "Вторая характеристика",
             "kind": "choice",
-            "from": "характеристики"
+            "from": "harakteristiki"
           },
           {
-            "key": "точность",
+            "key": "tochnost",
             "label": "Прибавка к меткости",
             "kind": "number"
           },
           {
-            "key": "урон",
+            "key": "damage",
             "label": "Урон сверх старшей кости",
             "kind": "number"
           }
@@ -172,31 +172,31 @@
         "bindings": [
           {
             "label": "Атаковать",
-            "effect": "атака",
+            "effect": "attack",
             "args": {
-              "первая": {
-                "expr": "@первая"
+              "pervaya": {
+                "expr": "@pervaya"
               },
-              "вторая": {
-                "expr": "@вторая"
+              "vtoraya": {
+                "expr": "@vtoraya"
               },
-              "точность": {
-                "expr": "@точность"
+              "tochnost": {
+                "expr": "@tochnost"
               },
-              "урон": {
-                "expr": "@урон"
+              "damage": {
+                "expr": "@damage"
               }
             }
           }
         ]
       },
-      "расходник": {
+      "rashodnik": {
         "label": "Расходник",
         "shape": "book",
         "use": "item",
         "columns": [
           {
-            "key": "лечит",
+            "key": "lechit",
             "label": "Сколько ОЗ возвращает",
             "kind": "number"
           }
@@ -204,16 +204,16 @@
         "bindings": [
           {
             "label": "Применить",
-            "effect": "лечение",
+            "effect": "healing",
             "args": {
-              "сколько": {
-                "expr": "@лечит"
+              "amount": {
+                "expr": "@lechit"
               }
             }
           }
         ]
       },
-      "действие": {
+      "deystvie": {
         "label": "Действие",
         "shape": "book",
         "use": "action",
@@ -222,99 +222,103 @@
       }
     },
     "constants": {
-      "пара": {
+      "para": {
         "label": "две кости характеристик",
         "kind": "die",
         "dice": [
           {
             "count": 1,
             "sides": 6,
-            "name": "первая"
+            "name": "pervaya",
+            "label": "первая"
           },
           {
             "count": 1,
             "sides": 6,
-            "name": "вторая"
+            "name": "vtoraya",
+            "label": "вторая"
           }
         ]
       }
     },
     "rolls": {
-      "проверка": {
+      "proverka": {
         "label": "Проверка",
-        "die": "пара",
+        "die": "para",
         "number": "sides",
         "pair": true,
         "success": {
-          "expr": "(@roll.parts.первая == @roll.parts.вторая and @roll.parts.первая >= 6) or (not(@roll.parts.первая == 1 and @roll.parts.вторая == 1) and @rolled >= @threshold)"
+          "expr": "(@roll.parts.pervaya == @roll.parts.vtoraya and @roll.parts.pervaya >= 6) or (not(@roll.parts.pervaya == 1 and @roll.parts.vtoraya == 1) and @rolled >= @threshold)"
         },
         "degrees": [
           {
             "label": "критический успех",
             "if": {
-              "expr": "@roll.parts.первая == @roll.parts.вторая and @roll.parts.первая >= 6"
+              "expr": "@roll.parts.pervaya == @roll.parts.vtoraya and @roll.parts.pervaya >= 6"
             }
           },
           {
             "label": "критический провал",
             "if": {
-              "expr": "@roll.parts.первая == 1 and @roll.parts.вторая == 1"
+              "expr": "@roll.parts.pervaya == 1 and @roll.parts.vtoraya == 1"
             }
           }
         ],
         "fields": [
           {
-            "table": "лист",
-            "column": "ловкость"
+            "table": "who",
+            "column": "dexterity"
           },
           {
-            "table": "лист",
-            "column": "восприятие"
+            "table": "who",
+            "column": "vospriyatie"
           },
           {
-            "table": "лист",
-            "column": "сила"
+            "table": "who",
+            "column": "strength"
           },
           {
-            "table": "лист",
-            "column": "воля"
+            "table": "who",
+            "column": "will"
           }
         ]
       }
     },
     "blocks": [
       {
-        "key": "Характеристики",
+        "key": "Harakteristiki",
+        "label": "Характеристики",
         "parts": [
           {
-            "table": "лист",
+            "table": "who",
             "columns": [
-              "ловкость",
-              "восприятие",
-              "сила",
-              "воля"
+              "dexterity",
+              "vospriyatie",
+              "strength",
+              "will"
             ]
           }
         ]
       },
       {
-        "key": "Бой",
+        "key": "Boy",
+        "label": "Бой",
         "parts": [
           {
-            "table": "лист",
+            "table": "who",
             "columns": [
-              "защита",
-              "маг_защита",
-              "оз",
-              "оз_макс",
-              "ом",
-              "ом_макс"
+              "defense",
+              "mag_zaschita",
+              "oz",
+              "oz_maks",
+              "om",
+              "om_maks"
             ],
             "views": {
-              "оз": {
+              "oz": {
                 "kind": "stepper"
               },
-              "ом": {
+              "om": {
                 "kind": "stepper"
               }
             }
@@ -323,37 +327,37 @@
       }
     ],
     "effects": {
-      "проверка": {
+      "proverka": {
         "label": "Проверка",
         "description": "Две кости двух характеристик, сумма против сложности: лёгкая 7, средняя 10, трудная 13. Дубль от шестёрок и выше — успех при любой сумме, две единицы — провал при любой.",
         "params": [
           {
             "kind": "sheet",
-            "key": "действующий",
+            "key": "deystvuyuschiy",
             "label": "Кто действует"
           },
           {
-            "key": "первая",
+            "key": "pervaya",
             "label": "Первая характеристика",
             "kind": "choice",
-            "from": "характеристики",
+            "from": "harakteristiki",
             "ask": {
               "by": "actor",
               "hint": "Грани первой кости — значение этой характеристики."
             }
           },
           {
-            "key": "вторая",
+            "key": "vtoraya",
             "label": "Вторая характеристика",
             "kind": "choice",
-            "from": "характеристики",
+            "from": "harakteristiki",
             "ask": {
               "by": "actor",
               "hint": "Вторая кость. Чтобы бросить одну характеристику дважды, выберите её ещё раз."
             }
           },
           {
-            "key": "сложность",
+            "key": "slozhnost",
             "label": "Сложность",
             "kind": "number",
             "ask": {
@@ -364,121 +368,125 @@
         ],
         "steps": [
           {
-            "id": "бросок",
+            "id": "brosok",
+            "label": "бросок",
             "type": "roll",
             "field": {
-              "expr": "@действующий.[@первая.поле]"
+              "expr": "@deystvuyuschiy.[@pervaya.pole]"
             },
             "second": {
-              "expr": "@действующий.[@вторая.поле]"
+              "expr": "@deystvuyuschiy.[@vtoraya.pole]"
             }
           },
           {
-            "id": "проверка",
+            "id": "proverka",
+            "label": "проверка",
             "type": "check",
             "value": {
-              "expr": "@бросок"
+              "expr": "@brosok"
             },
             "versus": {
-              "expr": "if(@бросок.parts.первая == @бросок.parts.вторая and @бросок.parts.первая >= 6, 0, if(@бросок.parts.первая == 1 and @бросок.parts.вторая == 1, 999, @сложность))"
+              "expr": "if(@brosok.parts.pervaya == @brosok.parts.vtoraya and @brosok.parts.pervaya >= 6, 0, if(@brosok.parts.pervaya == 1 and @brosok.parts.vtoraya == 1, 999, @slozhnost))"
             },
             "degrees": [
               {
                 "label": "критический успех",
                 "if": {
-                  "expr": "@бросок.parts.первая == @бросок.parts.вторая and @бросок.parts.первая >= 6"
+                  "expr": "@brosok.parts.pervaya == @brosok.parts.vtoraya and @brosok.parts.pervaya >= 6"
                 }
               },
               {
                 "label": "критический провал",
                 "if": {
-                  "expr": "@бросок.parts.первая == 1 and @бросок.parts.вторая == 1"
+                  "expr": "@brosok.parts.pervaya == 1 and @brosok.parts.vtoraya == 1"
                 }
               }
             ]
           }
         ]
       },
-      "атака": {
+      "attack": {
         "label": "Атака",
         "description": "Проверка меткости: две кости характеристик оружия плюс его прибавка против Защиты цели. Попал — урон: старшая из двух костей плюс число оружия.",
         "params": [
           {
             "kind": "sheet",
-            "key": "действующий",
+            "key": "deystvuyuschiy",
             "label": "Кто действует"
           },
           {
             "kind": "sheet",
             "many": true,
-            "key": "цели",
+            "key": "aims",
             "label": "Цели",
             "item": {
-              "key": "цель",
+              "key": "aim",
               "label": "Цель"
             }
           },
           {
-            "key": "первая",
+            "key": "pervaya",
             "label": "Первая характеристика",
             "kind": "choice",
-            "from": "характеристики"
+            "from": "harakteristiki"
           },
           {
-            "key": "вторая",
+            "key": "vtoraya",
             "label": "Вторая характеристика",
             "kind": "choice",
-            "from": "характеристики"
+            "from": "harakteristiki"
           },
           {
-            "key": "точность",
+            "key": "tochnost",
             "label": "Прибавка к меткости",
             "kind": "number"
           },
           {
-            "key": "урон",
+            "key": "damage",
             "label": "Урон сверх старшей кости",
             "kind": "number"
           }
         ],
         "steps": [
           {
-            "id": "бросок",
+            "id": "brosok",
+            "label": "бросок",
             "type": "roll",
             "field": {
-              "expr": "@действующий.[@первая.поле]"
+              "expr": "@deystvuyuschiy.[@pervaya.pole]"
             },
             "second": {
-              "expr": "@действующий.[@вторая.поле]"
+              "expr": "@deystvuyuschiy.[@vtoraya.pole]"
             },
             "bonus": {
-              "expr": "@точность"
+              "expr": "@tochnost"
             }
           },
           {
             "type": "each",
-            "of": "цели"
+            "of": "aims"
           },
           {
-            "id": "проверка",
+            "id": "proverka",
+            "label": "проверка",
             "type": "check",
             "value": {
-              "expr": "@бросок"
+              "expr": "@brosok"
             },
             "versus": {
-              "expr": "if(@бросок.parts.первая == @бросок.parts.вторая and @бросок.parts.первая >= 6, 0, if(@бросок.parts.первая == 1 and @бросок.parts.вторая == 1, 999, @цель.защита))"
+              "expr": "if(@brosok.parts.pervaya == @brosok.parts.vtoraya and @brosok.parts.pervaya >= 6, 0, if(@brosok.parts.pervaya == 1 and @brosok.parts.vtoraya == 1, 999, @aim.defense))"
             },
             "degrees": [
               {
                 "label": "критический успех",
                 "if": {
-                  "expr": "@бросок.parts.первая == @бросок.parts.вторая and @бросок.parts.первая >= 6"
+                  "expr": "@brosok.parts.pervaya == @brosok.parts.vtoraya and @brosok.parts.pervaya >= 6"
                 }
               },
               {
                 "label": "критический провал",
                 "if": {
-                  "expr": "@бросок.parts.первая == 1 and @бросок.parts.вторая == 1"
+                  "expr": "@brosok.parts.pervaya == 1 and @brosok.parts.vtoraya == 1"
                 }
               }
             ]
@@ -486,16 +494,16 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@проверка.success"
+              "expr": "@proverka.success"
             }
           },
           {
             "type": "apply",
             "target": {
-              "expr": "@цель.оз"
+              "expr": "@aim.oz"
             },
             "value": {
-              "expr": "max(@бросок.parts.первая, @бросок.parts.вторая) + @урон"
+              "expr": "max(@brosok.parts.pervaya, @brosok.parts.vtoraya) + @damage"
             }
           },
           {
@@ -503,17 +511,17 @@
           }
         ]
       },
-      "лечение": {
+      "healing": {
         "label": "Лечение",
         "description": "Возвращает очки здоровья без броска.",
         "params": [
           {
             "kind": "sheet",
-            "key": "действующий",
+            "key": "deystvuyuschiy",
             "label": "Кто действует"
           },
           {
-            "key": "сколько",
+            "key": "amount",
             "label": "Сколько ОЗ",
             "kind": "number"
           }
@@ -522,11 +530,11 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@действующий.оз"
+              "expr": "@deystvuyuschiy.oz"
             },
             "direction": "add",
             "value": {
-              "expr": "@сколько"
+              "expr": "@amount"
             }
           }
         ]
@@ -537,51 +545,51 @@
     "records": [
       {
         "id": "check",
-        "table": "действие",
+        "table": "deystvie",
         "label": "Проверка",
         "bindings": [
           {
             "label": "Бросить",
-            "effect": "проверка"
+            "effect": "proverka"
           }
         ]
       },
       {
         "id": "weapon_example",
-        "table": "оружие",
+        "table": "weapon",
         "label": "Оружие из примера",
         "description": "Пример буклета: Ловкость + Сила, +2 к меткости, урон — старшая кость + 10.",
         "cells": {
-          "первая": "ловкость",
-          "вторая": "сила",
-          "точность": 2,
-          "урон": 10
+          "pervaya": "dexterity",
+          "vtoraya": "strength",
+          "tochnost": 2,
+          "damage": 10
         }
       },
       {
         "id": "remedy",
-        "table": "расходник",
+        "table": "rashodnik",
         "label": "Лекарство",
         "description": "Возвращает 50 ОЗ.",
         "cells": {
-          "лечит": 50
+          "lechit": 50
         }
       }
     ]
   },
   "sheets": [
     {
-      "id": "герой",
+      "id": "geroy",
       "systemId": "fabula-ultima",
       "name": "Герой",
       "values": {
-        "ловкость": 10,
-        "восприятие": 8,
-        "сила": 8,
-        "воля": 6,
-        "защита": 11,
-        "оз_макс": 50,
-        "оз": 50
+        "dexterity": 10,
+        "vospriyatie": 8,
+        "strength": 8,
+        "will": 6,
+        "defense": 11,
+        "oz_maks": 50,
+        "oz": 50
       },
       "has": [
         {
@@ -597,17 +605,17 @@
       "effects": []
     },
     {
-      "id": "противник",
+      "id": "protivnik",
       "systemId": "fabula-ultima",
       "name": "Противник",
       "values": {
-        "ловкость": 8,
-        "восприятие": 6,
-        "сила": 10,
-        "воля": 6,
-        "защита": 9,
-        "оз_макс": 40,
-        "оз": 40
+        "dexterity": 8,
+        "vospriyatie": 6,
+        "strength": 10,
+        "will": 6,
+        "defense": 9,
+        "oz_maks": 40,
+        "oz": 40
       },
       "has": [
         {

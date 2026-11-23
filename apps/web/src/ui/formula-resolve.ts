@@ -71,6 +71,18 @@ const resolvePath = (index: Index, word: string): Found => {
   return base === null ? null : { tag: base };
 };
 
+const byKey = (index: Index, name: string): string | null => {
+  const segments = name.split('.');
+  for (let size = segments.length; size >= 1; size -= 1) {
+    const head = segments.slice(0, size).join('.');
+    if (index.byTag.has(plain(head))) return null;
+    const tags = [...(index.byLabel.get(plain(head)) ?? [])].filter(tag => !tag.includes('.'));
+    if (tags.length === 1) return [tags[0]!, ...segments.slice(size)].join('.');
+    if (tags.length > 1) return null;
+  }
+  return null;
+};
+
 interface Run { from: number; to: number; words: Token[] }
 
 const runsOf = (text: string, tokens: readonly Token[]): Run[] => {
@@ -100,6 +112,13 @@ export function resolveNames(text: string, known: readonly KnownName[], options:
   const index = indexOf(known);
   const edits: { from: number; to: number; put: string }[] = [];
   const unknown: Unknown[] = [];
+  for (const token of tokens) {
+    if (token.type !== 'ref' || !token.text.startsWith('@')) continue;
+    const end = token.pos + token.text.length;
+    if (!options.final && caret >= token.pos && caret <= end) continue;
+    const key = byKey(index, token.text.slice(1));
+    if (key) edits.push({ from: token.pos, to: end, put: `@${key}` });
+  }
   for (const run of runsOf(text, tokens)) {
     const typing = !options.final && caret >= run.from && caret <= run.to + (/^ *$/u.test(text.slice(run.to, caret)) ? caret - run.to : 0);
     let at = 0;

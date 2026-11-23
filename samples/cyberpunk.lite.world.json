@@ -4,12 +4,27 @@
     "id": "cp-slice",
     "name": "Киберпанк RED",
     "groups": {
-      "Атака": {},
-      "Состояния": {},
-      "Снаряжение": {},
-      "Приёмы": {},
-      "Общие правила": {},
-      "Плата": {}
+      "Ataka": {
+        "label": "Атака"
+      },
+      "Sostoyaniya": {
+        "label": "Состояния"
+      },
+      "Snaryazhenie": {
+        "label": "Снаряжение"
+      },
+      "Priemy": {
+        "label": "Приёмы"
+      },
+      "Obschie_pravila": {
+        "label": "Общие правила"
+      },
+      "Plata": {
+        "label": "Плата"
+      },
+      "Navyki": {
+        "label": "Навыки"
+      }
     },
     "constants": {
       "lead_die": {
@@ -75,7 +90,7 @@
       }
     },
     "tables": {
-      "лист": {
+      "who": {
         "label": "Лист",
         "shape": "single",
         "columns": [
@@ -376,39 +391,45 @@
         "key": "word",
         "rows": [
           {
-            "value": "пуля",
+            "value": "pulya",
+            "label": "пуля",
             "cells": {
-              "armor": "через броню"
+              "armor": "cherez_bronyu"
             }
           },
           {
-            "value": "холодное",
+            "value": "holodnoe",
+            "label": "холодное",
             "cells": {
-              "armor": "через броню"
+              "armor": "cherez_bronyu"
             }
           },
           {
-            "value": "огонь",
+            "value": "fire",
+            "label": "огонь",
             "cells": {
-              "armor": "мимо брони"
+              "armor": "mimo_broni"
             }
           },
           {
-            "value": "яд",
+            "value": "yad",
+            "label": "яд",
             "cells": {
-              "armor": "мимо брони"
+              "armor": "mimo_broni"
             }
           },
           {
-            "value": "кровотечение",
+            "value": "krovotechenie",
+            "label": "кровотечение",
             "cells": {
-              "armor": "мимо брони"
+              "armor": "mimo_broni"
             }
           },
           {
-            "value": "критический",
+            "value": "kriticheskiy",
+            "label": "критический",
             "cells": {
-              "armor": "мимо брони"
+              "armor": "mimo_broni"
             }
           }
         ],
@@ -426,10 +447,12 @@
         "key": "word",
         "rows": [
           {
-            "value": "по телу"
+            "value": "po_telu",
+            "label": "по телу"
           },
           {
-            "value": "по голове"
+            "value": "po_golove",
+            "label": "по голове"
           }
         ]
       },
@@ -438,10 +461,12 @@
         "key": "word",
         "rows": [
           {
-            "value": "через броню"
+            "value": "cherez_bronyu",
+            "label": "через броню"
           },
           {
-            "value": "мимо брони"
+            "value": "mimo_broni",
+            "label": "мимо брони"
           }
         ]
       },
@@ -450,13 +475,16 @@
         "key": "word",
         "rows": [
           {
-            "value": "атака"
+            "value": "attack",
+            "label": "атака"
           },
           {
-            "value": "проверка"
+            "value": "proverka",
+            "label": "проверка"
           },
           {
-            "value": "спасбросок"
+            "value": "saving_throw",
+            "label": "спасбросок"
           }
         ]
       },
@@ -495,7 +523,7 @@
         ],
         "rows": [
           {
-            "value": "концентрация",
+            "value": "koncentraciya",
             "label": "Концентрация",
             "cells": {
               "stat": "will",
@@ -511,7 +539,7 @@
             }
           },
           {
-            "value": "чтение по губам",
+            "value": "chtenie_po_gubam",
             "label": "Чтение по губам",
             "cells": {
               "stat": "int",
@@ -519,7 +547,7 @@
             }
           },
           {
-            "value": "внимательность",
+            "value": "vnimatelnost",
             "label": "Внимательность",
             "cells": {
               "stat": "int",
@@ -527,7 +555,7 @@
             }
           },
           {
-            "value": "выслеживание",
+            "value": "vyslezhivanie",
             "label": "Выслеживание",
             "cells": {
               "stat": "int",
@@ -535,7 +563,7 @@
             }
           },
           {
-            "value": "атлетика",
+            "value": "atletika",
             "label": "Атлетика",
             "cells": {
               "stat": "dex",
@@ -543,7 +571,7 @@
             }
           },
           {
-            "value": "гибкость",
+            "value": "gibkost",
             "label": "Гибкость",
             "cells": {
               "stat": "dex",
@@ -551,7 +579,7 @@
             }
           },
           {
-            "value": "танец",
+            "value": "tanec",
             "label": "Танец",
             "cells": {
               "stat": "dex",
@@ -559,7 +587,7 @@
             }
           },
           {
-            "value": "выносливость",
+            "value": "vynoslivost",
             "label": "Выносливость",
             "cells": {
               "stat": "will",
@@ -567,7 +595,7 @@
             }
           },
           {
-            "value": "стойкость к пыткам и наркотикам",
+            "value": "stoykost_k_pytkam_i_narkotikam",
             "label": "Стойкость к пыткам и наркотикам",
             "cells": {
               "stat": "will",
@@ -575,7 +603,7 @@
             }
           },
           {
-            "value": "скрытность",
+            "value": "skrytnost",
             "label": "Скрытность",
             "cells": {
               "stat": "dex",
@@ -583,7 +611,7 @@
             }
           },
           {
-            "value": "вождение",
+            "value": "vozhdenie",
             "label": "Вождение",
             "cells": {
               "stat": "ref",
@@ -607,7 +635,7 @@
             }
           },
           {
-            "value": "верховая езда",
+            "value": "verhovaya_ezda",
             "label": "Верховая езда",
             "cells": {
               "stat": "ref",
@@ -615,7 +643,7 @@
             }
           },
           {
-            "value": "бухгалтерия",
+            "value": "buhgalteriya",
             "label": "Бухгалтерия",
             "cells": {
               "stat": "int",
@@ -623,7 +651,7 @@
             }
           },
           {
-            "value": "обращение с животными",
+            "value": "obraschenie_s_zhivotnymi",
             "label": "Обращение с животными",
             "cells": {
               "stat": "int",
@@ -631,7 +659,7 @@
             }
           },
           {
-            "value": "бюрократия",
+            "value": "byurokratiya",
             "label": "Бюрократия",
             "cells": {
               "stat": "int",
@@ -639,7 +667,7 @@
             }
           },
           {
-            "value": "бизнес",
+            "value": "biznes",
             "label": "Бизнес",
             "cells": {
               "stat": "int",
@@ -647,7 +675,7 @@
             }
           },
           {
-            "value": "сочинительство",
+            "value": "sochinitelstvo",
             "label": "Сочинительство",
             "cells": {
               "stat": "int",
@@ -655,7 +683,7 @@
             }
           },
           {
-            "value": "криминология",
+            "value": "kriminologiya",
             "label": "Криминология",
             "cells": {
               "stat": "int",
@@ -663,7 +691,7 @@
             }
           },
           {
-            "value": "криптография",
+            "value": "kriptografiya",
             "label": "Криптография",
             "cells": {
               "stat": "int",
@@ -671,7 +699,7 @@
             }
           },
           {
-            "value": "дедукция",
+            "value": "dedukciya",
             "label": "Дедукция",
             "cells": {
               "stat": "int",
@@ -679,7 +707,7 @@
             }
           },
           {
-            "value": "образование",
+            "value": "obrazovanie",
             "label": "Образование",
             "cells": {
               "stat": "int",
@@ -687,7 +715,7 @@
             }
           },
           {
-            "value": "азартные игры",
+            "value": "azartnye_igry",
             "label": "Азартные игры",
             "cells": {
               "stat": "int",
@@ -695,7 +723,7 @@
             }
           },
           {
-            "value": "язык",
+            "value": "yazyk",
             "label": "Язык",
             "cells": {
               "stat": "int",
@@ -703,7 +731,7 @@
             }
           },
           {
-            "value": "поиск информации",
+            "value": "poisk_informacii",
             "label": "Поиск информации",
             "cells": {
               "stat": "int",
@@ -711,7 +739,7 @@
             }
           },
           {
-            "value": "знаток района",
+            "value": "znatok_rayona",
             "label": "Знаток района",
             "cells": {
               "stat": "int",
@@ -719,7 +747,7 @@
             }
           },
           {
-            "value": "наука",
+            "value": "nauka",
             "label": "Наука",
             "cells": {
               "stat": "int",
@@ -727,7 +755,7 @@
             }
           },
           {
-            "value": "тактика",
+            "value": "taktika",
             "label": "Тактика",
             "cells": {
               "stat": "int",
@@ -735,7 +763,7 @@
             }
           },
           {
-            "value": "выживание в глуши",
+            "value": "vyzhivanie_v_glushi",
             "label": "Выживание в глуши",
             "cells": {
               "stat": "int",
@@ -743,7 +771,7 @@
             }
           },
           {
-            "value": "рукопашный бой",
+            "value": "rukopashnyy_boy",
             "label": "Рукопашный бой",
             "cells": {
               "stat": "dex",
@@ -751,7 +779,7 @@
             }
           },
           {
-            "value": "уклонение",
+            "value": "uklonenie",
             "label": "Уклонение",
             "cells": {
               "stat": "dex",
@@ -759,7 +787,7 @@
             }
           },
           {
-            "value": "боевые искусства",
+            "value": "boevye_iskusstva",
             "label": "Боевые искусства",
             "cells": {
               "stat": "dex",
@@ -767,7 +795,7 @@
             }
           },
           {
-            "value": "холодное оружие",
+            "value": "holodnoe_oruzhie",
             "label": "Холодное оружие",
             "cells": {
               "stat": "dex",
@@ -775,7 +803,7 @@
             }
           },
           {
-            "value": "актёрство",
+            "value": "akterstvo",
             "label": "Актёрство",
             "cells": {
               "stat": "cool",
@@ -783,7 +811,7 @@
             }
           },
           {
-            "value": "игра на инструменте",
+            "value": "igra_na_instrumente",
             "label": "Игра на инструменте",
             "cells": {
               "stat": "tech",
@@ -791,7 +819,7 @@
             }
           },
           {
-            "value": "стрельба из лука",
+            "value": "strelba_iz_luka",
             "label": "Стрельба из лука",
             "cells": {
               "stat": "ref",
@@ -799,7 +827,7 @@
             }
           },
           {
-            "value": "автоматический огонь",
+            "value": "avtomaticheskiy_ogon",
             "label": "Автоматический огонь",
             "cells": {
               "stat": "ref",
@@ -807,7 +835,7 @@
             }
           },
           {
-            "value": "пистолеты",
+            "value": "pistolety",
             "label": "Пистолеты",
             "cells": {
               "stat": "ref",
@@ -815,7 +843,7 @@
             }
           },
           {
-            "value": "тяжёлое оружие",
+            "value": "tyazheloe_oruzhie",
             "label": "Тяжёлое оружие",
             "cells": {
               "stat": "ref",
@@ -823,7 +851,7 @@
             }
           },
           {
-            "value": "длинноствольное",
+            "value": "dlinnostvolnoe",
             "label": "Длинноствольное",
             "cells": {
               "stat": "ref",
@@ -831,7 +859,7 @@
             }
           },
           {
-            "value": "подкуп",
+            "value": "podkup",
             "label": "Подкуп",
             "cells": {
               "stat": "cool",
@@ -839,7 +867,7 @@
             }
           },
           {
-            "value": "разговор",
+            "value": "razgovor",
             "label": "Разговор",
             "cells": {
               "stat": "emp",
@@ -847,7 +875,7 @@
             }
           },
           {
-            "value": "понимание людей",
+            "value": "ponimanie_lyudey",
             "label": "Понимание людей",
             "cells": {
               "stat": "emp",
@@ -855,7 +883,7 @@
             }
           },
           {
-            "value": "допрос",
+            "value": "dopros",
             "label": "Допрос",
             "cells": {
               "stat": "cool",
@@ -863,7 +891,7 @@
             }
           },
           {
-            "value": "убеждение",
+            "value": "ubezhdenie",
             "label": "Убеждение",
             "cells": {
               "stat": "cool",
@@ -871,7 +899,7 @@
             }
           },
           {
-            "value": "уход за собой",
+            "value": "uhod_za_soboy",
             "label": "Уход за собой",
             "cells": {
               "stat": "cool",
@@ -879,7 +907,7 @@
             }
           },
           {
-            "value": "знание улиц",
+            "value": "znanie_ulic",
             "label": "Знание улиц",
             "cells": {
               "stat": "cool",
@@ -887,7 +915,7 @@
             }
           },
           {
-            "value": "торговля",
+            "value": "torgovlya",
             "label": "Торговля",
             "cells": {
               "stat": "cool",
@@ -895,7 +923,7 @@
             }
           },
           {
-            "value": "стиль и гардероб",
+            "value": "stil_i_garderob",
             "label": "Стиль и гардероб",
             "cells": {
               "stat": "cool",
@@ -903,7 +931,7 @@
             }
           },
           {
-            "value": "авиатехника",
+            "value": "aviatehnika",
             "label": "Авиатехника",
             "cells": {
               "stat": "tech",
@@ -911,7 +939,7 @@
             }
           },
           {
-            "value": "общая техника",
+            "value": "obschaya_tehnika",
             "label": "Общая техника",
             "cells": {
               "stat": "tech",
@@ -919,7 +947,7 @@
             }
           },
           {
-            "value": "кибертехника",
+            "value": "kibertehnika",
             "label": "Кибертехника",
             "cells": {
               "stat": "tech",
@@ -927,7 +955,7 @@
             }
           },
           {
-            "value": "подрывное дело",
+            "value": "podryvnoe_delo",
             "label": "Подрывное дело",
             "cells": {
               "stat": "tech",
@@ -935,7 +963,7 @@
             }
           },
           {
-            "value": "электроника и охранные системы",
+            "value": "elektronika_i_ohrannye_sistemy",
             "label": "Электроника и охранные системы",
             "cells": {
               "stat": "tech",
@@ -943,7 +971,7 @@
             }
           },
           {
-            "value": "первая помощь",
+            "value": "pervaya_pomosch",
             "label": "Первая помощь",
             "cells": {
               "stat": "tech",
@@ -951,7 +979,7 @@
             }
           },
           {
-            "value": "подделка",
+            "value": "poddelka",
             "label": "Подделка",
             "cells": {
               "stat": "tech",
@@ -959,7 +987,7 @@
             }
           },
           {
-            "value": "автотехника",
+            "value": "avtotehnika",
             "label": "Автотехника",
             "cells": {
               "stat": "tech",
@@ -967,7 +995,7 @@
             }
           },
           {
-            "value": "рисунок и скульптура",
+            "value": "risunok_i_skulptura",
             "label": "Рисунок и скульптура",
             "cells": {
               "stat": "tech",
@@ -975,7 +1003,7 @@
             }
           },
           {
-            "value": "парамедик",
+            "value": "paramedik",
             "label": "Парамедик",
             "cells": {
               "stat": "tech",
@@ -983,7 +1011,7 @@
             }
           },
           {
-            "value": "фото и видео",
+            "value": "foto_i_video",
             "label": "Фото и видео",
             "cells": {
               "stat": "tech",
@@ -991,7 +1019,7 @@
             }
           },
           {
-            "value": "взлом замков",
+            "value": "vzlom_zamkov",
             "label": "Взлом замков",
             "cells": {
               "stat": "tech",
@@ -999,7 +1027,7 @@
             }
           },
           {
-            "value": "карманная кража",
+            "value": "karmannaya_krazha",
             "label": "Карманная кража",
             "cells": {
               "stat": "tech",
@@ -1007,7 +1035,7 @@
             }
           },
           {
-            "value": "морская техника",
+            "value": "morskaya_tehnika",
             "label": "Морская техника",
             "cells": {
               "stat": "tech",
@@ -1015,7 +1043,7 @@
             }
           },
           {
-            "value": "оружейное дело",
+            "value": "oruzheynoe_delo",
             "label": "Оружейное дело",
             "cells": {
               "stat": "tech",
@@ -1031,7 +1059,7 @@
         "hint": "Ствол или клинок: кость урона своя у каждого.",
         "shape": "book",
         "use": "item",
-        "block": "Снаряжение",
+        "block": "Snaryazhenie",
         "columns": [
           {
             "key": "damage_dice",
@@ -1066,7 +1094,7 @@
         "hint": "Прочность брони: её съедает каждое попадание.",
         "shape": "book",
         "use": "item",
-        "block": "Снаряжение",
+        "block": "Snaryazhenie",
         "columns": [
           {
             "key": "sp",
@@ -1082,7 +1110,7 @@
         "expr": "@ref"
       },
       "tags": [
-        "проверка"
+        "proverka"
       ]
     },
     "effects": {
@@ -1092,17 +1120,17 @@
         "description": "Дистанцию называет ведущий: она задаёт сложность по таблице. Удачу можно потратить перед броском. Выстрел в голову идёт сквозь броню головы и бьёт вдвое.",
         "params": [
           {
-            "key": "действующий",
+            "key": "deystvuyuschiy",
             "label": "Кто действует",
             "kind": "sheet"
           },
           {
-            "key": "цели",
+            "key": "aims",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
             "item": {
-              "key": "цель",
+              "key": "cel",
               "label": "Цель"
             }
           },
@@ -1154,47 +1182,51 @@
         ],
         "steps": [
           {
-            "id": "попадание_бросок",
+            "id": "popadanie_brosok",
+            "label": "попадание бросок",
             "type": "roll",
             "field": {
-              "expr": "@действующий.skills.пистолеты.total"
+              "expr": "@deystvuyuschiy.skills.pistolety.total"
             },
             "shift": {
-              "expr": "@spend_luck - if(@aim == \"по голове\", 8, 0)"
+              "expr": "@spend_luck - if(@aim == \"po_golove\", 8, 0)"
             },
             "tags": [
-              "атака"
+              "attack"
             ]
           },
           {
+            "id": "uron",
+            "label": "урон",
             "type": "roll",
             "die": {
               "expr": "@damage_dice"
-            },
-            "id": "урон"
+            }
           },
           {
             "type": "branch",
             "if": {
-              "expr": "@урон.atMax >= 2"
+              "expr": "@uron.atMax >= 2"
             }
           },
           {
+            "id": "vzryv",
+            "label": "взрыв",
             "type": "roll",
             "fixed": {
               "expr": "5"
-            },
-            "id": "взрыв"
+            }
           },
           {
             "type": "end"
           },
           {
             "type": "each",
-            "of": "цели"
+            "of": "aims"
           },
           {
-            "id": "сложность",
+            "id": "slozhnost",
+            "label": "сложность",
             "type": "table",
             "table": "dv_range",
             "value": {
@@ -1202,19 +1234,20 @@
             }
           },
           {
-            "id": "попадание",
+            "id": "hit",
+            "label": "попадание",
             "type": "check",
             "value": {
-              "expr": "@попадание_бросок"
+              "expr": "@popadanie_brosok"
             },
             "versus": {
-              "expr": "@сложность"
+              "expr": "@slozhnost"
             }
           },
           {
             "type": "branch",
             "if": {
-              "expr": "@попадание.success"
+              "expr": "@hit.success"
             }
           },
           {
@@ -1222,13 +1255,13 @@
             "effect": "damage",
             "args": {
               "amount": {
-                "expr": "@урон.total"
+                "expr": "@uron.total"
               },
-              "лист": {
-                "expr": "@цель"
+              "who": {
+                "expr": "@cel"
               },
-              "источник": {
-                "expr": "@действующий"
+              "source": {
+                "expr": "@deystvuyuschiy"
               },
               "damage_type": {
                 "expr": "@damage_type"
@@ -1241,7 +1274,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@урон.atMax >= 2"
+              "expr": "@uron.atMax >= 2"
             }
           },
           {
@@ -1249,16 +1282,16 @@
             "effect": "damage",
             "args": {
               "amount": {
-                "expr": "@взрыв"
+                "expr": "@vzryv"
               },
               "damage_type": {
-                "expr": "\"критический\""
+                "expr": "\"kriticheskiy\""
               },
-              "лист": {
-                "expr": "@цель"
+              "who": {
+                "expr": "@cel"
               },
-              "источник": {
-                "expr": "@действующий"
+              "source": {
+                "expr": "@deystvuyuschiy"
               },
               "aim": {
                 "expr": "@aim"
@@ -1272,24 +1305,24 @@
             "type": "end"
           }
         ],
-        "group": "Атака",
+        "group": "Ataka",
         "cost": [
           {
             "type": "emit",
             "effect": "cost_action",
             "args": {
-              "лист": {
-                "expr": "@действующий"
+              "who": {
+                "expr": "@deystvuyuschiy"
               },
-              "источник": {
-                "expr": "@действующий"
+              "source": {
+                "expr": "@deystvuyuschiy"
               }
             }
           },
           {
             "type": "apply",
             "target": {
-              "expr": "@действующий.luck_left"
+              "expr": "@deystvuyuschiy.luck_left"
             },
             "value": {
               "expr": "@spend_luck"
@@ -1297,7 +1330,7 @@
           }
         ],
         "tags": [
-          "атака"
+          "attack"
         ]
       },
       "damage": {
@@ -1306,7 +1339,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@aim == \"по телу\" and @damage_type.armor == \"через броню\""
+              "expr": "@aim == \"po_telu\" and @damage_type.armor == \"cherez_bronyu\""
             }
           },
           {
@@ -1315,7 +1348,7 @@
               "expr": "@amount"
             },
             "versus": {
-              "expr": "@лист.sp_body"
+              "expr": "@who.sp_body"
             },
             "successWhen": "over",
             "id": "through_armor"
@@ -1338,7 +1371,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@лист.hp"
+              "expr": "@who.hp"
             },
             "value": {
               "expr": "@through_armor.margin"
@@ -1347,7 +1380,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@лист.sp_body"
+              "expr": "@who.sp_body"
             },
             "value": {
               "expr": "1"
@@ -1359,24 +1392,25 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@aim == \"по голове\" and @damage_type.armor == \"через броню\""
+              "expr": "@aim == \"po_golove\" and @damage_type.armor == \"cherez_bronyu\""
             }
           },
           {
+            "id": "skvoz_shlem",
+            "label": "сквозь шлем",
             "type": "check",
             "value": {
               "expr": "@amount"
             },
             "versus": {
-              "expr": "@лист.sp_head"
+              "expr": "@who.sp_head"
             },
-            "successWhen": "over",
-            "id": "сквозь_шлем"
+            "successWhen": "over"
           },
           {
             "type": "branch",
             "if": {
-              "expr": "not @сквозь_шлем.success"
+              "expr": "not @skvoz_shlem.success"
             }
           },
           {
@@ -1389,32 +1423,34 @@
             "type": "end"
           },
           {
+            "id": "v_golovu_vsego",
+            "label": "в голову всего",
             "type": "roll",
             "fixed": {
-              "expr": "@сквозь_шлем.margin"
-            },
-            "id": "в_голову_всего"
+              "expr": "@skvoz_shlem.margin"
+            }
           },
           {
-            "id": "в_голову",
+            "id": "v_golovu",
+            "label": "в голову",
             "type": "roll",
             "fixed": {
-              "expr": "if(true, floor((@в_голову_всего) * 2), @в_голову_всего)"
+              "expr": "if(true, floor((@v_golovu_vsego) * 2), @v_golovu_vsego)"
             }
           },
           {
             "type": "apply",
             "target": {
-              "expr": "@лист.hp"
+              "expr": "@who.hp"
             },
             "value": {
-              "expr": "@в_голову"
+              "expr": "@v_golovu"
             }
           },
           {
             "type": "apply",
             "target": {
-              "expr": "@лист.sp_head"
+              "expr": "@who.sp_head"
             },
             "value": {
               "expr": "1"
@@ -1426,13 +1462,13 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@damage_type.armor == \"мимо брони\""
+              "expr": "@damage_type.armor == \"mimo_broni\""
             }
           },
           {
             "type": "apply",
             "target": {
-              "expr": "@лист.hp"
+              "expr": "@who.hp"
             },
             "value": {
               "expr": "@amount"
@@ -1444,13 +1480,13 @@
         ],
         "params": [
           {
-            "key": "лист",
+            "key": "who",
             "label": "Лист",
             "kind": "sheet",
             "role": "target"
           },
           {
-            "key": "источник",
+            "key": "source",
             "label": "Источник",
             "kind": "sheet",
             "optional": true,
@@ -1479,17 +1515,17 @@
       },
       "cost_action": {
         "label": "Стоимость: действие",
-        "group": "Плата",
+        "group": "Plata",
         "description": "Списывается только в бою. Не хватило — действие не состоялось.",
         "params": [
           {
-            "key": "лист",
+            "key": "who",
             "label": "Лист",
             "kind": "sheet",
             "role": "actor"
           },
           {
-            "key": "источник",
+            "key": "source",
             "label": "Источник",
             "kind": "sheet",
             "optional": true,
@@ -1506,7 +1542,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@лист.turn_action < 1"
+              "expr": "@who.turn_action < 1"
             }
           },
           {
@@ -1521,7 +1557,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@лист.turn_action"
+              "expr": "@who.turn_action"
             },
             "value": {
               "expr": "1"
@@ -1543,8 +1579,8 @@
         "modifiers": [
           {
             "anyTags": [
-              "атака",
-              "проверка"
+              "attack",
+              "proverka"
             ],
             "kind": "edit",
             "call": "roll",
@@ -1558,7 +1594,7 @@
             }
           }
         ],
-        "group": "Состояния"
+        "group": "Sostoyaniya"
       },
       "crit_rule": {
         "label": "Критический бросок",
@@ -1571,8 +1607,8 @@
         "modifiers": [
           {
             "anyTags": [
-              "атака",
-              "проверка"
+              "attack",
+              "proverka"
             ],
             "kind": "edit",
             "call": "roll",
@@ -1584,8 +1620,8 @@
           },
           {
             "anyTags": [
-              "атака",
-              "проверка"
+              "attack",
+              "proverka"
             ],
             "kind": "edit",
             "call": "roll",
@@ -1596,7 +1632,7 @@
             }
           }
         ],
-        "group": "Состояния"
+        "group": "Sostoyaniya"
       },
       "death_save": {
         "label": "Спасбросок от смерти",
@@ -1606,7 +1642,7 @@
           "kind": "permanent"
         },
         "description": "Хиты на нуле: в начале своего хода к10 минус штраф строго ниже Телосложения, иначе смерть. Каждый спасбросок увеличивает штраф на 1; на новой грани смерти штраф снова 0.",
-        "group": "Состояния",
+        "group": "Sostoyaniya",
         "on": [
           {
             "on": "moment:turn-start",
@@ -1615,24 +1651,26 @@
             },
             "steps": [
               {
-                "id": "спас_бросок",
+                "id": "spas_brosok",
+                "label": "спас бросок",
                 "type": "roll",
                 "die": "lead_die",
                 "bonus": {
                   "expr": "@holder.death_penalty"
                 },
                 "tags": [
-                  "спасбросок"
+                  "saving_throw"
                 ],
                 "by": {
                   "expr": "@holder"
                 }
               },
               {
-                "id": "спас",
+                "id": "save",
+                "label": "спас",
                 "type": "check",
                 "value": {
-                  "expr": "@спас_бросок"
+                  "expr": "@spas_brosok"
                 },
                 "versus": {
                   "expr": "@holder.body"
@@ -1652,7 +1690,7 @@
               {
                 "type": "branch",
                 "if": {
-                  "expr": "not @спас.success"
+                  "expr": "not @save.success"
                 }
               },
               {
@@ -1692,7 +1730,7 @@
       },
       "battle_start": {
         "label": "Начало боя",
-        "group": "Общие правила",
+        "group": "Obschie_pravila",
         "description": "Бой пошёл: траты хода считаются, у всех полный запас.",
         "activation": "passive",
         "duration": {
@@ -1728,7 +1766,7 @@
       },
       "turn_refresh": {
         "label": "Начало хода",
-        "group": "Общие правила",
+        "group": "Obschie_pravila",
         "description": "Траты хода — снова полные.",
         "activation": "passive",
         "duration": {
@@ -1774,23 +1812,29 @@
       "crit_rule"
     ],
     "tags": {
-      "атака": {
+      "attack": {
         "label": "Атака",
         "inputs": [
           {
-            "key": "действующий",
+            "key": "deystvuyuschiy",
             "kind": "sheet"
           },
           {
-            "key": "цели",
+            "key": "aims",
             "kind": "sheet",
             "many": true
           }
         ],
-        "each": "цель",
+        "each": "cel",
         "outputs": [
-          "попадание"
+          "hit"
         ]
+      },
+      "proverka": {
+        "label": "проверка"
+      },
+      "saving_throw": {
+        "label": "спасбросок"
       }
     },
     "blocks": [
@@ -1798,7 +1842,7 @@
         "key": "Личное дело",
         "parts": [
           {
-            "table": "лист",
+            "table": "who",
             "columns": [
               "handle",
               "role"
@@ -1807,10 +1851,11 @@
         ]
       },
       {
-        "key": "Характеристики",
+        "key": "Harakteristiki",
+        "label": "Характеристики",
         "parts": [
           {
-            "table": "лист",
+            "table": "who",
             "columns": [
               "int",
               "ref",
@@ -1828,10 +1873,11 @@
         ]
       },
       {
-        "key": "Состояние",
+        "key": "Sostoyanie",
+        "label": "Состояние",
         "parts": [
           {
-            "table": "лист",
+            "table": "who",
             "columns": [
               "hp_max",
               "hp",
@@ -1864,10 +1910,11 @@
         ]
       },
       {
-        "key": "Броня",
+        "key": "Bronya",
+        "label": "Броня",
         "parts": [
           {
-            "table": "лист",
+            "table": "who",
             "columns": [
               "sp_head",
               "sp_body"
@@ -1889,11 +1936,11 @@
           {
             "table": "skills",
             "rows": [
-              "концентрация",
-              "спрятать_найти",
-              "чтение_по_губам",
-              "внимательность",
-              "выслеживание"
+              "koncentraciya",
+              "spryatat_nayti",
+              "chtenie_po_gubam",
+              "vnimatelnost",
+              "vyslezhivanie"
             ],
             "views": {
               "rank": {
@@ -1902,7 +1949,7 @@
             }
           }
         ],
-        "parent": "Навыки"
+        "parent": "Navyki"
       },
       {
         "key": "Навыки — тело",
@@ -1910,12 +1957,12 @@
           {
             "table": "skills",
             "rows": [
-              "атлетика",
-              "гибкость",
-              "танец",
-              "выносливость",
-              "стойкость_к_пыткам_и_наркотикам",
-              "скрытность"
+              "atletika",
+              "gibkost",
+              "tanec",
+              "vynoslivost",
+              "stoykost_k_pytkam_i_narkotikam",
+              "skrytnost"
             ],
             "views": {
               "rank": {
@@ -1924,7 +1971,7 @@
             }
           }
         ],
-        "parent": "Навыки"
+        "parent": "Navyki"
       },
       {
         "key": "Навыки — управление",
@@ -1932,10 +1979,10 @@
           {
             "table": "skills",
             "rows": [
-              "вождение",
-              "пилотирование_воздух",
-              "пилотирование_море",
-              "верховая_езда"
+              "vozhdenie",
+              "pilotirovanie_vozduh",
+              "pilotirovanie_more",
+              "verhovaya_ezda"
             ],
             "views": {
               "rank": {
@@ -1944,7 +1991,7 @@
             }
           }
         ],
-        "parent": "Навыки"
+        "parent": "Navyki"
       },
       {
         "key": "Навыки — образование",
@@ -1952,22 +1999,22 @@
           {
             "table": "skills",
             "rows": [
-              "бухгалтерия",
-              "обращение_с_животными",
-              "бюрократия",
-              "бизнес",
-              "сочинительство",
-              "криминология",
-              "криптография",
-              "дедукция",
-              "образование",
-              "азартные_игры",
-              "язык",
-              "поиск_информации",
-              "знаток_района",
-              "наука",
-              "тактика",
-              "выживание_в_глуши"
+              "buhgalteriya",
+              "obraschenie_s_zhivotnymi",
+              "byurokratiya",
+              "biznes",
+              "sochinitelstvo",
+              "kriminologiya",
+              "kriptografiya",
+              "dedukciya",
+              "obrazovanie",
+              "azartnye_igry",
+              "yazyk",
+              "poisk_informacii",
+              "znatok_rayona",
+              "nauka",
+              "taktika",
+              "vyzhivanie_v_glushi"
             ],
             "views": {
               "rank": {
@@ -1976,7 +2023,7 @@
             }
           }
         ],
-        "parent": "Навыки"
+        "parent": "Navyki"
       },
       {
         "key": "Навыки — бой",
@@ -1984,10 +2031,10 @@
           {
             "table": "skills",
             "rows": [
-              "рукопашный_бой",
-              "уклонение",
-              "боевые_искусства",
-              "холодное_оружие"
+              "rukopashnyy_boy",
+              "uklonenie",
+              "boevye_iskusstva",
+              "holodnoe_oruzhie"
             ],
             "views": {
               "rank": {
@@ -1996,7 +2043,7 @@
             }
           }
         ],
-        "parent": "Навыки"
+        "parent": "Navyki"
       },
       {
         "key": "Навыки — выступление",
@@ -2004,8 +2051,8 @@
           {
             "table": "skills",
             "rows": [
-              "актёрство",
-              "игра_на_инструменте"
+              "akterstvo",
+              "igra_na_instrumente"
             ],
             "views": {
               "rank": {
@@ -2014,7 +2061,7 @@
             }
           }
         ],
-        "parent": "Навыки"
+        "parent": "Navyki"
       },
       {
         "key": "Навыки — стрельба",
@@ -2022,11 +2069,11 @@
           {
             "table": "skills",
             "rows": [
-              "стрельба_из_лука",
-              "автоматический_огонь",
-              "пистолеты",
-              "тяжёлое_оружие",
-              "длинноствольное"
+              "strelba_iz_luka",
+              "avtomaticheskiy_ogon",
+              "pistolety",
+              "tyazheloe_oruzhie",
+              "dlinnostvolnoe"
             ],
             "views": {
               "rank": {
@@ -2035,7 +2082,7 @@
             }
           }
         ],
-        "parent": "Навыки"
+        "parent": "Navyki"
       },
       {
         "key": "Навыки — общение",
@@ -2043,15 +2090,15 @@
           {
             "table": "skills",
             "rows": [
-              "подкуп",
-              "разговор",
-              "понимание_людей",
-              "допрос",
-              "убеждение",
-              "уход_за_собой",
-              "знание_улиц",
-              "торговля",
-              "стиль_и_гардероб"
+              "podkup",
+              "razgovor",
+              "ponimanie_lyudey",
+              "dopros",
+              "ubezhdenie",
+              "uhod_za_soboy",
+              "znanie_ulic",
+              "torgovlya",
+              "stil_i_garderob"
             ],
             "views": {
               "rank": {
@@ -2060,7 +2107,7 @@
             }
           }
         ],
-        "parent": "Навыки"
+        "parent": "Navyki"
       },
       {
         "key": "Навыки — техника",
@@ -2068,21 +2115,21 @@
           {
             "table": "skills",
             "rows": [
-              "авиатехника",
-              "общая_техника",
-              "кибертехника",
-              "подрывное_дело",
-              "электроника_и_охранные_системы",
-              "первая_помощь",
-              "подделка",
-              "автотехника",
-              "рисунок_и_скульптура",
-              "парамедик",
-              "фото_и_видео",
-              "взлом_замков",
-              "карманная_кража",
-              "морская_техника",
-              "оружейное_дело"
+              "aviatehnika",
+              "obschaya_tehnika",
+              "kibertehnika",
+              "podryvnoe_delo",
+              "elektronika_i_ohrannye_sistemy",
+              "pervaya_pomosch",
+              "poddelka",
+              "avtotehnika",
+              "risunok_i_skulptura",
+              "paramedik",
+              "foto_i_video",
+              "vzlom_zamkov",
+              "karmannaya_krazha",
+              "morskaya_tehnika",
+              "oruzheynoe_delo"
             ],
             "views": {
               "rank": {
@@ -2091,13 +2138,13 @@
             }
           }
         ],
-        "parent": "Навыки"
+        "parent": "Navyki"
       },
       {
         "key": "В бою",
         "parts": [
           {
-            "table": "лист",
+            "table": "who",
             "columns": [
               "turn_action",
               "turn_move"
@@ -2115,7 +2162,7 @@
       }
     ],
     "rolls": {
-      "проверка": {
+      "proverka": {
         "label": "Проверка",
         "die": "lead_die",
         "fields": [
@@ -2136,7 +2183,7 @@
         "table": "weapon",
         "cells": {
           "damage_dice": "3d6",
-          "damage_type": "пуля"
+          "damage_type": "pulya"
         }
       },
       {
@@ -2146,7 +2193,7 @@
         "table": "weapon",
         "cells": {
           "damage_dice": "2d6",
-          "damage_type": "холодное"
+          "damage_type": "holodnoe"
         }
       },
       {
@@ -2182,12 +2229,12 @@
         "luck": 6,
         "move": 6,
         "body": 7,
-        "skills.пистолеты.rank": 6,
-        "skills.рукопашный_бой.rank": 3,
-        "skills.уклонение.rank": 4,
-        "skills.внимательность.rank": 3,
-        "skills.скрытность.rank": 2,
-        "skills.убеждение.rank": 3,
+        "skills.pistolety.rank": 6,
+        "skills.rukopashnyy_boy.rank": 3,
+        "skills.uklonenie.rank": 4,
+        "skills.vnimatelnost.rank": 3,
+        "skills.skrytnost.rank": 2,
+        "skills.ubezhdenie.rank": 3,
         "hp": 45
       },
       "has": [
@@ -2221,12 +2268,12 @@
         "luck": 6,
         "move": 6,
         "body": 5,
-        "skills.пистолеты.rank": 3,
-        "skills.рукопашный_бой.rank": 3,
-        "skills.уклонение.rank": 4,
-        "skills.внимательность.rank": 3,
-        "skills.скрытность.rank": 2,
-        "skills.убеждение.rank": 3,
+        "skills.pistolety.rank": 3,
+        "skills.rukopashnyy_boy.rank": 3,
+        "skills.uklonenie.rank": 4,
+        "skills.vnimatelnost.rank": 3,
+        "skills.skrytnost.rank": 2,
+        "skills.ubezhdenie.rank": 3,
         "hp": 40
       },
       "has": [

@@ -4,18 +4,42 @@
     "id": "daggerheart",
     "name": "Daggerheart",
     "groups": {
-      "Действия": {},
-      "Атака": {},
-      "Что случается": {},
-      "Плата": {},
-      "Правила": {},
-      "Состояния": {},
-      "Смертельные ходы": {},
-      "Отдых": {},
-      "Способности Надежды": {},
-      "Ведущий": {},
-      "Снаряжение": {},
-      "Приёмы": {}
+      "Deystviya": {
+        "label": "Действия"
+      },
+      "Ataka": {
+        "label": "Атака"
+      },
+      "Chto_sluchaetsya": {
+        "label": "Что случается"
+      },
+      "Plata": {
+        "label": "Плата"
+      },
+      "Pravila": {
+        "label": "Правила"
+      },
+      "Sostoyaniya": {
+        "label": "Состояния"
+      },
+      "Smertelnye_hody": {
+        "label": "Смертельные ходы"
+      },
+      "Otdyh": {
+        "label": "Отдых"
+      },
+      "Sposobnosti_Nadezhdy": {
+        "label": "Способности Надежды"
+      },
+      "Veduschiy": {
+        "label": "Ведущий"
+      },
+      "Snaryazhenie": {
+        "label": "Снаряжение"
+      },
+      "Priemy": {
+        "label": "Приёмы"
+      }
     },
     "constants": {
       "duality": {
@@ -24,11 +48,13 @@
         "dice": [
           {
             "sides": 12,
-            "name": "надежда"
+            "name": "nadezhda",
+            "label": "надежда"
           },
           {
             "sides": 12,
-            "name": "страх"
+            "name": "strah",
+            "label": "страх"
           }
         ]
       },
@@ -52,7 +78,7 @@
       }
     },
     "tables": {
-      "лист": {
+      "who": {
         "label": "Лист",
         "shape": "single",
         "columns": [
@@ -304,7 +330,7 @@
           }
         ]
       },
-      "стол": {
+      "stol": {
         "label": "Стол",
         "shape": "single",
         "owner": "desk",
@@ -323,39 +349,44 @@
         "key": "word",
         "columns": [
           {
-            "key": "успех",
+            "key": "hit",
             "label": "Успех",
             "kind": "text"
           },
           {
-            "key": "провал",
+            "key": "proval",
             "label": "Провал",
             "kind": "text"
           }
         ],
         "rows": [
           {
-            "value": "действие",
+            "value": "deystvie",
+            "label": "действие",
             "cells": {
-              "успех": "успех",
-              "провал": "неудача"
+              "hit": "успех",
+              "proval": "неудача"
             }
           },
           {
-            "value": "атака",
+            "value": "ataka",
+            "label": "атака",
             "cells": {
-              "успех": "попадание",
-              "провал": "промах"
+              "hit": "попадание",
+              "proval": "промах"
             }
           },
           {
-            "value": "герой"
+            "value": "geroy",
+            "label": "герой"
           },
           {
-            "value": "противник"
+            "value": "protivnik",
+            "label": "противник"
           },
           {
-            "value": "смерть"
+            "value": "smert",
+            "label": "смерть"
           }
         ]
       },
@@ -376,7 +407,8 @@
         ],
         "rows": [
           {
-            "value": "проворство",
+            "value": "provorstvo",
+            "label": "проворство",
             "cells": {
               "value": {
                 "expr": "@agility"
@@ -385,7 +417,8 @@
             }
           },
           {
-            "value": "сила",
+            "value": "sila",
+            "label": "сила",
             "cells": {
               "value": {
                 "expr": "@strength"
@@ -394,7 +427,8 @@
             }
           },
           {
-            "value": "искусность",
+            "value": "iskusnost",
+            "label": "искусность",
             "cells": {
               "value": {
                 "expr": "@finesse"
@@ -403,7 +437,8 @@
             }
           },
           {
-            "value": "чутьё",
+            "value": "chute",
+            "label": "чутьё",
             "cells": {
               "value": {
                 "expr": "@instinct"
@@ -412,7 +447,8 @@
             }
           },
           {
-            "value": "присутствие",
+            "value": "prisutstvie",
+            "label": "присутствие",
             "cells": {
               "value": {
                 "expr": "@presence"
@@ -421,7 +457,8 @@
             }
           },
           {
-            "value": "знание",
+            "value": "znanie",
+            "label": "знание",
             "cells": {
               "value": {
                 "expr": "@knowledge"
@@ -862,10 +899,12 @@
         "key": "word",
         "rows": [
           {
-            "value": "физический"
+            "value": "fizicheskiy",
+            "label": "физический"
           },
           {
-            "value": "магический"
+            "value": "magicheskiy",
+            "label": "магический"
           }
         ]
       },
@@ -874,19 +913,24 @@
         "key": "word",
         "rows": [
           {
-            "value": "вплотную"
+            "value": "vplotnuyu",
+            "label": "вплотную"
           },
           {
-            "value": "очень близко"
+            "value": "ochen_blizko",
+            "label": "очень близко"
           },
           {
-            "value": "близко"
+            "value": "blizko",
+            "label": "близко"
           },
           {
-            "value": "далеко"
+            "value": "daleko",
+            "label": "далеко"
           },
           {
-            "value": "очень далеко"
+            "value": "ochen_daleko",
+            "label": "очень далеко"
           }
         ]
       },
@@ -1243,7 +1287,7 @@
         "hint": "Черта, дистанция, кость урона и прибавка.",
         "shape": "book",
         "use": "item",
-        "block": "Снаряжение",
+        "block": "Snaryazhenie",
         "columns": [
           {
             "key": "trait",
@@ -1322,7 +1366,7 @@
         "hint": "Основа порогов и броня.",
         "shape": "book",
         "use": "item",
-        "block": "Снаряжение",
+        "block": "Snaryazhenie",
         "columns": [
           {
             "key": "major",
@@ -1347,7 +1391,7 @@
         "hint": "Урон вписан в приём, особенности — в описании.",
         "shape": "book",
         "use": "action",
-        "block": "Приёмы",
+        "block": "Priemy",
         "columns": [
           {
             "key": "damage_dice",
@@ -1381,7 +1425,7 @@
         "hint": "Бросок, отдых, смертельные ходы, способности.",
         "shape": "book",
         "use": "action",
-        "block": "Приёмы"
+        "block": "Priemy"
       }
     },
     "roll_edits": {
@@ -1448,11 +1492,11 @@
     "effects": {
       "action_roll": {
         "label": "Бросок действия",
-        "group": "Действия",
+        "group": "Deystviya",
         "description": "Кости двойственности + черта (+2 за опыт, если потратить Надежду) против сложности, которую называет ведущий. Дубль — крит: успех при любом итоге.",
         "params": [
           {
-            "key": "действующий",
+            "key": "deystvuyuschiy",
             "label": "Кто действует",
             "kind": "sheet"
           },
@@ -1466,7 +1510,7 @@
             }
           },
           {
-            "key": "опыт",
+            "key": "opyt",
             "label": "Опыт: 0 или +2 за Надежду",
             "kind": "number",
             "ask": {
@@ -1476,7 +1520,7 @@
             "max": 2
           },
           {
-            "key": "сложность",
+            "key": "slozhnost",
             "label": "Сложность",
             "kind": "number",
             "ask": {
@@ -1488,38 +1532,40 @@
         ],
         "steps": [
           {
-            "id": "бросок_бросок",
+            "id": "brosok_brosok",
+            "label": "бросок бросок",
             "type": "roll",
             "field": {
-              "expr": "@действующий.[@trait.field]"
+              "expr": "@deystvuyuschiy.[@trait.field]"
             },
             "shift": {
-              "expr": "@опыт"
+              "expr": "@opyt"
             },
             "tags": [
-              "действие"
+              "deystvie"
             ]
           },
           {
-            "id": "бросок",
+            "id": "brosok",
+            "label": "бросок",
             "type": "check",
             "value": {
-              "expr": "@бросок_бросок"
+              "expr": "@brosok_brosok"
             },
             "versus": {
-              "expr": "@сложность"
+              "expr": "@slozhnost"
             },
             "degrees": [
               {
                 "label": "критический успех",
                 "if": {
-                  "expr": "@бросок_бросок.parts.надежда == @бросок_бросок.parts.страх"
+                  "expr": "@brosok_brosok.parts.nadezhda == @brosok_brosok.parts.strah"
                 }
               },
               {
                 "label": "успех с надеждой",
                 "if": {
-                  "expr": "@success and @бросок_бросок.parts.надежда > @бросок_бросок.parts.страх"
+                  "expr": "@success and @brosok_brosok.parts.nadezhda > @brosok_brosok.parts.strah"
                 }
               },
               {
@@ -1531,7 +1577,7 @@
               {
                 "label": "провал с надеждой",
                 "if": {
-                  "expr": "@бросок_бросок.parts.надежда > @бросок_бросок.parts.страх"
+                  "expr": "@brosok_brosok.parts.nadezhda > @brosok_brosok.parts.strah"
                 }
               },
               {
@@ -1547,13 +1593,13 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@опыт > 0"
+              "expr": "@opyt > 0"
             }
           },
           {
             "type": "branch",
             "if": {
-              "expr": "@действующий.hope < 1"
+              "expr": "@deystvuyuschiy.hope < 1"
             }
           },
           {
@@ -1568,7 +1614,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@действующий.hope"
+              "expr": "@deystvuyuschiy.hope"
             },
             "value": {
               "expr": "1"
@@ -1581,21 +1627,21 @@
       },
       "hero_attack": {
         "label": "Атака героя",
-        "group": "Атака",
+        "group": "Ataka",
         "description": "Кости двойственности + черта оружия против сложности противника. Попал — кости урона по числу мастерства плюс прибавка; на крите сверху максимум костей урона.",
         "params": [
           {
-            "key": "действующий",
+            "key": "deystvuyuschiy",
             "label": "Кто действует",
             "kind": "sheet"
           },
           {
-            "key": "цели",
+            "key": "aims",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
             "item": {
-              "key": "цель",
+              "key": "aim",
               "label": "Цель"
             }
           },
@@ -1633,58 +1679,61 @@
         ],
         "steps": [
           {
-            "id": "бросок_бросок",
+            "id": "brosok_brosok",
+            "label": "бросок бросок",
             "type": "roll",
             "field": {
-              "expr": "@действующий.[@trait.field]"
+              "expr": "@deystvuyuschiy.[@trait.field]"
             },
             "shift": {
               "expr": "@attack_bonus"
             },
             "tags": [
-              "атака"
+              "ataka"
             ]
           },
           {
+            "id": "uron",
+            "label": "урон",
             "type": "roll",
             "die": {
               "expr": "@damage_die"
             },
             "count": {
-              "expr": "@действующий.proficiency + @extra_die"
+              "expr": "@deystvuyuschiy.proficiency + @extra_die"
             },
             "keep": {
-              "expr": "@действующий.proficiency"
+              "expr": "@deystvuyuschiy.proficiency"
             },
             "bonus": {
-              "expr": "@damage_bonus + if(@бросок_бросок.parts.надежда == @бросок_бросок.parts.страх, @действующий.proficiency * @die_size, 0)"
-            },
-            "id": "урон"
+              "expr": "@damage_bonus + if(@brosok_brosok.parts.nadezhda == @brosok_brosok.parts.strah, @deystvuyuschiy.proficiency * @die_size, 0)"
+            }
           },
           {
             "type": "each",
-            "of": "цели"
+            "of": "aims"
           },
           {
-            "id": "бросок",
+            "id": "brosok",
+            "label": "бросок",
             "type": "check",
             "value": {
-              "expr": "@бросок_бросок"
+              "expr": "@brosok_brosok"
             },
             "versus": {
-              "expr": "@цель.difficulty"
+              "expr": "@aim.difficulty"
             },
             "degrees": [
               {
                 "label": "критический успех",
                 "if": {
-                  "expr": "@бросок_бросок.parts.надежда == @бросок_бросок.parts.страх"
+                  "expr": "@brosok_brosok.parts.nadezhda == @brosok_brosok.parts.strah"
                 }
               },
               {
                 "label": "успех с надеждой",
                 "if": {
-                  "expr": "@success and @бросок_бросок.parts.надежда > @бросок_бросок.parts.страх"
+                  "expr": "@success and @brosok_brosok.parts.nadezhda > @brosok_brosok.parts.strah"
                 }
               },
               {
@@ -1696,7 +1745,7 @@
               {
                 "label": "провал с надеждой",
                 "if": {
-                  "expr": "@бросок_бросок.parts.надежда > @бросок_бросок.parts.страх"
+                  "expr": "@brosok_brosok.parts.nadezhda > @brosok_brosok.parts.strah"
                 }
               },
               {
@@ -1710,7 +1759,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "if(@бросок.success or @бросок.parts.надежда == @бросок.parts.страх, 1, 0) < 1"
+              "expr": "if(@brosok.success or @brosok.parts.nadezhda == @brosok.parts.strah, 1, 0) < 1"
             }
           },
           {
@@ -1727,13 +1776,13 @@
             "effect": "damage",
             "args": {
               "amount": {
-                "expr": "@урон.total"
+                "expr": "@uron.total"
               },
-              "лист": {
-                "expr": "@цель"
+              "who": {
+                "expr": "@aim"
               },
-              "источник": {
-                "expr": "@действующий"
+              "source": {
+                "expr": "@deystvuyuschiy"
               }
             }
           }
@@ -1741,21 +1790,21 @@
       },
       "adversary_attack": {
         "label": "Атака противника",
-        "group": "Атака",
+        "group": "Ataka",
         "description": "к20 + модификатор атаки против уклонения героя; натуральная 20 попадает всегда. Попал — урон приёма; на натуральной 20 сверху максимум костей урона.",
         "params": [
           {
-            "key": "действующий",
+            "key": "deystvuyuschiy",
             "label": "Кто действует",
             "kind": "sheet"
           },
           {
-            "key": "цели",
+            "key": "aims",
             "label": "Цели",
             "kind": "sheet",
             "many": true,
             "item": {
-              "key": "цель",
+              "key": "aim",
               "label": "Цель"
             }
           },
@@ -1772,42 +1821,45 @@
         ],
         "steps": [
           {
-            "id": "удар_бросок",
+            "id": "udar_brosok",
+            "label": "удар бросок",
             "type": "roll",
             "die": "adversary_die",
             "bonus": {
-              "expr": "@действующий.attack_mod"
+              "expr": "@deystvuyuschiy.attack_mod"
             },
             "tags": [
-              "атака",
-              "противник"
+              "ataka",
+              "protivnik"
             ],
             "by": {
-              "expr": "@действующий"
+              "expr": "@deystvuyuschiy"
             }
           },
           {
+            "id": "uron",
+            "label": "урон",
             "type": "roll",
             "die": {
               "expr": "@damage_dice"
             },
             "bonus": {
               "expr": "@damage_bonus"
-            },
-            "id": "урон"
+            }
           },
           {
             "type": "each",
-            "of": "цели"
+            "of": "aims"
           },
           {
-            "id": "удар",
+            "id": "udar",
+            "label": "удар",
             "type": "check",
             "value": {
-              "expr": "@удар_бросок"
+              "expr": "@udar_brosok"
             },
             "versus": {
-              "expr": "@цель.evasion"
+              "expr": "@aim.evasion"
             },
             "succeedOn": {
               "expr": "20"
@@ -1816,7 +1868,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@удар.success"
+              "expr": "@udar.success"
             }
           },
           {
@@ -1824,13 +1876,13 @@
             "effect": "damage",
             "args": {
               "amount": {
-                "expr": "@урон.total + if(@удар.natural >= 20, dicemax(@damage_dice), 0)"
+                "expr": "@uron.total + if(@udar.natural >= 20, dicemax(@damage_dice), 0)"
               },
-              "лист": {
-                "expr": "@цель"
+              "who": {
+                "expr": "@aim"
               },
-              "источник": {
-                "expr": "@действующий"
+              "source": {
+                "expr": "@deystvuyuschiy"
               }
             }
           },
@@ -1841,17 +1893,17 @@
       },
       "damage": {
         "label": "Урон",
-        "group": "Что случается",
+        "group": "Chto_sluchaetsya",
         "description": "Урон против порогов: ниже серьёзного — одна клетка хитов, от серьёзного — две, от тяжёлого — три. Бронеслот игрок отмечает сам действием «Отметить бронеслот».",
         "params": [
           {
-            "key": "лист",
+            "key": "who",
             "label": "Лист",
             "kind": "sheet",
             "role": "target"
           },
           {
-            "key": "источник",
+            "key": "source",
             "label": "Источник",
             "kind": "sheet",
             "optional": true,
@@ -1868,18 +1920,18 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@лист.hp"
+              "expr": "@who.hp"
             },
             "direction": "add",
             "value": {
-              "expr": "if(@amount >= @лист.severe, 3, if(@amount >= @лист.major, 2, if(@amount >= 1, 1, 0)))"
+              "expr": "if(@amount >= @who.severe, 3, if(@amount >= @who.major, 2, if(@amount >= 1, 1, 0)))"
             }
           }
         ]
       },
       "duality": {
         "label": "Двойственность",
-        "group": "Правила",
+        "group": "Pravila",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -1889,7 +1941,7 @@
           {
             "on": "done:action_roll",
             "if": {
-              "expr": "@действующий == @holder and @бросок.parts.надежда > @бросок.parts.страх"
+              "expr": "@deystvuyuschiy == @holder and @brosok.parts.nadezhda > @brosok.parts.strah"
             },
             "steps": [
               {
@@ -1907,7 +1959,7 @@
           {
             "on": "done:action_roll",
             "if": {
-              "expr": "@действующий == @holder and @бросок.parts.страх > @бросок.parts.надежда"
+              "expr": "@deystvuyuschiy == @holder and @brosok.parts.strah > @brosok.parts.nadezhda"
             },
             "steps": [
               {
@@ -1925,7 +1977,7 @@
           {
             "on": "done:action_roll",
             "if": {
-              "expr": "@действующий == @holder and @бросок.parts.надежда == @бросок.parts.страх"
+              "expr": "@deystvuyuschiy == @holder and @brosok.parts.nadezhda == @brosok.parts.strah"
             },
             "steps": [
               {
@@ -1961,7 +2013,7 @@
           {
             "on": "done:hero_attack",
             "if": {
-              "expr": "@действующий == @holder and @бросок_бросок.parts.надежда > @бросок_бросок.parts.страх"
+              "expr": "@deystvuyuschiy == @holder and @brosok_brosok.parts.nadezhda > @brosok_brosok.parts.strah"
             },
             "steps": [
               {
@@ -1979,7 +2031,7 @@
           {
             "on": "done:hero_attack",
             "if": {
-              "expr": "@действующий == @holder and @бросок_бросок.parts.страх > @бросок_бросок.parts.надежда"
+              "expr": "@deystvuyuschiy == @holder and @brosok_brosok.parts.strah > @brosok_brosok.parts.nadezhda"
             },
             "steps": [
               {
@@ -1997,7 +2049,7 @@
           {
             "on": "done:hero_attack",
             "if": {
-              "expr": "@действующий == @holder and @бросок_бросок.parts.надежда == @бросок_бросок.parts.страх"
+              "expr": "@deystvuyuschiy == @holder and @brosok_brosok.parts.nadezhda == @brosok_brosok.parts.strah"
             },
             "steps": [
               {
@@ -2082,8 +2134,8 @@
         ],
         "blocks": [
           "Пороги урона",
-          "Здоровье",
-          "Противник"
+          "Zdorove",
+          "Protivnik"
         ]
       }
     },
@@ -2092,7 +2144,7 @@
         "key": "Личное дело",
         "parts": [
           {
-            "table": "лист",
+            "table": "who",
             "columns": [
               "class",
               "ancestry",
@@ -2104,10 +2156,11 @@
         ]
       },
       {
-        "key": "Черты",
+        "key": "Cherty",
+        "label": "Черты",
         "parts": [
           {
-            "table": "лист",
+            "table": "who",
             "columns": [
               "agility",
               "strength",
@@ -2120,10 +2173,11 @@
         ]
       },
       {
-        "key": "Прогрессия",
+        "key": "Progressiya",
+        "label": "Прогрессия",
         "parts": [
           {
-            "table": "лист",
+            "table": "who",
             "columns": [
               "level",
               "tier",
@@ -2136,7 +2190,7 @@
         "key": "Уклонение и броня",
         "parts": [
           {
-            "table": "лист",
+            "table": "who",
             "columns": [
               "evasion_bonus",
               "evasion",
@@ -2158,7 +2212,7 @@
         "key": "Пороги урона",
         "parts": [
           {
-            "table": "лист",
+            "table": "who",
             "columns": [
               "major_base",
               "severe_base",
@@ -2169,10 +2223,11 @@
         ]
       },
       {
-        "key": "Здоровье",
+        "key": "Zdorove",
+        "label": "Здоровье",
         "parts": [
           {
-            "table": "лист",
+            "table": "who",
             "columns": [
               "hp_extra",
               "hp_max",
@@ -2202,10 +2257,11 @@
         ]
       },
       {
-        "key": "Надежда",
+        "key": "Nadezhda",
+        "label": "Надежда",
         "parts": [
           {
-            "table": "лист",
+            "table": "who",
             "columns": [
               "hope",
               "scars"
@@ -2219,10 +2275,11 @@
         ]
       },
       {
-        "key": "Противник",
+        "key": "Protivnik",
+        "label": "Противник",
         "parts": [
           {
-            "table": "лист",
+            "table": "who",
             "columns": [
               "difficulty",
               "adversary_hp",
@@ -2233,68 +2290,101 @@
         ]
       },
       {
-        "key": "Стол",
+        "key": "Stol",
+        "label": "Стол",
         "parts": [
           {
-            "table": "стол"
+            "table": "stol"
           }
         ]
       }
     ],
     "rolls": {
-      "действие": {
+      "deystvie": {
         "label": "Бросок",
         "die": "duality",
         "fields": [
           {
-            "table": "лист",
+            "table": "who",
             "column": "agility",
             "tags": [
-              "герой",
-              "проворство"
+              "geroy",
+              "provorstvo"
             ]
           },
           {
-            "table": "лист",
+            "table": "who",
             "column": "strength",
             "tags": [
-              "герой",
-              "сила"
+              "geroy",
+              "sila"
             ]
           },
           {
-            "table": "лист",
+            "table": "who",
             "column": "finesse",
             "tags": [
-              "герой",
-              "искусность"
+              "geroy",
+              "iskusnost"
             ]
           },
           {
-            "table": "лист",
+            "table": "who",
             "column": "instinct",
             "tags": [
-              "герой",
-              "чутьё"
+              "geroy",
+              "chute"
             ]
           },
           {
-            "table": "лист",
+            "table": "who",
             "column": "presence",
             "tags": [
-              "герой",
-              "присутствие"
+              "geroy",
+              "prisutstvie"
             ]
           },
           {
-            "table": "лист",
+            "table": "who",
             "column": "knowledge",
             "tags": [
-              "герой",
-              "знание"
+              "geroy",
+              "znanie"
             ]
           }
         ]
+      }
+    },
+    "tags": {
+      "ataka": {
+        "label": "атака"
+      },
+      "geroy": {
+        "label": "герой"
+      },
+      "deystvie": {
+        "label": "действие"
+      },
+      "znanie": {
+        "label": "знание"
+      },
+      "iskusnost": {
+        "label": "искусность"
+      },
+      "prisutstvie": {
+        "label": "присутствие"
+      },
+      "provorstvo": {
+        "label": "проворство"
+      },
+      "protivnik": {
+        "label": "противник"
+      },
+      "sila": {
+        "label": "сила"
+      },
+      "chute": {
+        "label": "чутьё"
       }
     }
   },
@@ -2306,14 +2396,14 @@
         "description": "Longsword. Проворство, вплотную, к8 + 3 физ., двуручное.",
         "table": "weapon",
         "cells": {
-          "trait": "проворство",
-          "range": "вплотную",
+          "trait": "provorstvo",
+          "range": "vplotnuyu",
           "damage_die": "1d8",
           "die_size": 8,
           "damage_bonus": 3,
           "attack_bonus": 0,
           "extra_die": 0,
-          "damage_kind": "физический"
+          "damage_kind": "fizicheskiy"
         }
       },
       {
@@ -2332,14 +2422,14 @@
         ],
         "table": "weapon",
         "cells": {
-          "trait": "сила",
-          "range": "вплотную",
+          "trait": "sila",
+          "range": "vplotnuyu",
           "damage_die": "1d10",
           "die_size": 10,
           "damage_bonus": 3,
           "attack_bonus": 0,
           "extra_die": 1,
-          "damage_kind": "физический"
+          "damage_kind": "fizicheskiy"
         }
       },
       {
@@ -2348,14 +2438,14 @@
         "description": "Dagger. Искусность, вплотную, к8 + 1 физ., одноручное.",
         "table": "weapon",
         "cells": {
-          "trait": "искусность",
-          "range": "вплотную",
+          "trait": "iskusnost",
+          "range": "vplotnuyu",
           "damage_die": "1d8",
           "die_size": 8,
           "damage_bonus": 1,
           "attack_bonus": 0,
           "extra_die": 0,
-          "damage_kind": "физический"
+          "damage_kind": "fizicheskiy"
         }
       },
       {
@@ -2364,14 +2454,14 @@
         "description": "Shortbow. Проворство, далеко, к6 + 3 физ., двуручное.",
         "table": "weapon",
         "cells": {
-          "trait": "проворство",
-          "range": "далеко",
+          "trait": "provorstvo",
+          "range": "daleko",
           "damage_die": "1d6",
           "die_size": 6,
           "damage_bonus": 3,
           "attack_bonus": 0,
           "extra_die": 0,
-          "damage_kind": "физический"
+          "damage_kind": "fizicheskiy"
         }
       },
       {
