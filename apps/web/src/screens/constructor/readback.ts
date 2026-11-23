@@ -6,7 +6,7 @@ import { formulaWords } from '../../ui/formula-words.ts';
 import { shownFormula } from '../../ui/formula-lang.ts';
 import { plural } from '../../ui/plural.ts';
 import { diceSaid as diceText, asDice, DIE_LETTER } from '../../words.ts';
-import { tagsSaid } from './tag-said.ts';
+import { tagsSaid, tagSaid } from './tag-said.ts';
 
 
 export type Segment = { text: string } | { hole: string };
@@ -201,7 +201,7 @@ export function changeReadback(step: Step, amount: Step | null, system: System, 
       what = known ? seg(`«${known.label ?? id}».`) : hole(`«${id || '?'}» — в системе нет`);
     } else what = refSegment(ref, system, effect, 'какое состояние?', names);
     if ((s.mode ?? 'apply') === 'remove' && s.by === 'tag') {
-      return [seg(`С ${whoOf(effect, s.to)} снимаются все эффекты с меткой`), typeof ref === 'string' && ref ? seg(`«${ref}».`) : hole('какая метка?')];
+      return [seg(`С ${whoOf(effect, s.to)} снимаются все эффекты с меткой`), typeof ref === 'string' && ref ? seg(`«${tagSaid(system, ref)}».`) : hole('какая метка?')];
     }
     return (s.mode ?? 'apply') === 'remove'
       ? [seg(`С ${whoOf(effect, s.to)} снимается состояние`), what]
@@ -228,7 +228,7 @@ export function askReadback(step: Step, effect: Effect): Segment[] {
   const s = step as Record<string, unknown>;
   const word = (value: unknown, fallback: string) => (typeof value === 'string' && value.trim() ? value.trim() : fallback);
   const to = s.to ? whoOf(effect, s.to) : ASK_WHOM;
-  const question = typeof s.label === 'string' && s.label.trim() ? `«${s.label.trim()}»` : '⟨вопрос?⟩';
+  const question = typeof s.question === 'string' && s.question.trim() ? `«${s.question.trim()}»` : '⟨вопрос?⟩';
   return [{ text: `спросить ${to}: ${question} — ${word(s.yes, NAME_LABELS.yes)} / ${word(s.no, NAME_LABELS.no)}` }];
 }
 

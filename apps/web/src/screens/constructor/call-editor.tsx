@@ -2,6 +2,7 @@ import { grouped as byRole } from './effects/roles.ts';
 import { useState, type ReactNode } from 'react';
 import type { System, Param, SlotRef, Effect } from '@vtt/schema';
 import { paymentsOf, listOf, isBlank, paramsOf, isTyped, implicitOf } from '@vtt/engine';
+import { defaultSaid } from '../../ui/formula-labels.ts';
 import { Field, Select } from '../../ui/primitives.tsx';
 import { FormulaView } from '../../ui/formula-field.tsx';
 import { ValueField, asText, type SlotOption } from './value-field.tsx';
@@ -139,7 +140,7 @@ function valueShown(system: System, input: CallInput, names?: Map<string, string
     return effectOf(input.value) ? chip : <span>{chip} <span className="faint">— как у эффекта</span></span>;
   }
   if (isBlank(input.value)) {
-    if (input.param.default !== undefined) return <span>{String(input.param.default)} <span className="faint">— как у эффекта</span></span>;
+    if (input.param.default !== undefined) return <span>{defaultSaid(system, input.param, input.param.default)} <span className="faint">— как у эффекта</span></span>;
     return <span className="faint">{input.param.optional ? 'нет' : 'не передаётся'}</span>;
   }
   const row = pickedRow(system, input.param, input.value);
@@ -260,7 +261,7 @@ export function CallEditor({ system, effect: raw, effects, onEffect, args, onArg
   const byDefault = (input: CallInput) => {
     if (!empty(input) || input.param.kind === 'effect' || input.param.default === undefined) return null;
     const value = input.param.default;
-    return `как у эффекта: ${value === true ? 'да' : value === false ? 'нет' : String(value)}`;
+    return `как у эффекта: ${defaultSaid(system, input.param, value)}`;
   };
   const main = inputs.filter(input => !rare(input));
   const rest = inputs.filter(rare);

@@ -1,6 +1,7 @@
 import type { System, Modifier } from '@vtt/schema';
 import { ROLL_CALL, CALL_WORDS, targetStages, paramStages, typeColumn, tiedToHolder, ROW, HOLDER, NAMES } from '@vtt/engine';
 import { labelOfTag } from '../../ui/formula.tsx';
+import { pathSaid, literalSaid } from '../../ui/formula-labels.ts';
 import { formulaWords } from '../../ui/formula-words.ts';
 import { addendWords } from './readback.ts';
 import { rowNames } from './row-names.ts';
@@ -25,7 +26,7 @@ const valueWords = (system: System, ref: unknown, names: Names): string => {
   return text ? formulaWords(system, text, names) : '…';
 };
 
-const tagList = (tags: unknown): string => ((tags as string[] | undefined) ?? []).map(t => `«${t}»`).join(', ');
+const tagList = (system: System, tags: unknown): string => ((tags as string[] | undefined) ?? []).map(t => `«${tagSaid(system, t)}»`).join(', ');
 
 const stageWords = (stages: readonly { key: string; label?: string }[], stage: unknown): string => {
   if (typeof stage !== 'string' || stages.length < 2) return '';
@@ -54,13 +55,13 @@ export function inputNamesOf(system: System, call: string, base: Names): Names {
 const columnLabel = (system: System, table: string, key: string): string =>
   typeColumn(system, table, key)?.label || key;
 
-function targetLabel(system: System, target: string, table?: string): string {
+export function targetLabel(system: System, target: string, table?: string): string {
   const anyRow = /^cell:([^.]+)\.\*\.(.+)$/u.exec(target);
   if (anyRow) return `${system.tables?.[anyRow[1]!]?.label ?? anyRow[1]} → ${columnLabel(system, anyRow[1]!, anyRow[2]!)} — у каждой строки`;
   const byProp = new RegExp(`^([^.]+)\\.\\{@${ROW}\\.([\\p{L}\\p{N}_]+)\\}\\.(.+)$`, 'u').exec(target);
   if (byProp) return `${system.tables?.[byProp[1]!]?.label ?? byProp[1]} → ${columnLabel(system, byProp[1]!, byProp[3]!)} по «${table ? columnLabel(system, table, byProp[2]!) : byProp[2]}»`;
   const byInput = /^\{@([\p{L}\p{N}_]+)(?:\.([\p{L}\p{N}_]+))?\}$/u.exec(target);
-  if (byInput) return `поле из «${byInput[1]}»`;
+  if (byInput) return `поле из «${pathSaid(system, byInput[1]!) ?? byInput[1]}»`;
   return labelOfTag(system, target);
 }
 
@@ -74,6 +75,13 @@ export function rollEditWhat(system: System, modifier: Modifier, names?: Names):
     : mod.param === 'threshold' ? amount(CALL_WORDS.roll.params.threshold)
     : system.roll_edits?.[String(mod.edit ?? '')]?.label ?? String(mod.edit ?? 'какая правка?');
 }
+
+const whereWords = (system: System, where: Loose): string => {
+  const column = typeColumn(system, String(where.table ?? ''), String(where.column));
+  const from = column?.from ? system.tables?.[column.from] : undefined;
+  const row = from?.rows?.find(one => one.value === where.is)?.label ?? literalSaid(system, String(where.is)) ?? String(where.is);
+  return `где «${column?.label || where.column}» — «${row}»`;
+};
 
 export function modifierSentence(system: System, modifier: Modifier, table?: string): string {
   const mod = modifier as unknown as Loose;
@@ -103,10 +111,10 @@ export function modifierSentence(system: System, modifier: Modifier, table?: str
   const param = (effect?.params ?? []).find(p => p.key === mod.param);
   const sheets = Object.fromEntries((effect?.params ?? []).filter(p => p.kind === 'sheet').map(p => [p.key, `«${p.label ?? p.key}» — носитель`]));
   const filters = [
-    tagList(mod.tags) ? `по меткам ${tagList(mod.tags)}` : '',
-    tagList(mod.anyTags) ? `по меткам ${tagList(mod.anyTags)}` : '',
-    tagList(mod.notTags) ? `кроме ${tagList(mod.notTags)}` : '',
-    mod.where ? `где «${(mod.where as Loose).column}» — «${(mod.where as Loose).is}»` : '',
+    tagList(system, mod.tags) ? `по меткам ${tagList(system, mod.tags)}` : '',
+    tagList(system, mod.anyTags) ? `по меткам ${tagList(system, mod.anyTags)}` : '',
+    tagList(system, mod.notTags) ? `кроме ${tagList(system, mod.notTags)}` : '',
+    mod.where ? whereWords(system, mod.where as Loose) : '',
   ].filter(Boolean).join(', ');
   const who = whoseWords(system, mod, sheets, 'на всех листах', inputs);
   const op = OP_WORDS[String(mod.op ?? 'mul')] ?? (value => value);

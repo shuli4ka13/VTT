@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { recordKinds, kindsFor, kindWord, choiceTables, ASKABLE, asDice, toDice } from '@vtt/engine';
+import { literalSaid, defaultSaid } from '../../../ui/formula-labels.ts';
 import { freeId, useWorld } from '../../../store/world.ts';
 import { followKey, paramUsed, keyOf, referenced } from '../keys.ts';
 import { KeyField } from '../../../ui/key-field.tsx';
@@ -42,10 +43,10 @@ export const kindWords = (param: Loose, system: System): string => {
 
 const defaultWords = (param: Loose, system: System): string => {
   const value = param.default;
-  if (value === true) return 'да';
-  if (value === false) return 'нет';
+  if (value === undefined || value === '') return '—';
   if (typeof value === 'string' && String(param.kind) === 'effect') return system.effects?.[value]?.label || value || 'ничего';
-  return value === undefined || value === '' ? '—' : typeof value === 'string' ? shownDice(value) : String(value);
+  if (typeof value === 'string' && typeof param.from !== 'string' && system.effects?.[value] === undefined && !literalSaid(system, value)) return shownDice(value);
+  return defaultSaid(system, param, value);
 };
 
 const askWords = (param: Loose, system: System): string => {

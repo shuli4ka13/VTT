@@ -5,6 +5,7 @@ import { blockLabel, renameLayoutColumn, renameLayoutTable, retagFields, kindsFo
 import type { RowPiece, TableColumn, Holder } from '@vtt/engine';
 export { rowNames } from '../row-names.ts';
 import { Card, CardHead, Input, NumInput, Button, DangerButton, Fold, Select, Verdict, Empty, Field, Chip, TextArea } from '../../../ui/primitives.tsx';
+import { formulaAsLabels } from '../../../ui/formula-labels.ts';
 import { LiveValue } from '../live-value.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
 import { ColumnCard } from './column-card.tsx';
@@ -640,7 +641,7 @@ const generalWord = (value: unknown): string => {
 };
 
 export const spoken = (system: System, tableId: string, row: TableRow, expr: string): RowPiece[] | undefined => {
-  try { return rowPieces(system, tableId, row, expr); } catch { return undefined; }
+  try { return rowPieces(system, tableId, row, expr).map(piece => ('text' in piece ? { text: formulaAsLabels(system, piece.text) } : piece)); } catch { return undefined; }
 };
 
 export function CellEditor({ column, value, system, where, names, placed, inherited, placeholder, onChange }: {

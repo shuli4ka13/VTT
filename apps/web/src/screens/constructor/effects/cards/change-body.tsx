@@ -1,4 +1,5 @@
 import { operandText, throwsDice, DICE_BY_STEP, amountParamOf } from '@vtt/engine';
+import { tagSaid } from '../../tag-said.ts';
 import { SheetPick } from '../../sheet-pick.tsx';
 import { sheetChoices, callable } from '../../slots.tsx';
 import { useMemo, useState, type ReactNode } from 'react';
@@ -376,7 +377,7 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
             <Field label="Какая метка" needed={!step.effect}>
               <Select
                 value={typeof step.effect === 'string' ? step.effect : ''}
-                options={[['', '— какая метка —'], ...[...new Set(Object.values(system.effects ?? {}).flatMap(one => one.tags ?? []))].sort().map(tag => [tag, tag] as const)] as never}
+                options={[['', '— какая метка —'], ...[...new Set(Object.values(system.effects ?? {}).flatMap(one => one.tags ?? []))].sort().map(tag => [tag, tagSaid(system, tag)] as const)] as never}
                 onChange={next => edit(applyIndex, draft => { const d = draft as any; if (next) d.effect = next; else delete d.effect; })}
               />
             </Field>

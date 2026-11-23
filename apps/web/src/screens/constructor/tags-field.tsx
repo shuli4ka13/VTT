@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { AddCombo } from '../../ui/combo.tsx';
 import type { System } from '@vtt/schema';
 import { tagWords } from '@vtt/engine';
-import { rowSaid } from './tag-said.ts';
+import { rowSaid, tagSaid } from './tag-said.ts';
 import { Chip, Input, Button } from '../../ui/primitives.tsx';
 import { focusNew } from '../../ui/focus-new.ts';
-import { shownFormula, storedFormula } from '../../ui/formula-lang.ts';
+import { storedFormula } from '../../ui/formula-lang.ts';
+import { useWorld, freeId } from '../../store/world.ts';
+import { formulaAsLabels } from '../../ui/formula-labels.ts';
 
 export type TagValue = string | { expr: string };
 
@@ -18,7 +20,7 @@ const COMPUTED = ':формула';
 
 export interface TagGroup { title: string; list: readonly (readonly [string, string])[] }
 
-export function TagsField({ system, value, onChange, known = [], templates = [], computed = false, empty = '+ метка…', boxed = false, lead = [], labels }: {
+export function TagsField({ system, value, onChange, known = [], templates = [], computed = false, empty = '+ метка…', boxed = false, lead = [], labels, names }: {
   system: System;
   value: readonly TagValue[] | undefined;
   onChange: (next: TagValue[]) => void;
@@ -29,7 +31,9 @@ export function TagsField({ system, value, onChange, known = [], templates = [],
   boxed?: boolean;
   lead?: readonly TagGroup[];
   labels?: ReadonlyMap<string, string>;
+  names?: ReadonlyMap<string, string>;
 }) {
+  const editSystem = useWorld(state => state.editSystem);
   const [typing, setTyping] = useState<'own' | 'formula' | null>(null);
   const [draft, setDraft] = useState('');
   const picked = [...(value ?? [])];
@@ -45,7 +49,7 @@ export function TagsField({ system, value, onChange, known = [], templates = [],
     ...lead.map(group => [group.title, [...group.list]] as [string, (readonly [string, string])[]]),
     ['шаблоны строки', templates.map(t => [t.value, t.label] as const)],
     ['метки с договором', contracts],
-    ['метки вызова', known.map(word => [word, word] as const)],
+    ['метки вызова', known.map(word => [word, tagSaid(system, word)] as const)],
     ...[...new Set(rows.map(([, table]) => table))].map(table => [
       `метки бросков · ${table}`, rows.filter(([, t]) => t === table).map(([word]) => [word, rowSaid(system, word)] as const),
     ] as [string, (readonly [string, string])[]]),
@@ -59,7 +63,13 @@ export function TagsField({ system, value, onChange, known = [], templates = [],
 
   const commit = () => {
     const text = draft.trim();
-    if (text) add(typing === 'formula' ? { expr: storedFormula(text) } : text);
+    if (text && typing === 'formula') add({ expr: storedFormula(text) });
+    else if (text) {
+      const same = groups.flatMap(([, list]) => list).find(([word, label]) => word === text || label.toLowerCase() === text.toLowerCase());
+      const key = same ? same[0] : freeId([...dictionary, ...Object.keys(system.tags ?? {})], text);
+      if (!same && key !== text) editSystem(next => { next.tags = { ...(next.tags ?? {}), [key]: { ...(next.tags?.[key] ?? {}), label: text } }; });
+      add(key);
+    }
     setDraft('');
     setTyping(null);
   };
@@ -69,7 +79,7 @@ export function TagsField({ system, value, onChange, known = [], templates = [],
       {picked.map(tag => (
         <Chip key={keyOf(tag)} active={typeof tag === 'string'} onRemove={() => drop(tag)}
           {...(typeof tag === 'string' ? {} : { title: 'метка вычисляется формулой при броске' })}>
-          {typeof tag === 'string' ? (labels?.get(tag) ?? templates.find(t => t.value === tag)?.label ?? said.get(tag) ?? tag) : `= ${shownFormula(tag.expr)}`}
+          {typeof tag === 'string' ? (labels?.get(tag) ?? templates.find(t => t.value === tag)?.label ?? said.get(tag) ?? tagSaid(system, tag)) : `= ${formulaAsLabels(system, tag.expr, names)}`}
           {typeof tag === 'string' && !dictionary.has(tag) ? <span className="faint tag-unknown" title="такой метки нет в словаре меток бросков"> · нет в словаре</span> : null}
         </Chip>
       ))}

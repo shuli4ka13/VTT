@@ -53,6 +53,12 @@ export function ValueEditor({ type, value, system, compendium, onlyWorn, except,
     );
   }
   if (kind === 'dice') return <DiceProp value={String(value ?? '')} onChange={onChange} />;
+  if (kind === 'effect' && type.many) {
+    const effects = Object.entries(system.effects ?? {})
+      .filter(([, e]) => !onlyWorn || (e.activation ?? 'manual') === 'passive')
+      .map(([key, e]) => ({ value: key, label: e.label || key }));
+    return <MultiChoice value={value} options={effects} onChange={onChange} />;
+  }
   if (kind === 'effect') {
     return (
       <Select

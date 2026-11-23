@@ -32,13 +32,13 @@ describe('шаг «Спросить» в конструкторе', () => {
   it('из палитры: заготовка с именем без вопроса, «Проблемы» просят вписать вопрос', () => {
     start();
     within().click('+ спросить');
-    expect(steps()).toEqual([{ id: 'reshenie', type: 'ask' }]);
+    expect(steps()).toEqual([{ id: 'reshenie', label: 'решение', type: 'ask' }]);
     expect(stepCard(/^1 · Спросить/).textContent).toContain('Вопрос');
     expect(stepCard(/^1 · Спросить/).querySelector('.verdict--bad')).not.toBeNull();
   });
 
   it('второй шаг получает другое имя', () => {
-    start([{ id: 'reshenie', type: 'ask', label: 'Первый?' }]);
+    start([{ id: 'reshenie', type: 'ask', question: 'Первый?' }]);
     within().click('+ спросить');
     expect(steps().map(step => step.id)).toEqual(['reshenie', 'reshenie_2']);
   });
@@ -55,13 +55,13 @@ describe('шаг «Спросить» в конструкторе', () => {
     within(card).type('Ответ «да» словами', 'Бьющий');
     card = stepCard(/^1 · Спросить/);
     within(card).type('Ответ «нет» словами', 'Защитник');
-    expect(steps()).toEqual([{ id: 'reshenie', type: 'ask', label: 'Кто победил?', to: { expr: '@цель' }, yes: 'Бьющий', no: 'Защитник' }]);
+    expect(steps()).toEqual([{ id: 'reshenie', label: 'решение', type: 'ask', question: 'Кто победил?', to: { expr: '@цель' }, yes: 'Бьющий', no: 'Защитник' }]);
     card = stepCard(/^1 · Спросить/);
     expect(card.querySelector('.verdict--bad')).toBeNull();
     within(card).type('Ответ «да» словами', '');
     card = stepCard(/^1 · Спросить/);
     within(card).formula('Кого', '');
-    expect(steps()).toEqual([{ id: 'reshenie', type: 'ask', label: 'Кто победил?', no: 'Защитник' }]);
+    expect(steps()).toEqual([{ id: 'reshenie', label: 'решение', type: 'ask', question: 'Кто победил?', no: 'Защитник' }]);
   });
 });
 
@@ -70,8 +70,8 @@ describe('пересказ и подсказки шага «Спросить»',
   const text = (step: object) => askReadback(step as Step, effect).map(part => ('text' in part ? part.text : part.hole)).join(' ');
 
   it('пересказ словами: ведущий по умолчанию, лист — по имени входа, ответы по умолчанию «да / нет»', () => {
-    expect(text({ type: 'ask', label: 'Кто победил?', yes: 'Бьющий', no: 'Защитник' })).toBe('спросить ведущего: «Кто победил?» — Бьющий / Защитник');
-    expect(text({ type: 'ask', label: 'Согласен?', to: { expr: '@цель' } })).toBe('спросить «Цель»: «Согласен?» — да / нет');
+    expect(text({ type: 'ask', question: 'Кто победил?', yes: 'Бьющий', no: 'Защитник' })).toBe('спросить ведущего: «Кто победил?» — Бьющий / Защитник');
+    expect(text({ type: 'ask', question: 'Согласен?', to: { expr: '@цель' } })).toBe('спросить «Цель»: «Согласен?» — да / нет');
   });
 
   it('итог шага — «да / нет» — предлагается следующим шагам по имени шага', () => {

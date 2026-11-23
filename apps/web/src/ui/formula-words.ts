@@ -1,7 +1,7 @@
 import type { System } from '@vtt/schema';
 import { compile, AND, OR, NOT, ROW, STEP_WORDS, listOf, fieldOf, fieldLinkOf } from '@vtt/engine';
 import type { Node } from '@vtt/engine';
-import { formulaAsLabels, pickTail } from './formula-labels.ts';
+import { formulaAsLabels, pickTail, literalSaid } from './formula-labels.ts';
 import { localName } from './formula-lang.ts';
 
 const COMPARE: Record<string, string> = { '==': '=', '!=': '≠', '>=': '≥', '<=': '≤', '>': '>', '<': '<' };
@@ -63,7 +63,7 @@ export function formulaWords(system: System, source: string, names?: ReadonlyMap
   const words = (node: Node, top = false): string => {
     switch (node.kind) {
       case 'Number': return String(node.value);
-      case 'Text': return node.dice ? diceWords(node.value) : `«${node.value}»`;
+      case 'Text': return node.dice ? diceWords(node.value) : `«${literalSaid(system, node.value) ?? node.value}»`;
       case 'Bool': return node.value ? 'да' : 'нет';
       case 'Ref': return node.tag.startsWith(`${ROW}.`) ? `«${ref(`@${node.tag}`)}»` : pathWords(ref, node.tag);
       case 'Pick': return `«${ref(`@${node.tag}`)}» по ${words(node.key, true)}${node.rest ? ` · ${pickTail(system, node.tag, node.rest)}` : ''}`;

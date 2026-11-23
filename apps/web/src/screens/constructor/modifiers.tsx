@@ -1,6 +1,7 @@
 import type { System, Modifier, Stage } from '@vtt/schema';
 import { paramStages, targetStages, targets, installMethod, recipesToInstall, tagsOf, tagTablesOf, listOf as rowsFrom, amountParamOf, calledOf, ROLL_CALL, CALL_WORDS, placesMatching, wordFits, cancels, callNamesOf, holderConditionOf, NAMES } from '@vtt/engine';
-import { modifierSentence, rowNamesOf, inputNamesOf } from './modifier-words.ts';
+import { pathSaid } from '../../ui/formula-labels.ts';
+import { modifierSentence, rowNamesOf, inputNamesOf, targetLabel } from './modifier-words.ts';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Card, CardHead, Field, Input, Select, Button, DangerButton } from '../../ui/primitives.tsx';
@@ -77,7 +78,8 @@ const ROLL_PARAM_HINTS: Record<string, string> = {
 
 type Loose = Record<string, unknown>;
 
-function StagePick({ stages, value, onChange }: {
+function StagePick({ system, stages, value, onChange }: {
+  system: System;
   stages: readonly Stage[];
   value: string | undefined;
   onChange: (stage: string | undefined) => void;
@@ -87,7 +89,8 @@ function StagePick({ stages, value, onChange }: {
     <Field label="Этап" needed={stages.length > 1 && !value}>
       <Select
         value={value ?? ''}
-        options={[['', '— выберите этап —'], ...stages.map(stage => [stage.key, stage.label || stage.key] as const)] as never}
+        options={[['', '— выберите этап —'], ...(value && !stages.some(stage => stage.key === value) ? [[value, pathSaid(system, value) ?? value] as const] : []),
+          ...stages.map(stage => [stage.key, stage.label || stage.key] as const)] as never}
         onChange={stage => onChange(stage || undefined)}
       />
     </Field>
@@ -158,6 +161,7 @@ export function useModifierRows({ system, modifiers, onEdit, editSystem, table, 
                 <Select
                   value={modifier.target}
                   options={[['', '— выберите, что правим —'],
+                    ...(modifier.target && !valueTargets.some(t => t.tag === modifier.target) ? [[modifier.target, targetLabel(system, modifier.target, table)] as const] : []),
                     ...valueTargets.map(t => [t.tag, t.label] as const)] as never}
                   onChange={target => onEdit(draft => { const d = draft[index] as { target: string; stage?: string }; d.target = target; delete d.stage; })}
                 />
@@ -181,6 +185,7 @@ export function useModifierRows({ system, modifiers, onEdit, editSystem, table, 
                 />
               </Field>
               <StagePick
+                system={system}
                 stages={targetStages(system, String(modifier.target ?? ''))}
                 value={(modifier as { stage?: string }).stage}
                 onChange={stage => onEdit(draft => {
@@ -332,6 +337,7 @@ function EditBody({ system, modifier, calls, edits, recipes, names, onChange, on
         </Field>
       )}
 <StagePick
+        system={system}
         stages={isRoll ? [] : paramStages(effect?.params, String(m.param ?? ''))}
         value={m.stage as string | undefined}
         onChange={stage => onChange(d => { if (stage === undefined) delete d.stage; else d.stage = stage; })}

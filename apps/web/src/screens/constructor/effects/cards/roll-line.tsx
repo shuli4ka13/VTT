@@ -5,8 +5,9 @@ import { ROLL_CALL } from '@vtt/engine';
 
 type Roll = Record<string, unknown>;
 
-export function RollTags({ roll, system, label = 'Метки', onRoll }: {
+export function RollTags({ roll, system, label = 'Метки', names, onRoll }: {
   label?: string;
+  names?: ReadonlyMap<string, string>;
   roll: Roll;
   system: System;
   onRoll: (change: (draft: Roll) => void) => void;
@@ -15,7 +16,7 @@ export function RollTags({ roll, system, label = 'Метки', onRoll }: {
   return (
     <div className="field roll-tags" title="По меткам бросок находят правки и подписки; метка — строка любой таблицы системы">
       <span className="field__label">{label}</span>
-      <TagsField system={system} value={tags} computed empty="+ метка"
+      <TagsField system={system} value={tags} computed empty="+ метка" {...(names ? { names } : {})}
         onChange={next => onRoll(draft => { if (next.length) draft.tags = next; else delete draft.tags; })} />
       <Listeners names={rollListeners(system, tags.filter((tag): tag is string => typeof tag === 'string'))} />
     </div>

@@ -77,7 +77,7 @@ describe('форма «Бросок»: кто бросает', () => {
   it('бросающий не из списка листов остаётся пунктом с пометкой, а не подменяется первым листом', () => {
     const view = body({ id: 'бросок', type: 'roll', die: 'lead', by: { expr: 'first(@цели)' } });
     expect(by(view).dataset.value).toBe('first(@цели)');
-    expect(by(view).value).toBe('первый(@цели) — такого листа здесь нет');
+    expect(by(view).value).toBe('первый(цели) — такого листа здесь нет');
   });
 });
 

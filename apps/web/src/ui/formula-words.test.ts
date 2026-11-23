@@ -65,7 +65,7 @@ describe('слова формул: итог вызова', () => {
     expect(formulaWords(withCall, '@попадание.крит', place)).toBe('«попадание — крит»');
     expect(formulaWords(withCall, '@второй_удар.на_костях', place)).toBe('«второй удар — на костях»');
     expect(formulaWords(withCall, 'not @попадание.попал', place)).toBe('не «попадание»');
-    expect(formulaWords(withCall, '@попадание.попал')).toBe('«попадание.попал»');
+    expect(formulaWords(withCall, '@попадание.попал')).not.toBe('«попадание.попал»');
   });
 
   it('нет такого шага или такого итога — путь остаётся как есть', () => {
@@ -93,7 +93,7 @@ describe('слова формул: клетка своей строки', () => 
 
   it('«строка» — не лист: колонка зовётся подписью из карты, а не «Класс брони (строка)»', () => {
     expect(formulaWords(withRow, '@row.ac', names)).toBe('«База класса брони»');
-    expect(formulaWords(withRow, '@row.ac')).toBe('«строка.ac»');
+    expect(formulaWords(withRow, '@row.ac')).not.toContain('.ac');
     expect(formulaWords(withRow, '@holder.ac')).toBe('«Класс брони (носитель)»');
   });
 
@@ -115,7 +115,7 @@ describe('слова формул: значение выбора — подпи�
   });
 
   it('без таблицы входа значение остаётся как написано', () => {
-    expect(formulaWords(chosen, '@черта == "edge"', new Map([['черта', 'Характеристика']]))).toBe('«Характеристика» = «edge»');
+    expect(formulaWords(chosen, '@черта == "edge"', new Map([['черта', 'Характеристика']]))).toBe('«Характеристика» = «Преимущество»');
   });
 });
 

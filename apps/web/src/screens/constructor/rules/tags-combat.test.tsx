@@ -26,7 +26,8 @@ describe('правила: метки и бой', () => {
     fireEvent.click(screen.getByText('Новая метка'));
     fireEvent.click(screen.getByText('+ вход'));
     const tag = Object.values(useWorld.getState().system.tags ?? {})[0]!;
-    expect(tag.inputs).toEqual([{ key: 'действующий', kind: 'sheet' }]);
+    expect(tag.inputs).toEqual([{ key: 'deystvuyuschiy', kind: 'sheet' }]);
+    expect(tag.said).toEqual({ deystvuyuschiy: 'действующий' });
   });
 
   it('инициатива заводится костью системы, пределы по умолчанию в данные не пишутся', () => {

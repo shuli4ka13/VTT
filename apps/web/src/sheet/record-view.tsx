@@ -1,4 +1,4 @@
-import { findRecord, recordKindOf, propsOf, entryKeyOf as keyOf, isFormulaCell, itemExpr, ITEM_NAME, compile, listOf } from '@vtt/engine';
+import { findRecord, recordKindOf, propsOf, entryKeyOf as keyOf, isFormulaCell, itemExpr, ITEM_NAME, compile, listOf, fieldOf } from '@vtt/engine';
 import { Card, Chip } from '../ui/primitives.tsx';
 import { asDice } from '../words.ts';
 import { formulaWords } from '../ui/formula-words.ts';
@@ -50,9 +50,11 @@ export function recordDetails(record: CompendiumRecord, system: System, compendi
   const word = (prop: (typeof columns)[number], value: unknown): string => {
     const kindOf = String(prop.kind ?? 'number');
     if (typeof value === 'boolean') return value ? 'да' : 'нет';
+    if (Array.isArray(value)) return value.map(one => word(prop, one)).join(', ');
     const raw = String(value);
     return kindOf === 'dice' ? asDice(raw)
       : kindOf === 'effect' ? (system.effects[raw]?.label ?? raw)
+        : kindOf === 'field' ? (fieldOf(system, raw)?.label ?? raw)
         : kindOf === 'record' ? recordLabel(compendium, raw)
           : kindOf === 'choice' ? labelsOf(system, prop.from, value)
             : raw;

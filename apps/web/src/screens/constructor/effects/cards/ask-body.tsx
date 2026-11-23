@@ -17,8 +17,8 @@ export function AskBody({ step, context, edit, system }: { step: Record<string, 
   return (
     <>
       <div className="row">
-        <Field label="Вопрос" needed={!text('label').trim()}>
-          <Input value={text('label')} placeholder="Кто победил?" onChange={set('label')} />
+        <Field label="Вопрос" needed={!text('question').trim()}>
+          <Input value={text('question')} placeholder="Кто победил?" onChange={set('question')} />
         </Field>
         <Field label="Кого" hint="Кто отвечает на вопрос. Пусто — отвечает ведущий.">
           <TypedPick want={{ kind: 'sheet' }} value={step.to} context={context} blank={ASK_WHOM} label="Кого"

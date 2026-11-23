@@ -5,8 +5,7 @@ import { Combo, type ComboOption } from '../../../../ui/combo.tsx';
 import { useFormulaBar } from '../../../../store/formula-bar.ts';
 import { sheetChoices } from '../../slots.tsx';
 import type { SlotContext } from '../../slots.tsx';
-import { loneSheet } from '../../sheet-pick.tsx';
-import { shownFormula } from '../../../../ui/formula-lang.ts';
+import { formulaAsLabels } from '../../../../ui/formula-labels.ts';
 import type { EditFn } from '../words.ts';
 import { Extras } from './extras.tsx';
 import { SlotFormula } from './die-pick.tsx';
@@ -31,7 +30,7 @@ const NOBODY = 'никто — кости ничьи';
 
 function ownDieSaid(context: SlotContext, text: string): string {
   const named = inputDice(context.system, context.effect).find(([key]) => key === `${EXPR}${text.trim()}`);
-  const source = named ? `кость из входа «${named[1]}»` : `кость «${text.replace(/['"]/g, '')}»`;
+  const source = named ? `кость из входа «${named[1]}»` : `кость «${formulaAsLabels(context.system, text.replace(/['"]/g, ''), context.names)}»`;
   return `${source}: выпавшие грани складываются, правила успеха у неё нет`;
 }
 
@@ -57,7 +56,7 @@ export function RollBody({ step, context, edit, takenNames }: {
   const stray = who !== '' && !sheets.some(([value]) => value === who);
   const people: (readonly [string, string])[] = [
     ...(who === '' && fielded ? [['', 'кто бросает?'] as const] : []),
-    ...(stray ? [[who, `${loneSheet({ expr: who }) || shownFormula(who)} — такого листа здесь нет`] as const] : []),
+    ...(stray ? [[who, `${formulaAsLabels(context.system, who, context.names)} — такого листа здесь нет`] as const] : []),
     ...sheets,
     ...(fielded ? [] : [['', NOBODY] as const]),
   ];
@@ -113,7 +112,7 @@ export function RollBody({ step, context, edit, takenNames }: {
   const picked = fielded ? rollableFields(context.system, context.effect).find(one => one.tail === tailOf(exprOf(read.field))) : undefined;
   const rule = picked ? context.system.rolls?.[picked.roll] : undefined;
   const constant = typeof read.die === 'string' ? context.system.constants?.[read.die] : undefined;
-  const die = constant ? dieSaid(constant, context.system, read.count !== undefined && read.count !== null) : null;
+  const die = constant ? dieSaid(constant, context.system, read.count !== undefined && read.count !== null, context.names) : null;
   const keepExtra: Extra = {
     key: 'keep',
     label: 'оставить',
@@ -196,7 +195,7 @@ export function RollBody({ step, context, edit, takenNames }: {
         <ResultChips name={stepSaid(read)} system={context.system} nameSlot={<span className="result-row__name" title="так итог броска зовётся в формулах, а через точку — его части">{stepSaid(read)}</span>}
           outputs={resultsOf(context.system, context.effect.params ?? [], step as never).map(one => ({ key: one.path.slice(1) || 'целиком', label: one.label.replace(/^да или нет: /, ''), kind: one.kind }))} />
       ) : null}
-      <RollTags label={fielded ? 'Ещё метки' : 'Метки'} roll={read} system={context.system} onRoll={change => set(change)} />
+      <RollTags label={fielded ? 'Ещё метки' : 'Метки'} roll={read} system={context.system} {...(context.names ? { names: context.names } : {})} onRoll={change => set(change)} />
     </>
   );
 }

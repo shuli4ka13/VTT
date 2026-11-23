@@ -190,7 +190,7 @@ export const BRICKS: StepTemplate[] = [
   {
     key: 'ask', label: `+ ${STEP_WORDS.ask.label.toLowerCase()}`,
     hint: STEP_WORDS.ask.hint,
-    make: (_system, taken) => [{ id: freeId(taken, 'решение'), type: 'ask' } as unknown as Step],
+    make: (_system, taken) => [{ ...saidId(taken, 'решение'), type: 'ask' } as unknown as Step],
   },
   {
     key: 'stop', label: '+ стоп',

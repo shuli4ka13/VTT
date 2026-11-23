@@ -116,7 +116,7 @@ describe('поле формулы со словами в покое', () => {
     const commits: string[] = [];
     render(<FormulaField value="@сила + 2" spoken="«Сила» + 2" system={system} where="А" onCommit={text => commits.push(text)} />);
     expect(words()!.textContent).toBe('«Сила» + 2');
-    expect(words()!.title).toBe('@сила + 2');
+    expect(words()!.title).toBe('Сила + 2');
     expect(document.querySelector('.chips')).toBeNull();
 
     fireEvent.click(words()!);

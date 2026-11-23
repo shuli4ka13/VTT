@@ -325,7 +325,7 @@ describe('условие блока «Если» в покое — словам�
   it('в покое — слова, без фишек и без второй строки; нажатие на слова открывает поле, Enter возвращает слова', () => {
     show({ expr: 'not empty(@status)' });
     expect(face()!.textContent).toBe('задано «Состояние при попадании»');
-    expect(face()!.title).toBe('не пусто(@status)');
+    expect(face()!.title).toBe('не пусто(Состояние при попадании)');
     expect(chipsInHead()).toBeNull();
     expect(headOf(block(0)).querySelector('.cond__words')).toBeNull();
     expect(headOf(block(0)).textContent!.split('Состояние при попадании')).toHaveLength(2);
@@ -398,7 +398,7 @@ describe('условие блока «Если» в покое — словам�
   it('«Если» со «Стоп» внутри читается в той же шапке: слова условия и «— стоп»', () => {
     show({ expr: 'empty(@status)' }, { type: 'stop' } as unknown as Step);
     expect(face()!.textContent).toBe('не задано «Состояние при попадании» — стоп');
-    expect(face()!.title).toBe('пусто(@status)');
+    expect(face()!.title).toBe('пусто(Состояние при попадании)');
     expect(block(0).classList.contains('flow-block--guard')).toBe(true);
     cleanup();
     show({ expr: 'empty(@status)' }, { type: 'stop' } as unknown as Step, { type: 'orElse' } as unknown as Step, { type: 'stop' } as unknown as Step);

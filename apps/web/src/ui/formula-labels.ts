@@ -1,6 +1,6 @@
 import type { System } from '@vtt/schema';
 import { sheetPathLabel } from './paths.ts';
-import { fieldOf, fieldLinkOf, ROW, typeColumn, nameLabel, saidName } from '@vtt/engine';
+import { fieldOf, fieldLinkOf, ROW, typeColumn, nameLabel, saidName, listOf } from '@vtt/engine';
 import { shownFormula } from './formula-lang.ts';
 
 const known = (system: System, tag: string, names?: ReadonlyMap<string, string>): boolean =>
@@ -13,16 +13,101 @@ const onSheet = (system: System, tag: string, names?: ReadonlyMap<string, string
   return known(system, rest, names) || system.effects?.[rest] ? { head: tag.slice(0, dot), rest } : null;
 };
 
+const ROLL_PATHS: Record<string, string> = {
+  dice: 'кости', rolls: 'выпавшие', natural: 'на кости', total: 'сколько вышло всего', success: 'успех', margin: 'запас',
+  atMax: 'кости на максимуме', atMin: 'кости на минимуме', degree: 'ступень', parts: 'части', versus: 'порог', tags: 'метки броска',
+};
+
+const SAID = new WeakMap<System, Map<string, string>>();
+
+function walkSteps(list: unknown, put: (key: unknown, label: unknown) => void): void {
+  if (!Array.isArray(list)) return;
+  for (const step of list as Record<string, unknown>[]) {
+    if (!step || typeof step !== 'object') continue;
+    put(step.id, step.label);
+    put(step.as, step.asLabel);
+    walkSteps(step.steps, put);
+    walkSteps(step.cost, put);
+  }
+}
+
+function saidIndex(system: System): Map<string, string> {
+  const cached = SAID.get(system);
+  if (cached) return cached;
+  const index = new Map<string, string>();
+  const put = (key: unknown, label: unknown): void => {
+    if (typeof key !== 'string' || typeof label !== 'string' || !label || label === key) return;
+    if (!index.has(key)) index.set(key, label);
+  };
+  for (const [id, table] of Object.entries(system.tables ?? {})) {
+    put(id, table.label);
+    for (const column of table.columns ?? []) {
+      put(column.key, column.label);
+      for (const stage of column.stages ?? []) put(stage.key, stage.label);
+    }
+    for (const row of table.rows ?? []) put(row.value, row.label);
+  }
+  for (const [id, effect] of Object.entries(system.effects ?? {})) {
+    put(id, effect.label);
+    for (const param of effect.params ?? []) {
+      put(param.key, param.label);
+      for (const stage of param.stages ?? []) put(stage.key, stage.label);
+    }
+    for (const column of effect.returns ?? []) put(column.key, column.label);
+    walkSteps(effect.steps, put);
+    walkSteps(effect.cost, put);
+    for (const handler of effect.on ?? []) { walkSteps(handler.steps, put); walkSteps(handler.cost, put); }
+    walkSteps(effect.attach, put);
+    walkSteps(effect.detach, put);
+  }
+  for (const [id, constant] of Object.entries(system.constants ?? {})) {
+    put(id, constant.label);
+    for (const part of constant.dice ?? []) put(part.name, part.label);
+  }
+  for (const [id, tag] of Object.entries(system.tags ?? {})) put(id, tag.label);
+  SAID.set(system, index);
+  return index;
+}
+
+function segmentSaid(system: System, names: ReadonlyMap<string, string> | undefined, segment: string): string | undefined {
+  const named = names?.get(segment);
+  return (named !== segment ? named : undefined) ?? nameLabel(segment) ?? ROLL_PATHS[segment] ?? saidIndex(system).get(segment);
+}
+
+export function pathSaid(system: System, tag: string, names?: ReadonlyMap<string, string>, strict = false): string | null {
+  const segments = tag.replace(/^cell:/u, '').split('.');
+  const said = segments.map(segment => segmentSaid(system, names, segment));
+  if (strict ? said.some(one => one === undefined) : said.every(one => one === undefined)) return null;
+  return said.map((one, at) => one ?? segments[at]!).join(' → ');
+}
+
 export const plainLabel = (system: System, tag: string, names?: ReadonlyMap<string, string>): string =>
-  fieldOf(system, tag)?.label ?? names?.get(tag) ?? sheetPathLabel(system, tag) ?? system.effects?.[tag]?.label ?? saidName(tag);
+  fieldOf(system, tag)?.label ?? (names?.get(tag) !== tag ? names?.get(tag) : undefined) ?? sheetPathLabel(system, tag) ?? system.effects?.[tag]?.label ?? pathSaid(system, tag, names) ?? saidName(tag);
 
 export const pickTail = (system: System, tag: string, rest: string): string =>
-  typeColumn(system, fieldLinkOf(system, fieldOf(system, tag)), rest)?.label || rest;
+  typeColumn(system, fieldLinkOf(system, fieldOf(system, tag)), rest)?.label || pathSaid(system, rest) || rest;
 
 export function labelOfTag(system: System, tag: string, names?: ReadonlyMap<string, string>): string {
   const owned = onSheet(system, tag, names);
-  if (owned) return `${labelOfTag(system, owned.rest, names)} (${names?.get(owned.head) ?? nameLabel(owned.head) ?? owned.head})`;
+  if (owned) return `${labelOfTag(system, owned.rest, names)} (${names?.get(owned.head) ?? nameLabel(owned.head) ?? pathSaid(system, owned.head) ?? owned.head})`;
   return plainLabel(system, tag, names);
+}
+
+export function literalSaid(system: System, value: string): string | undefined {
+  const said = new Set<string>();
+  for (const table of Object.values(system.tables ?? {})) {
+    for (const row of table.rows ?? []) if (row.value === value && row.label) said.add(row.label);
+  }
+  return said.size ? [...said][0] : undefined;
+}
+
+export function defaultSaid(system: System, param: { kind?: unknown; from?: unknown }, value: unknown): string {
+  if (value === true) return 'да';
+  if (value === false) return 'нет';
+  if (typeof value !== 'string') return String(value);
+  if (String(param.kind) === 'effect') return system.effects?.[value]?.label || value;
+  const row = typeof param.from === 'string' ? listOf(system, param.from)?.find(one => one.value === value)?.label : undefined;
+  return row ?? system.effects?.[value]?.label ?? literalSaid(system, value) ?? value;
 }
 
 export const formulaAsLabels = (system: System, source: string, names?: ReadonlyMap<string, string>): string =>
@@ -43,5 +128,7 @@ function labels(
   const picks = lookups.replace(/[@#]([\p{L}\p{N}_]+(?:\.[\p{L}\p{N}_]+)*)\.\[([^[\]]*)\]((?:\.[\p{L}\p{N}_]+)*)/gu,
     (_, tag: string, by: string, rest: string) =>
       `${labelOfTag(system, tag, names)} · колонка по [${labels(system, by, names)}]${rest ? ` · ${pickTail(system, tag, rest.slice(1))}` : ''}`);
-  return picks.replace(/[@#]([\p{L}\p{N}_.]+)/gu, (_, name: string) => labelOfTag(system, name, names));
+  return picks
+    .replace(/[@#]([\p{L}\p{N}_.]+)/gu, (_, name: string) => labelOfTag(system, name, names))
+    .replace(/"([A-Za-z][A-Za-z0-9_]*)"/gu, (whole, value: string) => { const said = literalSaid(system, value); return said ? `«${said}»` : whole; });
 }

@@ -48,7 +48,7 @@ export function titleOf(kind: string, step: Step | undefined, system: System, ef
     const verb = s.mode === 'remove' ? STEP_TITLES.take : STEP_TITLES.put;
     const id = typeof s.effect === 'string' ? s.effect : undefined;
     const via = id ? undefined : param(s.effect);
-    const what = id ? system.effects?.[id]?.label ?? id : via ? via.label ?? via.key : '';
+    const what = id ? system.effects?.[id]?.label ?? system.tags?.[id]?.label ?? id : via ? via.label ?? via.key : '';
     return what ? `${verb} «${what}»` : verb;
   }
   if (s?.type === 'apply') {

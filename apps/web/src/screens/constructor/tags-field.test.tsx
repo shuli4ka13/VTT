@@ -5,6 +5,7 @@ import { TagsField } from './tags-field.tsx';
 import type { TagValue } from './tags-field.tsx';
 import type { System } from '@vtt/schema';
 import { comboOptions, comboGroups, pickCombo } from '../../testing/cards.ts';
+import { useWorld } from '../../store/world.ts';
 
 const add = () => document.querySelector<HTMLElement>('.combo--add [role="combobox"]')!;
 
@@ -35,7 +36,7 @@ describe('одно поле меток', () => {
     expect(comboOptions(add()).some(o => o.value === ':формула')).toBe(false);
   });
 
-  it('метка не из словаря помечена; своя метка — только пунктом «новая метка…»', () => {
+  it('метка не из словаря помечена; своя метка — только пунктом «новая метка…», ключ ей делается из названия, название — подписью', () => {
     let got: TagValue[] = [];
     render(<TagsField system={system} value={['атака', 'выдумана']} onChange={next => { got = next; }} />);
     expect(screen.getAllByText(/нет в словаре/)).toHaveLength(1);
@@ -45,6 +46,7 @@ describe('одно поле меток', () => {
     pickCombo(add(), ':своя');
     fireEvent.change(screen.getByPlaceholderText('как назвать метку'), { target: { value: 'новая' } });
     fireEvent.click(screen.getByText('добавить'));
-    expect(got).toEqual(['атака', 'выдумана', 'новая']);
+    expect(got).toEqual(['атака', 'выдумана', 'novaya']);
+    expect(useWorld.getState().system.tags?.novaya).toEqual({ label: 'новая' });
   });
 });

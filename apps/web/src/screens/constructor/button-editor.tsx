@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
 import { useWorld, useBook } from '../../store/world.ts';
 import type { System, Effect, Param, Binding, SlotRef } from '@vtt/schema';
-import { isUnder, propsOf as propsOfRecord, paramsOf, typeColumns, columnChoices, ITEM_NAME, listOf, asDice, paymentsOf } from '@vtt/engine';
+import { isUnder, propsOf as propsOfRecord, paramsOf, typeColumns, columnChoices, ITEM_NAME, listOf, asDice, paymentsOf, NAMES, NAME_LABELS } from '@vtt/engine';
 import type { RecordKind, ColumnChoice } from '@vtt/engine';
 import { Card, Field, Select, LabelInput, Button, DangerButton } from '../../ui/primitives.tsx';
 import { ValueField, asText, type SlotOption } from './value-field.tsx';
 import { grouped as byRole } from './effects/roles.ts';
+import { formulaAsLabels, literalSaid, defaultSaid } from '../../ui/formula-labels.ts';
 import { kindWords } from './effects/params-editor.tsx';
 import { ConditionField } from './condition-field.tsx';
 import { shapeProblem, shapeOfKind, type Shape } from './formula-shape.ts';
@@ -168,12 +169,7 @@ function hintsOf(param: Param, system: System, effect: Effect, args: Record<stri
 }
 
 function emptyWords(param: Param, system: System): string {
-  if (param.default !== undefined) {
-    const value = param.default;
-    const shown = value === true ? 'да' : value === false ? 'нет'
-      : typeof value === 'string' && system.effects[value] ? system.effects[value]!.label || value : String(value);
-    return `как у эффекта: ${shown}`;
-  }
+  if (param.default !== undefined) return `как у эффекта: ${defaultSaid(system, param, param.default)}`;
   if (param.ask) return param.ask.by === 'gm' ? 'спросят ведущего' : 'спросят игрока';
   if (param.optional) return 'не передаётся';
   return '— не заполнено —';
@@ -223,7 +219,7 @@ function ArgRow({ param, binding, params, system, recordKind, props, propNames, 
             value={text}
             options={[
               [EMPTY, emptyWords(param, system)] as const,
-              ...(known ? [] : [[text, `формула: ${text}`] as const]),
+              ...(known ? [] : [[text, `формула: ${formulaAsLabels(system, text)}`] as const]),
               ...sources.filter(source => source.group === OWN).map(source => [source.key, source.label, source.group] as const),
               ...(onNew && !byName ? [[NEW, `+ свойство «${name}»`, OWN] as const] : []),
               ...sources.filter(source => source.group !== OWN).map(source => [source.key, source.label, source.group] as const),
@@ -251,7 +247,7 @@ function ArgRow({ param, binding, params, system, recordKind, props, propNames, 
         <ValueField
           where={`${where} · ${name}`}
           value={(text ? { expr: text } : undefined) as never}
-          context={{ system, effect: { ...effect, params: [] }, earlier: [], recordKind, names: propNames, sheets: new Map(params.filter(one => one.kind === 'sheet' && !one.many).map(one => [one.key, one.label ?? one.key] as const)) }}
+          context={{ system, effect: { ...effect, params: [] }, earlier: [], recordKind, names: propNames, sheets: new Map([[NAMES.holder, NAME_LABELS.holder] as const, ...params.filter(one => one.kind === 'sheet' && !one.many).map(one => [one.key, one.label ?? one.key] as const)]) }}
           allow={['prop', 'table', 'tag']}
           extraOptions={hintsOf(param, system, effect, binding.args as Record<string, unknown> | undefined, onNew && !byName ? onNew : undefined)}
           placeholder={emptyWords(param, system)}
@@ -300,10 +296,11 @@ const SHOWN = 3;
 function cellWords(system: System, column: { kind?: string; from?: string }, value: unknown): string {
   if (value === undefined || value === null || value === '') return '—';
   if (Array.isArray(value)) return value.map(one => cellWords(system, column, one)).join(', ');
-  if (typeof value === 'object') return String((value as { expr?: unknown }).expr ?? '');
+  if (typeof value === 'object') return formulaAsLabels(system, String((value as { expr?: unknown }).expr ?? ''));
   if (column.kind === 'dice') return asDice(String(value));
-  if (column.kind === 'choice' && column.from) return listOf(system, column.from)?.find(row => row.value === value)?.label ?? String(value);
-  return String(value);
+  if (column.kind === 'choice' && column.from) return listOf(system, column.from)?.find(row => row.value === value)?.label ?? system.effects?.[String(value)]?.label ?? literalSaid(system, String(value)) ?? String(value);
+  if (column.kind === 'effect') return system.effects?.[String(value)]?.label ?? String(value);
+  return literalSaid(system, String(value)) ?? String(value);
 }
 
 function Examples({ system, kind, kindId, prop }: { system: System; kind: RecordKind; kindId: string; prop: string }) {

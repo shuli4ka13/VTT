@@ -82,5 +82,7 @@ export function show(value: Computed, options?: FieldOption[], dice = false): { 
   }
   if (typeof value.value === 'boolean') return { text: value.value ? 'да' : 'нет', bad: false };
   if (value.value === null || value.value === undefined) return { text: '—', bad: false };
+  const said = options?.find(option => String(option.value) === String(value.value))?.label;
+  if (said !== undefined) return { text: said, bad: false };
   return { text: dice && typeof value.value === 'string' ? shownDice(value.value) : String(value.value), bad: false };
 }

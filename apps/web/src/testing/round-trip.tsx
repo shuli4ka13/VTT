@@ -13,12 +13,12 @@ import { EffectsTab } from '../screens/constructor/effects/effects-tab.tsx';
 import { RecordsTab } from '../screens/constructor/records-tab.tsx';
 import { CompendiumScreen } from '../screens/compendium/compendium.tsx';
 
-type View = { name: string; ui: () => ReactElement; pick: Record<string, unknown> };
+export type View = { name: string; ui: () => ReactElement; pick: Record<string, unknown> };
 
 const firstOfEachTable = (compendium: Compendium): string[] =>
   [...new Map((compendium.records ?? []).map(record => [record.table, record.id] as const)).values()];
 
-const viewsOf = (system: System, compendium: Compendium): View[] => [
+export const viewsOf = (system: System, compendium: Compendium): View[] => [
   { name: 'Лист', ui: () => <SheetTab />, pick: {} },
   ...sheetKinds(system).map(([id]) => ({ name: `тип листа ${id}`, ui: () => <SheetTab />, pick: { activeSheetKind: id } })),
   ...firstOfEachTable(compendium).map(id => ({ name: `запись ${id}`, ui: () => <CompendiumScreen />, pick: { activeRecordId: id } })),
@@ -27,7 +27,7 @@ const viewsOf = (system: System, compendium: Compendium): View[] => [
   ...recordKinds(system).map(([id]) => ({ name: `книга ${id}`, ui: () => <RecordsTab />, pick: { activeRecordKind: id } })),
 ];
 
-const load = (world: SampleWorld, pick: Record<string, unknown>): void => {
+export const load = (world: SampleWorld, pick: Record<string, unknown>): void => {
   useWorld.setState(state => ({
     ...state, system: structuredClone(world.system), compendium: structuredClone(world.compendium),
     activeFieldTag: null, activeGroupName: null, activeEffectId: null, activeRecordKind: null,
@@ -48,7 +48,7 @@ const openSpoken = (): void => {
   document.querySelectorAll<HTMLElement>('.formula-words').forEach(face => fireEvent.click(face));
 };
 
-const reveal = (): void => {
+export const reveal = (): void => {
   openAll();
   act(() => { openReturns(); openSpoken(); });
   document.querySelectorAll('details').forEach(d => { d.open = true; });
@@ -111,7 +111,7 @@ const same = (a: unknown, b: unknown): boolean => {
   try { expect(b).toEqual(a); return true; } catch { return false; }
 };
 
-const QUICK = ['13th Age', 'Blades in the Dark'];
+export const QUICK = ['13th Age', 'Blades in the Dark'];
 
 export function roundTrip(name: string, part = 0, parts = 1): void {
   const world = SAMPLE_WORLDS.find(one => one.system.name === name);

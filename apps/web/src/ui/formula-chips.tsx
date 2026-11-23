@@ -5,7 +5,7 @@ import { matchTagQuery } from './tag-suggest.tsx';
 import { fieldPaths, sheetPathLabel } from './paths.ts';
 import { DESK_ID, NAME_LABELS, fieldsOf, readableFields, hasField, fieldLinkOf, ROW, tagWords, typeColumns, callAt, partAt, FUNCTION_SPECS } from '@vtt/engine';
 import type { FunctionSpec } from '@vtt/engine';
-import { plainLabel, pickTail } from './formula-labels.ts';
+import { plainLabel, pickTail, literalSaid, pathSaid } from './formula-labels.ts';
 import { formulaWords, useFormulaWords, shownFormula, storedFormula, functionIdOf, localName, localSpec } from './formula-lang.ts';
 import { tablesOf, choiceTableOf, rowLabelOf, picksOf } from './formula-words.ts';
 import { resolveNames, plain, NO_NAME } from './formula-resolve.ts';
@@ -55,7 +55,7 @@ function typedPath(text: string, caret: number): { base: string; at: number; nee
 
 export function lookupNames(system: System, value: string): Map<string, string> {
   const out = new Map<string, string>();
-  const call = /(?:таблица|table)\(\s*"([^"]+)"/gu;
+  const call = /(?:таблица|table|строки|rows)\(\s*"([^"]+)"/gu;
   for (const found of value.matchAll(call)) {
     const table = system.tables?.[found[1]!];
     if (!table) continue;
@@ -65,8 +65,10 @@ export function lookupNames(system: System, value: string): Map<string, string> 
   return out;
 }
 
-const spoken = (text: string, names: Map<string, string>): string =>
-  names.size ? text.replace(/"([^"]+)"/gu, (whole, key: string) => (names.has(key) ? `«${names.get(key)}»` : whole)) : text;
+const spoken = (text: string, names: Map<string, string>, system: System): string =>
+  text.replace(/"([^"]+)"/gu, (whole, key: string) => { const said = names.get(key) ?? literalSaid(system, key); return said ? `«${said}»` : whole; });
+
+const withSheets = (names?: Map<string, string>, sheets?: SheetNames): Map<string, string> => new Map([...(sheets ?? []), ...(names ?? [])]);
 
 const onSheet = (tag: string, sheets?: SheetNames): { head: string; rest: string } | null => {
   const dot = tag.indexOf('.');
@@ -77,7 +79,7 @@ const onSheet = (tag: string, sheets?: SheetNames): { head: string; rest: string
 
 const labelOfTag = (system: System, tag: string, extra?: Map<string, string>, sheets?: SheetNames): string => {
   const owned = onSheet(tag, sheets);
-  const label = owned ? plainLabel(system, owned.rest, extra) : plainLabel(system, tag, extra);
+  const label = owned ? plainLabel(system, owned.rest, extra) : plainLabel(system, tag, withSheets(extra, sheets));
   return !owned && label === tag && sheets?.has(tag) ? sheets.get(tag)! : label;
 };
 
@@ -136,9 +138,9 @@ const opsOf = (): Op[] => {
   ];
 };
 
-const lookupWord = (): string => formulaWords().functions.table;
-
 const PICK = '[@#]([\\p{L}\\p{N}_]+(?:\\.[\\p{L}\\p{N}_]+)*)\\.\\[([^\\[\\]]*)\\]((?:\\.[\\p{L}\\p{N}_]+)*)';
+
+const LAST_BARE = /[@#]([\p{L}\p{N}_]+)\s*$/u;
 
 const PART = new RegExp(`${PICK}|[@#]([\\p{L}\\p{N}_.]+)|"([^"]*)"`, 'u');
 
@@ -167,16 +169,18 @@ const quoted = (arg: { start: number; text: string } | undefined): { at: number;
 
 export function lookupLits(system: System, value: string): Map<number, string> {
   const out = new Map<number, string>();
-  const LOOKUP = lookupWord();
-  for (const found of value.matchAll(new RegExp(`${LOOKUP}\\(`, 'gu'))) {
-    const args = lookupArgs(value, found.index! + LOOKUP.length);
-    const table = quoted(args[0]);
-    const owner = table ? system.tables?.[table.id] : undefined;
-    if (table && owner) out.set(table.at, owner.label || table.id);
-    const column = quoted(args[2]);
-    if (!column) continue;
-    const hit = owner && table ? typeColumns(system, table.id).find(one => one.key === column.id) : undefined;
-    if (hit) out.set(column.at, hit.label || column.id);
+  const words = formulaWords().functions;
+  for (const [LOOKUP, columnAt] of [[words.table, 2], [words.rows, 1]] as const) {
+    for (const found of value.matchAll(new RegExp(`${LOOKUP}\\(`, 'gu'))) {
+      const args = lookupArgs(value, found.index! + LOOKUP.length);
+      const table = quoted(args[0]);
+      const owner = table ? system.tables?.[table.id] : undefined;
+      if (table && owner) out.set(table.at, owner.label || table.id);
+      const column = quoted(args[columnAt]);
+      if (!column) continue;
+      const hit = owner && table ? typeColumns(system, table.id).find(one => one.key === column.id) : undefined;
+      if (hit) out.set(column.at, hit.label || column.id);
+    }
   }
   return out;
 }
@@ -197,6 +201,11 @@ export function choiceLits(system: System, value: string, tables?: ReadonlyMap<s
   for (const pattern of CHOICE_LITS) for (const found of value.matchAll(pattern)) put(found[1]!, found.index! + found[0].length - 1);
   for (const found of value.matchAll(/"([^"]*)"\s*(?:==|!=)\s*@([\p{L}\p{N}_.]+)/gu)) {
     const label = rowLabelOf(system, choiceTableOf(system, found[2]!, tables), found[1]!);
+    if (label) out.set(found.index!, label);
+  }
+  for (const found of value.matchAll(/"([A-Za-z][A-Za-z0-9_]*)"/gu)) {
+    if (out.has(found.index!)) continue;
+    const label = literalSaid(system, found[1]!);
     if (label) out.set(found.index!, label);
   }
   return out;
@@ -349,22 +358,22 @@ function LocalChips({ value, onChange, onFinal, system, table, placeholder, onKe
   whole?: boolean;
   notes?: boolean;
 }) {
+  const [active, setActive] = useState<number | null>(null);
   const paths = useMemo(() => fieldPaths(system), [system]);
   const marks = useMemo(() => tagWords(system), [system]);
-  const lits = useMemo(() => new Map([...lookupLits(system, value), ...choiceLits(system, value, tablesOf(extraNames))]), [system, value, extraNames]);
+  const lits = useMemo(() => new Map([...choiceLits(system, value, tablesOf(extraNames)), ...lookupLits(system, value)]), [system, value, extraNames]);
   const parts = useMemo(
     () => partsOf(value, tag => {
       const owned = onSheet(tag, sheets);
-      if (owned) return knownSheetName(system, owned.rest) || Boolean(extraNames?.has(owned.rest));
-      return knownSheetName(system, tag) || Boolean(names?.[tag]) || Boolean(extraNames?.has(tag)) || Boolean(sheets?.has(tag)) || marks.has(tag);
+      if (owned) return knownSheetName(system, owned.rest) || Boolean(extraNames?.has(owned.rest)) || pathSaid(system, owned.rest, withSheets(extraNames, sheets), true) !== null;
+      return knownSheetName(system, tag) || Boolean(names?.[tag]) || Boolean(extraNames?.has(tag)) || Boolean(sheets?.has(tag)) || marks.has(tag) || ((tag.includes('.') || active === null || !LAST_BARE.test(value) || LAST_BARE.exec(value)?.[1] !== tag) && pathSaid(system, tag, withSheets(extraNames, sheets), true) !== null);
     }, lits),
-    [value, system, names, extraNames, paths, sheets, marks, lits],
+    [value, system, names, extraNames, paths, sheets, marks, lits, active],
   );
   const host = useRef<HTMLDivElement>(null);
   const inputs = useRef(new Map<number, HTMLInputElement>());
   const leaving = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (leaving.current) clearTimeout(leaving.current); }, []);
-  const [active, setActive] = useState<number | null>(null);
   const [caret, setCaret] = useState(0);
   const [highlight, setHighlight] = useState(0);
   const [closed, setClosed] = useState(false);
@@ -719,7 +728,7 @@ function LocalChips({ value, onChange, onFinal, system, table, placeholder, onKe
               {badge(part.tag)}
             </span>
           )
-        ) : <span key={index} className="chips__word">{spoken(part.text, lookups)}</span>))}
+        ) : <span key={index} className="chips__word">{spoken(part.text, lookups, system)}</span>))}
       </span>
     );
   }

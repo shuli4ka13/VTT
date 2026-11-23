@@ -6,7 +6,7 @@ import { useFormulaBar } from '../store/formula-bar.ts';
 import type { BarOption } from '../store/formula-bar.ts';
 import { FormulaChips } from './formula-chips.tsx';
 import { useLookup } from '../store/lookup.ts';
-import { shownFormula } from './formula-lang.ts';
+import { formulaAsLabels } from './formula-labels.ts';
 
 export interface FormulaFieldProps {
   value: string;
@@ -31,8 +31,8 @@ export interface FormulaFieldProps {
   notes?: boolean;
 }
 
-function SpokenFormula({ words, formula, onOpen }: { words: string; formula: string; onOpen: () => void }) {
-  return <button type="button" className="formula-words" title={shownFormula(formula)} onClick={onOpen}>{words}</button>;
+function SpokenFormula({ words, formula, system, names, onOpen }: { words: string; formula: string; system: System; names?: Map<string, string>; onOpen: () => void }) {
+  return <button type="button" className="formula-words" title={formulaAsLabels(system, formula, names)} onClick={onOpen}>{words}</button>;
 }
 
 export function FormulaField(props: FormulaFieldProps) {
@@ -64,7 +64,7 @@ export function FormulaField(props: FormulaFieldProps) {
         ...(props.onCommit ? { onCommit: props.onCommit } : {}),
         ...(props.onCancel ? { onCancel: props.onCancel } : {}),
       });
-  if (spoken && !spot) return <SpokenFormula words={spoken} formula={value} onOpen={start} />;
+  if (spoken && !spot) return <SpokenFormula words={spoken} formula={value} system={system} {...(extraNames ? { names: extraNames } : {})} onOpen={start} />;
   return (
     <div
       role="button"
@@ -109,7 +109,7 @@ function InlineFormula({ value, system, onChange, onCommit, onCancel, names, ext
     close();
   };
   const api = { write, dismiss: () => setText(null) };
-  if (spoken && !asked) return <SpokenFormula words={spoken} formula={value} onOpen={() => setAsked(true)} />;
+  if (spoken && !asked) return <SpokenFormula words={spoken} formula={value} system={system} {...(extraNames ? { names: extraNames } : {})} onOpen={() => setAsked(true)} />;
   return (
     <FormulaChips
       value={current}

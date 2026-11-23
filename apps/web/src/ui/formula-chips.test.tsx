@@ -132,7 +132,7 @@ describe('ссылка на таблицу видна в формуле чере
 
   it('набрал «@кость» — предлагается и колонка по ссылке', () => {
     let value = '@кость';
-    render(<FormulaChips value={value} system={сКлассом} onChange={next => { value = next; }} />);
+    render(<FormulaChips value={value} system={сКлассом} autoFocus onChange={next => { value = next; }} />);
     const input = screen.getByDisplayValue('@кость') as HTMLInputElement;
     input.focus();
     input.setSelectionRange(value.length, value.length);

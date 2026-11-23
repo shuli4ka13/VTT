@@ -143,7 +143,7 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove, startO
   const tables = placeTablesAt(system, id, { part: 'handler-if', handler: index });
 
   const spoken = kind === 'call' && phase !== 'done' ? callSubjects(tags, actions, true) : subjects;
-  const subjectWord = spoken.find(([key]) => key === subject)?.[1] ?? subject;
+  const subjectWord = spoken.find(([key]) => key === subject)?.[1] ?? (kind === 'field' ? fieldsOf(system).find(f => f.tag === subject)?.label : undefined) ?? tagSaid(system, subject);
   const quoted = (list?: readonly string[]): string => (list ?? []).map(tag => `«${tagSaid(system, tag)}»`).join(', ');
   const filter = [
     handler.tags?.length ? `только с метками ${quoted(handler.tags)}` : '',
@@ -199,7 +199,7 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove, startO
           <Field label={kind === 'call' ? 'Что именно' : kind === 'moment' ? 'Когда' : 'Какое'} needed={!subject}>
             <Select<string>
               value={subject}
-              options={[...(subject ? [] : [['', '— выберите —'] as const]), ...subjects]}
+              options={[...(subject ? [] : [['', '— выберите —'] as const]), ...(subject && !subjects.some(([key]) => key === subject) ? [[subject, subjectWord] as const] : []), ...subjects]}
               onChange={next => setOn(kind, next, phase)}
             />
           </Field>

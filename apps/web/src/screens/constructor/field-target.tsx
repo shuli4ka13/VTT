@@ -3,7 +3,7 @@ import { BY_FORMULA } from './typed-pick.tsx';
 import type { System } from '@vtt/schema';
 import { Field, Select } from '../../ui/primitives.tsx';
 import { FieldPick } from '../../ui/field-pick.tsx';
-import { fieldsOf, readableFields, cellSource, DESK_ID, NAME_LABELS, stepSaid } from '@vtt/engine';
+import { fieldsOf, readableFields, cellSource, typeColumns, DESK_ID, NAME_LABELS, stepSaid } from '@vtt/engine';
 import type { SlotContext } from './slots.tsx';
 
 const fieldTarget = (target: unknown): { sheet: string; tag: string } | null => {
@@ -16,7 +16,7 @@ const rowNamesOf = (context: SlotContext): { name: string; label: string; table:
   ...(context.effect.params ?? [])
     .filter(param => param.kind === 'choice' && typeof param.from === 'string' && !param.many)
     .map(param => ({ name: param.key, label: param.label ?? param.key, table: String(param.from) })),
-  ...context.earlier.filter(step => step.table).map(step => ({ name: step.id, label: stepSaid(step), table: step.table! })),
+  ...context.earlier.filter(step => step.table).map(step => ({ name: step.id, label: step.title || stepSaid(step), table: step.table! })),
 ];
 
 const storedColumns = (system: System, table: string) => {
@@ -40,14 +40,18 @@ export function TargetPick({ target, context, onChange, formula }: {
   const [manual, setManual] = useState(false);
   const byFormula = Boolean(formula) && (manual || (Boolean(param) && !fieldParams.some(p => p.key === param)));
   const owner = byFormula ? BY_FORMULA : picked?.sheet ?? (param ? `:${param}` : chosen ?? sheets[0]?.[0] ?? '');
+  const records = (context.effect.params ?? []).filter(p => p.kind === 'record' && !p.many && typeof p.from === 'string');
   const options: (readonly [string, string])[] = [
     ...sheets.map(([name, label]) => [name, `«${label}»`] as const),
+    ...records.map(p => [p.key, `«${p.label ?? p.key}» — вещь`] as const),
     ...(desk ? [[DESK_ID, NAME_LABELS.desk] as const] : []),
     ...fieldParams.map(p => [`:${p.key}`, `поле из входа «${p.label ?? p.key}»`] as const),
     ...(formula ? [[BY_FORMULA, 'формулой…'] as const] : []),
   ];
   const fields = readableFields(system).filter(f => f.value.kind === 'stored' && (owner === DESK_ID ? f.lives === 'desk' : f.lives !== 'desk'));
-  const cells = rowNamesOf(context)
+  const recordOwner = records.find(p => p.key === owner);
+  const recordCells = recordOwner ? typeColumns(system, String(recordOwner.from)).map(column => [column.key, column.label || column.key] as const) : [];
+  const cells = recordOwner ? recordCells : rowNamesOf(context)
     .filter(row => (owner === DESK_ID ? system.tables?.[row.table]?.owner === 'desk' : system.tables?.[row.table]?.owner && system.tables?.[row.table]?.owner !== 'desk'))
     .flatMap(row => storedColumns(system, row.table).map(column => [`${row.name}.${column.key}`, `${row.label} · ${column.label ?? column.key}`] as const));
   return (
@@ -70,7 +74,7 @@ export function TargetPick({ target, context, onChange, formula }: {
           <FieldPick
             system={system}
             value={picked?.tag ?? ''}
-            fields={fields}
+            fields={recordOwner ? [] : fields}
             extra={cells}
             onChange={next => onChange(next ? { expr: `@${owner}.${next}` } : null)}
           />

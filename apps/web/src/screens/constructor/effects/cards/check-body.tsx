@@ -159,7 +159,7 @@ const readsInside = (text: string, id: string): boolean =>
 
 function insideFormula(step: any, context: SlotContext): string | null {
   for (const roll of throwsOf(context)) {
-    if (readsInside(exprText(step.value), roll.id) || readsInside(exprText(step.versus), roll.id)) return String(roll.id);
+    if (readsInside(exprText(step.value), roll.id) || readsInside(exprText(step.versus), roll.id)) return stepSaid(roll);
   }
   return null;
 }
