@@ -1,4 +1,5 @@
 import { hasDegrees } from '../engine/check.ts';
+import { translateFormula, NEUTRAL_WORDS, RU_WORDS } from '../formula/words.ts';
 import { paramStages, targetStages } from '../engine/stages.ts';
 import { armsOf, balance, flowOf, inBlock, isFlow } from './flow.ts';
 import { loopOf, loopParam } from '../engine/steps/each.ts';
@@ -120,13 +121,15 @@ function ownerText(ref: Reference, system: System): string | null {
 
 const HOLDER_ONLY = `«${HOLDER}» есть только у того, что висит на листе: подписка, правка, наложение. В кнопке лист приходит входом — например, «Кто действует»`;
 
+const said = (formula: string): string => translateFormula(formula, NEUTRAL_WORDS, RU_WORDS);
+
 function danglingText(ref: Reference, declared: Declared): string | null {
   if (ref.scope === LISTEN) return null;
   if (ref.key === HOLDER && (ref.kind === 'step' || (ref.kind === 'field' && ref.scope === 'bare'))) return HOLDER_ONLY;
   if (ref.kind === 'syntax' && ref.path === 'roll') return DICE_ANYWHERE;
-  if (ref.kind === 'syntax' && ref.path === 'function') return `в формуле «${ref.key}» нет функции «${ref.scope}»`;
-  if (ref.kind === 'syntax' && ref.path === 'dice') return `в формуле «${ref.key}» кость стоит как число — ${DICE_BY_STEP}`;
-  if (ref.kind === 'syntax') return `формула «${ref.key}» не разбирается — проверьте скобки и знаки`;
+  if (ref.kind === 'syntax' && ref.path === 'function') return `в формуле «${said(ref.key)}» нет функции «${ref.scope}»`;
+  if (ref.kind === 'syntax' && ref.path === 'dice') return `в формуле «${said(ref.key)}» кость стоит как число — ${DICE_BY_STEP}`;
+  if (ref.kind === 'syntax') return `формула «${said(ref.key)}» не разбирается — проверьте скобки и знаки`;
   if (ref.kind === 'field' && ref.scope === 'bare' && !declared.field.has(ref.key) && declared.effect.has(ref.key)) {
     return `«${ref.key}» — сколько раз висит эффект на листе: возьмите это у листа: в списке «носитель» → «${ref.key}»`;
   }

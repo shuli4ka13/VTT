@@ -368,9 +368,10 @@ function boundsOf(column: Pick<TableColumn, 'min' | 'max'>): { min?: number | st
   };
 }
 
-const rolesOf = (column: TableColumn): Pick<Field, 'sees' | 'edits'> => ({
+const rolesOf = (column: TableColumn): Pick<Field, 'sees' | 'edits' | 'dice'> => ({
   ...(column.sees ? { sees: column.sees } : {}),
   ...(column.edits ? { edits: column.edits } : {}),
+  ...(column.kind === 'dice' ? { dice: true as const } : {}),
 });
 
 const livesOf = (table: Table): { lives?: 'group' | 'desk' } => {

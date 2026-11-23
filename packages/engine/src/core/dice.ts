@@ -1,6 +1,6 @@
 import { EngineError } from '../engine/errors.ts';
 import { readingOf } from '../engine/readings.ts';
-import { DICE_TEXT, DIE_LETTER } from '../words/glossary.ts';
+import { DICE_TEXT, DIE_LETTER, asDice } from '../words/glossary.ts';
 import type { ReadSpec } from '../engine/readings.ts';
 import type { DieConstant, Die, RollEdit, RollEditOp } from '../model/types.ts';
 
@@ -70,7 +70,7 @@ export function parse(input: string | DieConstant, countOf?: CountOf): Spec {
   if (typeof input === 'string') {
     const match = DICE_TEXT.exec(input.trim());
     if (!match) throw new EngineError(`не понимаю запись кубиков «${input}»; ожидается вид «2к6»`);
-    return { label: input.trim(), terms: [{ count: Number(match[1] ?? 1), sides: Number(match[2]) }], read: { kind: 'sum' } };
+    return { label: asDice(input.trim()), terms: [{ count: Number(match[1] ?? 1), sides: Number(match[2]) }], read: { kind: 'sum' } };
   }
   const terms = (input.dice ?? []).map((term): Term => {
     const raw = term.count ?? 1;

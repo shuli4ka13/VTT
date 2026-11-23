@@ -74,7 +74,7 @@ export function useReader(system: System, sheet: Sheet | null, compendium: Compe
   }, [system, sheet, compendium, shared, only]);
 }
 
-export function show(value: Computed, options?: FieldOption[]): { text: string; title?: string; bad: boolean } {
+export function show(value: Computed, options?: FieldOption[], dice = false): { text: string; title?: string; bad: boolean } {
   if (!value.ok) return { text: '—', title: value.error, bad: true };
   if (Array.isArray(value.value)) {
     const labels = value.value.map(item => options?.find(option => String(option.value) === String(item))?.label ?? String(item));
@@ -82,5 +82,5 @@ export function show(value: Computed, options?: FieldOption[]): { text: string; 
   }
   if (typeof value.value === 'boolean') return { text: value.value ? 'да' : 'нет', bad: false };
   if (value.value === null || value.value === undefined) return { text: '—', bad: false };
-  return { text: typeof value.value === 'string' ? shownDice(value.value) : String(value.value), bad: false };
+  return { text: dice && typeof value.value === 'string' ? shownDice(value.value) : String(value.value), bad: false };
 }

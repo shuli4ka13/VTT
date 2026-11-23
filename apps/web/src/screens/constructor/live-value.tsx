@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { compile } from '@vtt/engine';
+import { compile, fieldOf } from '@vtt/engine';
 import { Chip, Tip } from '../../ui/primitives.tsx';
 import { useReader, show } from '../../engine/use-calc.ts';
 import { mannequinsOf } from '../../engine/dry-run.ts';
@@ -19,7 +19,7 @@ export function LiveValue({ system, compendium, tag, source }: {
   const [doll] = mannequinsOf(system);
   const reader = useReader(system, doll!, compendium);
   const deps = useMemo(() => depsOf(source), [source]);
-  const value = show(reader.valueOf(tag));
+  const value = show(reader.valueOf(tag), undefined, fieldOf(system, tag)?.dice);
   const words = formulaAsLabels(system, source);
 
   return (

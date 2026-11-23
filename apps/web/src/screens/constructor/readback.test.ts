@@ -1,7 +1,9 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import { checkReadback, rollReadback, changeReadback, numberReadback, joinReadback, editReadback, dieReadback, dieSaid, editNotation, seenReadback } from './readback.ts';
 import type { System, Effect, Step } from '@vtt/schema';
 import { withColumn } from '@vtt/engine';
+import { formulaAsLabels } from '../../ui/formula.tsx';
+import { useLocale } from '../../store/locale.ts';
 
 const system = {
   tables: { лист: { shape: 'single', columns: [
@@ -220,5 +222,27 @@ describe('сводка свёрнутого шага «увидев кости»
   it('«Докинуть» и «Прибавить»', () => {
     expect(words({ type: 'roll-add', count: { expr: '1' }, keep: 'best' })).toBe('1, оставить лучшую');
     expect(words({ type: 'roll-plus', value: { expr: '2' } })).toBe('+ 2');
+  });
+});
+
+describe('пересказ — письмом языка экрана', () => {
+  afterEach(() => { useLocale.setState({ lang: 'ru' }); });
+  const step = { type: 'apply', target: { expr: '@цель.wounds' }, direction: 'add', value: { expr: 'max(1, floor(@цель.armor / 2))' } } as unknown as Step;
+
+  it('формула в шаге «Изменение» читается русскими словами, по-английски — нейтральными', () => {
+    expect(joinReadback(changeReadback(step, null, system, hero))).toContain('большее из(1, округлить вниз( «Класс брони (цель)» / 2))');
+    useLocale.setState({ lang: 'en' });
+    expect(joinReadback(changeReadback(step, null, system, hero))).toContain('max(1, floor( «Класс брони (цель)» / 2))');
+  });
+
+  it('имя висящего эффекта через лист читается подписью', () => {
+    const counted = { ...step, value: { expr: 'min(1, @цель.poison)' } } as unknown as Step;
+    expect(joinReadback(changeReadback(counted, null, system, hero))).toContain('меньшее из(1, «Отравлен (цель)» )');
+  });
+
+  it('формула подписями: слова языка экрана, имена — подписями', () => {
+    expect(formulaAsLabels(system, 'if(@armor > 10 and not false, floor(@wounds / 2), 2d6)')).toBe('если(Класс брони > 10 и не нет, округлить вниз(Текущие хиты / 2), 2к6)');
+    useLocale.setState({ lang: 'en' });
+    expect(formulaAsLabels(system, 'if(@armor > 10 and not false, floor(@wounds / 2), 2d6)')).toBe('if(Класс брони > 10 and not false, floor(Текущие хиты / 2), 2d6)');
   });
 });

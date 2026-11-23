@@ -1,4 +1,5 @@
 import { parseItemTag } from '../model/item-ref.ts';
+import { translateFormula, NEUTRAL_WORDS, RU_WORDS } from '../formula/words.ts';
 import { recordKinds } from '../model/owned.ts';
 import { loopOf } from '../engine/steps/each.ts';
 import { effectLabelOf } from './actions.ts';
@@ -158,7 +159,7 @@ export function describeParts(
       if (String(ref.expr).includes('(')) return null;
       const needs = new Map<string, string>(
         ((effect?.params ?? []) as { key: string; label?: string }[]).map(p => [String(p.key), String(p.label ?? p.key)]));
-      return String(ref.expr).replace(/[@#]([\p{L}\p{N}_.-]+)|[\p{L}\p{N}_-]+/gu,
+      return translateFormula(String(ref.expr), NEUTRAL_WORDS, RU_WORDS).replace(/[@#]([\p{L}\p{N}_.-]+)|[\p{L}\p{N}_-]+/gu,
         (word: string, name?: string) => (name ? nameLabel(name) : needs.get(word) ?? word));
     }
     return null;

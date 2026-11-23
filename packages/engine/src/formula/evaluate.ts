@@ -197,7 +197,7 @@ export function evaluate(ast: Node, resolve: Resolve, tools: Tools = {}): Value 
     }
     if (typeof fn.arity === 'number' && node.args.length !== fn.arity) {
       throw new FormulaRuntimeError(
-        `«${node.name}» требует аргументов: ${fn.arity}, передано ${node.args.length}`);
+        `«${saidName(node.name)}» требует аргументов: ${fn.arity}, передано ${node.args.length}`);
     }
     if (fn.raw) return fn.raw(node.args.map(arg => visit(arg)), tools);
     const args = node.args.map((arg, n) => number(visit(arg), `аргумент ${n + 1} функции «${node.name}»`));

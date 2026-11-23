@@ -42,4 +42,5 @@ export interface Field {
   cell?: CellMark;
   sees?: 'owner' | 'gm' | 'none';
   edits?: 'gm' | 'none';
+  dice?: true;
 }

@@ -112,7 +112,7 @@ function cellOf(system: System, compendium: Compendium | null | undefined, sheet
   const plain = value.kind === 'stored' ? value.default : book;
   const given = entry.values?.[column];
   const tag = itemTag(key, column);
-  return { tag, field: { tag, label, home: table, value, ...(spec.hint ? { hint: spec.hint } : {}) }, value: isBlank(given) ? plain : given, plain };
+  return { tag, field: { tag, label, home: table, value, ...(spec.hint ? { hint: spec.hint } : {}), ...(spec.kind === 'dice' ? { dice: true as const } : {}) }, value: isBlank(given) ? plain : given, plain };
 }
 
 export function itemCell(system: System, compendium: Compendium | null | undefined, sheet: Sheet, key: string, column: string): ItemCell {

@@ -5,7 +5,7 @@ import { show } from '../engine/use-calc.ts';
 import { VIEWS } from './views/index.tsx';
 import type { Reader } from '../engine/use-calc.ts';
 import type { Sheet, System, StoredValue, FieldOption } from '@vtt/schema';
-import { MOST_STEPS, NOTE_LIMIT, isNoteField, optionsOf } from '@vtt/engine';
+import { MOST_STEPS, NOTE_LIMIT, isNoteField, optionsOf, toDice, asDice } from '@vtt/engine';
 import type { Field as FieldModel } from '@vtt/engine';
 
 export function FieldCell({ field, system, sheet, reader, onChange, onShift, onRoll, bare, mark }: {
@@ -70,7 +70,7 @@ export function FieldCell({ field, system, sheet, reader, onChange, onShift, onR
   }
 
   if (!editable) {
-    const shown = stored ? show({ ok: true, value }, options) : show(computed!, options);
+    const shown = stored ? show({ ok: true, value }, options, field.dice) : show(computed!, options, field.dice);
     return <Shown label={label} text={shown.text} title={shown.title} bad={shown.bad} roll={roll} />;
   }
 
@@ -121,7 +121,7 @@ export function FieldCell({ field, system, sheet, reader, onChange, onShift, onR
       <div className="inline inline--tight">
         {type === 'number'
           ? <NumInput value={Number(value ?? 0)} onCommit={n => editable(field.tag, n)} />
-          : <Input value={String(value ?? '')} onChange={next => editable(field.tag, next)} />}
+          : <Input value={field.dice ? asDice(String(value ?? '')) : String(value ?? '')} onChange={next => editable(field.tag, field.dice ? toDice(next) : next)} />}
         {roll}
       </div>
     </Field>
