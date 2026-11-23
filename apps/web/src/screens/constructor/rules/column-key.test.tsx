@@ -29,6 +29,19 @@ const columns = (table: string) => useWorld.getState().system.tables![table]!.co
 const base = (tables: Record<string, unknown>, blocks: unknown[] = []) => ({ tables, blocks, constants: {}, effects: {} } as unknown as System);
 
 describe('ключ колонки идёт за названием, пока на неё никто не ссылается', () => {
+  it('переименование колонки не теряет переводы — ни свой, ни соседней колонки', () => {
+    open(base({ лист: { shape: 'single', columns: [
+      { key: 'field_4', label: 'Новое поле', kind: 'number', i18n: { en: { label: 'New field' } } },
+      { key: 'ac', label: 'Класс брони', kind: 'number', i18n: { en: { label: 'Armor class' } } },
+    ] } }), 'лист', 'field_4');
+    rename('Здоровье');
+    const got = useWorld.getState().system.tables!['лист']!.columns! as { key: string; label?: string; i18n?: unknown }[];
+    expect(got.map(column => [column.key, column.label, column.i18n])).toEqual([
+      ['zdorove', 'Здоровье', { en: { label: 'New field' } }],
+      ['ac', 'Класс брони', { en: { label: 'Armor class' } }],
+    ]);
+  });
+
   it('поле листа, уже стоящее в блоке, получает ключ по названию — и блок следует за ним', () => {
     open(base(
       { лист: { shape: 'single', columns: [{ key: 'field_4', label: 'Новое поле', kind: 'number' }] } },

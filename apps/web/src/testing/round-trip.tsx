@@ -113,8 +113,9 @@ const same = (a: unknown, b: unknown): boolean => {
 
 export const QUICK = ['13th Age', 'Blades in the Dark'];
 
-export function roundTrip(name: string, part = 0, parts = 1): void {
-  const world = SAMPLE_WORLDS.find(one => one.system.name === name);
+export function roundTrip(name: string, part = 0, parts = 1, prepare?: (world: SampleWorld) => SampleWorld): void {
+  const found = SAMPLE_WORLDS.find(one => one.system.name === name);
+  const world = found && prepare ? prepare(structuredClone(found)) : found;
   const mode = (globalThis as { process?: { env: Record<string, string | undefined> } }).process?.env.ROUND_TRIP;
   const wanted = mode === 'full' || mode === name || QUICK.includes(name);
   const limit = Number((globalThis as { process?: { env: Record<string, string | undefined> } }).process?.env.ROUND_TRIP_MS) || 600000;

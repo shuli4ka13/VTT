@@ -5842,8 +5842,9 @@
           {
             "key": "action",
             "label": "Действие (метка броска)",
-            "kind": "text",
-            "default": "матрица"
+            "kind": "choice",
+            "default": "matrica",
+            "from": "rolls"
           }
         ]
       },
@@ -14466,7 +14467,8 @@
           {
             "key": "tag",
             "label": "Метка броска",
-            "kind": "text"
+            "kind": "choice",
+            "from": "rolls"
           }
         ],
         "rows": [

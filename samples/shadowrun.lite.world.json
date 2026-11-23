@@ -12582,7 +12582,8 @@
           {
             "key": "tag",
             "label": "Метка броска",
-            "kind": "text"
+            "kind": "choice",
+            "from": "rolls"
           }
         ],
         "rows": [
