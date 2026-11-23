@@ -302,7 +302,7 @@ describe('цена эффекта', () => {
     expect(ok({ op: 'keepBest', n: 1 })).toBe(true);
     expect(ok({ op: 'explode', at: 'min' })).toBe(true);
     expect(ok({ op: 'plus', die: '1к6', minus: true })).toBe(true);
-    expect(ok({ op: 'plus', value: { expr: '@носитель.мод' } })).toBe(true);
+    expect(ok({ op: 'plus', value: { expr: '@holder.мод' } })).toBe(true);
     expect(ok({ op: 'удвоить' })).toBe(false);
     expect(ok({ op: 'keepBest', n: '1' })).toBe(false);
     expect(ok({ op: 'keepBest', least: 3 })).toBe(false);
