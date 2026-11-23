@@ -11,13 +11,14 @@ import { SheetView } from '../../sheet/sheet-view.tsx';
 import { recordDetails } from '../../sheet/record-view.tsx';
 import { useSession } from '../../store/session.ts';
 import { Lobby } from './lobby.tsx';
+import { useShownRoom, LangSwitch } from './shown.tsx';
 import { Hanging } from './hanging.tsx';
 import type { Sheet, System, RoomState, Owned, CompendiumRecord, SheetList } from '@vtt/schema';
 import { ThingsList, ThingLine } from '../../sheet/things-list.tsx';
 import { FieldCell } from '../../sheet/field-cell.tsx';
 
 export function SheetScreen() {
-  const room = useRoom(s => s.room);
+  const room = useShownRoom();
   const mySheetId = useRoom(s => s.mySheetId);
   const pickSheet = useRoom(s => s.pickSheet);
   const [newName, setNewName] = useState('');
@@ -40,6 +41,7 @@ export function SheetScreen() {
     <Columns
       left={{
         head: 'Листы стола',
+        tools: <LangSwitch />,
         body: (
           <>
             {room.sheets.length === 0

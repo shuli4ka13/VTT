@@ -12,10 +12,11 @@ import { TogglesSection } from './toggles-section.tsx';
 import { TagsSection } from './tags-section.tsx';
 import { CombatSection } from './combat-section.tsx';
 import { HealthSection } from './health-section.tsx';
-import { critOf, armorOf, calledOf, rowTables } from '@vtt/engine';
+import { LangsSection } from './langs-section.tsx';
+import { critOf, armorOf, calledOf, rowTables, langsOf } from '@vtt/engine';
 import type { System } from '@vtt/schema';
 
-type SectionKey = 'rolls' | 'tables' | 'tags' | 'combat' | 'vitals' | 'toggles';
+type SectionKey = 'rolls' | 'tables' | 'tags' | 'combat' | 'vitals' | 'toggles' | 'langs';
 
 interface Section {
   key: SectionKey;
@@ -37,6 +38,7 @@ const SECTIONS: Section[] = [
       calledOf(system).some(([key]) => armorOf(system, key).choice !== 'none'),
     ].filter(Boolean).length,
   },
+  { key: 'langs', label: 'Языки', count: system => langsOf(system).length - 1 },
 ];
 
 export function RulesTab() {
@@ -89,6 +91,7 @@ export function RulesTab() {
             {section === 'combat' ? <CombatSection system={system} editSystem={editSystem} /> : null}
             {section === 'vitals' ? <HealthSection system={system} editSystem={editSystem} /> : null}
             {section === 'toggles' ? <TogglesSection system={system} editSystem={editSystem} /> : null}
+            {section === 'langs' ? <LangsSection system={system} editSystem={editSystem} /> : null}
           </>
         ),
       }}

@@ -1,5 +1,5 @@
 import type { System } from '@vtt/schema';
-import { ruleLabelOf } from '@vtt/engine';
+import { tagSaid as saidBy } from '@vtt/engine';
 
 export function rowSaid(system: System, word: string): string {
   for (const table of Object.values(system.tables ?? {})) {
@@ -11,7 +11,7 @@ export function rowSaid(system: System, word: string): string {
 
 export function tagSaid(system: System | undefined, tag: string): string {
   if (!system) return tag;
-  return ruleLabelOf(system, tag) ?? system.tags?.[tag]?.label ?? rowSaid(system, tag);
+  return saidBy(system, tag);
 }
 
 export const tagsSaid = (system: System | undefined, tags: readonly string[]): string => tags.map(tag => tagSaid(system, tag)).join(', ');

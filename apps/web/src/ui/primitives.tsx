@@ -306,11 +306,12 @@ export function Verdict({ tone, action, children }: {
   );
 }
 
-export function Fold({ title, count, summary, open, children, rename, actions }: {
+export function Fold({ title, count, summary, open, lazy, children, rename, actions }: {
   title: ReactNode;
   count?: number;
   summary?: ReactNode;
   open?: boolean;
+  lazy?: boolean;
   children: ReactNode;
   rename?: { value: string; placeholder?: string; onCommit: (next: string) => void };
   actions?: ReactNode;
@@ -332,7 +333,7 @@ export function Fold({ title, count, summary, open, children, rename, actions }:
         {count === undefined ? null : <span className="fold__count num">{count}</span>}
         {actions ? <span className="fold__actions" onClick={e => e.preventDefault()}>{actions}</span> : null}
       </summary>
-      <div className="fold__body">{children}</div>
+      <div className="fold__body">{lazy && !shown ? null : children}</div>
     </details>
   );
 }

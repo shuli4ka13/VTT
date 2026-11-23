@@ -103,6 +103,17 @@ describe('граница режимов', () => {
     }
   });
 
+  it('перевод подписей показывают только экраны партии и общий лист', () => {
+    const allowed = (file: string) => /[\\/]screens[\\/]play[\\/]/.test(file) || /[\\/]sheet[\\/]/.test(file);
+    const users: string[] = [];
+    for (const file of walk(src)) {
+      if (/\.test\.tsx?$/.test(file)) continue;
+      if (/\blocalized(Book)?\(/.test(readFileSync(file, 'utf8'))) users.push(file);
+    }
+    expect(users.length, 'хук показа обязан вызывать localized').toBeGreaterThan(0);
+    for (const file of users) expect(allowed(file), `${file}: localized — только для показа игроку`).toBe(true);
+  });
+
   it('негативный контроль: проверка ловит нарушение, а не совпадение', () => {
 
     const fake = "import { SheetTab } from '../constructor/sheet-tab.tsx';";

@@ -8,6 +8,7 @@ import type { ActionRequest } from './action-form.tsx';
 import { Columns, Tabs } from '../../ui/layout.tsx';
 import { Card, CardHead, Button, Empty, Verdict, Chip, Fold, DangerButton, Input, Select } from '../../ui/primitives.tsx';
 import { Lobby } from './lobby.tsx';
+import { useShownRoom, LangSwitch } from './shown.tsx';
 import { useSession } from '../../store/session.ts';
 import type { RoomState, Sheet, System } from '@vtt/schema';
 import { useReader } from '../../engine/use-calc.ts';
@@ -19,7 +20,7 @@ import { QUESTION_ID } from './pending-bar.tsx';
 import './table.css';
 
 export function TableScreen() {
-  const room = useRoom(s => s.room);
+  const room = useShownRoom();
   return room ? <RoomTable key={room.id} room={room} /> : <Lobby />;
 }
 
@@ -67,7 +68,7 @@ function RoomTable({ room }: { room: RoomState }) {
       <Columns
         left={{
           head: room.title,
-          tools: <Button size="sm" variant="ghost" onClick={leave}>выйти</Button>,
+          tools: <><LangSwitch /><Button size="sm" variant="ghost" onClick={leave}>выйти</Button></>,
           body: (
             <div className="stack stack--tight">
               <span className="faint">За столом</span>
