@@ -3,6 +3,7 @@ import { pickedRow } from './choice-rows.ts';
 import type { System, Effect, Step, SystemConstant } from '@vtt/schema';
 import { labelOfTag, formulaAsLabels } from '../../ui/formula.tsx';
 import { formulaWords } from '../../ui/formula-words.ts';
+import { shownFormula } from '../../ui/formula-lang.ts';
 import { plural } from '../../ui/plural.ts';
 import { diceSaid as diceText, asDice, DIE_LETTER } from '../../words.ts';
 
@@ -161,7 +162,7 @@ export function amountValueSegments(step: Step, system: System, effect: Effect, 
 function exprSegments(expr: string, amount: Step | null, system: System, effect: Effect, names?: Names): Segment[] {
   const id = String((amount as any)?.id ?? '');
   const out: Segment[] = [];
-  let rest = expr.trim();
+  let rest = shownFormula(expr).trim();
   if (!rest) return [hole('чем станет?')];
   for (;;) {
     const m = rest.match(/[@#]([\p{L}\p{N}_.]+)/u);
@@ -176,7 +177,8 @@ function exprSegments(expr: string, amount: Step | null, system: System, effect:
       const sheet = onSheet(effect, name);
       const field = sheet?.rest ?? name;
       const label = names?.get(name)
-        ?? (hasField(system, field) ? `${labelOfTag(system, field)}${sheet ? ` (${sheet.sheet})` : ''}` : null);
+        ?? (hasField(system, field) ? `${labelOfTag(system, field)}${sheet ? ` (${sheet.sheet})` : ''}` : null)
+        ?? (sheet && system.effects?.[field] ? `${system.effects[field]!.label ?? field} (${sheet.sheet})` : null);
       out.push(label ? seg(`«${label}»`) : hole(`${name} — такого нет`));
     }
     rest = rest.slice(m.index + m[0].length);

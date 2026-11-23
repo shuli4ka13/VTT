@@ -10,6 +10,7 @@ import type { Effect, Param, System, ValueKind, Stage } from '@vtt/schema';
 import { StagesEditor } from '../stages-editor.tsx';
 import { ConditionField } from '../condition-field.tsx';
 import { focusNew } from '../../../ui/focus-new.ts';
+import { shownDice } from '../../../ui/formula-lang.ts';
 
 const SHEETS = 'sheet+many';
 const PARAM_KINDS = [...kindsFor('param'), [SHEETS, 'список листов'] as const];
@@ -44,7 +45,7 @@ const defaultWords = (param: Loose, system: System): string => {
   if (value === true) return 'да';
   if (value === false) return 'нет';
   if (typeof value === 'string' && String(param.kind) === 'effect') return system.effects?.[value]?.label || value || 'ничего';
-  return value === undefined || value === '' ? '—' : String(value);
+  return value === undefined || value === '' ? '—' : typeof value === 'string' ? shownDice(value) : String(value);
 };
 
 const askWords = (param: Loose, system: System): string => {

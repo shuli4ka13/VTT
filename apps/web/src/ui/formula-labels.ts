@@ -1,6 +1,7 @@
 import type { System } from '@vtt/schema';
 import { sheetPathLabel } from './paths.ts';
 import { fieldOf, fieldLinkOf, ROW, typeColumn } from '@vtt/engine';
+import { shownFormula } from './formula-lang.ts';
 
 const known = (system: System, tag: string, names?: ReadonlyMap<string, string>): boolean =>
   Boolean(fieldOf(system, tag)) || sheetPathLabel(system, tag) !== null || Boolean(names?.has(tag));
@@ -24,7 +25,10 @@ export function labelOfTag(system: System, tag: string, names?: ReadonlyMap<stri
   return plainLabel(system, tag, names);
 }
 
-export function formulaAsLabels(
+export const formulaAsLabels = (system: System, source: string, names?: ReadonlyMap<string, string>): string =>
+  labels(system, shownFormula(source), names);
+
+function labels(
   system: System,
   source: string,
   names?: ReadonlyMap<string, string>,
@@ -38,6 +42,6 @@ export function formulaAsLabels(
     });
   const picks = lookups.replace(/[@#]([\p{L}\p{N}_]+(?:\.[\p{L}\p{N}_]+)*)\.\[([^[\]]*)\]((?:\.[\p{L}\p{N}_]+)*)/gu,
     (_, tag: string, by: string, rest: string) =>
-      `${labelOfTag(system, tag, names)} · колонка по [${formulaAsLabels(system, by, names)}]${rest ? ` · ${pickTail(system, tag, rest.slice(1))}` : ''}`);
+      `${labelOfTag(system, tag, names)} · колонка по [${labels(system, by, names)}]${rest ? ` · ${pickTail(system, tag, rest.slice(1))}` : ''}`);
   return picks.replace(/[@#]([\p{L}\p{N}_.]+)/gu, (_, name: string) => labelOfTag(system, name, names));
 }

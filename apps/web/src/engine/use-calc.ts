@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import type { System, Sheet, Compendium, FieldOption } from '@vtt/schema';
 import { compile, newPass, calc, baseOf, findField, livesOn, hasDesk, blankDesk, resolveRoll, toolsOf, HOLDER } from '@vtt/engine';
 import type { Pass, Scope, RollResolution } from '@vtt/engine';
+import { shownDice } from '../ui/formula-lang.ts';
 
 export type Computed =
   | { ok: true; value: unknown }
@@ -81,5 +82,5 @@ export function show(value: Computed, options?: FieldOption[]): { text: string; 
   }
   if (typeof value.value === 'boolean') return { text: value.value ? 'да' : 'нет', bad: false };
   if (value.value === null || value.value === undefined) return { text: '—', bad: false };
-  return { text: String(value.value), bad: false };
+  return { text: typeof value.value === 'string' ? shownDice(value.value) : String(value.value), bad: false };
 }
