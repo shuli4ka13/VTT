@@ -71,7 +71,7 @@ export function typedChoices(system: System, names: readonly NameAt[], want: Wan
   }
   for (const one of names) {
     if (want.kind === 'dice' && one.group === 'constant') continue;
-    const said = one.group === 'step' && one.label.toLowerCase() !== one.name.replace(/_/g, ' ').toLowerCase() ? `${one.label} «${one.name.replace(/_/g, ' ')}»` : one.label;
+    const said = one.group === 'step' && one.label.toLowerCase() !== (one.said ?? one.name.replace(/_/g, ' ')).toLowerCase() ? `${one.label} «${one.said ?? one.name.replace(/_/g, ' ')}»` : one.label;
     if (fits(one, want) || (one.whole && fits({ kind: one.whole }, want))) out.push({ expr: `@${one.name}`, label: said, group: GROUP[one.group] });
     for (const child of one.children ?? []) {
       if (fits(child, want)) out.push({ expr: `@${one.name}${child.path}`, label: `${said} → ${child.label}`, group: GROUP[one.group] });

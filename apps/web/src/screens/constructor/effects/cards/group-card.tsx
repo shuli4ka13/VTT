@@ -1,13 +1,12 @@
-import { STEP_WORDS, loopOf, rowTables, isRange } from '@vtt/engine';
+import { STEP_WORDS, loopOf, rowTables, isRange, stepSaid } from '@vtt/engine';
 import type { NameAt } from '@vtt/engine';
 import type { SheetNames } from '../../../../ui/formula-chips.tsx';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import type { System, Effect, Step, ValueKind } from '@vtt/schema';
 import { Card, CardHead, Verdict, Button, DangerButton, Select } from '../../../../ui/primitives.tsx';
-import { KeyField } from '../../../../ui/key-field.tsx';
-import { referenced } from '../../keys.ts';
-import { useWorld } from '../../../../store/world.ts';
+import { applyName, loopNames, namedSteps, stepNameTrouble } from '../../keys.ts';
+import { NameField, STEP_KEYS, LOOP_KEYS } from './step-name.tsx';
 import type { CardGroup } from '../../cards.ts';
 import type { Segment } from '../../readback.ts';
 import { checkReadback, changeReadback, sendReadback, numberReadback, rollReadback, seenReadback, askReadback, amountValueSegments } from '../../readback.ts';
@@ -45,7 +44,7 @@ export function Readback({ segments }: { segments: Segment[] }) {
 
 export function GroupCard({
   group, position, system, effect, earlier, problem, problemAction,
-  edit: editStep, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, upTitle, downTitle, folded = false, onFold, sheets, names, tables, scope, takenNames, onRename, ifBy, byOutput, activeOutput, onUnwrap, asIf = false, outcome = '', headCond, headBy,
+  edit: editStep, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, upTitle, downTitle, folded = false, onFold, sheets, names, tables, scope, takenNames, ifBy, byOutput, activeOutput, onUnwrap, asIf = false, outcome = '', headCond, headBy,
 }: {
   group: CardGroup;
   position: number;
@@ -83,7 +82,6 @@ export function GroupCard({
   asIf?: boolean;
   outcome?: string;
   takenNames?: readonly string[];
-  onRename?: (from: string, to: string) => void;
 }) {
   const context: SlotContext = { system, effect, earlier, ...(sheets ? { sheets } : {}), ...(names ? { names } : {}), ...(tables ? { tables } : {}), ...(scope ? { scope } : {}) };
   const step = group.step as any;
@@ -131,12 +129,12 @@ export function GroupCard({
     <>
       {problem ? <Verdict tone="bad" action={problemAction}>{problem.text}</Verdict> : null}
       {group.kind === 'check' ? <CheckBody step={step} context={context} edit={edit} system={system} asIf={asIf} /> : null}
-      {group.kind === 'roll' ? <RollBody step={step} context={context} edit={edit} {...(takenNames ? { takenNames } : {})} {...(onRename ? { onRename } : {})} /> : null}
+      {group.kind === 'roll' ? <RollBody step={step} context={context} edit={edit} {...(takenNames ? { takenNames } : {})} /> : null}
       {group.kind === 'seen' ? <SeenBody step={step} context={context} edit={edit} /> : null}
       {group.kind === 'change' ? <ChangeBody group={group} context={context} edit={edit} withNumber={withNumber} system={system} onAddParam={onAddParam} onOpenEffect={onOpenEffect} lane={lane} /> : null}
       {group.kind === 'number'
         ? <NumberBody step={step} context={context} edit={edit} onAddParam={onAddParam}
-          {...(takenNames ? { takenNames } : {})} {...(onRename ? { onRename } : {})} />
+          {...(takenNames ? { takenNames } : {})} />
         : null}
       {group.kind === 'table' ? <TableBody step={step} context={context} edit={edit} system={system} /> : null}
       {group.kind === 'ask' ? <AskBody step={step} context={context} edit={edit} system={system} /> : null}
@@ -148,8 +146,8 @@ export function GroupCard({
     return (
       <>
         <StepHead
-          position={position} word={called.replace(/^.*«(.+)».*$/, '$1')} words={headBy ? `по итогу ${headBy}` : `по итогу${step.id ? ` «${String(step.id)}»` : ''}: ${outcome}`} open={!folded} onToggle={onFold} problem={problem?.text ?? null}
-          {...(headCond ? { cond: <><span className="flow-head__by">по итогу{step.id ? ` «${String(step.id)}»` : ''}:</span>{headCond}</> } : {})}
+          position={position} word={called.replace(/^.*«(.+)».*$/, '$1')} words={headBy ? `по итогу ${headBy}` : `по итогу${step.id ? ` «${stepSaid(step)}»` : ''}: ${outcome}`} open={!folded} onToggle={onFold} problem={problem?.text ?? null}
+          {...(headCond ? { cond: <><span className="flow-head__by">по итогу{step.id ? ` «${stepSaid(step)}»` : ''}:</span>{headCond}</> } : {})}
           actions={<FlowActions onUp={onMoveUp} onDown={onMoveDown} upTitle={upTitle} downTitle={downTitle} onDelete={onDelete} onKeep={onUnwrap} />}
         />
         {folded ? null : <div className={`step-card flow-block__source flow-block__source--${group.kind}`}>{body}</div>}
@@ -198,7 +196,7 @@ function summaryOf(group: CardGroup, system: System, effect: Effect, names: Map<
   const step = group.step;
   const segments = group.kind === 'check' ? checkReadback(step, system, effect, names)
     : group.kind === 'roll' ? rollReadback(step, system, effect, names)
-    : group.kind === 'number' ? (step.id ? [{ text: `${String(step.id)} =` }, ...amountValueSegments(step, system, effect, names)] : numberReadback(step, system, effect, names))
+    : group.kind === 'number' ? (step.id ? [{ text: `${stepSaid(step)} =` }, ...amountValueSegments(step, system, effect, names)] : numberReadback(step, system, effect, names))
     : group.kind === 'table' ? tableReadback(step as Record<string, unknown>, system)
     : group.kind === 'ask' ? askReadback(step, effect)
     : group.kind === 'seen' ? seenReadback(step, system)
@@ -211,7 +209,7 @@ function summaryOf(group: CardGroup, system: System, effect: Effect, names: Map<
 const TABLE_ROWS = 'строки:';
 
 function SplitStrip({ step, position, system, effect, earlier, edit, actions }: {
-  step: { of?: unknown; rows?: unknown; as?: unknown };
+  step: { of?: unknown; rows?: unknown; as?: unknown; asLabel?: unknown };
   position: number;
   system: System;
   effect: Effect;
@@ -235,22 +233,23 @@ function SplitStrip({ step, position, system, effect, earlier, edit, actions }: 
       <Select<string> label="из какого списка" value={value}
         options={[...(known ? [] : [['', '— какого списка —'] as const]), ...lists, ...tables]}
         onChange={next => edit(0, draft => {
-          const loop = draft as { of?: string; rows?: string; as?: string };
+          const loop = draft as { of?: string; rows?: string; as?: string; asLabel?: string };
           if (next.startsWith(TABLE_ROWS)) {
             delete loop.of;
             loop.rows = next.slice(TABLE_ROWS.length);
           } else {
             delete loop.rows;
             delete loop.as;
+            delete loop.asLabel;
             loop.of = next;
           }
         })} />
       {rows ? (
         <>
           <span className="faint">строка зовётся:</span>
-          <KeyField value={name} taken={taken}
-            locked={Boolean(name) && referenced(effect, name)}
-            onChange={next => edit(0, draft => { (draft as { as?: string }).as = next; })} />
+          <NameField shown={name ? stepSaid({ id: name, label: step.asLabel }) : ''}
+            check={typed => stepNameTrouble(typed, { id: name, label: step.asLabel }, [...namedSteps(effect), ...loopNames(effect).filter(one => one.id !== name)])}
+            onCommit={typed => edit(0, draft => applyName(draft as unknown as Record<string, unknown>, LOOP_KEYS, typed, taken))} />
           <span className="step-fold__summary">шаги ниже — для каждой строки по очереди, выше — один раз</span>
         </>
       ) : (
@@ -272,32 +271,37 @@ function StepName({ group, effect, system, edit, branches, active }: { group: Ca
   const calledId = group.step.type === 'emit' ? (group.step as { effect?: unknown }).effect : undefined;
   const gives = typeof calledId === 'string' && (system.effects[calledId]?.returns ?? []).length > 0;
   if (!id && group.step.type !== 'apply' && !gives) return null;
-  const st = useWorld.getState();
-  const locked = Boolean(id) && referenced({ s: st.system, c: st.compendium }, id, { steps: effect.steps ?? [], cost: effect.cost ?? [] });
-  const taken = [...(effect.steps ?? []), ...(effect.cost ?? [])].map(s => String(s.id ?? '')).filter(Boolean);
-  const rename = (next: string) => edit(group.amount ? 1 : 0, draft => { if (next) draft.id = next; else delete draft.id; });
+  const keys = [...(effect.steps ?? []), ...(effect.cost ?? [])].map(s => String(s.id ?? '')).filter(Boolean).concat((effect.params ?? []).map(p => p.key));
+  const others = [...namedSteps(effect).filter(one => one.id !== id), ...loopNames(effect)];
+  const at = group.amount ? 1 : 0;
+  const said = id ? stepSaid(group.step) : '';
+  const nameField = (
+    <NameField optional shown={said}
+      check={typed => stepNameTrouble(typed, group.step, others)}
+      onCommit={typed => edit(at, draft => applyName(draft as unknown as Record<string, unknown>, STEP_KEYS, typed, keys))} />
+  );
   if (gives) {
-    const field = open && !locked
-      ? <span className="result-row__name-field" data-guide="step-name" ref={el => { if (el && !el.contains(document.activeElement)) el.querySelector('input')?.focus(); }} onBlur={() => setOpen(false)}><KeyField optional value={id} locked={false} taken={taken} onChange={rename} /></span>
+    const field = open
+      ? <span className="result-row__name-field" data-guide="step-name" ref={el => { if (el && !el.contains(document.activeElement)) el.querySelector('input')?.focus(); }} onBlur={() => setOpen(false)}>{nameField}</span>
       : undefined;
     return (
       <div className="inline inline--tight step-name">
-        <ResultChips name={id} outputs={system.effects[String(calledId)]?.returns ?? []} system={system} {...(branches ? { branches } : {})} active={active}
-          onName={locked ? undefined : () => setOpen(true)} nameSlot={field} />
+        <ResultChips name={said} outputs={system.effects[String(calledId)]?.returns ?? []} system={system} {...(branches ? { branches } : {})} active={active}
+          onName={() => setOpen(true)} nameSlot={field} />
       </div>
     );
   }
   if (!open) {
     return (
       <div className="inline inline--tight step-name">
-        <Button size="sm" variant="ghost" title="как итог шага зовётся в формулах" onClick={() => setOpen(true)}>{id ? `имя в формулах: ${id}` : 'имя в формулах…'}</Button>
+        <Button size="sm" variant="ghost" title="как итог шага зовётся в формулах" onClick={() => setOpen(true)}>{id ? `имя в формулах: ${said}` : 'имя в формулах…'}</Button>
       </div>
     );
   }
   return (
     <div className="inline inline--tight step-name">
       <span className="faint">имя в формулах</span>
-      <KeyField optional value={id} locked={locked} taken={taken} onChange={rename} />
+      {nameField}
     </div>
   );
 }

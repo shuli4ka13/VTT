@@ -8,6 +8,7 @@ import { useWorld } from '../../../store/world.ts';
 import { openAll } from '../../../testing/render-open.tsx';
 import { within, stepCard, callIf, dragParamBefore, blocks, block, headOf, armLabel, addToArm, addArm, stopNote, lastNumber, outcomeIf, wrapIf, forkBy } from '../../../testing/cards.ts';
 import { EffectsTab } from './effects-tab.tsx';
+import { folded } from '../../../testing/folded.ts';
 
 const worldOf = (id: string) => [...SAMPLE_WORLDS, ...LITE_WORLDS].find(w => w.system.id === id)!;
 
@@ -56,7 +57,7 @@ const savingThrow = (at: number, args: readonly (readonly [string, string])[]): 
   nameStep(made(), 'спас');
 };
 
-const built = (id: string): Effect | undefined => useWorld.getState().system.effects[id];
+const built = (id: string): Effect | undefined => folded(useWorld.getState().system.effects[id]);
 
 const dump = (what: unknown) => {
   if (process.env.BUILD_DUMP) writeFileSync(process.env.BUILD_DUMP, JSON.stringify(what, null, 1));

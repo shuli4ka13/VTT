@@ -1,4 +1,4 @@
-import { STEP_WORDS, LAUNCHES } from '@vtt/engine';
+import { STEP_WORDS, LAUNCHES, stepSaid } from '@vtt/engine';
 import type { LaunchKind } from '@vtt/engine';
 import type { Step, System, Effect } from '@vtt/schema';
 import { labelOfTag } from '../../../ui/formula.tsx';
@@ -30,9 +30,9 @@ const fieldOfTarget = (ref: unknown): string | undefined => {
   return found?.[1];
 };
 
-const named = (title: string, id: unknown): string => {
-  const name = typeof id === 'string' ? id.replace(/_/g, ' ') : '';
-  return name && name.replace(/ \d+$/, '') !== title.toLowerCase() ? `${title} «${name}»` : title;
+const named = (title: string, step: { id?: unknown; label?: unknown } | undefined): string => {
+  const name = typeof step?.id === 'string' && step.id ? stepSaid(step) : '';
+  return name && name.replace(/ \d+$/, '').toLowerCase() !== title.toLowerCase() ? `${title} «${name}»` : title;
 };
 
 export function titleOf(kind: string, step: Step | undefined, system: System, effect?: Effect, names?: ReadonlyMap<string, string>): string {
@@ -54,9 +54,9 @@ export function titleOf(kind: string, step: Step | undefined, system: System, ef
     const tag = fieldOfTarget(s.target);
     return tag ? `${STEP_TITLES.set} «${labelOfTag(system, tag, names)}»` : STEP_TITLES.set;
   }
-  if (kind === 'roll') return named(STEP_TITLES.roll, s?.id);
-  if (kind === 'number') return named(STEP_TITLES.number, s?.id);
-  if (kind === 'table') return named(CARD_TITLES[kind] ?? kind, s?.id);
+  if (kind === 'roll') return named(STEP_TITLES.roll, s);
+  if (kind === 'number') return named(STEP_TITLES.number, s);
+  if (kind === 'table') return named(CARD_TITLES[kind] ?? kind, s);
   if (kind === "seen" && typeof s?.type === "string" && s.type in STEP_WORDS) return STEP_WORDS[s.type as keyof typeof STEP_WORDS].label;
   return CARD_TITLES[kind] ?? kind;
 }

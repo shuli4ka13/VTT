@@ -1,7 +1,7 @@
 import type { System, Param, Effect } from '@vtt/schema';
 import type { Lesson, View } from '../types.ts';
 import { effectBy, fieldBy, stepsOf, is, subtracts, adds, numberOf, armOf, errorsOf, same, isArm, FORMULA_DONE, barOpen, barText } from '../find.ts';
-import { armsOf } from '@vtt/engine';
+import { armsOf, stepSaid } from '@vtt/engine';
 import { problemsClean, trialShown } from './first-system.ts';
 import { visible } from '../anchor.ts';
 import base from '../seeds/base.json' with { type: 'json' };
@@ -231,7 +231,7 @@ export const links: Lesson = {
         { at: { guide: 'step-name' }, say: 'Впишите имя «урон» и нажмите Enter.' },
       ],
       done: view => calls(view).some(step => typeof step.id === 'string' && step.id.trim() !== ''),
-      result: view => `Вызов называется «${String(calls(view).find(step => step.id)?.id ?? '')}»: шаги ниже видят его «Осталось».`,
+      result: view => `Вызов называется «${stepSaid(calls(view).find(step => step.id) ?? {})}»: шаги ниже видят его «Осталось».`,
     },
     {
       id: 'trial',

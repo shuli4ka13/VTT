@@ -29,7 +29,8 @@ export const loopOf = (params: readonly { key: string; label?: string; item?: { 
 
 export const loopParam = (step: LoopStep): Param | null => {
   const found = rows(step);
-  return found && found.as ? { key: found.as, label: found.as, kind: 'choice', from: found.table } as Param : null;
+  const said = (step as { asLabel?: unknown }).asLabel;
+  return found && found.as ? { key: found.as, label: typeof said === 'string' && said ? said : found.as, kind: 'choice', from: found.table } as Param : null;
 };
 
 export function finish() {

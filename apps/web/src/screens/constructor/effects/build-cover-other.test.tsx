@@ -8,6 +8,7 @@ import { useWorld } from '../../../store/world.ts';
 import { openAll } from '../../../testing/render-open.tsx';
 import { within, stepCard, block, headOf, addToArm, addArm, stopNote, wrapIf } from '../../../testing/cards.ts';
 import { EffectsTab } from './effects-tab.tsx';
+import { folded } from '../../../testing/folded.ts';
 
 const worldOf = (id: string) => SAMPLE_WORLDS.find(w => w.system.id === id)!;
 
@@ -24,7 +25,7 @@ const start = (systemId: string, without: string[]): Effect[] => {
   return goal;
 };
 
-const built = (id: string): Effect | undefined => useWorld.getState().system.effects[id];
+const built = (id: string): Effect | undefined => folded(useWorld.getState().system.effects[id]);
 
 const dump = (what: unknown) => {
   if (process.env.BUILD_DUMP) writeFileSync(process.env.BUILD_DUMP, JSON.stringify(what, null, 1));
@@ -305,7 +306,7 @@ describe('эффекты пресетов собираются руками: Sha
     check(2, 5, ['@amount', '@лист.sp_head'], 'сквозь_шлем');
     number(2, 7, '@сквозь_шлем.margin', 'в_голову_всего');
     number(2, 8, 'if(true, floor((@в_голову_всего) * 2), @в_голову_всего)', 'в_голову');
-    apply(2, 9, 'hp', '@в_голову');
+    apply(2, 9, 'hp', 'в голову');
     apply(2, 9, 'sp_head', '1');
     guarded(4, '@damage_type.armor == "мимо брони"');
     apply(4, 10, 'hp', '@amount');

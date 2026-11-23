@@ -26,7 +26,7 @@ function linesOf(
 function namesInside(system: System, effect: Effect): Map<string, string> {
   const steps = (effect.steps ?? []) as Step[];
   const earlier = steps.map(step => ({
-    id: String(step.id ?? ''), type: step.type, ...fieldedOf(system, effect.params ?? [], step),
+    id: String(step.id ?? ''), ...(step.label ? { label: step.label } : {}), type: step.type, ...fieldedOf(system, effect.params ?? [], step),
     title: titleOf(groupSteps([step])[0]?.kind ?? '', step, system),
   })).filter(step => step.id);
   return stepNames({ system, effect, earlier });

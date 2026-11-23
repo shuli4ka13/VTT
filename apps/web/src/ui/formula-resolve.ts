@@ -41,6 +41,8 @@ const findIn = (index: Index, word: string, under?: string): Found => {
   if (!want) return null;
   const inside = (tag: string): boolean => !under || tag.startsWith(`${under}.`);
   const exact = index.byTag.get(under ? plain(`${under}.${word}`) : want);
+  const said = [...(index.byLabel.get(want) ?? [])].filter(inside);
+  if (exact && inside(exact) && said.length === 1 && said[0] !== exact && !under) return { tag: said[0]! };
   if (exact && inside(exact)) return { tag: exact };
   const tags = [...(index.byLabel.get(want) ?? [])].filter(inside).filter(tag => (under ? !tag.slice(under.length + 1).includes('.') || true : true));
   const top = under ? tags : tags.filter(tag => !tag.includes('.')).length ? tags.filter(tag => !tag.includes('.')) : tags;

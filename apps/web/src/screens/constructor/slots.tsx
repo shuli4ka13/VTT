@@ -1,7 +1,7 @@
 import { rolesOf } from './effects/roles.ts';
 import type { SheetNames } from '../../ui/formula-chips.tsx';
 import type { System, Effect, SlotRef, Param } from '@vtt/schema';
-import { givesOf, stepModule, loopsAt, calledOf, amountParamOf, hasField, NAMES } from '@vtt/engine';
+import { givesOf, stepModule, loopsAt, calledOf, amountParamOf, hasField, stepSaid, NAMES } from '@vtt/engine';
 import type { Graded, RecordKind, NameAt } from '@vtt/engine';
 import { columnPaths } from '../../ui/formula.tsx';
 import { STEP } from '../../words.ts';
@@ -9,7 +9,7 @@ import { withTables, withPicks } from '../../ui/formula-words.ts';
 
 export interface StepOutput { path: string; label: string; kind?: string; no?: string }
 
-export interface EarlierStep { id: string; type: string; title?: string; table?: string; splits?: boolean; fielded?: boolean | Graded; dice?: boolean; outputs?: StepOutput[] }
+export interface EarlierStep { id: string; label?: string; type: string; title?: string; table?: string; splits?: boolean; fielded?: boolean | Graded; dice?: boolean; outputs?: StepOutput[] }
 
 const throwsDice = (step: unknown): boolean => {
   try { return stepModule((step as { type: string }).type).dice?.(step as never) === true; } catch { return false; }
@@ -34,7 +34,7 @@ function outputsOf(type: string, fielded: boolean | Graded = false): StepOutput[
 
 const outputsAt = (step: EarlierStep): StepOutput[] => [...(step.outputs ?? []), ...outputsOf(step.type, step.fielded)];
 
-export const formulaName = (step: EarlierStep): string => (loopsAt(step) ? step.title || step.id : step.id ? step.id.replace(/_/g, ' ') : step.title || STEP.one);
+export const formulaName = (step: EarlierStep): string => (loopsAt(step) ? step.title || step.id : step.id ? stepSaid(step) : step.title || STEP.one);
 
 const said = (name: string, label: string): string => (name.toLowerCase() === label.toLowerCase() ? name : `${name} — ${label}`);
 

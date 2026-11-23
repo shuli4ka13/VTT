@@ -19,16 +19,14 @@ const textOf = (step: Loose): string =>
     .filter((part): part is string => typeof part === 'string' && part.trim() !== '')
     .join(' + ');
 
-export function NumberBody({ step, context, edit, onAddParam, takenNames, onRename }: {
+export function NumberBody({ step, context, edit, onAddParam, takenNames }: {
   step: Step;
   context: SlotContext;
   edit: EditFn;
   onAddParam?: (label: string, kind: ValueKind, want?: string) => string;
   takenNames?: readonly string[];
-  onRename?: (from: string, to: string) => void;
 }) {
-  const current = typeof (step as { id?: unknown }).id === 'string' ? (step as { id: string }).id : '';
-  const name = useStepName({ current, context, edit, takenNames, onRename });
+  const name = useStepName({ step, context, edit, takenNames });
   const [draft, setDraft] = useState<string | null>(null);
   const read = loose(step);
   const stored = textOf(read);

@@ -39,9 +39,12 @@ const statesOf = (system: System): { tag: string; label: string }[] =>
 
 export type SheetNames = ReadonlyMap<string, string>;
 
-function shortOf(label: string, base: string): string {
-  const head = `${base.replace(/_/g, ' ')} — `;
-  return label.startsWith(head) ? label.slice(head.length) : label;
+function shortOf(label: string, base: string, baseLabel?: string): string {
+  for (const name of [baseLabel, base.replace(/_/g, ' ')]) {
+    const head = `${name} — `;
+    if (name && label.startsWith(head)) return label.slice(head.length);
+  }
+  return label;
 }
 
 function typedPath(text: string, caret: number): { base: string; at: number; needle: string } | null {
@@ -859,7 +862,7 @@ function LocalChips({ value, onChange, onFinal, system, table, placeholder, onKe
               onMouseDown={e => { e.preventDefault(); chooseField(f.tag); }}
             >
               <span className="slot__group">{f.group}</span>
-              {dotted && f.tag === dotted ? `${f.label} целиком` : dotted || through ? shortOf(f.label, dotted ?? through!.base) : f.label}
+              {dotted && f.tag === dotted ? `${f.label} целиком` : dotted || through ? shortOf(f.label, dotted ?? through!.base, fields.find(one => one.tag === (dotted ?? through!.base))?.label) : f.label}
               {!dotted && !through && below(f.tag) ? <span className="slot__more" title="наберите точку после имени — откроется список">. ещё {below(f.tag)}</span> : null}
             </button>
           ))}

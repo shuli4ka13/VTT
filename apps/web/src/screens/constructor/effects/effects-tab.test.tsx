@@ -216,7 +216,7 @@ describe('ссылка на результат шага', () => {
 
   it('машинного имени проверки на экране нет (своё имя видно у «Броска» и «Числа»), а сослаться на шаг всё равно можно', () => {
     renderOpen(<EffectsTab />);
-    expect(screen.queryAllByPlaceholderText('имя').map(input => (input as HTMLInputElement).value)).toEqual(['бросок_бросок', 'сколько']);
+    expect(screen.queryAllByPlaceholderText('имя').map(input => (input as HTMLInputElement).value)).toEqual(['бросок бросок', 'сколько']);
     fireEvent.click(screen.getAllByText('+ проверка')[0]!);
     const steps = useWorld.getState().system.effects.strike!.steps!;
     const id = String(steps.at(-1)!.id);
@@ -231,13 +231,13 @@ describe('ссылка на результат шага', () => {
     const before = useWorld.getState().system.effects.strike!.steps!.map(step => step.id);
     const check = String(before.at(-1));
     fireEvent.click(screen.getAllByText(/^имя в формулах/).at(-1)!);
-    const input = [...document.querySelectorAll('input')].find(i => i.value === check)!;
+    const input = [...document.querySelectorAll('input')].find(i => i.value === check.replace(/_/g, ' '))!;
     fireEvent.change(input, { target: { value: 'hit' } });
     fireEvent.blur(input);
-    const ids = useWorld.getState().system.effects.strike!.steps!.map(step => step.id);
-    expect(ids).toContain('hit');
-    expect(ids).toContain('бросок_бросок');
-    expect(ids).not.toContain('hit_бросок');
+    const steps = useWorld.getState().system.effects.strike!.steps!;
+    expect(steps.map(step => step.id)).toEqual(before);
+    expect(steps.at(-1)!.label).toBe('hit');
+    expect(steps.map(step => step.id)).toContain('бросок_бросок');
   });
 
   it('формула числа предлагает выходы проверки поимённо', () => {

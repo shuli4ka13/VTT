@@ -14,7 +14,7 @@ import type { Extra } from './extras.tsx';
 import { RollTags } from './roll-line.tsx';
 import { useStepName } from './step-name.tsx';
 import { dieSaid } from '../../readback.ts';
-import { resultsOf } from '@vtt/engine';
+import { resultsOf, stepSaid } from '@vtt/engine';
 import { ResultChips } from './result-chips.tsx';
 import { rollSaid } from '../../rules/rolls.ts';
 import {
@@ -38,16 +38,15 @@ function ownDieSaid(context: SlotContext, text: string): string {
 const asCombo = (options: readonly (readonly [string, string] | readonly [string, string, string])[]): ComboOption[] =>
   options.map(([value, label, group]) => ({ value, label, ...(group ? { group } : {}) }));
 
-export function RollBody({ step, context, edit, takenNames, onRename }: {
+export function RollBody({ step, context, edit, takenNames }: {
   step: Step;
   context: SlotContext;
   edit: EditFn;
   takenNames?: readonly string[];
-  onRename?: (from: string, to: string) => void;
 }) {
   const read = loose(step);
   const current = typeof read.id === 'string' ? read.id : '';
-  const name = useStepName({ current, context, edit, takenNames, onRename });
+  const name = useStepName({ step: read, context, edit, takenNames });
   const [hand, setHand] = useState<typeof OWN_DIE | typeof OWN_FIELD | null>(null);
 
   const fielded = read.field !== undefined;
@@ -194,7 +193,7 @@ export function RollBody({ step, context, edit, takenNames, onRename }: {
       {!fielded && who === '' ? <span className="faint">кости ничьи: правки броска и вопросы «увидев кости» на них не действуют</span> : null}
       <div className="roll-extras"><Extras items={extras} /></div>
       {current ? (
-        <ResultChips name={current} system={context.system} nameSlot={<span className="result-row__name" title="так итог броска зовётся в формулах, а через точку — его части">{current}</span>}
+        <ResultChips name={stepSaid(read)} system={context.system} nameSlot={<span className="result-row__name" title="так итог броска зовётся в формулах, а через точку — его части">{stepSaid(read)}</span>}
           outputs={resultsOf(context.system, context.effect.params ?? [], step as never).map(one => ({ key: one.path.slice(1) || 'целиком', label: one.label.replace(/^да или нет: /, ''), kind: one.kind }))} />
       ) : null}
       <RollTags label={fielded ? 'Ещё метки' : 'Метки'} roll={read} system={context.system} onRoll={change => set(change)} />

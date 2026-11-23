@@ -48,7 +48,7 @@ function contextOf(system: System, effect: Effect): SlotContext {
       ...(column.no ? { no: column.no } : {}),
     }));
     const title = callee?.label ?? words?.label;
-    earlier.push({ id: String(step.id), type: step.type, ...fieldedOf(system, effect.params ?? [], step), ...(title ? { title } : {}), ...(outputs.length ? { outputs } : {}) });
+    earlier.push({ id: String(step.id), ...(step.label ? { label: step.label } : {}), type: step.type, ...fieldedOf(system, effect.params ?? [], step), ...(title ? { title } : {}), ...(outputs.length ? { outputs } : {}) });
   }
   return { system, effect, earlier };
 }

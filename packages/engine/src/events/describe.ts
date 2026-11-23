@@ -129,6 +129,7 @@ export function describeParts(
     if (param) return String(param.label ?? name);
     const source = (effect?.steps ?? []).find((step: any) => String(step.id) === name);
     if (source?.type === 'roll') return rollTitle(system, ((source.tags ?? []) as unknown[]).filter((tag): tag is string => typeof tag === 'string'), source.by || source.field ? 'бросок' : 'расчёт');
+    if (typeof source?.label === 'string' && source.label) return source.label;
     return labelOf(name);
   };
   const outputLabel = (name: string): string => {

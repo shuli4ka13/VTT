@@ -46,22 +46,31 @@ describe('шаг «Число»', () => {
     expect(taken).toEqual(['нет_такого']);
   });
 
-  it('имя правится в поле: ссылки переименовываются, пустое и занятое не принимаются с причиной', () => {
-    const renames: Array<[string, string]> = [];
-    const view = render(<NumberBody step={{ id: 'урон', type: 'roll', fixed: { expr: '1' } } as unknown as Step} context={{ ...context, earlier: [{ id: 'удар', type: 'roll' }] }}
-      edit={() => {}} onRename={(from, to) => renames.push([from, to])} />);
+  it('переименование меняет только подпись: ключ и ссылки прежние, имя по умолчанию не хранится, пустое и занятое не принимаются', () => {
+    const step = { id: 'урон', type: 'roll', fixed: { expr: '1' } };
+    const next = { id: 'удар', type: 'roll', fixed: { expr: '@урон' } };
+    const draft = structuredClone(step) as Record<string, unknown>;
+    const view = render(<NumberBody step={step as unknown as Step} context={{ ...context, effect: { ...effect, steps: [next, step] } as unknown as Effect }}
+      edit={(_, change) => change(draft as never)} />);
     const name = view.container.querySelector('input.input') as HTMLInputElement;
     expect(name.value).toBe('урон');
     fireEvent.change(name, { target: { value: '' } });
     fireEvent.blur(name);
     expect(view.container.querySelector('.field__error')!.textContent).toContain('пустым');
-    fireEvent.change(name, { target: { value: 'удар' } });
+    fireEvent.change(name, { target: { value: 'Удар' } });
     fireEvent.blur(name);
     expect(view.container.querySelector('.field__error')!.textContent).toContain('занято');
-    expect(renames).toEqual([]);
-    fireEvent.change(name, { target: { value: 'ущерб' } });
+    expect(draft).toEqual(step);
+    fireEvent.change(name, { target: { value: 'Тяжёлый ущерб' } });
     fireEvent.blur(name);
-    expect(renames).toEqual([['урон', 'ущерб']]);
+    expect(draft).toEqual({ ...step, label: 'Тяжёлый ущерб' });
+    expect(next.fixed.expr).toBe('@урон');
+    view.rerender(<NumberBody step={draft as unknown as Step} context={context} edit={(_, change) => change(draft as never)} />);
+    const again = view.container.querySelector('input.input') as HTMLInputElement;
+    expect(again.value).toBe('Тяжёлый ущерб');
+    fireEvent.change(again, { target: { value: 'урон' } });
+    fireEvent.blur(again);
+    expect(draft).toEqual(step);
   });
 
   it('у числа нет ни выбора бросающего, ни меток', () => {

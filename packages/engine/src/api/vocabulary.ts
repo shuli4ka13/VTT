@@ -19,7 +19,7 @@ export { renameLayoutColumn, renameLayoutTable, retagFields, tidyLayout, tidySam
 export { healthOf, healthSpec, healthSteps, shareOf } from '../model/health.ts';
 export type { Health, HealthSpec, HealthStep } from '../model/health.ts';
 export { amountParamOf, choiceTableOf, listOf, listUsers, optionsOf, tagsOf, tagTablesOf } from '../model/lists.ts';
-export { choiceTablesAt, labelsAt, labelsOf, namesAt, resultsOf, sheetNamesAt } from '../model/names-at.ts';
+export { choiceTablesAt, labelsAt, labelsOf, namesAt, resultsOf, sheetNamesAt, stepSaid } from '../model/names-at.ts';
 export type { NameAt, Place as NamePlace } from '../model/names-at.ts';
 export { argsWithProps, blockLine, blockShown, findRecord, isBook, isItem, isUnder, keyOf as entryKeyOf, kindOf, kindsOf, propKeysOf, propsNeeded, propsOf, recordKindOf, recordKinds, recordsOf, sheetKindOf, sheetKinds, shownOn, withLibrary } from '../model/owned.ts';
 export type { AnyKind, RecordKind } from '../model/owned.ts';

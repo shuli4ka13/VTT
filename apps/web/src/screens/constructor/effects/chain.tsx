@@ -1,10 +1,10 @@
-import { compile, printFormula, operandText, NOT, degreeWords as tableWords, listOf, choiceTableOf, fieldOf, activationOf, loopOf, loopParam, loopsAt, splitsTargets, armsOf, sees, endOf, outcomeWords, namesAt, blockLabel } from '@vtt/engine';
+import { compile, printFormula, operandText, NOT, degreeWords as tableWords, listOf, choiceTableOf, fieldOf, activationOf, loopOf, loopParam, loopsAt, splitsTargets, armsOf, sees, endOf, outcomeWords, namesAt, blockLabel, stepSaid } from '@vtt/engine';
 import type { NamePlace as Place } from '@vtt/engine';
 import { withRole } from './roles.ts';
 import type { ReactNode } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useWorld, freeId } from '../../../store/world.ts';
-import { renameStep, stepIdsOf } from '../keys.ts';
+import { stepIdsOf } from '../keys.ts';
 import { STEP } from '../../../words.ts';
 import { cardTitle, titleOf } from './words.ts';
 import { Button, CardHead, Select, Verdict } from '../../../ui/primitives.tsx';
@@ -104,7 +104,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
         const loop = loopsAt(step) ? loopOf(effect.params, step as { of?: unknown }) : null;
         const called = loopsAt(step) ? row?.label ?? loop?.label : cardTitle(cards, at, system, effect);
         return {
-          id: String(loopsAt(step) ? row?.key ?? loop?.key : step.id), type: step.type, ...fieldedOf(system, effect.params ?? [], step),
+          id: String(loopsAt(step) ? row?.key ?? loop?.key : step.id), ...(!loopsAt(step) && step.label ? { label: step.label } : {}), type: step.type, ...fieldedOf(system, effect.params ?? [], step),
           ...(splitsTargets(step) ? { splits: true } : {}),
           ...(called ? { title: called } : {}),
           ...(row?.from ? { table: row.from } : {}),
@@ -173,12 +173,13 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
   };
   const degreeWords = (sys: typeof system, degrees: unknown): string[] =>
     (Array.isArray(degrees) ? [...new Set(degrees.map(one => String((one as { label?: unknown }).label ?? '')).filter(Boolean))] : tableWords(sys, (degrees as { table?: string } | undefined)?.table));
+  const saidOf = (key: string): string => stepSaid(steps.find(step => step.id === key) ?? { id: key });
   const sourceOf = (ref: string, open: number): { options: Option[]; title: string } | null => {
     if (ref.endsWith('.degree')) {
       const id = ref.slice(0, -'.degree'.length);
       const check = steps.find(step => step.type === 'check' && step.id === id);
       const words = check ? degreeWords(system, (check as { degrees?: unknown }).degrees) : [];
-      return words.length ? { options: words.map(value => ({ value, label: value })), title: `ступени «${id.replace(/_/g, ' ')}»` } : null;
+      return words.length ? { options: words.map(value => ({ value, label: value })), title: `ступени «${saidOf(id)}»` } : null;
     }
     const param = (effect.params ?? []).find(one => one.key === ref && one.kind === 'choice' && one.from && !one.many);
     if (param) {
@@ -189,7 +190,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
     const choice = dot > 0 ? choiceReturnOf(steps.find(step => step.type === 'emit' && step.id === ref.slice(0, dot)), ref.slice(dot + 1)) : undefined;
     if (choice) {
       const options = tableOptions(choice.from);
-      return options.length ? { options, title: `«${choice.label ?? choice.key}» (${ref.slice(0, dot).replace(/_/g, ' ')})` } : null;
+      return options.length ? { options, title: `«${choice.label ?? choice.key}» (${saidOf(ref.slice(0, dot))})` } : null;
     }
     const sheets = sheetsAt(system, id, placeAt(open));
     if (dot > 0 && sheets.has(ref.slice(0, dot))) {
@@ -295,7 +296,6 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
         ) : undefined}
         onAddParam={addParam}
         takenNames={takenStepNames()}
-        onRename={(from, to) => useWorld.getState().editEffect(id, draft => renameStep(draft, from, to))}
         onOpenEffect={onOpenEffect}
         edit={(k, change) => edit(draft => {
           const index = group.indices[k] ?? group.indices[0]!;
@@ -426,7 +426,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
     const callPick = fused && fused.group.step.type === 'emit' ? (() => {
       const called = String((fused.group.step as { effect?: unknown }).effect ?? '');
       const callee = system.effects?.[called];
-      const quick = outcomeRefs([{ id: String(fused.group.step.id), type: 'emit', ...(callee?.label ? { title: callee.label } : {}), outputs: returnsOf(system, fused.group.step) }])
+      const quick = outcomeRefs([{ id: String(fused.group.step.id), ...(fused.group.step.label ? { label: fused.group.step.label } : {}), type: 'emit', ...(callee?.label ? { title: callee.label } : {}), outputs: returnsOf(system, fused.group.step) }])
         .filter(one => one.kind === 'boolean')
         .map(one => {
           const bare = (text: string) => text.slice(text.indexOf(' — ') + 3);

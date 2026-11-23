@@ -308,6 +308,7 @@ export const param = column.extend({
 
 export const step = z.object({
   id: z.string().optional(),
+  label: z.string().min(1).optional(),
   type: z.string().min(1),
 
   if: formula.optional(),

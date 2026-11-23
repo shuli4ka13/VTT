@@ -1,7 +1,8 @@
 import { slugOf, freeId } from '../../store/world.ts';
 import { usageIndex, inUse } from './usage.ts';
 import type { System, Compendium } from '@vtt/schema';
-import { splitsTargets, NAMES, NAME_LABELS, nameLabel } from '@vtt/engine';
+import { splitsTargets, NAMES, NAME_LABELS, nameLabel, stepSaid } from '@vtt/engine';
+import { plain } from '../../ui/formula-resolve.ts';
 
 const escape = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -77,32 +78,41 @@ export function followKey({ used, key, base, before, after, taken }: {
 
 export const keyOf = (text: string): string => slugOf(text);
 
-export function renameStep(node: unknown, from: string, to: string): void {
-  const pattern = new RegExp(`@${escape(from)}(?![\\p{L}\\p{N}_])`, 'gu');
-  const walk = (value: unknown): void => {
-    if (Array.isArray(value)) { value.forEach(walk); return; }
-    if (!value || typeof value !== 'object') return;
-    const holder = value as Record<string, unknown>;
-    if (typeof holder.type === 'string' && holder.id === from) holder.id = to;
-    for (const [name, inner] of Object.entries(holder)) {
-      if (typeof inner === 'string') {
-        if (pattern.test(inner)) holder[name] = inner.replace(pattern, `@${to}`);
-        pattern.lastIndex = 0;
-      } else walk(inner);
-    }
-  };
-  walk(node);
-}
-
 export const RESERVED_NAMES: readonly string[] = [NAMES.row, NAMES.holder, NAMES.desk, NAME_LABELS.row, NAME_LABELS.holder, NAME_LABELS.desk];
 
-export function stepNameTrouble(typed: string, current: string, taken: readonly string[]): string | null {
-  const next = keyOf(typed);
+export interface NameKeys { key: 'id' | 'as'; label: 'label' | 'asLabel' }
+
+type Named = { id?: unknown; label?: unknown };
+
+export const namedSteps = (effect: { steps?: unknown; cost?: unknown }): Named[] =>
+  [...((effect.cost as Named[] | undefined) ?? []), ...((effect.steps as Named[] | undefined) ?? [])]
+    .filter(step => typeof step.id === 'string' && step.id !== '');
+
+export const loopNames = (effect: { steps?: unknown; cost?: unknown }): Named[] =>
+  ([...((effect.cost as Record<string, unknown>[] | undefined) ?? []), ...((effect.steps as Record<string, unknown>[] | undefined) ?? [])])
+    .filter(step => typeof step.as === 'string' && step.as !== '')
+    .map(step => ({ id: step.as, label: step.asLabel }));
+
+const wordsOf = (typed: string): string => typed.replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
+
+export function stepNameTrouble(typed: string, step: Named, others: readonly Named[]): string | null {
+  const text = wordsOf(typed);
+  const next = keyOf(text);
   if (!next) return 'имя не может быть пустым';
-  if (next === current) return null;
-  if (RESERVED_NAMES.includes(next)) return `имя «${nameLabel(next) ?? next}» занято системой`;
-  if (taken.includes(next)) return `имя «${next}» уже занято`;
+  const had = typeof step.id === 'string' && step.id !== '';
+  if (had && text === stepSaid(step)) return null;
+  if (RESERVED_NAMES.includes(next) || RESERVED_NAMES.includes(text)) return `имя «${nameLabel(next) ?? text}» занято системой`;
+  if (others.some(other => plain(stepSaid(other)) === plain(text))) return `имя «${text}» уже занято`;
   return null;
+}
+
+export function applyName(holder: Record<string, unknown>, names: NameKeys, typed: string, taken: Iterable<string> = []): void {
+  const text = wordsOf(typed);
+  const had = typeof holder[names.key] === 'string' && holder[names.key] !== '';
+  if (!text) { if (had) delete holder[names.label]; return; }
+  if (!had) holder[names.key] = freeId(taken, text);
+  if (text === stepSaid({ id: holder[names.key] })) delete holder[names.label];
+  else holder[names.label] = text;
 }
 
 export function stepIdsOf(node: unknown): string[] {

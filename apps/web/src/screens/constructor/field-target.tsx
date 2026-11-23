@@ -3,7 +3,7 @@ import { BY_FORMULA } from './typed-pick.tsx';
 import type { System } from '@vtt/schema';
 import { Field, Select } from '../../ui/primitives.tsx';
 import { FieldPick } from '../../ui/field-pick.tsx';
-import { fieldsOf, readableFields, cellSource, DESK_ID, NAME_LABELS } from '@vtt/engine';
+import { fieldsOf, readableFields, cellSource, DESK_ID, NAME_LABELS, stepSaid } from '@vtt/engine';
 import type { SlotContext } from './slots.tsx';
 
 const fieldTarget = (target: unknown): { sheet: string; tag: string } | null => {
@@ -16,7 +16,7 @@ const rowNamesOf = (context: SlotContext): { name: string; label: string; table:
   ...(context.effect.params ?? [])
     .filter(param => param.kind === 'choice' && typeof param.from === 'string' && !param.many)
     .map(param => ({ name: param.key, label: param.label ?? param.key, table: String(param.from) })),
-  ...context.earlier.filter(step => step.table).map(step => ({ name: step.id, label: step.id, table: step.table! })),
+  ...context.earlier.filter(step => step.table).map(step => ({ name: step.id, label: stepSaid(step), table: step.table! })),
 ];
 
 const storedColumns = (system: System, table: string) => {

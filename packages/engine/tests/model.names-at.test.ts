@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { namesAt, sheetNamesAt } from '../src/model/names-at.ts';
+import { namesAt, sheetNamesAt, stepSaid } from '../src/model/names-at.ts';
+import { loopParam } from '../src/engine/steps/each.ts';
 import { SAMPLE_SYSTEMS } from '../src/model/systems.ts';
 import type { System } from '../src/model/types.ts';
 
@@ -70,5 +71,22 @@ describe('namesAt: что видно в каждом месте эффекта',
     const after = namesAt(system, 'после', { part: 'handler-if', handler: 0 }).find(one => one.name === 'урон');
     expect(after).toMatchObject({ name: 'урон', label: 'Урон', kind: 'number', group: 'heard' });
     expect(names(namesAt(system, 'до', { part: 'handler-if', handler: 0 }))).not.toContain('урон');
+  });
+});
+
+describe('подпись шага и имени цикла', () => {
+  it('шаг называется подписью, без неё — ключом с пробелами; имя в формуле остаётся ключом', () => {
+    expect(stepSaid({ id: 'attack_roll' })).toBe('attack roll');
+    expect(stepSaid({ id: 'attack_roll', label: 'Бросок атаки' })).toBe('Бросок атаки');
+    const system = structuredClone(dnd) as System;
+    const step = (system.effects.strike!.steps ?? []).find(one => one.id === 'бросок')! as { label?: string };
+    step.label = 'Удар мечом';
+    const seen = namesAt(system, 'strike', { part: 'steps', index: 4 }).find(one => one.name === 'бросок');
+    expect(seen?.said).toBe('Удар мечом');
+  });
+
+  it('строка цикла подписана своей подписью, ключ прежний', () => {
+    expect(loopParam({ type: 'each', rows: 'skills', as: 'skill' } as never)).toMatchObject({ key: 'skill', label: 'skill' });
+    expect(loopParam({ type: 'each', rows: 'skills', as: 'skill', asLabel: 'навык' } as never)).toMatchObject({ key: 'skill', label: 'навык' });
   });
 });

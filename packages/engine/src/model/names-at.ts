@@ -26,6 +26,7 @@ export interface NameChild { path: string; label: string; kind: string; from?: s
 
 export interface NameAt {
   name: string;
+  said?: string;
   label: string;
   kind: string;
   group: NameGroup;
@@ -103,6 +104,9 @@ const returnsOf = (system: System | undefined, step: Step): NameChild[] => {
   });
 };
 
+export const stepSaid = (step: { id?: unknown; label?: unknown }): string =>
+  (typeof step.label === 'string' && step.label ? step.label : String(step.id ?? '').replace(/_/g, ' '));
+
 function stepLabel(system: System | undefined, step: Step, fallback: string): string {
   const called = (step as { effect?: unknown }).effect;
   const label = step.type === 'emit' && typeof called === 'string' ? system?.effects?.[called]?.label : undefined;
@@ -129,7 +133,8 @@ function stepsBefore(steps: readonly Step[], index: number, withLoop: boolean, p
     const whole = resultsOf(system, inputs, step).find(output => !output.path)?.kind;
     out.push({
       name: String(step.id),
-      label: stepLabel(system, step, String(step.id)),
+      said: stepSaid(step),
+      label: stepLabel(system, step, stepSaid(step)),
       kind: 'result',
       group: 'step',
       ...(whole ? { whole } : {}),
@@ -152,7 +157,7 @@ function targetsChildren(listened: Effect | null, system?: System): NameChild[] 
   if (at < 0) return [];
   return steps.slice(at + 1).filter(step => step.id).flatMap(step => {
     const outputs = [...returnsOf(system, step), ...outputsOf(step, system, listened.params ?? [])];
-    const own = { path: `.${String(step.id)}`, label: `шаг «${String(step.id)}» у каждой цели`, kind: 'result' };
+    const own = { path: `.${String(step.id)}`, label: `шаг «${stepSaid(step)}» у каждой цели`, kind: 'result' };
     return [own, ...outputs.map(output => ({ path: `.${String(step.id)}${output.path}`, label: output.label, kind: output.kind }))];
   });
 }
@@ -178,7 +183,7 @@ function heard(system: System, handler: NonNullable<Effect['on']>[number]): Name
     const step = steps.get(name);
     if (step) {
       const children = [...returnsOf(system, step), ...outputsOf(step, system, listened?.params ?? [])];
-      out.push({ name, label: stepLabel(system, step, name), kind: 'result', group: 'heard', ...(children.length ? { children } : {}) });
+      out.push({ name, said: stepSaid(step), label: stepLabel(system, step, stepSaid(step)), kind: 'result', group: 'heard', ...(children.length ? { children } : {}) });
       continue;
     }
     if (name === TARGETS_SEED) {
@@ -240,7 +245,7 @@ export const sheetNamesAt = (system: System, effectId: string, place: Place): Na
 
 const childLabel = (one: NameAt, label: string): string => {
   if (one.kind !== 'result') return `${one.label} → ${label}`;
-  const name = one.name.replace(/_/g, ' ');
+  const name = one.said ?? one.name.replace(/_/g, ' ');
   return name.toLowerCase() === label.toLowerCase() ? name : `${name} — ${label}`;
 };
 
