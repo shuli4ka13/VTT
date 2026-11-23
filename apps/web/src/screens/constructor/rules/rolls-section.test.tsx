@@ -47,7 +47,7 @@ describe('«Правила → Броски»: успех и степени чи
     fireEvent.click([...row(view.container, 'Ступени').querySelectorAll('button')].find(b => b.textContent === '+ ступень')!);
     expect(system.rolls!.r!.degrees).toHaveLength(1);
     cleanup();
-    const again = run({ degrees: [{ label: 'Успех', if: { expr: 'да' } }] });
+    const again = run({ degrees: [{ label: 'Успех', if: { expr: 'true' } }] });
     fireEvent.click(again.view.container.querySelector('[aria-label="убрать ступень"]')!);
     expect(again.system.rolls!.r).not.toHaveProperty('degrees');
   });
@@ -151,7 +151,7 @@ describe('«Правила → Броски»: ступени и встроен�
   afterEach(cleanup);
 
   it('последняя ступень «да» показана словом «иначе», новая ступень встаёт перед ней', () => {
-    const { system, view } = run({ number: 'under', degrees: [{ label: 'Успех', if: { expr: '@успех' } }, { label: 'Провал', if: { expr: 'да' } }] });
+    const { system, view } = run({ number: 'under', degrees: [{ label: 'Успех', if: { expr: '@успех' } }, { label: 'Провал', if: { expr: 'true' } }] });
     expect(row(view.container, 'Ступени').textContent).toContain('иначе');
     expect(view.container.textContent).toContain('Берётся первая подходящая сверху.');
     fireEvent.click([...view.container.querySelectorAll('button')].find(b => b.textContent === '+ ступень')!);

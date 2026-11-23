@@ -5,7 +5,7 @@ import type { System } from '@vtt/schema';
 
 export interface Degree { label: string; if: { expr: string } }
 
-export const OTHERWISE = 'да';
+export const OTHERWISE = 'true';
 
 type Shared = Pick<FormulaFieldProps, 'extraNames' | 'meanings' | 'badges' | 'sheets'>;
 

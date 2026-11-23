@@ -48,6 +48,8 @@
 }
 .worldbar .spacer { flex: 1; min-width: var(--s-3); }
 .worldbar__name { width: clamp(140px, 18vw, 240px); }
+.worldbar__lang { border: 1px solid var(--border); border-radius: var(--r-full); background: transparent; color: var(--text-muted); font-size: var(--fs-2); padding: 2px var(--s-3); cursor: pointer; white-space: nowrap; }
+.worldbar__lang:hover { border-color: var(--border-strong); color: var(--text); }
 .worldbar__note { font-size: var(--fs-2); max-width: 32ch; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 0 1 auto; }
 .worldbar__books { display: flex; gap: var(--s-2); flex-wrap: wrap; font-size: var(--fs-2); }
 .appbar { position: relative; z-index: 30; flex: none; background: var(--surface); border-bottom: 1px solid var(--border); }

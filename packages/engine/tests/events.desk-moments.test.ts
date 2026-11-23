@@ -4,7 +4,7 @@ import { grantedTo } from '../src/engine/effects.ts';
 import { idleClock } from '../src/engine/clock.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
-const tick = { type: 'apply', target: { expr: '@носитель.раунды' }, direction: 'set', value: { expr: 'если(@moment.round > 1, @носитель.раунды + 1, 0)' } };
+const tick = { type: 'apply', target: { expr: '@носитель.раунды' }, direction: 'set', value: { expr: 'if(@moment.round > 1, @носитель.раунды + 1, 0)' } };
 
 const system = {
   id: 'с', name: 'с',

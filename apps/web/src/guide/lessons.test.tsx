@@ -225,13 +225,13 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
       () => {},
       () => press(findAnchor({ guide: 'add-column' })!),
       () => labelColumn('таблица', 'колонка', 'Модификатор'),
-      () => { openBar(''); typeBar('округлить вниз(('); },
-      () => typeBar('округлить вниз((@строка.value'),
-      () => typeBar('округлить вниз((@строка.value - 10) / 2)'),
+      () => { openBar(''); typeBar('floor(('); },
+      () => typeBar('floor((@строка.value'),
+      () => typeBar('floor((@строка.value - 10) / 2)'),
       () => edit(d => {
         const column = d.tables!.таблица!.columns!.find(c => c.key === 'колонка')!;
         delete (column as { kind?: string }).kind;
-        (column as { expr?: unknown }).expr = { expr: 'округлить вниз((@строка.value - 10) / 2)' };
+        (column as { expr?: unknown }).expr = { expr: 'floor((@строка.value - 10) / 2)' };
       }),
     ],
     sample: () => press(findAnchor({ text: 'образец листа' })!),
@@ -461,8 +461,8 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
     ],
     when: [
       () => openBar(''),
-      () => typeBar('не пусто(@заготовка)'),
-      () => edit(d => { (d.sheets!.по_заготовке!.modifiers![0] as { if: unknown }).if = { expr: 'не пусто(@заготовка)' }; }),
+      () => typeBar('not empty(@заготовка)'),
+      () => edit(d => { (d.sheets!.по_заготовке!.modifiers![0] as { if: unknown }).if = { expr: 'not empty(@заготовка)' }; }),
     ],
     problems: openProblems,
     more: () => edit(d => { d.tables!.заготовки!.rows!.push({ value: 'разведчик', label: 'Разведчик', cells: { ближний_бой: 2, стрельба: 3 } }); }),
@@ -483,7 +483,7 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
     ],
     problems: openProblems,
     refuse: () => edit(d => setSteps(d, 'удар', [
-      { type: 'branch', if: { expr: '@стол.бой и @действующий.действий_осталось < 1' } },
+      { type: 'branch', if: { expr: '@стол.бой and @действующий.действий_осталось < 1' } },
       { type: 'stop' },
       { type: 'end' },
       ...steps('удар'),
@@ -524,7 +524,7 @@ const BAD: Record<string, Record<string, Wrong[]>> = {
       d => { stepOf(d, 'удар', 'check').versus = formula('10'); },
       d => { d.constants!.кость!.label = 'Кубик'; },
     ],
-    branch: [d => { stepOf(d, 'удар', 'branch').if = formula('не @проверка.success'); }],
+    branch: [d => { stepOf(d, 'удар', 'branch').if = formula('not @проверка.success'); }],
     damage: [
       d => { stepOf(d, 'удар', 'apply').direction = 'add'; },
       d => { stepOf(d, 'удар', 'apply').value = formula('3'); },
@@ -549,7 +549,7 @@ const BAD: Record<string, Record<string, Wrong[]>> = {
       setExpr('таблица', 'колонка', '@строка.value / 2'),
       setExpr('таблица', 'колонка', '(@строка.value - 10) / 2'),
       setExpr('таблица', 'колонка', '@строка.value - 10'),
-      setExpr('таблица', 'колонка', 'округлить вниз((@строка.value - 10) / 2) + 1'),
+      setExpr('таблица', 'колонка', 'floor((@строка.value - 10) / 2) + 1'),
     ],
     armor: [
       setExpr('лист', 'класс_брони', '10 + @таблица.сила.колонка'),
@@ -637,7 +637,7 @@ const BAD: Record<string, Record<string, Wrong[]>> = {
       d => { d.tables!.заклинание!.bindings![0]!.effect = 'прекращение'; },
     ],
     stop: [d => { d.tables!.заклинание!.bindings![1]!.effect = 'сотворить'; }],
-    if: [d => { d.tables!.заклинание!.bindings![1]!.if = formula('не @срок.держится'); }, d => { delete d.tables!.заклинание!.bindings![1]!.if; }],
+    if: [d => { d.tables!.заклинание!.bindings![1]!.if = formula('not @срок.держится'); }, d => { delete d.tables!.заклинание!.bindings![1]!.if; }],
     bond: [d => { d.effects.сотворить!.bond!.effect = 'прекращение'; }],
     many: [d => { d.effects.сотворить!.bond!.many = false; }],
     problems: [closed],
@@ -654,7 +654,7 @@ const BAD: Record<string, Record<string, Wrong[]>> = {
       d => { (d.sheets!.по_заготовке!.modifiers![0] as { value: unknown }).value = formula('@заготовка'); },
       d => { (d.sheets!.по_заготовке!.modifiers![0] as { value: unknown }).value = formula('@заготовка.[@строка] + 1'); },
     ],
-    when: [d => { (d.sheets!.по_заготовке!.modifiers![0] as { if: unknown }).if = formula('пусто(@заготовка)'); }],
+    when: [d => { (d.sheets!.по_заготовке!.modifiers![0] as { if: unknown }).if = formula('empty(@заготовка)'); }],
     problems: [closed],
     more: [
       d => { d.tables!.заготовки!.rows!.pop(); },
@@ -662,7 +662,7 @@ const BAD: Record<string, Record<string, Wrong[]>> = {
     ],
   },
   combat: {
-    if: [d => { stepOf(d, 'удар', 'branch').if = formula('не @стол.бой'); }],
+    if: [d => { stepOf(d, 'удар', 'branch').if = formula('not @стол.бой'); }],
     spend: [d => { stepOf(d, 'удар', 'apply').value = formula('2'); }, d => { stepOf(d, 'удар', 'apply').direction = 'add'; }],
     problems: [closed],
     refuse: [
@@ -1069,7 +1069,7 @@ describe('уроки конструктора', () => {
     const refuse = lesson.steps.find(step => step.id === 'refuse')!;
     const system = structuredClone(lesson.seed);
     system.effects.удар!.steps = [
-      { type: 'branch', if: { expr: 'не @стол.бой' } },
+      { type: 'branch', if: { expr: 'not @стол.бой' } },
       { type: 'orElse', if: { expr: '@действующий.действий_осталось < 1' } },
       { type: 'stop' },
       { type: 'end' },

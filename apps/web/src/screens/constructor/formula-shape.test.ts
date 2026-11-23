@@ -19,10 +19,10 @@ describe('вид формулы у входа', () => {
   });
   it('неизвестное имя и «если» не ругаются', () => {
     expect(shapeProblem('@x', 'number', named({}))).toBeNull();
-    expect(shapeProblem('если(@x > 1, 2, 3)', 'number', named({}))).toBeNull();
+    expect(shapeProblem('if(@x > 1, 2, 3)', 'number', named({}))).toBeNull();
   });
   it('кость в арифметике — подсказка про шаг «Бросок»', () => {
-    expect(shapeProblem('к4 + 1', 'number', named({}))).toBe(DICE_BY_STEP);
-    expect(shapeProblem('-к4', 'number', named({}))).toBe(DICE_BY_STEP);
+    expect(shapeProblem('d4 + 1', 'number', named({}))).toBe(DICE_BY_STEP);
+    expect(shapeProblem('-d4', 'number', named({}))).toBe(DICE_BY_STEP);
   });
 });

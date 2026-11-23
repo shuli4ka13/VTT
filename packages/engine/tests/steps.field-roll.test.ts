@@ -15,9 +15,9 @@ const build = (steps: unknown[], rule: Record<string, unknown> = {}) => ({
   rolls: {
     проверка: {
       label: 'Проверка', die: 'к100', number: 'under',
-      success: { expr: '@выпало <= 5 или (@выпало <= 95 и @выпало <= @порог)' },
-      margin: { expr: 'округлить вниз(@порог / 10) - округлить вниз(@выпало / 10)' },
-      degrees: [{ label: 'твёрдый успех', if: { expr: '@успех и @степени >= 2' } }],
+      success: { expr: '@выпало <= 5 or (@выпало <= 95 and @выпало <= @порог)' },
+      margin: { expr: 'floor(@порог / 10) - floor(@выпало / 10)' },
+      degrees: [{ label: 'твёрдый успех', if: { expr: '@успех and @степени >= 2' } }],
       fields: [{ table: 'лист', column: 'навык' }],
       ...rule,
     },
@@ -39,7 +39,7 @@ const OPPOSED = [
   EACH,
   { id: 'защита', type: 'roll', field: { expr: '@цель.навык' } },
   { id: 'попал', type: 'check', value: { expr: '@удар.margin' }, versus: { expr: '@защита.margin' }, successWhen: 'over' },
-  { type: 'branch', if: { expr: 'не @попал.success' } }, { type: 'stop' }, { type: 'end' },
+  { type: 'branch', if: { expr: 'not @попал.success' } }, { type: 'stop' }, { type: 'end' },
   { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '1 + @удар.margin - @защита.margin' } },
 ];
 
@@ -155,7 +155,7 @@ group('проверка системы: бросок', () => {
   });
 
   test('«кинуть» в формуле — ошибка про шаг «Бросок», и кость с формулой в одном шаге', () => {
-    const thrown = one({ id: 'ч', type: 'roll', fixed: { expr: 'кинуть(@к100) + 1' } });
+    const thrown = one({ id: 'ч', type: 'roll', fixed: { expr: 'roll(@к100) + 1' } });
     ok(texts(thrown)[0]!.includes('кости бросает шаг «Бросок»'), texts(thrown).join('\n'));
     deepEq(texts(one({ id: 'ч', type: 'roll', die: 'к100', fixed: { expr: '1' } })), ['кость и формула в одном шаге — формулу перенесите в прибавку']);
   });
@@ -184,9 +184,9 @@ group('кость из частей и кость со счётом по фор�
       return errorsOf(lintSystem(system, book)).map(p => p.text);
     };
     const mine = { id: 'б', type: 'roll', die: 'набор', by: { expr: '@действующий' } };
-    ok(pool('большее из(1, @рейтинг)', mine)[0]!.includes('берёт число костей из «рейтинг»'));
-    deepEq(pool('большее из(1, @навык)', mine), []);
-    deepEq(pool('большее из(1, @цели)', mine), []);
+    ok(pool('max(1, @рейтинг)', mine)[0]!.includes('берёт число костей из «рейтинг»'));
+    deepEq(pool('max(1, @навык)', mine), []);
+    deepEq(pool('max(1, @цели)', mine), []);
   });
 });
 

@@ -56,14 +56,14 @@ describe('«когда»: исходы под момент', () => {
   it('после «Для каждого из» исход — «хоть по одной цели»: в условие ложится счёт по итогам целей', () => {
     const { get } = card({ on: 'done:каждому', steps: [] }, { каждому: eachEffect });
     within(document.body).when('хоть по одной цели: Проверка — пройдена');
-    expect(get().if?.expr).toBe('сколько(@итоги.спас.success, да) >= 1');
+    expect(get().if?.expr).toBe('count(@итоги.спас.success, true) >= 1');
   });
 
   it('«завершено» не предлагает итог одной цели: условие — формулой, и она знает таблицу итогов по целям', () => {
     const { get } = card({ on: 'done:удар', steps: [] });
     expect(get().if).toBeUndefined();
-    within(document.body).formula(document.querySelector<HTMLElement>('.cond__formula')!, 'сколько(@итоги.hit.success, да) >= 2');
-    expect(get().if?.expr).toBe('сколько(@итоги.hit.success, да) >= 2');
+    within(document.body).formula(document.querySelector<HTMLElement>('.cond__formula')!, 'count(@итоги.hit.success, true) >= 2');
+    expect(get().if?.expr).toBe('count(@итоги.hit.success, true) >= 2');
   });
 
   it('у «завершено» нет выбора «Кому», зато есть «Кого касается»', () => {

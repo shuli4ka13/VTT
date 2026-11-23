@@ -1,7 +1,7 @@
 import { ColumnSheetFields } from '../table-field.tsx';
 import type { CellValue } from '@vtt/schema';
 import { rowNames } from '../row-names.ts';
-import { renameLayoutColumn, renameLayoutTable, retagFields, kindsFor, kindWord, isFormulaCell, onSheet, isSingle, holderOf, fieldsOf, withColumn, forgetFields, rowPieces, listUsers, isRange, tableKeyOf as keyOf, choiceTables, rowTables, numberTables, rowUsers, renameRow, renameRowInBook } from '@vtt/engine';
+import { renameLayoutColumn, renameLayoutTable, retagFields, kindsFor, kindWord, isFormulaCell, onSheet, isSingle, holderOf, fieldsOf, withColumn, forgetFields, rowPieces, listUsers, isRange, tableKeyOf as keyOf, choiceTables, rowTables, numberTables, rowUsers, renameRow, renameRowInBook, asDice, toDice } from '@vtt/engine';
 import type { RowPiece, TableColumn, Holder } from '@vtt/engine';
 export { rowNames } from '../row-names.ts';
 import { Card, CardHead, Input, NumInput, Button, DangerButton, Fold, Select, Verdict, Empty, Field, Chip, TextArea } from '../../../ui/primitives.tsx';
@@ -679,7 +679,7 @@ export function CellEditor({ column, value, system, where, names, placed, inheri
     if (!text) onChange(undefined);
     else if (text.startsWith('=')) onChange({ expr: text.slice(1).trim() });
     else if (column.kind === 'number') onChange(/^-?\d+(\.\d+)?$/.test(text) ? Number(text) : { expr: text });
-    else onChange(text);
+    else onChange(column.kind === 'dice' ? toDice(text) : text);
   };
   if (column.expr !== undefined && empty && draft === null && inherited) {
     return (
@@ -694,7 +694,7 @@ export function CellEditor({ column, value, system, where, names, placed, inheri
   }
   return (
     <Input
-      value={draft ?? (empty ? '' : String(value))}
+      value={draft ?? (empty ? '' : column.kind === 'dice' ? asDice(String(value)) : String(value))}
       mono={column.kind !== 'text'}
       autoFocus={draft === '' && empty}
       placeholder={hint}

@@ -30,7 +30,7 @@ const world = (effects: Record<string, unknown>, extra: Record<string, unknown> 
     приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] },
   },
   effects: {
-    уколоть: { label: 'Уколоть', params: [{ key: 'раненый', kind: 'sheet' }], steps: [{ id: 'к', type: 'roll', die: { expr: '1к6' } }, hit('@к', '@раненый.хп')] },
+    уколоть: { label: 'Уколоть', params: [{ key: 'раненый', kind: 'sheet' }], steps: [{ id: 'к', type: 'roll', die: { expr: '1d6' } }, hit('@к', '@раненый.хп')] },
     ...effects,
   },
   ...extra,
@@ -57,7 +57,7 @@ group('новое ядро: ключи костей у повторов', () => 
   test('эффект, наложенный дважды, срабатывает дважды — у каждого своя кость', () => {
     const system = world({
       удар: strike([hit('1')]),
-      шипы: { label: 'Шипы', activation: 'passive', reapply: 'stack', on: [{ ...mine, steps: [{ id: 'к', type: 'roll', die: { expr: '1к6' } }, hit('@к', '@действующий.хп')] }] },
+      шипы: { label: 'Шипы', activation: 'passive', reapply: 'stack', on: [{ ...mine, steps: [{ id: 'к', type: 'roll', die: { expr: '1d6' } }, hit('@к', '@действующий.хп')] }] },
     });
     const out = play(system, [sheet('а'), sheet('б', ['шипы', 'шипы'])], 'а', 'б', [3, 4]);
     eq(hp(out, 'а'), 13, '20 − 3 − 4');
@@ -75,8 +75,8 @@ group('новое ядро: ключи костей у повторов', () => 
 
 group('новое ядро: пауза и повтор', () => {
   const system = world({
-    удар: strike([{ id: 'к', type: 'roll', die: { expr: '1к6' } }, hit('@к')]),
-    ответ: { label: 'Ответ', activation: 'passive', on: [{ ...mine, confirm: true, steps: [{ id: 'к', type: 'roll', die: { expr: '1к4' } }, hit('@к', '@действующий.хп')] }] },
+    удар: strike([{ id: 'к', type: 'roll', die: { expr: '1d6' } }, hit('@к')]),
+    ответ: { label: 'Ответ', activation: 'passive', on: [{ ...mine, confirm: true, steps: [{ id: 'к', type: 'roll', die: { expr: '1d4' } }, hit('@к', '@действующий.хп')] }] },
   });
   const sheets = [sheet('а'), sheet('б', ['ответ'])];
 
@@ -130,7 +130,7 @@ group('новое ядро: урон бросается, только когда
     EACH,
     { id: 'бросок', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
     { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '@цель.хп - 10' } },
-    { type: 'branch', if: { expr: 'не @попал.success' } }, { type: 'stop' }, { type: 'end' },
+    { type: 'branch', if: { expr: 'not @попал.success' } }, { type: 'stop' }, { type: 'end' },
     hit('@урон'),
   ];
   const system = world({ удар: button(steps) }, D20);
@@ -159,7 +159,7 @@ group('новое ядро: броски действующего не деля�
       { id: 'урон', type: 'roll', die: { expr: '1d6' } },
       { id: 'бросок', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
       { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '10' } },
-      { type: 'branch', if: { expr: 'не @попал.success' } }, { type: 'stop' }, { type: 'end' },
+      { type: 'branch', if: { expr: 'not @попал.success' } }, { type: 'stop' }, { type: 'end' },
       EACH,
       hit('@урон'),
     ];
@@ -173,7 +173,7 @@ group('новое ядро: броски действующего не деля�
     const steps = [
       { id: 'бросок', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
       { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '10' } },
-      { type: 'branch', if: { expr: 'не @попал.success' } }, { type: 'stop' }, { type: 'end' },
+      { type: 'branch', if: { expr: 'not @попал.success' } }, { type: 'stop' }, { type: 'end' },
       { type: 'branch', if: { expr: '@бросок.natural >= 20' } },
       { id: 'урон', type: 'roll', die: { expr: '1d6' } },
       { type: 'end' },

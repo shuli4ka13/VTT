@@ -85,7 +85,7 @@ group('увидев кости: докинуть и оставить — сре�
 
   test('на 2к6 докинуть и оставить лучшие — две лучшие из трёх', () => {
     const die = queue(2, 5, 6);
-    const two = { label: '2к6', kind: 'die', dice: [{ count: 2, sides: 6 }] } as DieConstant;
+    const two = { label: '2d6', kind: 'die', dice: [{ count: 2, sides: 6 }] } as DieConstant;
     const seen = seeRoll(rollLead(two, die), { kind: 'add', count: 1, keep: 'best' }, die);
     eq(seen.total, 11);
   });
@@ -165,7 +165,7 @@ group('перебросить одну меньшую: кого не трога�
 
 group('перебросить весь набор — «Свирепый атакующий»', () => {
   const all = { kind: 'reroll', which: 'all' } as const;
-  const d6x2: DieConstant = { label: '2к6', kind: 'die', dice: [{ count: 2, sides: 6 }] } as DieConstant;
+  const d6x2: DieConstant = { label: '2d6', kind: 'die', dice: [{ count: 2, sides: 6 }] } as DieConstant;
 
   test('новый набор больше — остаётся новый целиком', () => {
     const die = queue(1, 2, 4, 5);

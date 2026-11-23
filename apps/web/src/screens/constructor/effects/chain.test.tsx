@@ -124,7 +124,7 @@ describe('блок «Если»: условие строкой, руки, «Ст
     expect(head.whenOptions()).toContain('Проверка — пройдена');
     expect(head.whenOptions()).toContain('Проверка — не пройдена');
     head.when('Проверка — не пройдена');
-    expect(steps()[2]).toEqual({ type: 'branch', if: { expr: 'не @hit.success' } });
+    expect(steps()[2]).toEqual({ type: 'branch', if: { expr: 'not @hit.success' } });
     expect(isFused(block(0))).toBe(true);
     expect(armWord(block(0))).toBe('2 · Проверка');
     expect(headOf(block(0)).querySelector('.flow-head__words')!.textContent).toBe('по итогу «hit»: провал / успех');
@@ -230,7 +230,7 @@ describe('блок «Если»: условие строкой, руки, «Ст
 
   it('слово исхода берётся из метки броска: «атака» — «попадание: / промах:»', () => {
     const tables = { метки: { label: 'Метки', columns: [{ key: 'успех', label: 'успех' }, { key: 'провал', label: 'провал' }], rows: [{ value: 'атака', cells: { успех: 'попадание', провал: 'промах' } }] } };
-    start([{ ...checked[0], tags: ['атака'] }, checked[1], { type: 'branch', if: { expr: 'не @hit.success' } }, { type: 'end' }], { tables });
+    start([{ ...checked[0], tags: ['атака'] }, checked[1], { type: 'branch', if: { expr: 'not @hit.success' } }, { type: 'end' }], { tables });
     expect(isFused(block(0))).toBe(true);
     expect(armLabel(block(0))).toBe('промах:');
     expect(headOf(block(0)).querySelector('.flow-head__words')!.textContent).toBe('по итогу «hit»: промах / попадание');
@@ -242,7 +242,7 @@ describe('блок «Если»: условие строкой, руки, «Ст
     within().click('+ если');
     expect(within(headOf(block(0))).whenOptions()).toEqual([]);
     within(headOf(block(0))).when('=1 > 0 и 2 > 1');
-    expect(steps()[0]).toEqual({ type: 'branch', if: { expr: '1 > 0 и 2 > 1' } });
+    expect(steps()[0]).toEqual({ type: 'branch', if: { expr: '1 > 0 and 2 > 1' } });
     within(headOf(block(0))).when('=1 > 0');
     expect(steps()[0]).toEqual({ type: 'branch', if: { expr: '1 > 0' } });
   });
@@ -323,7 +323,7 @@ describe('условие блока «Если» в покое — словам�
   beforeEach(() => { cleanup(); try { localStorage.clear(); } catch { return; } });
 
   it('в покое — слова, без фишек и без второй строки; нажатие на слова открывает поле, Enter возвращает слова', () => {
-    show({ expr: 'не пусто(@status)' });
+    show({ expr: 'not empty(@status)' });
     expect(face()!.textContent).toBe('задано «Состояние при попадании»');
     expect(face()!.title).toBe('не пусто(@status)');
     expect(chipsInHead()).toBeNull();
@@ -335,7 +335,7 @@ describe('условие блока «Если» в покое — словам�
     expect(chipsInHead()!.getAttribute('data-value')).toBe('не пусто(@status)');
     fireEvent.keyDown(chipsInHead()!, { key: 'Enter' });
     expect(face()!.textContent).toBe('задано «Состояние при попадании»');
-    expect(condition()).toBe('не пусто(@status)');
+    expect(condition()).toBe('not empty(@status)');
   });
 
   it('правка с Enter меняет условие и слова; Esc отменяет правку — условие прежнее', () => {
@@ -396,12 +396,12 @@ describe('условие блока «Если» в покое — словам�
   });
 
   it('«Если» со «Стоп» внутри читается в той же шапке: слова условия и «— стоп»', () => {
-    show({ expr: 'пусто(@status)' }, { type: 'stop' } as unknown as Step);
+    show({ expr: 'empty(@status)' }, { type: 'stop' } as unknown as Step);
     expect(face()!.textContent).toBe('не задано «Состояние при попадании» — стоп');
     expect(face()!.title).toBe('пусто(@status)');
     expect(block(0).classList.contains('flow-block--guard')).toBe(true);
     cleanup();
-    show({ expr: 'пусто(@status)' }, { type: 'stop' } as unknown as Step, { type: 'orElse' } as unknown as Step, { type: 'stop' } as unknown as Step);
+    show({ expr: 'empty(@status)' }, { type: 'stop' } as unknown as Step, { type: 'orElse' } as unknown as Step, { type: 'stop' } as unknown as Step);
     expect(face()!.textContent).toBe('не задано «Состояние при попадании»');
   });
 

@@ -18,7 +18,7 @@ function misses(system: System): string[] {
       const check = (want: Parameters<typeof typedChoices>[2], value: unknown, what: string) => {
         if (value === undefined || value === null) return;
         const text = exprOf(value);
-        if (text.includes('(') && !text.startsWith('первый(')) return;
+        if (text.includes('(') && !text.startsWith('first(')) return;
         if (!typedChoices(system, names, want).some(one => one.expr === text)) out.push(`${effectId} · ${where} ${index} · ${what} = ${text}`);
       };
       if ((step.type === 'status' || step.type === 'ask') && it.to !== undefined) check({ kind: 'sheet' }, it.to, 'на кого');

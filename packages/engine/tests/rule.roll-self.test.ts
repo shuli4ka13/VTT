@@ -29,7 +29,7 @@ group('правило броска видит сам бросок: @бросок
     { bonus: { expr: '@навык' }, degrees: [
       { label: 'крит', if: { expr: '@бросок.parts.надежда == @бросок.parts.страх' } },
       { label: 'со страхом', if: { expr: '@бросок.parts.страх > @бросок.parts.надежда' } },
-      { label: 'с надеждой', if: { expr: 'да' } },
+      { label: 'с надеждой', if: { expr: 'true' } },
     ] },
   );
 
@@ -49,7 +49,7 @@ group('правило броска видит сам бросок: @бросок
 
   test('грани набора: две шестёрки — крит, по лучшей кости — успех', () => {
     const pool = system({ dice: [{ sides: 6 }], read: 'best' }, { number: 'count', fields: [{ table: 'лист', column: 'навык', threshold: { expr: '4' } }], degrees: [
-      { label: 'крит', if: { expr: 'сколько(@бросок.dice.rolls, 6) >= 2' } },
+      { label: 'крит', if: { expr: 'count(@бросок.dice.rolls, 6) >= 2' } },
       { label: 'успех', if: { expr: '@успех' } },
     ] }, []);
     eq(click(pool, [6, 6]).endsWith('· крит'), true);
@@ -57,7 +57,7 @@ group('правило броска видит сам бросок: @бросок
   });
 
   test('@бросок без точки — итог броска, как @выпало', () => {
-    const lead = system({ dice: [{ sides: 20 }] }, { bonus: { expr: '@навык' }, degrees: [{ label: 'много', if: { expr: '@бросок == @выпало и @бросок >= 10' } }] });
+    const lead = system({ dice: [{ sides: 20 }] }, { bonus: { expr: '@навык' }, degrees: [{ label: 'много', if: { expr: '@бросок == @выпало and @бросок >= 10' } }] });
     eq(click(lead, [9]).endsWith('= 11 · много'), true);
   });
 
@@ -82,10 +82,10 @@ group('ступени «Проверки» списком: видят её ус�
       { type: 'each', of: 'цели' },
       { id: 'итог', type: 'check', value: { expr: '@бросок' }, versus: { expr: '15' }, degrees: [
         { label: 'крит', if: { expr: '@бросок.parts.надежда == @бросок.parts.страх' } },
-        { label: 'успех со страхом', if: { expr: '@успех и @бросок.parts.страх > @бросок.parts.надежда' } },
+        { label: 'успех со страхом', if: { expr: '@успех and @бросок.parts.страх > @бросок.parts.надежда' } },
         { label: 'успех с надеждой', if: { expr: '@успех' } },
-        { label: 'провал со страхом', if: { expr: '@степени < 0 и @бросок.parts.страх > @бросок.parts.надежда' } },
-        { label: 'провал с надеждой', if: { expr: 'да' } },
+        { label: 'провал со страхом', if: { expr: '@степени < 0 and @бросок.parts.страх > @бросок.parts.надежда' } },
+        { label: 'провал с надеждой', if: { expr: 'true' } },
       ] },
     ] } },
   } as unknown as System;
@@ -127,12 +127,12 @@ group('ступени «Проверки» списком: проверка «П
   const problems = (sys: System) => lintSystem(sys, deck).map(one => one.text);
 
   test('опечатка в имени в условии ступени — ошибка «Проблем», а не отказ за столом', () => {
-    const texts = errorsOf(lintSystem(make([{ label: 'со страхом', if: { expr: '@успех и @брсок.parts.страх > 1' } }]), deck)).map(one => one.text);
+    const texts = errorsOf(lintSystem(make([{ label: 'со страхом', if: { expr: '@успех and @брсок.parts.страх > 1' } }]), deck)).map(one => one.text);
     eq(texts.some(text => text.includes('брсок')), true);
   });
 
   test('битая формула в условии ступени — ошибка «Проблем»', () => {
-    eq(errorsOf(lintSystem(make([{ label: 'крит', if: { expr: '@успех и (' } }]), deck)).length > 0, true);
+    eq(errorsOf(lintSystem(make([{ label: 'крит', if: { expr: '@успех and (' } }]), deck)).length > 0, true);
   });
 
   test('шаг эффекта по имени «успех» рядом со ступенями списком — предупреждение', () => {

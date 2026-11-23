@@ -15,7 +15,7 @@
         "dice": [
           {
             "count": {
-              "expr": "большее из(1, @rating)"
+              "expr": "max(1, @rating)"
             },
             "sides": 6
           }
@@ -28,7 +28,7 @@
         "dice": [
           {
             "count": {
-              "expr": "большее из(1, @resolve)"
+              "expr": "max(1, @resolve)"
             },
             "sides": 6
           }
@@ -155,7 +155,7 @@
             "label": "Воля",
             "kind": "number",
             "expr": {
-              "expr": "если(@attune > 0, 1, 0) + если(@command > 0, 1, 0) + если(@consort > 0, 1, 0) + если(@sway > 0, 1, 0)"
+              "expr": "if(@attune > 0, 1, 0) + if(@command > 0, 1, 0) + if(@consort > 0, 1, 0) + if(@sway > 0, 1, 0)"
             }
           },
           {
@@ -355,14 +355,14 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@rating > 0 и сколько(@бросок.dice.rolls, 6) >= 2"
+              "expr": "@rating > 0 and count(@бросок.dice.rolls, 6) >= 2"
             }
           },
           {
             "type": "table",
             "table": "crit",
             "value": {
-              "expr": "сколько(@бросок.dice.rolls, 6)"
+              "expr": "count(@бросок.dice.rolls, 6)"
             }
           },
           {
@@ -381,7 +381,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "меньшее из(8, @стол.alarm + 1)"
+              "expr": "min(8, @стол.alarm + 1)"
             }
           },
           {
@@ -397,7 +397,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "меньшее из(8, @стол.alarm + 2)"
+              "expr": "min(8, @стол.alarm + 2)"
             }
           },
           {
@@ -425,7 +425,7 @@
               "expr": "\"нулевой\""
             },
             "if": {
-              "expr": "@бросающий == @носитель и @число == 0"
+              "expr": "@бросающий == @носитель and @число == 0"
             }
           },
           {
@@ -440,7 +440,7 @@
               "expr": "1"
             },
             "if": {
-              "expr": "@бросающий == @носитель и @число == 0"
+              "expr": "@бросающий == @носитель and @число == 0"
             }
           },
           {

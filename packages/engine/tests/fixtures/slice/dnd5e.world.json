@@ -63,42 +63,42 @@
             "key": "str_mod",
             "label": "Модификатор Силы",
             "expr": {
-              "expr": "округлить вниз((#str - 10) / 2)"
+              "expr": "floor((#str - 10) / 2)"
             }
           },
           {
             "key": "dex_mod",
             "label": "Модификатор Ловкости",
             "expr": {
-              "expr": "округлить вниз((#dex - 10) / 2)"
+              "expr": "floor((#dex - 10) / 2)"
             }
           },
           {
             "key": "con_mod",
             "label": "Модификатор Телосложения",
             "expr": {
-              "expr": "округлить вниз((#con - 10) / 2)"
+              "expr": "floor((#con - 10) / 2)"
             }
           },
           {
             "key": "int_mod",
             "label": "Модификатор Интеллекта",
             "expr": {
-              "expr": "округлить вниз((#int - 10) / 2)"
+              "expr": "floor((#int - 10) / 2)"
             }
           },
           {
             "key": "wis_mod",
             "label": "Модификатор Мудрости",
             "expr": {
-              "expr": "округлить вниз((#wis - 10) / 2)"
+              "expr": "floor((#wis - 10) / 2)"
             }
           },
           {
             "key": "cha_mod",
             "label": "Модификатор Харизмы",
             "expr": {
-              "expr": "округлить вниз((#cha - 10) / 2)"
+              "expr": "floor((#cha - 10) / 2)"
             }
           },
           {
@@ -117,7 +117,7 @@
             "key": "prof_bonus",
             "label": "Бонус мастерства",
             "expr": {
-              "expr": "таблица(\"proficiency\", #level)"
+              "expr": "table(\"proficiency\", #level)"
             }
           },
           {
@@ -406,7 +406,7 @@
             "key": "ac",
             "label": "Класс брони",
             "expr": {
-              "expr": "@ac_base + если(@armor_heavy, 0, @dex_mod)"
+              "expr": "@ac_base + if(@armor_heavy, 0, @dex_mod)"
             }
           },
           {
@@ -892,7 +892,7 @@
               "expr": "@damage_dice"
             },
             "times": {
-              "expr": "если((@hit_бросок.natural >= 20), 2, 1)"
+              "expr": "if((@hit_бросок.natural >= 20), 2, 1)"
             },
             "bonus": {
               "expr": "@действующий.str_mod"
@@ -916,7 +916,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "не @hit.success"
+              "expr": "not @hit.success"
             }
           },
           {
@@ -969,7 +969,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "не @check.success"
+              "expr": "not @check.success"
             }
           },
           {
@@ -1146,7 +1146,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "не @check.success"
+              "expr": "not @check.success"
             }
           },
           {
@@ -1262,7 +1262,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "не @check.success"
+              "expr": "not @check.success"
             }
           },
           {
@@ -1338,7 +1338,7 @@
           {
             "type": "roll",
             "die": {
-              "expr": "1к10"
+              "expr": "1d10"
             },
             "id": "dmg"
           },
@@ -1359,7 +1359,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "не @hit.success"
+              "expr": "not @hit.success"
             }
           },
           {
@@ -1414,7 +1414,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "не @check.success"
+              "expr": "not @check.success"
             }
           },
           {
@@ -1505,7 +1505,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "не @check.success"
+              "expr": "not @check.success"
             }
           },
           {
@@ -1620,7 +1620,7 @@
             "id": "dmg",
             "type": "roll",
             "fixed": {
-              "expr": "если(@save.success, округлить вниз((@dmg_всего) * (0.5)), @dmg_всего)"
+              "expr": "if(@save.success, floor((@dmg_всего) * (0.5)), @dmg_всего)"
             }
           },
           {
@@ -1666,7 +1666,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "не @check.success"
+              "expr": "not @check.success"
             }
           },
           {
@@ -1889,7 +1889,7 @@
             "param": "bonus",
             "op": "add",
             "die": {
-              "expr": "1к4"
+              "expr": "1d4"
             },
             "if": {
               "expr": "@бросающий == @носитель"
@@ -1912,7 +1912,7 @@
           {
             "on": "before:атака",
             "if": {
-              "expr": "@цель == @носитель и @hit.success"
+              "expr": "@цель == @носитель and @hit.success"
             },
             "confirm": true,
             "cost": [
@@ -1935,7 +1935,7 @@
               {
                 "type": "branch",
                 "if": {
-                  "expr": "не @check.success"
+                  "expr": "not @check.success"
                 }
               },
               {
@@ -2010,7 +2010,7 @@
           {
             "on": "seen",
             "if": {
-              "expr": "@бросающий == @носитель и @носитель.inspiration > 0"
+              "expr": "@бросающий == @носитель and @носитель.inspiration > 0"
             },
             "confirm": true,
             "steps": [
@@ -2087,7 +2087,7 @@
             "param": "edits",
             "edit": "disadvantage",
             "if": {
-              "expr": "@бросающий == @носитель и @носитель.armor_heavy"
+              "expr": "@бросающий == @носитель and @носитель.armor_heavy"
             }
           }
         ],
@@ -2111,7 +2111,7 @@
             "param": "edits",
             "edit": "advantage",
             "if": {
-              "expr": "@бросающий == @носитель и @носитель.prof_bonus >= 4"
+              "expr": "@бросающий == @носитель and @носитель.prof_bonus >= 4"
             }
           }
         ],
@@ -2132,13 +2132,13 @@
           {
             "on": "after:strike",
             "if": {
-              "expr": "@цель == @носитель и @hit.success и не пусто(@действующий)"
+              "expr": "@цель == @носитель and @hit.success and not empty(@действующий)"
             },
             "steps": [
               {
                 "type": "roll",
                 "die": {
-                  "expr": "1к4"
+                  "expr": "1d4"
                 },
                 "id": "back"
               },
@@ -2181,7 +2181,7 @@
           {
             "on": "moment:turn-start",
             "if": {
-              "expr": "@ходит == @носитель и @носитель.hp_current <= 0"
+              "expr": "@ходит == @носитель and @носитель.hp_current <= 0"
             },
             "steps": [
               {
@@ -2228,7 +2228,7 @@
               {
                 "type": "branch",
                 "if": {
-                  "expr": "не @спас.success"
+                  "expr": "not @спас.success"
                 }
               },
               {
@@ -2386,7 +2386,7 @@
           {
             "on": "after:damage",
             "if": {
-              "expr": "@лист == @носитель и не пусто(@источник)"
+              "expr": "@лист == @носитель and not empty(@источник)"
             },
             "confirm": true,
             "cost": [
@@ -2409,7 +2409,7 @@
               {
                 "type": "branch",
                 "if": {
-                  "expr": "не @check.success"
+                  "expr": "not @check.success"
                 }
               },
               {
@@ -2464,7 +2464,7 @@
               {
                 "type": "roll",
                 "die": {
-                  "expr": "2к10"
+                  "expr": "2d10"
                 },
                 "id": "dmg_всего"
               },
@@ -2472,7 +2472,7 @@
                 "id": "dmg",
                 "type": "roll",
                 "fixed": {
-                  "expr": "если(@save.success, округлить вниз((@dmg_всего) * (0.5)), @dmg_всего)"
+                  "expr": "if(@save.success, floor((@dmg_всего) * (0.5)), @dmg_всего)"
                 }
               },
               {
@@ -2519,7 +2519,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "да"
+                  "expr": "true"
                 }
               },
               {
@@ -2564,7 +2564,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "нет"
+                  "expr": "false"
                 }
               }
             ]
@@ -3141,7 +3141,7 @@
             "target": "armor_heavy",
             "op": "set",
             "value": {
-              "expr": "да"
+              "expr": "true"
             }
           }
         ],

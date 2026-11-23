@@ -48,7 +48,7 @@ group('степени успеха', () => {
     steps: [
       { id: 'move_бросок', type: 'roll', die: 'пара', bonus: { expr: '0' }, tags: ['ход'], by: { expr: '@действующий' } },
       { id: 'move', type: 'check', value: { expr: '@move_бросок' }, versus: { expr: '7' }, degrees: { table: 'исходы', of: 'total' } },
-      { type: 'branch', if: { expr: 'не @move.success' } }, { type: 'stop' }, { type: 'end' },
+      { type: 'branch', if: { expr: 'not @move.success' } }, { type: 'stop' }, { type: 'end' },
     ],
   };
 
@@ -169,7 +169,7 @@ group('правка одной части составного броска', ()
 group('ступени «Проверки» списком учитывают правку «повысить/понизить степень»', () => {
   const sys: any = {
     id: 'ход', name: 'ход',
-    constants: { пара: { label: '2к6', kind: 'die', dice: [{ count: 2, sides: 6 }] } },
+    constants: { пара: { label: '2d6', kind: 'die', dice: [{ count: 2, sides: 6 }] } },
     tables: { лист: { shape: 'single', owner: 'sheet', columns: [{ key: 'хп', label: 'Хиты', kind: 'number', default: 10 }] }, приём: { shape: 'book', use: 'action', label: 'Приём' } },
     roll_edits: { кураж: { label: 'Кураж', ops: [{ op: 'shiftDegree', by: 1 }] } },
     effects: {
@@ -179,7 +179,7 @@ group('ступени «Проверки» списком учитывают п�
         { id: 'ход', type: 'check', value: { expr: '@бросок' }, versus: { expr: '7' }, degrees: [
           { label: 'с запасом', if: { expr: '@степени >= 1' } },
           { label: 'впритык', if: { expr: '@успех' } },
-          { label: 'мимо', if: { expr: 'да' } },
+          { label: 'мимо', if: { expr: 'true' } },
         ] },
       ] },
       кураж: { label: 'кураж', activation: 'passive', duration: { kind: 'permanent' }, modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['ход'], if: { expr: '@бросающий == @носитель' }, edit: 'кураж' }] },

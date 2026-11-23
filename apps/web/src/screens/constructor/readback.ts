@@ -4,7 +4,7 @@ import type { System, Effect, Step, SystemConstant } from '@vtt/schema';
 import { labelOfTag, formulaAsLabels } from '../../ui/formula.tsx';
 import { formulaWords } from '../../ui/formula-words.ts';
 import { plural } from '../../ui/plural.ts';
-import { dice as diceText, asDice, DIE_LETTER } from '../../words.ts';
+import { diceSaid as diceText, asDice, DIE_LETTER } from '../../words.ts';
 
 
 export type Segment = { text: string } | { hole: string };

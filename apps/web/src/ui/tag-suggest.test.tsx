@@ -8,7 +8,7 @@ describe('matchTagQuery', () => {
 
   it('без собаки запрос — слово перед кареткой, с первой буквы', () => {
     expect(matchTagQuery('1d20 + сил', 10)).toEqual({ at: 7, needle: 'сил' });
-    expect(matchTagQuery('если(', 5)).toBeNull();
+    expect(matchTagQuery('if(', 5)).toBeNull();
     expect(matchTagQuery('1d20 + 5', 8)).toBeNull();
   });
 

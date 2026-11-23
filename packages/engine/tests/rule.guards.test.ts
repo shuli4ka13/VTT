@@ -43,7 +43,7 @@ const saveCheck = { id: 'спас', type: 'check', value: { expr: '@спас_б�
 group('ветвление по исходу: блоки «Если» / «Иначе»', () => {
   const halfOnSave = [
     save, saveCheck,
-    { type: 'branch', if: { expr: 'не @спас.success' } },
+    { type: 'branch', if: { expr: 'not @спас.success' } },
     { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '8' } },
     { type: 'orElse' },
     { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '4' } },

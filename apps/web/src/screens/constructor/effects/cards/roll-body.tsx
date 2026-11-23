@@ -6,6 +6,7 @@ import { useFormulaBar } from '../../../../store/formula-bar.ts';
 import { sheetChoices } from '../../slots.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import { loneSheet } from '../../sheet-pick.tsx';
+import { shownFormula } from '../../../../ui/formula-lang.ts';
 import type { EditFn } from '../words.ts';
 import { Extras } from './extras.tsx';
 import { SlotFormula } from './die-pick.tsx';
@@ -57,7 +58,7 @@ export function RollBody({ step, context, edit, takenNames, onRename }: {
   const stray = who !== '' && !sheets.some(([value]) => value === who);
   const people: (readonly [string, string])[] = [
     ...(who === '' && fielded ? [['', 'кто бросает?'] as const] : []),
-    ...(stray ? [[who, `${loneSheet({ expr: who }) || who} — такого листа здесь нет`] as const] : []),
+    ...(stray ? [[who, `${loneSheet({ expr: who }) || shownFormula(who)} — такого листа здесь нет`] as const] : []),
     ...sheets,
     ...(fielded ? [] : [['', NOBODY] as const]),
   ];

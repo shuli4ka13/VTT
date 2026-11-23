@@ -23,11 +23,11 @@ const errors = (sys: System): string[] => lintSystem(sys).filter(one => one.leve
 group('«Проблемы» ловят опечатку в итоге шага', () => {
   test('после «Броска» и «Проверки» — имя, которого у шага нет', () => {
     eq(errors(system('@бросок.natual')).includes('у шага «бросок» нет итога «natual» — после «бросок» выберите итог из списка'), true);
-    eq(errors(system('если(@итог.sucess, 5, 0)')).some(text => text.includes('у шага «итог» нет итога «sucess»')), true);
+    eq(errors(system('if(@итог.sucess, 5, 0)')).some(text => text.includes('у шага «итог» нет итога «sucess»')), true);
   });
 
   test('настоящие итоги — без находок', () => {
-    for (const ok of ['@бросок.natural', '@бросок.total', 'сколько(@бросок.dice.rolls, 6)', '@итог.margin', 'если(@итог.success, @итог.total, 0)']) {
+    for (const ok of ['@бросок.natural', '@бросок.total', 'count(@бросок.dice.rolls, 6)', '@итог.margin', 'if(@итог.success, @итог.total, 0)']) {
       deepEq(errors(system(ok)), [], ok);
     }
   });

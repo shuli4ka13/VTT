@@ -22,8 +22,6 @@ const PUNCT: Record<string, TokenType> = {
   '(': 'lparen', ')': 'rparen', ',': 'comma',
 };
 
-export const PHRASES = ['округлить вниз', 'округлить вверх', 'большее из', 'меньшее из', 'максимум костей'];
-
 export interface LexWords { functions: Record<string, string>; dieLetters: string }
 
 function phraseAt(src: string, at: number, phrases: readonly string[]): string | null {
@@ -44,8 +42,8 @@ const isNamePart = (ch: string) => /[\p{L}\p{N}_.]/u.test(ch);
 
 export function lex(source: unknown, words?: LexWords): Token[] {
   const src = String(source ?? '');
-  const phrases = words ? Object.values(words.functions).filter(name => name.includes(' ')) : PHRASES;
-  const letters = words?.dieLetters ?? 'dдк';
+  const phrases = words ? Object.values(words.functions).filter(name => name.includes(' ')) : [];
+  const letters = words?.dieLetters ?? 'd';
   const isDieLetter = (ch: string) => letters.includes(ch.toLowerCase());
   const tokens: Token[] = [];
   let i = 0;

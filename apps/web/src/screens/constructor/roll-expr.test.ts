@@ -10,12 +10,12 @@ const system = {
 
 describe('parseRollExpr', () => {
   it('кость из словаря становится ссылкой на константу', () => {
-    expect(parseRollExpr('1к20 + #бонус_атаки', system))
+    expect(parseRollExpr('1d20 + #бонус_атаки', system))
       .toEqual({ die: 'lead', bonus: { expr: '#бонус_атаки' } });
   });
 
   it('чужая кость — литералом, число — числом', () => {
-    expect(parseRollExpr('2к6 + 3', system))
+    expect(parseRollExpr('2d6 + 3', system))
       .toEqual({ die: { expr: '"2d6"' }, bonus: { expr: '3' } });
   });
 
@@ -72,7 +72,7 @@ describe('formatRollExpr', () => {
   });
 
   it('набранная прибавка остаётся формулой — даже одно имя', () => {
-    expect(parseRollExpr('1к20 + @attack_with', system, null).bonus).toEqual({ expr: '@attack_with' });
-    expect(parseRollExpr('1к20 + @attack_with + 2', system, null).bonus).toEqual({ expr: '@attack_with + 2' });
+    expect(parseRollExpr('1d20 + @attack_with', system, null).bonus).toEqual({ expr: '@attack_with' });
+    expect(parseRollExpr('1d20 + @attack_with + 2', system, null).bonus).toEqual({ expr: '@attack_with + 2' });
   });
 });

@@ -53,15 +53,15 @@ group('парсер', () => {
   });
 
   test('вызов функции с одним аргументом', () => {
-    eq(sexp(parse('округлить вниз(1.5)')), '(округлить вниз 1.5)');
+    eq(sexp(parse('floor(1.5)')), '(floor 1.5)');
   });
 
   test('вызов функции с двумя аргументами', () => {
-    eq(sexp(parse('большее из(1, 2)')), '(большее из 1 2)');
+    eq(sexp(parse('max(1, 2)')), '(max 1 2)');
   });
 
   test('вложенные вызовы', () => {
-    eq(sexp(parse('округлить вниз(меньшее из(#str, 20) / 2)')), '(округлить вниз (/ (меньшее из #str 20) 2))');
+    eq(sexp(parse('floor(min(#str, 20) / 2)')), '(floor (/ (min #str 20) 2))');
   });
 
   test('сравнение слабее сложения', () => {
@@ -69,19 +69,19 @@ group('парсер', () => {
   });
 
   test('«если» выбирает из двух', () => {
-    eq(sexp(parse('если(@heavy, 0, @dex_mod)')), '(if #heavy 0 #dex_mod)');
+    eq(sexp(parse('if(@heavy, 0, @dex_mod)')), '(if #heavy 0 #dex_mod)');
   });
 
   test('условие «если» — любое сравнение', () => {
-    eq(sexp(parse('если(@lvl >= 5, 3, 2)')), '(if (>= #lvl 5) 3 2)');
+    eq(sexp(parse('if(@lvl >= 5, 3, 2)')), '(if (>= #lvl 5) 3 2)');
   });
 
   test('«если» вкладывается', () => {
-    eq(sexp(parse('если(1, 2, если(3, 4, 5))')), '(if 1 2 (if 3 4 5))');
+    eq(sexp(parse('if(1, 2, if(3, 4, 5))')), '(if 1 2 (if 3 4 5))');
   });
 
   test('формула модификатора из 5e разбирается целиком', () => {
-    eq(sexp(parse('округлить вниз((#str - 10) / 2)')), '(округлить вниз (/ (- #str 10) 2))');
+    eq(sexp(parse('floor((#str - 10) / 2)')), '(floor (/ (- #str 10) 2))');
   });
 
   group('ошибки', () => {
@@ -104,11 +104,11 @@ group('парсер', () => {
     });
 
     test('«если» без ветки «иначе»', () => {
-      throws(() => parse('если(1, 2)'), FormulaSyntaxError, 'три части');
+      throws(() => parse('if(1, 2)'), FormulaSyntaxError, 'три части');
     });
 
     test('пустой аргумент в вызове', () => {
-      throws(() => parse('большее из(1, )'), FormulaSyntaxError);
+      throws(() => parse('max(1, )'), FormulaSyntaxError);
     });
 
     test('цепочка сравнений запрещена — она читается неоднозначно', () => {
@@ -119,15 +119,15 @@ group('парсер', () => {
 
 group('парсер: запись кости без кавычек', () => {
   test('кость — текст с признаком кости', () => {
-    deepEq(parse('к4'), { kind: 'Text', value: '1к4', at: 0, raw: 'к4', dice: true });
+    deepEq(parse('d4'), { kind: 'Text', value: '1d4', at: 0, raw: 'd4', dice: true });
   });
 
   test('кость в вызове и в колонке по значению', () => {
-    eq(sexp(parse('кинуть(2к6, 2)')), '(кинуть ?Text 2)');
-    eq(parse('@x.[к4].y').kind, 'Pick');
+    eq(sexp(parse('roll(2d6, 2)')), '(roll ?Text 2)');
+    eq(parse('@x.[d4].y').kind, 'Pick');
   });
 
   test('после кости вызов не открывается', () => {
-    throws(() => parse('к4(1)'), FormulaSyntaxError);
+    throws(() => parse('d4(1)'), FormulaSyntaxError);
   });
 });

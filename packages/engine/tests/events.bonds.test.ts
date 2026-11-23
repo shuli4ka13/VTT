@@ -96,12 +96,12 @@ group('держание с условием: концентрация — гал
   const cast = (s: System) => exchange({ system: s, compendium, die: () => 1, sheets: [sheet('жрец'), sheet('воин')], actionId: 'молитва:0', fromId: 'жрец', toId: 'воин' });
 
   test('держится — наложенное связано с заклинателем', () => {
-    const out = cast(held('да'));
+    const out = cast(held('true'));
     deepEq(out.sheets.find(s => s.id === 'воин')!.effects![0]!.bond, { sheet: 'жрец', effect: 'благословение' });
   });
 
   test('не держится — наложено без связи, заклинателю пометки нет', () => {
-    const out = cast(held('нет'));
+    const out = cast(held('false'));
     eq(out.sheets.find(s => s.id === 'воин')!.effects![0]!.bond, undefined);
     eq((out.sheets.find(s => s.id === 'жрец')!.effects ?? []).length, 0);
   });

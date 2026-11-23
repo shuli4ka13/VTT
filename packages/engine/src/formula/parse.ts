@@ -2,14 +2,16 @@ import { lex } from './lex.ts';
 import type { Token, TokenType } from './lex.ts';
 import type { Node } from './ast.ts';
 import { FormulaSyntaxError } from './errors.ts';
+import { NEUTRAL_WORDS } from './words.ts';
 
-export const BOOLEANS: Record<string, boolean> = { да: true, нет: false };
+export const BOOLEANS: Record<string, boolean> = { true: true, false: false };
 
 const COMPARISON_OPS = ['==', '!=', '<', '<=', '>', '>='];
 
-export const AND = 'и';
-export const OR = 'или';
-export const NOT = 'не';
+export const AND = 'and';
+export const OR = 'or';
+export const NOT = 'not';
+export const IF = 'if';
 
 const MISPLACED: Record<string, string> = {
   [AND]: '«и» ставится между двумя условиями: а и б',
@@ -18,7 +20,7 @@ const MISPLACED: Record<string, string> = {
 };
 
 export function parse(source: unknown): Node {
-  const tokens = lex(source);
+  const tokens = lex(source, NEUTRAL_WORDS);
   let i = 0;
 
   const peek = (): Token => tokens[i]!;
@@ -136,7 +138,7 @@ export function parse(source: unknown): Node {
       }
       if (!at('rparen')) throw new FormulaSyntaxError('не закрыта скобка вызова функции', peek().pos);
       advance();
-      if (t.value === 'если') {
+      if (t.value === IF) {
         if (args.length !== 3) throw new FormulaSyntaxError('«если» ждёт три части: условие, что если да, что если нет', t.pos);
         return { kind: 'Conditional', test: args[0]!, then: args[1]!, otherwise: args[2]! };
       }

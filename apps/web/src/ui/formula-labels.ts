@@ -29,7 +29,7 @@ export function formulaAsLabels(
   source: string,
   names?: ReadonlyMap<string, string>,
 ): string {
-  const lookups = source.replace(/таблица\(\s*(["'])([^"']*)\1\s*,([^,()]*(?:\([^()]*\)[^,()]*)*)(?:,\s*(["'])([^"']*)\4)?\s*\)/gu,
+  const lookups = source.replace(/(?:таблица|table)\(\s*(["'])([^"']*)\1\s*,([^,()]*(?:\([^()]*\)[^,()]*)*)(?:,\s*(["'])([^"']*)\4)?\s*\)/gu,
     (whole, _q, table: string, arg: string, _q2, column?: string) => {
       const found = system.tables?.[table];
       if (!found) return whole;

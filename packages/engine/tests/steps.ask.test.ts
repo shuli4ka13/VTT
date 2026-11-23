@@ -96,7 +96,7 @@ group('шаг «Спросить»', () => {
 
   test('в плате: «нет» — действие не состоялось', () => {
     const system = world({
-      cost: [{ ...ASK, label: 'Разрешить?', yes: 'да', no: 'нет' }, { type: 'branch', if: { expr: 'не(@решение)' } }, { type: 'stop' }, { type: 'end' }],
+      cost: [{ ...ASK, label: 'Разрешить?', yes: 'да', no: 'нет' }, { type: 'branch', if: { expr: 'not(@решение)' } }, { type: 'stop' }, { type: 'end' }],
       steps: [EACH, hit(5)],
     });
     eq(play(system).kind, 'paused');
@@ -146,7 +146,7 @@ group('шаг «Спросить»', () => {
     const errors = (system: System) => lintSystem(system).filter(one => one.level === 'error').map(one => one.text);
     const warns = (system: System) => lintSystem(system).filter(one => one.level === 'warn').map(one => one.text);
     ok(errors(world({ steps: [EACH, { ...ASK, label: '  ' }, ...byAnswer] })).some(text => text.includes('не вписан вопрос')));
-    const paid = world({ cost: [ASK, { type: 'branch', if: { expr: 'не(@решение)' } }, { type: 'stop' }, { type: 'end' }], steps: [EACH, hit(5)] });
+    const paid = world({ cost: [ASK, { type: 'branch', if: { expr: 'not(@решение)' } }, { type: 'stop' }, { type: 'end' }], steps: [EACH, hit(5)] });
     eq(errors(paid).length, 0);
     ok(!warns(paid).some(text => text.includes('не плата')));
     const hung = (handler: Record<string, unknown>) => world({ steps: [EACH, hit(5)] }, { щит: { label: 'Щит', activation: 'passive', on: [handler] } });

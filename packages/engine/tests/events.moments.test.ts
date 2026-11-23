@@ -63,7 +63,7 @@ group('шина моментов', () => {
 
   test('условие на срабатывании проверяется', () => {
     const picky = structuredClone(system) as System;
-    (picky.effects.отравление as Effect).on![0]!.if = { expr: '@ходит == @носитель и @носитель.яд' };
+    (picky.effects.отравление as Effect).on![0]!.if = { expr: '@ходит == @носитель and @носитель.яд' };
     const ctx = { ...world, system: picky };
     eq(fireMoments([{ moment: 'turn-start', sheetId: 'а' }], [sheet(['отравление'])], ctx as never)
       .sheets[0]!.values.хиты, 20, 'яда нет — молчит');

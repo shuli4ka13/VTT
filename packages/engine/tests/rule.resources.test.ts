@@ -25,12 +25,12 @@ const system = {
       steps: [
         { type: 'branch', if: { expr: '@круг == 1' } },
         { id: 'есть_1', type: 'check', value: { expr: '@лист.ячейки_1' }, versus: { expr: '1' } },
-        { type: 'branch', if: { expr: 'не @есть_1.success' } }, { type: 'stop', note: { expr: '"не хватает ячейки 1-го круга"' } }, { type: 'end' },
+        { type: 'branch', if: { expr: 'not @есть_1.success' } }, { type: 'stop', note: { expr: '"не хватает ячейки 1-го круга"' } }, { type: 'end' },
         { type: 'apply', target: { expr: '@лист.ячейки_1' }, direction: 'subtract', value: { expr: '1' } },
         { type: 'end' },
         { type: 'branch', if: { expr: '@круг == 2' } },
         { id: 'есть_2', type: 'check', value: { expr: '@лист.ячейки_2' }, versus: { expr: '1' } },
-        { type: 'branch', if: { expr: 'не @есть_2.success' } }, { type: 'stop', note: { expr: '"не хватает ячейки 2-го круга"' } }, { type: 'end' },
+        { type: 'branch', if: { expr: 'not @есть_2.success' } }, { type: 'stop', note: { expr: '"не хватает ячейки 2-го круга"' } }, { type: 'end' },
         { type: 'apply', target: { expr: '@лист.ячейки_2' }, direction: 'subtract', value: { expr: '1' } },
         { type: 'end' },
       ],
@@ -50,7 +50,7 @@ const system = {
       params: [ACTOR, TARGETS],
       steps: [
         EACH,
-        { id: 'урон', type: 'roll', die: { expr: '1d6' }, times: { expr: 'округлить вверх(@действующий.уровень / 2)' } },
+        { id: 'урон', type: 'roll', die: { expr: '1d6' }, times: { expr: 'ceil(@действующий.уровень / 2)' } },
         { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '@урон' } },
       ],
     },
@@ -240,7 +240,7 @@ group('наложенное помнит число, штрафная кость
       { key: 'крит_от', label: 'Крит от', kind: 'number', default: 19 },
       { key: 'заряды', label: 'Заряды', kind: 'number', default: 1, min: 0 },
     ] }, rolls: { label: 'Броски', key: 'word', rows: [{ value: 'атака' }] } , а: { shape: 'book', use: 'action', label: 'А', columns: [], bindings: [{ label: 'Поджечь', effect: 'поджечь', args: {} }] }, б: { shape: 'book', use: 'action', label: 'Б', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
-    roll_edits: { порча: { label: 'Порча', ops: [{ op: 'plus', die: '1к4', minus: true }] } },
+    roll_edits: { порча: { label: 'Порча', ops: [{ op: 'plus', die: '1d4', minus: true }] } },
     effects: {
       горит: {
         label: 'Горит', activation: 'passive', params: [{ key: 'сила', label: 'Сила', kind: 'number', optional: true }],
@@ -254,8 +254,8 @@ group('наложенное помнит число, штрафная кость
           EACH,
           { id: 'hit_бросок', type: 'roll', die: 'к20', tags: ['атака'], by: { expr: '@действующий' } },
           { id: 'hit', type: 'check', value: { expr: '@hit_бросок' }, versus: { expr: '@цель.кд' } },
-          { type: 'branch', if: { expr: 'не @hit.success' } }, { type: 'stop' }, { type: 'end' },
-          { id: 'dmg', type: 'roll', die: { expr: '1d6' }, times: { expr: 'если(@hit.natural >= @действующий.крит_от, 2, 1)' } },
+          { type: 'branch', if: { expr: 'not @hit.success' } }, { type: 'stop' }, { type: 'end' },
+          { id: 'dmg', type: 'roll', die: { expr: '1d6' }, times: { expr: 'if(@hit.natural >= @действующий.крит_от, 2, 1)' } },
           { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '@dmg' } },
         ],
       },
@@ -263,7 +263,7 @@ group('наложенное помнит число, штрафная кость
         label: 'Парирование', activation: 'passive',
         on: [{ on: 'before:удар', if: { expr: '@цель == @носитель' }, confirm: true, cost: [
           { id: 'есть_заряд', type: 'check', value: { expr: '@носитель.заряды' }, versus: { expr: '1' } },
-          { type: 'branch', if: { expr: 'не @есть_заряд.success' } }, { type: 'stop' }, { type: 'end' },
+          { type: 'branch', if: { expr: 'not @есть_заряд.success' } }, { type: 'stop' }, { type: 'end' },
           { type: 'apply', target: { expr: '@носитель.заряды' }, direction: 'subtract', value: { expr: '1' } },
         ], steps: [] }],
       },

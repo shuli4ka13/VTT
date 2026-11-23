@@ -27,9 +27,9 @@ describe('одно поле меток', () => {
     let got: TagValue[] = [];
     render(<TagsField system={system} value={[]} computed onChange={next => { got = next; }} />);
     pickCombo(add(), ':формула');
-    fireEvent.change(screen.getByPlaceholderText(/если\(рейтинг/), { target: { value: 'если(@rating == 0, "нулевой", "")' } });
+    fireEvent.change(screen.getByPlaceholderText(/если\(рейтинг/), { target: { value: 'if(@rating == 0, "нулевой", "")' } });
     fireEvent.click(screen.getByText('добавить'));
-    expect(got).toEqual([{ expr: 'если(@rating == 0, "нулевой", "")' }]);
+    expect(got).toEqual([{ expr: 'if(@rating == 0, "нулевой", "")' }]);
     cleanup();
     render(<TagsField system={system} value={[]} onChange={() => {}} />);
     expect(comboOptions(add()).some(o => o.value === ':формула')).toBe(false);

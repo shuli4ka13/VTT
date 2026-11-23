@@ -30,7 +30,7 @@ const rule: any = {
     { type: 'each', of: 'цели' },
     { id: 'try_бросок', type: 'roll', die: 'pool_die', bonus: { expr: '0' }, by: { expr: '@действующий' } },
     { id: 'try', type: 'check', value: { expr: '@try_бросок' }, versus: { expr: '2' } },
-    { type: 'branch', if: { expr: 'не @try.success' } }, { type: 'stop' }, { type: 'end' },
+    { type: 'branch', if: { expr: 'not @try.success' } }, { type: 'stop' }, { type: 'end' },
   ],
 };
 

@@ -5,7 +5,7 @@ import type { System, Sheet, Compendium } from '../src/model/types.ts';
 const ACTOR = { key: 'действующий', label: 'Кто действует', kind: 'sheet' };
 const TARGETS = { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель' } };
 const EACH = { type: 'each', of: 'цели' };
-const roll = (id: string, tags: string[]) => ({ id, type: 'roll', die: { expr: '1к6' }, by: { expr: '@действующий' }, tags });
+const roll = (id: string, tags: string[]) => ({ id, type: 'roll', die: { expr: '1d6' }, by: { expr: '@действующий' }, tags });
 
 const world = (word: Record<string, unknown>, steps: unknown[], listen = false): System => ({
   id: 'раз', name: 'Раз',

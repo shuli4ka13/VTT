@@ -23,8 +23,8 @@ const system = flattenSystem({
 } as unknown as System);
 
 const book = { records: [
-  { id: 'кинжал', table: 'оружие', label: 'Кинжал', cells: { кость: '1к4' } },
-  { id: 'меч', table: 'оружие', label: 'Меч', cells: { кость: '1к8' } },
+  { id: 'кинжал', table: 'оружие', label: 'Кинжал', cells: { кость: '1d4' } },
+  { id: 'меч', table: 'оружие', label: 'Меч', cells: { кость: '1d8' } },
 ] } as unknown as Compendium;
 
 const hero = { id: 'г', systemId: 'с', name: 'Герой', values: {}, has: [{ of: 'кинжал' }, { of: 'меч' }], effects: [] } as unknown as Sheet;

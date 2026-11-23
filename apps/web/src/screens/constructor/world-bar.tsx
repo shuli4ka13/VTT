@@ -10,6 +10,7 @@ import { GuideButton } from '../../guide/guide-card.tsx';
 import { pathWords } from './problems.ts';
 import { Tabs } from '../../ui/layout.tsx';
 import { FormulaBar } from '../../ui/formula-bar.tsx';
+import { useLocale } from '../../store/locale.ts';
 import { useFormulaBar } from '../../store/formula-bar.ts';
 import { TABS } from '../../words.ts';
 
@@ -36,6 +37,8 @@ export function SystemBar() {
   const saving = useAutosave(s => s.state);
   const tab = useWorld(s => s.activeTab);
   const pick = useWorld(s => s.pick);
+  const lang = useLocale(s => s.lang);
+  const setLang = useLocale(s => s.setLang);
   const setOrigin = useWorld(s => s.setOrigin);
 
   const [note, setNote] = useState<{ text: string; bad: boolean } | null>(null);
@@ -88,6 +91,8 @@ export function SystemBar() {
       >{PUBLICATION[origin.publication ?? 'draft']}</span> : null}
       {note ? <span className={`worldbar__note ${note.bad ? 'field__error' : 'muted'}`} title={note.text}>{note.text}</span> : null}
       <span className="muted">{name}</span>
+      <button type="button" className="worldbar__lang" title="письмо формул: по-русски или по-английски — данные от этого не меняются"
+        onClick={() => { useFormulaBar.getState().commit(); setLang(lang === 'ru' ? 'en' : 'ru'); }}>{lang === 'ru' ? 'формулы: рус' : 'formulas: en'}</button>
       <GuideButton />
       <span data-guide="problems"><ProblemsButton /></span>
       <Button size="sm" variant="primary" onClick={() => void publish()}

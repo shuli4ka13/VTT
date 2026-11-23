@@ -3,9 +3,10 @@ import type { ReactNode } from 'react';
 import type { System } from '@vtt/schema';
 import { matchTagQuery } from './tag-suggest.tsx';
 import { fieldPaths, sheetPathLabel } from './paths.ts';
-import { DESK_ID, fieldsOf, readableFields, hasField, fieldLinkOf, ROW, tagWords, typeColumns, callAt, partAt, functionSpec, FUNCTION_SPECS, AND, OR, NOT, BOOLEANS } from '@vtt/engine';
+import { DESK_ID, fieldsOf, readableFields, hasField, fieldLinkOf, ROW, tagWords, typeColumns, callAt, partAt, FUNCTION_SPECS } from '@vtt/engine';
 import type { FunctionSpec } from '@vtt/engine';
 import { plainLabel, pickTail } from './formula-labels.ts';
+import { formulaWords, useFormulaWords, shownFormula, storedFormula, functionIdOf, localName, localSpec } from './formula-lang.ts';
 import { tablesOf, choiceTableOf, rowLabelOf, picksOf } from './formula-words.ts';
 import { resolveNames, plain, NO_NAME } from './formula-resolve.ts';
 
@@ -51,7 +52,7 @@ function typedPath(text: string, caret: number): { base: string; at: number; nee
 
 export function lookupNames(system: System, value: string): Map<string, string> {
   const out = new Map<string, string>();
-  const call = /таблица\(\s*"([^"]+)"/gu;
+  const call = /(?:таблица|table)\(\s*"([^"]+)"/gu;
   for (const found of value.matchAll(call)) {
     const table = system.tables?.[found[1]!];
     if (!table) continue;
@@ -105,26 +106,34 @@ export function pickOptions(system: System, table: string | undefined): { tag: s
     })));
 }
 
-const fn = (name: string, open: string, close: string) => ({ label: name, hint: functionSpec(name)?.hint ?? '', open, close, word: true });
+interface Op { label: string; hint: string; open: string; close?: string; word?: boolean }
 
-const OPS: { label: string; hint: string; open: string; close?: string; word?: boolean }[] = [
-  { label: '+', hint: 'сложить', open: ' + ' },
-  { label: '−', hint: 'вычесть', open: ' - ' },
-  { label: '×', hint: 'умножить', open: ' * ' },
-  { label: '÷', hint: 'поделить', open: ' / ' },
-  { label: '( )', hint: 'скобки: что внутри — считается первым', open: '(', close: ')' },
-  fn('округлить вниз', 'округлить вниз(', ')'),
-  fn('округлить вверх', 'округлить вверх(', ')'),
-  fn('большее из', 'большее из(', ', )'),
-  fn('меньшее из', 'меньшее из(', ', )'),
-  fn('если', 'если(', ', , )'),
-  { label: 'и', hint: 'верно, только если верны обе части', open: ' и ', word: true },
-  { label: 'или', hint: 'первая часть, если она задана, иначе вторая: «класс или 1к8», «бой или реакция»', open: ' или ', word: true },
-  { label: 'не', hint: 'наоборот: «не пусто(…)» — задано', open: 'не ', word: true },
-  { ...fn('есть', 'есть(', ', "")'), label: 'есть в списке' },
-];
+const fn = (id: string, close: string): Op => {
+  const name = localName(id);
+  return { label: name, hint: localSpec(id)?.hint ?? '', open: `${name}(`, close, word: true };
+};
 
-const LOOKUP = 'таблица';
+const opsOf = (): Op[] => {
+  const words = formulaWords();
+  return [
+    { label: '+', hint: 'сложить', open: ' + ' },
+    { label: '−', hint: 'вычесть', open: ' - ' },
+    { label: '×', hint: 'умножить', open: ' * ' },
+    { label: '÷', hint: 'поделить', open: ' / ' },
+    { label: '( )', hint: 'скобки: что внутри — считается первым', open: '(', close: ')' },
+    fn('floor', ')'),
+    fn('ceil', ')'),
+    fn('max', ', )'),
+    fn('min', ', )'),
+    fn('if', ', , )'),
+    { label: words.and, hint: 'верно, только если верны обе части', open: ` ${words.and} `, word: true },
+    { label: words.or, hint: 'первая часть, если она задана, иначе вторая: «класс или 1к8», «бой или реакция»', open: ` ${words.or} `, word: true },
+    { label: words.not, hint: 'наоборот: «не пусто(…)» — задано', open: `${words.not} `, word: true },
+    { ...fn('has', ', "")'), label: words.functions.has === 'есть' ? 'есть в списке' : words.functions.has },
+  ];
+};
+
+const lookupWord = (): string => formulaWords().functions.table;
 
 const PICK = '[@#]([\\p{L}\\p{N}_]+(?:\\.[\\p{L}\\p{N}_]+)*)\\.\\[([^\\[\\]]*)\\]((?:\\.[\\p{L}\\p{N}_]+)*)';
 
@@ -155,6 +164,7 @@ const quoted = (arg: { start: number; text: string } | undefined): { at: number;
 
 export function lookupLits(system: System, value: string): Map<number, string> {
   const out = new Map<number, string>();
+  const LOOKUP = lookupWord();
   for (const found of value.matchAll(new RegExp(`${LOOKUP}\\(`, 'gu'))) {
     const args = lookupArgs(value, found.index! + LOOKUP.length);
     const table = quoted(args[0]);
@@ -170,7 +180,7 @@ export function lookupLits(system: System, value: string): Map<number, string> {
 
 const CHOICE_LITS = [
   /@([\p{L}\p{N}_.]+)\s*(?:==|!=)\s*(")/gu,
-  /есть\(\s*@([\p{L}\p{N}_.]+)\s*,\s*(")/gu,
+  /(?:есть|has)\(\s*@([\p{L}\p{N}_.]+)\s*,\s*(")/gu,
 ];
 
 export function choiceLits(system: System, value: string, tables?: ReadonlyMap<string, string>): Map<number, string> {
@@ -219,7 +229,10 @@ export function partsOf(value: string, known?: (tag: string) => boolean, lits?: 
   return out;
 }
 
-const KEYWORDS: string[] = [...FUNCTION_SPECS.map(spec => spec.name), AND, OR, NOT, ...Object.keys(BOOLEANS)];
+const keywords = (): string[] => {
+  const words = formulaWords();
+  return [...FUNCTION_SPECS.map(spec => localName(spec.name, words)), words.and, words.or, words.not, words.yes, words.no];
+};
 
 const rankOf = (f: { tag: string; label: string }, needle: string): number => {
   if (!needle) return 0;
@@ -282,7 +295,20 @@ export function namesOf(system: System, scope: { extraNames?: Map<string, string
   ];
 }
 
-export function FormulaChips({ value, onChange, onFinal, system, table, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, extraNames, badges, sheets, extraOptions, calculator, readOnly, autoFocus, onChipPick, whole, notes = true }: {
+export function FormulaChips(props: Parameters<typeof LocalChips>[0]) {
+  const words = useFormulaWords();
+  const { value, onChange, onFinal } = props;
+  return (
+    <LocalChips
+      {...props}
+      value={shownFormula(value, words)}
+      onChange={next => onChange(storedFormula(next, words))}
+      {...(onFinal ? { onFinal: (text: string) => onFinal(storedFormula(text, words)) } : {})}
+    />
+  );
+}
+
+function LocalChips({ value, onChange, onFinal, system, table, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, extraNames, badges, sheets, extraOptions, calculator, readOnly, autoFocus, onChipPick, whole, notes = true }: {
   value: string;
   onChange: (next: string) => void;
   system: System;
@@ -343,7 +369,8 @@ export function FormulaChips({ value, onChange, onFinal, system, table, placehol
   const signature = useMemo(() => {
     if (active === null || !parts[active] || !('text' in parts[active]!)) return null;
     const own = dot?.index === active ? dot.text : (parts[active] as { text: string }).text;
-    return callAt(`${joinParts(parts.slice(0, active))}${own.slice(0, caret)}`);
+    const found = callAt(`${joinParts(parts.slice(0, active))}${own.slice(0, caret)}`, formulaWords(), name => functionIdOf(name));
+    return found ? { ...found, spec: { ...found.spec, name: localName(found.spec.name) } } : null;
   }, [active, caret, parts, dot]);
   const menuRef = useRef<HTMLDivElement>(null);
   const focusOnce = useRef(Boolean(autoFocus));
@@ -480,7 +507,7 @@ export function FormulaChips({ value, onChange, onFinal, system, table, placehol
     ? (parts[active] as { text: string }).text[query.at] !== '@'
     : false;
   const words = query && bare && !dotted && !through
-    ? KEYWORDS.filter(word => query.needle !== '' && rankOf({ tag: '', label: word }, query.needle) < 1)
+    ? keywords().filter(word => query.needle !== '' && rankOf({ tag: '', label: word }, query.needle) < 1)
       .sort((a, b) => rankOf({ tag: '', label: a }, query.needle) - rankOf({ tag: '', label: b }, query.needle))
       .slice(0, 8)
     : [];
@@ -529,7 +556,7 @@ export function FormulaChips({ value, onChange, onFinal, system, table, placehol
     const part = parts[active] as { text: string };
     const before = part.text.slice(0, query.at);
     const after = part.text.slice(caret);
-    const piece = functionSpec(word) ? `${word}(` : `${word} `;
+    const piece = localSpec(word) ? `${word}(` : `${word} `;
     const text = before + piece + after;
     commitParts(parts.map((p, i) => (i === active ? { text } : p)), { index: active, caret: before.length + piece.length });
   };
@@ -578,7 +605,8 @@ export function FormulaChips({ value, onChange, onFinal, system, table, placehol
   };
 
 
-  const opButton = (op: typeof OPS[number]) => (
+  const OPS = opsOf();
+  const opButton = (op: Op) => (
     <button
       key={op.label} type="button"
       className={op.word ? 'chips__op chips__op--word' : 'chips__op'}

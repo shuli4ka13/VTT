@@ -23,7 +23,7 @@ const система = {
         { id: 'бросок', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
         {
           id: 'урон', type: 'roll', die: { expr: '@кость' },
-          times: { expr: 'если(@бросок.natural >= @действующий.порог, 2, 1)' },
+          times: { expr: 'if(@бросок.natural >= @действующий.порог, 2, 1)' },
           bonus: { expr: '@действующий.сила' },
         },
         { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '@урон' } },
@@ -34,7 +34,7 @@ const система = {
 } as unknown as System;
 
 const книга = {
-  records: [{ id: 'меч', table: 'оружие', label: 'Меч', cells: { кость: '1к8' } }],
+  records: [{ id: 'меч', table: 'оружие', label: 'Меч', cells: { кость: '1d8' } }],
 } as never;
 
 const лист = (порог: number) => ({
@@ -57,12 +57,12 @@ group('кость бросает шаг «Бросок»', () => {
   });
 
   test('«кинуть» в формуле узнаётся и отказывает словами про шаг «Бросок»', () => {
-    const беда = throws(() => compile('кинуть(1)').evaluate(() => 0));
+    const беда = throws(() => compile('roll(1)').evaluate(() => 0));
     ok(String(беда.message).includes('шаг «Бросок»'), String(беда.message));
   });
 
   test('«кинуть» с любыми аргументами — та же ошибка', () => {
-    const беда = throws(() => compile('кинуть(1, 2)').evaluate(() => 0));
+    const беда = throws(() => compile('roll(1, 2)').evaluate(() => 0));
     ok(String(беда.message).includes('шаг «Бросок»'), String(беда.message));
   });
 });

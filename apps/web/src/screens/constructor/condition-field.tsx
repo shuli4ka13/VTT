@@ -26,10 +26,10 @@ export function readyOf(quick: readonly QuickRef[], phrases: readonly Phrase[]):
   return [
     ...phrases.map(one => [one.expr, one.label] as const),
     ...quick.flatMap((one): (readonly [string, string])[] => {
-      if (one.kind === 'tags') return (one.tags ?? []).map(tag => [`есть(@${one.ref}, ${JSON.stringify(tag)})`, `${one.label}: «${tag}»`] as const);
+      if (one.kind === 'tags') return (one.tags ?? []).map(tag => [`has(@${one.ref}, ${JSON.stringify(tag)})`, `${one.label}: «${tag}»`] as const);
       if (one.kind !== 'boolean') return [];
       const [yes, no] = yesNo(one);
-      return [[`@${one.ref}`, yes] as const, [`не @${one.ref}`, no] as const];
+      return [[`@${one.ref}`, yes] as const, [`not @${one.ref}`, no] as const];
     }),
   ];
 }

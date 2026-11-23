@@ -79,7 +79,7 @@ export function typedChoices(system: System, names: readonly NameAt[], want: Wan
   }
   if (want.kind === 'sheet' && !want.many) {
     for (const list of names.filter(one => one.kind === 'sheet' && one.many)) {
-      out.push({ expr: `первый(@${list.name})`, label: `первый из «${list.label}»`, group: GROUP[list.group] });
+      out.push({ expr: `first(@${list.name})`, label: `первый из «${list.label}»`, group: GROUP[list.group] });
     }
   }
   if (want.kind !== 'sheet') {

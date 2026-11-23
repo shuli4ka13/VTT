@@ -12,7 +12,7 @@ const raw = {
   id: 'с', name: 'с',
   tables: {
     лист: { shape: 'single', owner: 'sheet', columns: [
-      { key: 'сущность', label: 'Сущность', expr: { expr: '6 - сумма(строки("имплант", "essence"))' } },
+      { key: 'сущность', label: 'Сущность', expr: { expr: '6 - sum(rows("имплант", "essence"))' } },
       { key: 'защита', label: 'Защита', kind: 'number', default: 0 },
       { key: 'сила', label: 'Сила', kind: 'number', default: 3 },
     ] },
@@ -40,7 +40,7 @@ const raw = {
     выстрел: { label: 'Выстрел', activation: 'manual', params: [ACTOR], steps: [
       { type: 'check', id: 'есть', value: { expr: '@вещь.ammo' }, versus: { expr: '1' }, successWhen: 'atLeast' },
       { type: 'apply', target: { expr: '@вещь.ammo' }, direction: 'subtract', value: { expr: '1' } },
-      { type: 'apply', target: { expr: '@действующий.защита' }, direction: 'set', value: { expr: '@вещь.ar + сумма(строки("мод", "ar_mod", @вещь))' } },
+      { type: 'apply', target: { expr: '@действующий.защита' }, direction: 'set', value: { expr: '@вещь.ar + sum(rows("мод", "ar_mod", @вещь))' } },
     ] },
   },
 } as unknown as System;
@@ -157,7 +157,7 @@ describe('по ревью: экземпляры, круги, @вещь в кле
   it('клетка-формула видит @вещь: занятая ёмкость — сумма того, что стоит в этой вещи', () => {
     const roomy = flattenSystem({
       ...raw,
-      tables: { ...raw.tables, оружие: { ...raw.tables!['оружие']!, columns: [...raw.tables!['оружие']!.columns!, { key: 'занято', label: 'Занято', kind: 'number', expr: { expr: 'сумма(строки("мод", "cost", @вещь))' } }] } },
+      tables: { ...raw.tables, оружие: { ...raw.tables!['оружие']!, columns: [...raw.tables!['оружие']!.columns!, { key: 'занято', label: 'Занято', kind: 'number', expr: { expr: 'sum(rows("мод", "cost", @вещь))' } }] } },
       effects: { ...raw.effects, выстрел: { ...raw.effects['выстрел']!, steps: [{ type: 'apply', target: { expr: '@действующий.защита' }, direction: 'set', value: { expr: '@вещь.занято' } }] } },
     } as unknown as System);
     const sheet = hero([{ of: 'предатор', id: 'п1' }, { of: 'лазер', in: 'п1' }, { of: 'лазер', id: 'л2', in: 'п1' }, { of: 'предатор', id: 'п2' }]);

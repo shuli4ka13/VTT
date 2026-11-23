@@ -131,7 +131,7 @@
             "key": "mooks_left",
             "label": "Сколько в толпе стоит",
             "expr": {
-              "expr": "если(@mook_hp > 0, округлить вверх(большее из(0, @hp) / @mook_hp), 1)"
+              "expr": "if(@mook_hp > 0, ceil(max(0, @hp) / @mook_hp), 1)"
             }
           }
         ]
@@ -203,7 +203,7 @@
             "label": "Модификатор",
             "kind": "number",
             "expr": {
-              "expr": "округлить вниз((@строка.score - 10) / 2)"
+              "expr": "floor((@строка.score - 10) / 2)"
             },
             "title": "Модификатор: {label}"
           }
@@ -641,7 +641,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "меньшее из(6, @стол.escalation + 1)"
+              "expr": "min(6, @стол.escalation + 1)"
             }
           }
         ],
@@ -870,7 +870,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "если(@moment.round > 1, меньшее из(6, @стол.escalation + 1), 0)"
+                  "expr": "if(@moment.round > 1, min(6, @стол.escalation + 1), 0)"
                 }
               }
             ]
@@ -908,7 +908,7 @@
             "kind": "choice",
             "from": "attack_outcomes",
             "expr": {
-              "expr": "если(не @проверка.success, \"промах\", если(@проверка.natural >= 20, \"крит\", \"попадание\"))"
+              "expr": "if(not @проверка.success, \"промах\", if(@проверка.natural >= 20, \"крит\", \"попадание\"))"
             }
           },
           {

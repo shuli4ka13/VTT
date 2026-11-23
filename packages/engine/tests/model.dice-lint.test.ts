@@ -24,12 +24,12 @@ const dice = (texts: string[]): string[] => texts.filter(text => /Бросок|�
 
 group('«Проблемы» про кости в формулах', () => {
   test('«кинуть» в шаге — одна находка, без второй про «кость как число»', () => {
-    const found = dice(errors(system({ steps: [{ type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: 'кинуть(@к20)' } }] })));
+    const found = dice(errors(system({ steps: [{ type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: 'roll(@к20)' } }] })));
     eq(found.length, 1);
   });
 
   test('«кинуть» в формуле поля листа тоже ловится', () => {
-    eq(dice(errors(system({ columns: [{ key: 'удача', label: 'Удача', expr: { expr: 'кинуть(к6)' } }] }))).length, 1);
+    eq(dice(errors(system({ columns: [{ key: 'удача', label: 'Удача', expr: { expr: 'roll(d6)' } }] }))).length, 1);
   });
 
   test('кость прибавки у правки: имя, которого нет в «Костях», и опечатка во входе', () => {
@@ -37,7 +37,7 @@ group('«Проблемы» про кости в формулах', () => {
     eq(named.some(text => text.includes('«нет_такой»')), true);
     const typo = errors(system({ modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', die: { expr: '@носитель.нет_поля' } }] }));
     eq(typo.some(text => text.includes('нет_поля')), true);
-    eq(errors(system({ modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', die: { expr: '1к4' } }] })).some(text => text.includes('1к4')), false);
+    eq(errors(system({ modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', die: { expr: '1d4' } }] })).some(text => text.includes('1d4')), false);
   });
 
   test('в правиле броска «@бросок.margin» — опечатка: степени правила зовутся @степени', () => {

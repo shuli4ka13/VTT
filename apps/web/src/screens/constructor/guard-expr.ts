@@ -32,7 +32,7 @@ function part(node: Node, when: Partial<When>): boolean {
     else { if (when.atMost !== undefined) return false; when.atMost = bound; }
     return true;
   }
-  if (node.kind === 'Call' && node.name === 'есть' && node.args.length === 2) {
+  if (node.kind === 'Call' && node.name === 'has' && node.args.length === 2) {
     const [first, second] = node.args;
     const wanted = textOf(second);
     if (wanted === null) return false;
@@ -43,7 +43,7 @@ function part(node: Node, when: Partial<When>): boolean {
       when.has = wanted;
       return true;
     }
-    if (first?.kind === 'Call' && first.name === 'таблица' && first.args.length === 3) {
+    if (first?.kind === 'Call' && first.name === 'table' && first.args.length === 3) {
       const table = textOf(first.args[0]);
       const inner = refOf(first.args[1]);
       const column = textOf(first.args[2]);
@@ -79,8 +79,8 @@ export function writeGuard(when: When): string {
   const parts: string[] = [];
   if (when.atLeast !== undefined && when.atLeast.trim()) parts.push(`${name} >= ${operandText(when.atLeast.trim(), '>=')}`);
   if (when.atMost !== undefined && when.atMost.trim()) parts.push(`${name} <= ${operandText(when.atMost.trim(), '<=')}`);
-  if (when.has !== undefined && when.has !== '') parts.push(`есть(${name}, ${quote(when.has)})`);
-  if (when.where) parts.push(`есть(таблица(${quote(when.where.table)}, ${name}, ${quote(when.where.column)}), ${quote(when.where.is)})`);
+  if (when.has !== undefined && when.has !== '') parts.push(`has(${name}, ${quote(when.has)})`);
+  if (when.where) parts.push(`has(table(${quote(when.where.table)}, ${name}, ${quote(when.where.column)}), ${quote(when.where.is)})`);
   if (!parts.length) parts.push(name);
   const joined = andText(parts);
   return when.not ? printFormula({ kind: 'Unary', op: NOT, operand: compile(joined).ast }) : joined;

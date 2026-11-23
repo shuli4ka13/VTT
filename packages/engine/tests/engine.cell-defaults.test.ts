@@ -52,12 +52,12 @@ const system = {
     флаг: {
       label: 'Флаг', activation: 'manual',
       params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }, { key: 'выбор', label: 'Выбор', kind: 'choice', from: 'режимы' }],
-      steps: [{ type: 'apply', target: { expr: '@действующий.итог' }, direction: 'add', value: { expr: 'если(@выбор.flag, 10, 1) + @выбор.bonus' } }],
+      steps: [{ type: 'apply', target: { expr: '@действующий.итог' }, direction: 'add', value: { expr: 'if(@выбор.flag, 10, 1) + @выбор.bonus' } }],
     },
     путь: {
       label: 'Путь', activation: 'manual',
       params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }, { key: 'вид', label: 'Вид', kind: 'choice', from: 'виды' }],
-      steps: [{ type: 'apply', target: { expr: '@действующий.итог' }, direction: 'add', value: { expr: 'если(@вид.режим.flag, 10, 1) + @вид.режим.bonus' } }],
+      steps: [{ type: 'apply', target: { expr: '@действующий.итог' }, direction: 'add', value: { expr: 'if(@вид.режим.flag, 10, 1) + @вид.режим.bonus' } }],
     },
     чужая: {
       label: 'Чужая', activation: 'manual',
@@ -77,7 +77,7 @@ const system = {
     удар: {
       label: 'Удар', activation: 'manual',
       params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }],
-      steps: [{ type: 'apply', target: { expr: '@действующий.итог' }, direction: 'add', value: { expr: '@вещь.режим.bonus + если(@вещь.режим.flag, 10, 0)' } }],
+      steps: [{ type: 'apply', target: { expr: '@действующий.итог' }, direction: 'add', value: { expr: '@вещь.режим.bonus + if(@вещь.режим.flag, 10, 0)' } }],
     },
   },
 } as unknown as System;

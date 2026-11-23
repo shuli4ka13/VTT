@@ -19,7 +19,7 @@ const world = (versus: string, extra: Record<string, unknown>): System => ({
         { type: 'each', of: 'цели' },
         { id: 'бросок', type: 'roll', die: 'к20', bonus: { expr: '5' }, by: { expr: '@действующий' } },
         { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: versus }, ...extra },
-        { type: 'branch', if: { expr: 'не @попал.success' } }, { type: 'stop' }, { type: 'end' },
+        { type: 'branch', if: { expr: 'not @попал.success' } }, { type: 'stop' }, { type: 'end' },
         { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '1' } },
       ],
     },
@@ -70,19 +70,19 @@ group('формула «максимум костей»', () => {
   const run = (src: string) => compile(src).evaluate(() => 0, tools);
 
   test('старшая грань каждой кости', () => {
-    eq(run('максимум костей("1к8")'), 8);
-    eq(run('максимум костей("2к6")'), 12);
-    eq(run('максимум костей("1к8", 3)'), 24);
+    eq(run('dicemax("1d8")'), 8);
+    eq(run('dicemax("2d6")'), 12);
+    eq(run('dicemax("1d8", 3)'), 24);
   });
 
   test('лишний аргумент — ошибка словами', () => {
-    throws(() => run('максимум костей("1к8", 1, 2)'));
+    throws(() => run('dicemax("1d8", 1, 2)'));
   });
 });
 
 group('ноль бросков — ноль', () => {
   test('максимум костей ноль раз даёт 0', () => {
     const tools = toolsOf({ tables: {} } as unknown as System, {} as never, 'я', () => 6);
-    eq(compile('максимум костей("2к6", 0)').evaluate(() => 0, tools), 0);
+    eq(compile('dicemax("2d6", 0)').evaluate(() => 0, tools), 0);
   });
 });

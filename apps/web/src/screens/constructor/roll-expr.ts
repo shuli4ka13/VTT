@@ -49,7 +49,7 @@ export function parseRollExpr(text: string, system: System, picked?: string | nu
 export function formatRollExpr(roll: unknown, system: System): string {
   const r = (roll ?? {}) as { die?: unknown; bonus?: unknown };
   let head = '';
-  if (typeof r.die === 'string' && r.die) head = dieWord(system, r.die);
+  if (typeof r.die === 'string' && r.die) head = asDice(dieWord(system, r.die));
   else if (r.die && typeof r.die === 'object' && 'expr' in r.die) head = asDice(unquote(String((r.die as { expr: unknown }).expr)));
   let tail = '';
   if (r.bonus && typeof r.bonus === 'object') {

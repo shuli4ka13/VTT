@@ -15,7 +15,7 @@ const system = {
       rows: [
         { value: 'сила', cells: { value: '@melee_attack' } },
         { value: 'ловкость', cells: { value: '@ranged_attack' } },
-        { value: 'лучшее', cells: { value: 'большее из(@melee_attack, @ranged_attack)' } },
+        { value: 'лучшее', cells: { value: 'max(@melee_attack, @ranged_attack)' } },
       ],
     },
     ступени: {
@@ -77,7 +77,7 @@ group('формула видит результат шага выше', () => {
             { type: 'each', of: 'цели' },
             { id: 'бросок', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
             { id: 'урон', type: 'roll', die: { expr: '"1d6"' },
-              count: { expr: 'если(@бросок.natural >= @действующий.порог, 2, 1)' } },
+              count: { expr: 'if(@бросок.natural >= @действующий.порог, 2, 1)' } },
             { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '@урон' } },
           ],
         },

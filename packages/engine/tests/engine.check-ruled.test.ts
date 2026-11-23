@@ -13,7 +13,7 @@ const make = (extra: Record<string, unknown>): System => ({
       label: 'Проба', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }],
       steps: [
         { id: 'п', type: 'check', value: { expr: '5' }, versus: { expr: '3' }, ...extra },
-        { type: 'apply', target: { expr: '@действующий.итог' }, direction: 'set', value: { expr: 'если(@п.success, 1, 0)' } },
+        { type: 'apply', target: { expr: '@действующий.итог' }, direction: 'set', value: { expr: 'if(@п.success, 1, 0)' } },
         { type: 'apply', target: { expr: '@действующий.запас' }, direction: 'set', value: { expr: '@п.margin' } },
       ],
     },
@@ -28,6 +28,6 @@ const out = (extra: Record<string, unknown>) => {
 
 group('исход проверки по правилу', () => {
   test('без правила — по числам', () => deepEq(out({}), [1, 2]));
-  test('«всегда провал, если» — провал', () => deepEq(out({ failIf: { expr: 'да' } }), [0, 2]));
+  test('«всегда провал, если» — провал', () => deepEq(out({ failIf: { expr: 'true' } }), [0, 2]));
   test('«всегда успех с запасом» — успех с этим запасом', () => deepEq(out({ versus: { expr: '9' }, passWith: { expr: '4' } }), [1, 4]));
 });

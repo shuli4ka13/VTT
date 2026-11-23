@@ -47,8 +47,8 @@ const world = (steps: unknown[]): System => ({
   roll_edits: {
     advantage: { label: 'Преимущество', ops: [{ op: 'addDie' }, { op: 'keepBest', n: 1 }], cancels: ['disadvantage'] },
     disadvantage: { label: 'Помеха', ops: [{ op: 'addDie' }, { op: 'keepWorst', n: 1 }], cancels: ['advantage'] },
-    boon: { label: 'Подмога', ops: [{ op: 'plus', die: '1к6' }], cancels: ['bane'] },
-    bane: { label: 'Сбивка', ops: [{ op: 'plus', die: '1к6', minus: true }], cancels: ['boon'] },
+    boon: { label: 'Подмога', ops: [{ op: 'plus', die: '1d6' }], cancels: ['bane'] },
+    bane: { label: 'Сбивка', ops: [{ op: 'plus', die: '1d6', minus: true }], cancels: ['boon'] },
     reroll: { label: 'Переброс', ops: [{ op: 'reroll', n: 1 }] },
     cover: { label: 'Укрытие', ops: [{ op: 'shiftVersus', by: 2 }] },
   },
@@ -80,7 +80,7 @@ const world = (steps: unknown[]): System => ({
       params: [{ key: 'источник', kind: 'sheet' }],
       modifiers: [{
         kind: 'edit', call: 'roll', param: 'count', op: 'add', value: { expr: '-4' }, notTags: ['лечение'],
-        if: { expr: '@бросающий == @носитель и @против == @источник' },
+        if: { expr: '@бросающий == @носитель and @против == @источник' },
       }],
     },
   },
@@ -230,7 +230,7 @@ group('линт правок «против»', () => {
   });
 
   test('бросающий у сложной формулы — ошибка', () => {
-    const system = world([{ id: 'кости', type: 'roll', fixed: { expr: "кинуть('1к6') + 1" }, by: { expr: '@действующий' } }]);
+    const system = world([{ id: 'кости', type: 'roll', fixed: { expr: "roll('1d6') + 1" }, by: { expr: '@действующий' } }]);
     ok(texts(system).some(text => text.includes('у броска вместо кости формула')));
   });
 

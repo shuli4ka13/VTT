@@ -2,6 +2,7 @@ import type { System } from '@vtt/schema';
 import { compile, AND, OR, NOT, ROW, STEP_WORDS, listOf, fieldOf, fieldLinkOf } from '@vtt/engine';
 import type { Node } from '@vtt/engine';
 import { formulaAsLabels, pickTail } from './formula-labels.ts';
+import { localName } from './formula-lang.ts';
 
 const COMPARE: Record<string, string> = { '==': '=', '!=': '≠', '>=': '≥', '<=': '≤', '>': '>', '<': '<' };
 const ARITH: Record<string, string> = { '+': '+', '-': '−', '*': '×', '/': '÷' };
@@ -69,7 +70,7 @@ export function formulaWords(system: System, source: string, names?: ReadonlyMap
       case 'Unary': {
         if (node.op === NOT) {
           const inner = node.operand;
-          if (inner.kind === 'Call' && inner.name === 'пусто') return `задано ${inner.args[0] ? words(inner.args[0], true) : '…'}`;
+          if (inner.kind === 'Call' && inner.name === 'empty') return `задано ${inner.args[0] ? words(inner.args[0], true) : '…'}`;
           return `не ${words(inner)}`;
         }
         return node.op === '-' ? `−${words(node.operand)}` : `${node.op}${words(node.operand)}`;
@@ -77,7 +78,7 @@ export function formulaWords(system: System, source: string, names?: ReadonlyMap
       case 'Binary': {
         if (node.op === AND || node.op === OR) {
           const side = (child: Node) => words(child, child.kind === 'Binary' && child.op === node.op);
-          const text = `${side(node.left)} ${node.op} ${side(node.right)}`;
+          const text = `${side(node.left)} ${node.op === AND ? 'и' : 'или'} ${side(node.right)}`;
           return top ? text : `(${text})`;
         }
         const op = COMPARE[node.op] ?? ARITH[node.op] ?? node.op;
@@ -104,13 +105,13 @@ export function formulaWords(system: System, source: string, names?: ReadonlyMap
     const all = (join: string) => args.map(arg => words(arg, true)).join(join);
     const arg = (at: number): string => (args[at] ? words(args[at]!, true) : '…');
     switch (name) {
-      case 'пусто': return `не задано ${arg(0)}`;
-      case 'меньшее из': return `меньшее из ${all(' и ')}`;
-      case 'большее из': return `большее из ${all(' и ')}`;
-      case 'сколько': return args.length > 1 ? `сколько ${arg(1)} среди ${arg(0)}` : `сколько ${arg(0)}`;
-      case 'есть': return `${arg(0)} содержит ${args[0] && args[1] ? choiceWord(args[0], args[1]) ?? arg(1) : arg(1)}`;
-      case 'первый': return `первый из ${arg(0)}`;
-      default: return `${name} ${all(', ')}`;
+      case 'empty': return `не задано ${arg(0)}`;
+      case 'min': return `меньшее из ${all(' и ')}`;
+      case 'max': return `большее из ${all(' и ')}`;
+      case 'count': return args.length > 1 ? `сколько ${arg(1)} среди ${arg(0)}` : `сколько ${arg(0)}`;
+      case 'has': return `${arg(0)} содержит ${args[0] && args[1] ? choiceWord(args[0], args[1]) ?? arg(1) : arg(1)}`;
+      case 'first': return `первый из ${arg(0)}`;
+      default: return `${localName(name)} ${all(', ')}`;
     }
   };
 

@@ -52,11 +52,11 @@ const dealt = (system: System, dice: number[], effects: string[] = []): number =
 
 group('«Бросок» оставляет лучшие или худшие', () => {
   test('бросить три к6, оставить две лучшие', () => {
-    eq(dealt(world({ die: '1к6', count: { expr: '3' }, keep: { expr: '2' } }), [5, 1, 6]), 11);
+    eq(dealt(world({ die: '1d6', count: { expr: '3' }, keep: { expr: '2' } }), [5, 1, 6]), 11);
   });
 
   test('оставить худшую', () => {
-    eq(dealt(world({ die: '1к6', count: { expr: '3' }, keep: { expr: '1' }, keepWorst: true }), [5, 2, 6]), 2);
+    eq(dealt(world({ die: '1d6', count: { expr: '3' }, keep: { expr: '1' }, keepWorst: true }), [5, 2, 6]), 2);
   });
 
   test('«Проблемы»: «оставить» без кости', () => {
@@ -68,13 +68,13 @@ group('«Бросок» оставляет лучшие или худшие', ()
 group('кость прибавки — без «кинуть»', () => {
   test('«увидев кости → прибавить» костью из «Костей» и вычесть', () => {
     const plus = { label: 'Благо', activation: 'passive', on: [{ on: 'seen', if: { expr: mine }, steps: [{ type: 'roll-plus', die: 'к4' }] }] };
-    const minus = { label: 'Порча', activation: 'passive', on: [{ on: 'seen', if: { expr: mine }, steps: [{ type: 'roll-plus', die: '1к4', count: { expr: '2' }, minus: true }] }] };
+    const minus = { label: 'Порча', activation: 'passive', on: [{ on: 'seen', if: { expr: mine }, steps: [{ type: 'roll-plus', die: '1d4', count: { expr: '2' }, minus: true }] }] };
     eq(dealt(world({}, { благо: plus }), [10, 3], ['благо']), 13);
     eq(dealt(world({}, { порча: minus }), [10, 3, 1], ['порча']), 6);
   });
 
   test('правка «Бросок → прибавка» костью', () => {
-    const blessed = { label: 'Благословлён', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', die: '1к4', if: { expr: mine } }] };
+    const blessed = { label: 'Благословлён', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', die: '1d4', if: { expr: mine } }] };
     const baned = { label: 'Порча', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', die: 'к4', minus: true, if: { expr: mine } }] };
     eq(dealt(world({}, { благо: blessed }), [10, 4], ['благо']), 14);
     eq(dealt(world({}, { порча: baned }), [10, 4], ['порча']), 6);
@@ -83,12 +83,12 @@ group('кость прибавки — без «кинуть»', () => {
   test('слово правки броска «прибавить» костью', () => {
     const sys = world({ claims: undefined }, {
       дар: { label: 'Дар', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', op: 'add', edit: 'advantage', if: { expr: mine } }] },
-    }, { roll_edits: { advantage: { label: 'Преимущество', ops: [{ op: 'plus', die: '1к6' }] } } });
+    }, { roll_edits: { advantage: { label: 'Преимущество', ops: [{ op: 'plus', die: '1d6' }] } } });
     eq(dealt(sys, [10, 5], ['дар']), 15);
   });
 
   test('«Проблемы»: прибавка костью без числа — не ошибка', () => {
-    const blessed = { label: 'Благословлён', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', die: '1к4' }] };
+    const blessed = { label: 'Благословлён', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', die: '1d4' }] };
     eq(lintSystem(world({}, { благо: blessed })).some(one => one.text.includes('не задано, на сколько')), false);
   });
 });

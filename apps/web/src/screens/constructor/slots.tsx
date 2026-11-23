@@ -163,7 +163,7 @@ export function sheetChoices(ctx: SlotContext): { singles: Map<string, string>; 
   const shared = lists.some(param => param.item && !ctx.sheets?.has(param.item.key));
   return {
     singles,
-    firsts: lists.map(param => [`первый(@${param.key})`, `первый из «${param.label ?? param.key}»`] as const),
+    firsts: lists.map(param => [`first(@${param.key})`, `первый из «${param.label ?? param.key}»`] as const),
     lists: new Map(lists.map(param => [param.key, param.label ?? param.key])),
     shared,
   };

@@ -181,7 +181,7 @@ export const tables: Lesson = {
           at: { text: 'Формула для всех строк' },
           say: 'Щёлкните «Формула для всех строк» и наберите «округлить вниз((».',
           hint: FORMULA_HINT,
-          done: view => barText(view).includes('округлить') || modifierRight(view, columnBy(stats(view)?.[1], 'Модификатор')?.expr),
+          done: view => barText(view).includes('floor') || modifierRight(view, columnBy(stats(view)?.[1], 'Модификатор')?.expr),
         },
         {
           at: { text: 'Формула для всех строк' },

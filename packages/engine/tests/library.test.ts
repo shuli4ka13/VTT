@@ -73,7 +73,7 @@ describe('готовый блок отдаёт итоги («Что отдаёт
       бросок_атаки: stopping,
       удар: strike([
         { id: 'атака', type: 'emit', effect: 'бросок_атаки', args: { кто: { expr: '@действующий' }, против: { expr: '@цель' } } },
-        { type: 'branch', if: { expr: 'пусто(@атака.попал)' } }, hit('7'), { type: 'end' },
+        { type: 'branch', if: { expr: 'empty(@атака.попал)' } }, hit('7'), { type: 'end' },
       ]),
     });
     expect(hp(play(system, [sheet('а'), sheet('б')], []), 'б')).toBe(13);
@@ -82,8 +82,8 @@ describe('готовый блок отдаёт итоги («Что отдаёт
   it('итог шага в невзятой ветке — пусто', () => {
     const branchy = {
       ...attackRoll,
-      returns: [{ key: 'попал', label: 'попал', kind: 'boolean', expr: { expr: '@проверка.success или нет' } }],
-      steps: [{ type: 'branch', if: { expr: 'нет' } }, ...attackRoll.steps, { type: 'end' }],
+      returns: [{ key: 'попал', label: 'попал', kind: 'boolean', expr: { expr: '@проверка.success or false' } }],
+      steps: [{ type: 'branch', if: { expr: 'false' } }, ...attackRoll.steps, { type: 'end' }],
     };
     const system = world({ бросок_атаки: branchy, удар: strike() });
     expect(hp(play(system, [sheet('а'), sheet('б')], []), 'б')).toBe(20);
@@ -120,7 +120,7 @@ describe('бросок внутри готового блока остаётся
   it('подписка «до удара» видит итог готового блока из пробы тела (Щит)', () => {
     const system = world({
       удар: strike(),
-      щит: { label: 'Щит', activation: 'passive', on: [{ on: 'before:удар', if: { expr: '@цель == @носитель и @атака.попал' }, steps: [{ type: 'apply', target: { expr: '@носитель.щит' }, direction: 'add', value: { expr: '1' } }] }] },
+      щит: { label: 'Щит', activation: 'passive', on: [{ on: 'before:удар', if: { expr: '@цель == @носитель and @атака.попал' }, steps: [{ type: 'apply', target: { expr: '@носитель.щит' }, direction: 'add', value: { expr: '1' } }] }] },
     });
     const out = play(system, [sheet('а'), sheet('б', {}, ['щит'])], [12, 12]);
     expect(out.sheets.find(s => s.id === 'б')!.values.щит).toBe(1);

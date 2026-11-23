@@ -1,5 +1,5 @@
 import type { Node } from './ast.ts';
-import { AND, OR, NOT } from './parse.ts';
+import { AND, OR, NOT, IF } from './parse.ts';
 
 const RANK: Record<string, number> = {
   [OR]: 1, [AND]: 2, '==': 4, '!=': 4, '<': 4, '<=': 4, '>': 4, '>=': 4, '+': 5, '-': 5, '*': 6, '/': 6,
@@ -25,7 +25,7 @@ export function printFormula(node: Node): string {
   switch (node.kind) {
     case 'Number': return String(node.value);
     case 'Text': return node.dice ? node.raw ?? node.value : quote(node.value);
-    case 'Bool': return node.value ? 'да' : 'нет';
+    case 'Bool': return node.value ? 'true' : 'false';
     case 'Ref': return `@${node.tag}`;
     case 'Pick': return `@${node.tag}.[${printFormula(node.key)}]${node.rest ? `.${node.rest}` : ''}`;
     case 'Unary': {
@@ -44,7 +44,7 @@ export function printFormula(node: Node): string {
     }
     case 'Call': return `${node.name}(${node.args.map(printFormula).join(', ')})`;
     case 'Conditional':
-      return `если(${printFormula(node.test)}, ${printFormula(node.then)}, ${printFormula(node.otherwise)})`;
+      return `${IF}(${printFormula(node.test)}, ${printFormula(node.then)}, ${printFormula(node.otherwise)})`;
     default: return '';
   }
 }

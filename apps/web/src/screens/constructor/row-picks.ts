@@ -40,6 +40,6 @@ export function rowPicks(system: System, target: unknown, names?: Map<string, st
       label: `«${label}» → клетка этой строки`,
       onPick: (insert, bar) => bar.write(insert(`@${key}.[@${ROW}]`)),
     })),
-    phrases: sources.map(([key, label]) => ({ expr: `не пусто(@${key})`, label: `«${label}» выбрано` })),
+    phrases: sources.map(([key, label]) => ({ expr: `not empty(@${key})`, label: `«${label}» выбрано` })),
   };
 }

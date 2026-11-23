@@ -48,7 +48,7 @@ const system = {
       params: [{ key: 'кто', label: 'Кто', kind: 'sheet', role: 'actor' }],
       cost: [
         { id: 'хватит', type: 'check', value: { expr: '@кто.тайна' }, versus: { expr: '1000' } },
-        { type: 'branch', if: { expr: 'не @хватит.success' } }, { type: 'stop' }, { type: 'end' },
+        { type: 'branch', if: { expr: 'not @хватит.success' } }, { type: 'stop' }, { type: 'end' },
       ],
       steps: [],
     },

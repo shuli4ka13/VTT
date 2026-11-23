@@ -25,7 +25,7 @@ const advantage = { label: 'Преимущество', ops: [{ op: 'addDie' }, {
 describe('прибавки броска', () => {
   it('кость прибавки кидается после набора, преимущество её не отбрасывает, натуральная — только набор', () => {
     const die = queue(7, 19, 3);
-    const roll = addTo(start(parse(к20), [advantage], die), [plusDie('Благословлён', '1к4')], die);
+    const roll = addTo(start(parse(к20), [advantage], die), [plusDie('Благословлён', '1d4')], die);
     const now = result(roll);
     expect(now.dice.rolls).toEqual([7, 19]);
     expect(now.natural).toBe(19);
@@ -37,7 +37,7 @@ describe('прибавки броска', () => {
   it('«не меньше 10» и переброс единиц не трогают прибавку', () => {
     const reliable = { label: 'Надёжный', ops: [{ op: 'floorDie', least: 10 }] } as RollEdit;
     const die = queue(4, 1);
-    const roll = addTo(start(parse(к20), [reliable], die), [plusDie('Порча', '1к4', true)], die);
+    const roll = addTo(start(parse(к20), [reliable], die), [plusDie('Порча', '1d4', true)], die);
     expect(result(roll).total).toBe(9);
     expect(roll.addends[0]!.dice).toEqual([{ sides: 4, value: 1 }]);
   });
@@ -55,8 +55,8 @@ describe('слово словаря прибавляет', () => {
   const system = {
     id: 'с', name: 'с', tables: { лист: { shape: 'single', owner: 'sheet', columns: [] } }, effects: {},
     roll_edits: {
-      advantage: { label: 'Преимущество', ops: [{ op: 'plus', die: '1к6' }], cancels: ['disadvantage'] },
-      disadvantage: { label: 'Помеха', ops: [{ op: 'plus', die: '1к6', minus: true }], cancels: ['advantage'] },
+      advantage: { label: 'Преимущество', ops: [{ op: 'plus', die: '1d6' }], cancels: ['disadvantage'] },
+      disadvantage: { label: 'Помеха', ops: [{ op: 'plus', die: '1d6', minus: true }], cancels: ['advantage'] },
     },
   } as unknown as System;
   const sheet = { id: 'я', systemId: 'с', name: 'я', values: {}, has: [], effects: [] } as unknown as Sheet;
@@ -83,7 +83,7 @@ describe('слово словаря прибавляет', () => {
         x: {
           label: 'Икс', activation: 'passive', modifiers: [
             { kind: 'edit', call: 'roll', param: 'bonus', op: 'mul', value: { expr: '2' } },
-            { kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '1' }, if: { expr: 'кинуть(к20) > 10' } },
+            { kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '1' }, if: { expr: 'roll(d20) > 10' } },
           ],
         },
       },
@@ -98,18 +98,18 @@ describe('слово словаря прибавляет', () => {
   it('линт: кость как число, «кинуть» вне броска и в слове, «гасится» в пустоту', () => {
     const broken = {
       ...system,
-      roll_edits: { a: { label: 'А', ops: [{ op: 'plus', value: { expr: 'к4 + 1' } }, { op: 'plus', value: { expr: 'кинуть(к4)' } }], cancels: ['нет_такого'] } },
+      roll_edits: { a: { label: 'А', ops: [{ op: 'plus', value: { expr: 'd4 + 1' } }, { op: 'plus', value: { expr: 'roll(d4)' } }], cancels: ['нет_такого'] } },
       effects: {
         урон: { label: 'Урон', activation: 'manual', params: [{ key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }], steps: [] },
         x: {
           label: 'Икс', activation: 'passive',
-          modifiers: [{ kind: 'edit', call: 'урон', param: 'сколько', op: 'add', value: { expr: 'кинуть(к6)' } }],
-          on: [{ on: 'seen', if: { expr: 'кинуть(к20) > 10' }, steps: [] }],
+          modifiers: [{ kind: 'edit', call: 'урон', param: 'сколько', op: 'add', value: { expr: 'roll(d6)' } }],
+          on: [{ on: 'seen', if: { expr: 'roll(d20) > 10' }, steps: [] }],
         },
       },
     } as unknown as System;
     const texts = lintSystem(broken).map(p => p.text);
-    expect(texts).toContain('в формуле «к4 + 1» кость стоит как число — кости бросает шаг «Бросок»: поставьте его перед этим шагом и возьмите его итог по имени шага');
+    expect(texts).toContain('в формуле «d4 + 1» кость стоит как число — кости бросает шаг «Бросок»: поставьте его перед этим шагом и возьмите его итог по имени шага');
     expect(texts).toContain('у правки броска «А»: кость прибавки выберите в «Сколько», а не формулой');
     expect(texts.filter(text => text === 'здесь кости не бросают — бросок делает шаг «Бросок» в эффекте')).toHaveLength(2);
     expect(texts).toContain('правка броска «А» гасит слово «нет_такого», которого нет в словаре');

@@ -24,7 +24,7 @@ const rule: any = {
   steps: [
     { id: 'roll', type: 'roll', die: 'пул', bonus: { expr: '0' }, tags: ['проверка'], by: { expr: '@действующий' } },
     { id: 'крит', type: 'check', value: { expr: '@roll.atMax' }, versus: { expr: '2' } },
-    { type: 'branch', if: { expr: 'не @крит.success' } }, { type: 'stop' }, { type: 'end' },
+    { type: 'branch', if: { expr: 'not @крит.success' } }, { type: 'stop' }, { type: 'end' },
   ],
 };
 

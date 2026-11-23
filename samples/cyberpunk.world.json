@@ -171,14 +171,14 @@
             "key": "emp",
             "label": "Эмпатия",
             "expr": {
-              "expr": "округлить вниз(@humanity / 10)"
+              "expr": "floor(@humanity / 10)"
             }
           },
           {
             "key": "hp_max",
             "label": "Максимум хитов",
             "expr": {
-              "expr": "10 + 5 * округлить вверх((@body + @will) / 2)"
+              "expr": "10 + 5 * ceil((@body + @will) / 2)"
             }
           },
           {
@@ -195,7 +195,7 @@
             "key": "wound_at",
             "label": "Порог серьёзной раны",
             "expr": {
-              "expr": "округлить вверх(@hp_max / 2) - 1"
+              "expr": "ceil(@hp_max / 2) - 1"
             }
           },
           {
@@ -1164,7 +1164,7 @@
               "expr": "@действующий.skills.пистолеты.total"
             },
             "shift": {
-              "expr": "@spend_luck - если(@aim == \"по голове\", 8, 0)"
+              "expr": "@spend_luck - if(@aim == \"по голове\", 8, 0)"
             },
             "tags": [
               "атака"
@@ -1357,7 +1357,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@aim == \"по телу\" и @damage_type.armor == \"через броню\""
+              "expr": "@aim == \"по телу\" and @damage_type.armor == \"через броню\""
             }
           },
           {
@@ -1374,7 +1374,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "не @сквозь_броню.success"
+              "expr": "not @сквозь_броню.success"
             }
           },
           {
@@ -1410,7 +1410,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@aim == \"по голове\" и @damage_type.armor == \"через броню\""
+              "expr": "@aim == \"по голове\" and @damage_type.armor == \"через броню\""
             }
           },
           {
@@ -1427,7 +1427,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "не @сквозь_шлем.success"
+              "expr": "not @сквозь_шлем.success"
             }
           },
           {
@@ -1450,7 +1450,7 @@
             "id": "в_голову",
             "type": "roll",
             "fixed": {
-              "expr": "если(да, округлить вниз((@в_голову_всего) * 2), @в_голову_всего)"
+              "expr": "if(true, floor((@в_голову_всего) * 2), @в_голову_всего)"
             }
           },
           {
@@ -1667,7 +1667,7 @@
               "expr": "-2"
             },
             "if": {
-              "expr": "@бросающий == @носитель и @носитель.seriously"
+              "expr": "@бросающий == @носитель and @носитель.seriously"
             }
           }
         ],
@@ -1724,7 +1724,7 @@
           {
             "on": "moment:turn-start",
             "if": {
-              "expr": "@ходит == @носитель и @носитель.mortal"
+              "expr": "@ходит == @носитель and @носитель.mortal"
             },
             "steps": [
               {
@@ -1765,7 +1765,7 @@
               {
                 "type": "branch",
                 "if": {
-                  "expr": "не @спас.success"
+                  "expr": "not @спас.success"
                 }
               },
               {
@@ -1775,7 +1775,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "да"
+                  "expr": "true"
                 }
               },
               {

@@ -44,10 +44,10 @@ const damageDice = (trace: Record<string, unknown>[]) => (trace.find(line => lin
 const attack = (bonus?: string) => [
   { id: 'удар_бросок', type: 'roll', die: 'к20', ...(bonus ? { bonus: { expr: bonus } } : {}), by: { expr: '@действующий' } },
   { id: 'удар', type: 'check', value: { expr: '@удар_бросок' }, versus: { expr: '@цель.броня' } },
-  { type: 'branch', if: { expr: 'не @удар.success' } }, { type: 'stop' }, { type: 'end' },
+  { type: 'branch', if: { expr: 'not @удар.success' } }, { type: 'stop' }, { type: 'end' },
 ];
 const hurt = { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '@урон' } };
-const damage = { id: 'урон', type: 'roll', die: { expr: '2d6' }, times: { expr: 'если(@удар.natural >= 20, 2, 1)' } };
+const damage = { id: 'урон', type: 'roll', die: { expr: '2d6' }, times: { expr: 'if(@удар.natural >= 20, 2, 1)' } };
 
 const steps = [...attack(), damage, hurt];
 
@@ -56,8 +56,8 @@ const play = (rolls: number[]) => resolve(steps, rolls);
 group('крит: кости удваиваются до броска', () => {
   test('запись костей умножается, а не дописывается', () => {
     eq(multiplyNotation('2d6', 2), '4d6');
-    eq(multiplyNotation('к8', 2), '2d8');
-    eq(multiplyNotation('1к20', 3), '3d20');
+    eq(multiplyNotation('d8', 2), '2d8');
+    eq(multiplyNotation('1d20', 3), '3d20');
   });
 
   test('на двадцатке кидается вдвое больше костей, и лишних бросков нет', () => {
@@ -92,7 +92,7 @@ group('доля величины: половина при удачном спа�
     { id: 'спас_бросок', type: 'roll', die: 'к20', by: { expr: '@цель' } },
     { id: 'спас', type: 'check', value: { expr: '@спас_бросок' }, versus: { expr: '10' } },
     { id: 'всего', type: 'roll', die: { expr: '2d6' } },
-    { id: 'урон', type: 'roll', fixed: { expr: `если(@спас.success, округлить вниз(@всего * ${times}), @всего)` } },
+    { id: 'урон', type: 'roll', fixed: { expr: `if(@спас.success, floor(@всего * ${times}), @всего)` } },
     hurt,
   ];
 

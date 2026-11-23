@@ -60,7 +60,7 @@ group('«Проблемы»: метку, которую ждёт правка б
   });
 
   test('метку «если(…, "текст", "")» видно; формулу, которую не развернуть, — система «открыта», замечаний нет', () => {
-    const literal = system({ удар: strike([{ expr: 'если(@стихия == "огонь", "жаркий", "")' }]), жар: { label: 'Жар', activation: 'passive', modifiers: [edit(['жаркий'])] } });
+    const literal = system({ удар: strike([{ expr: 'if(@стихия == "огонь", "жаркий", "")' }]), жар: { label: 'Жар', activation: 'passive', modifiers: [edit(['жаркий'])] } });
     eq(unreached(literal).join(' | '), '');
     const open = system({ удар: strike([{ expr: '@носитель.ловкость' }]), слепота: { label: 'Слепота', activation: 'passive', modifiers: [edit(['зрение'])] } });
     eq(rollTagReach(open).open, true);

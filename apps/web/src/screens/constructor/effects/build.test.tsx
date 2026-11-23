@@ -206,7 +206,7 @@ describe('эффекты пресетов собираются в констру
 
     ui.click('+ число');
     card = stepCard(/^5 · /);
-    within(card).formula('Формула', 'если(@спас.прошёл, округлить вниз((@урон_всего.total) * (0.5)), @урон_всего.total)');
+    within(card).formula('Формула', 'if(@спас.прошёл, floor((@урон_всего.total) * (0.5)), @урон_всего.total)');
     nameStep(card, 'урон');
 
     ui.click('+ изменение');
@@ -277,7 +277,7 @@ describe('эффекты пресетов собираются в констру
     within(card).select('Кто бросает', '@действующий');
     within(card).select('Что бросает', 'field:skills.пистолеты.total');
     within(stepCard(/^4 · /)).click('+ поправка к числу поля');
-    within(stepCard(/^4 · /)).formula('Поправка к числу поля', '@spend_luck - если(@aim == "по голове", 8, 0)');
+    within(stepCard(/^4 · /)).formula('Поправка к числу поля', '@spend_luck - if(@aim == "по голове", 8, 0)');
     fieldMarks(stepCard(/^4 · /), 'атака');
     nameStep(stepCard(/^4 · /), 'попадание_бросок');
     within(stepCard(/^4 · /)).click('↑');
@@ -339,7 +339,7 @@ describe('эффекты пресетов собираются в констру
     ui.select('Когда именно', 'after');
     ui.select('Кого касается', '@лист == @носитель');
 
-    savingThrow(1, [['Кто спасается', '@носитель'], ['Чем спасается', '"телосложение"'], ['Сложность', '(большее из(10, округлить вниз(@amount / 2)))']]);
+    savingThrow(1, [['Кто спасается', '@носитель'], ['Чем спасается', '"телосложение"'], ['Сложность', '(max(10, floor(@amount / 2)))']]);
     let card: HTMLElement;
 
     const kept = callIf(1, 'Спасбросок', 'не спасся');
@@ -715,7 +715,7 @@ describe('эффекты пресетов собираются в констру
     within(at(4)).select('У кого', 'цель');
     within(at(4)).select('Какое поле', 'оз');
     within(at(4)).select('Как', 'subtract');
-    within(at(4)).formula('Сколько', 'большее из(@бросок.parts.первая, @бросок.parts.вторая) + @урон');
+    within(at(4)).formula('Сколько', 'max(@бросок.parts.первая, @бросок.parts.вторая) + @урон');
     dump({ got: built('атака'), goal });
     expect(built('атака')).toEqual(goal);
   });

@@ -196,15 +196,15 @@ describe('правка броска записью костей', () => {
 
   it('одна простая кость — «было → стало»', () => {
     expect(editNotation({ ops: [{ op: 'addDie' }, { op: 'keepBest', n: 1 }] }, lead)).toBe('к20 → 2к20, лучшая');
-    expect(editNotation({ ops: [{ op: 'plus', die: { expr: '1к6' }, minus: true }] }, lead)).toBe('к20 → к20 − 1к6');
+    expect(editNotation({ ops: [{ op: 'plus', die: { expr: '1d6' }, minus: true }] }, lead)).toBe('к20 → к20 − 1к6');
     expect(editNotation({ ops: [{ op: 'floorDie', least: 10 }] }, lead)).toBe('к20 → к20, не меньше 10');
     expect(editNotation({ ops: [{ op: 'shiftVersus', by: 99 }] }, lead)).toBe('порог труднее на 99');
   });
 
   it('составная кость или несколько костей — словами', () => {
     const duality = { constants: { d: { kind: 'die', dice: [{ count: 1, sides: 12, name: 'hope' }, { count: 1, sides: 12, name: 'fear' }] } } } as unknown as System;
-    expect(editNotation({ ops: [{ op: 'plus', die: { expr: '1к6' } }] }, duality)).toBeNull();
-    expect(joinReadback(editReadback({ ops: [{ op: 'plus', die: { expr: '1к6' } }] }, duality))).toBe('Прибавить 1к6.');
+    expect(editNotation({ ops: [{ op: 'plus', die: { expr: '1d6' } }] }, duality)).toBeNull();
+    expect(joinReadback(editReadback({ ops: [{ op: 'plus', die: { expr: '1d6' } }] }, duality))).toBe('Прибавить 1к6.');
     expect(joinReadback(editReadback({ ops: [{ op: 'floorDie', least: 10 }] }, duality))).toBe('Считать кость не меньше 10.');
   });
 });

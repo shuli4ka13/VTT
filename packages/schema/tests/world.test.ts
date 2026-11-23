@@ -95,7 +95,7 @@ describe('схема стережёт инварианты, а не только
     const die = (count: unknown) =>
       W.dieConstant.safeParse({ kind: 'die', dice: [{ count, sides: 6 }] }).success;
     expect(die(4), 'литеральный счёт').toBe(true);
-    expect(die({ expr: 'большее из(1, @rating)' }), 'пул из листа — Shadowrun, Blades').toBe(true);
+    expect(die({ expr: 'max(1, @rating)' }), 'пул из листа — Shadowrun, Blades').toBe(true);
     expect(die('4'), 'строка счётом не бывает — это дыра черновика').toBe(false);
     expect(die({ tag: 'pool' }), 'старая ссылка на поле').toBe(false);
   });
@@ -206,7 +206,7 @@ describe('ссылки слотов не теряются при разборе'
       { expr: '0' },
       { expr: '"1d6"' },
       { expr: '@цель.dex_save' },
-      { expr: 'большее из(1, @rating)' },
+      { expr: 'max(1, @rating)' },
       'lead_die',
       'damage',
     ];

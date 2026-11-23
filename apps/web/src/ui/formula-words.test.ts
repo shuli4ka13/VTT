@@ -13,25 +13,25 @@ describe('слова формул: кости', () => {
   });
 
   it('«сколько» с одним списком — просто сколько', () => {
-    expect(formulaWords(system, 'сколько(@цели) != 1')).toBe('сколько «цели» ≠ 1');
+    expect(formulaWords(system, 'count(@цели) != 1')).toBe('сколько «цели» ≠ 1');
   });
 
   it('недописанная формула не роняет пересказ', () => {
-    for (const text of ['не()', 'сколько()', 'есть(@x)', 'первый()', 'или()']) {
+    for (const text of ['не()', 'count()', 'has(@x)', 'first()', 'или()']) {
       expect(() => formulaWords(system, text)).not.toThrow();
     }
   });
 
   it('метки броска в подписке «увидев кости»', () => {
-    expect(formulaWords(system, 'есть(@roll.tags, "атака")')).toBe('«Бросок»: метки броска содержит «атака»');
+    expect(formulaWords(system, 'has(@roll.tags, "атака")')).toBe('«Бросок»: метки броска содержит «атака»');
   });
 
   it('прибавка к броску со знаком минус читается вычитанием', () => {
     const slowed = { kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '-2' } } as unknown as Modifier;
     expect(modifierSentence(system, slowed)).toBe('Бросок, бросает кто угодно: − 2');
-    const bane = { kind: 'edit', call: 'roll', param: 'bonus', op: 'add', die: { expr: '1к4' }, minus: true } as unknown as Modifier;
+    const bane = { kind: 'edit', call: 'roll', param: 'bonus', op: 'add', die: { expr: '1d4' }, minus: true } as unknown as Modifier;
     expect(modifierSentence(system, bane)).toBe('Бросок, бросает кто угодно: − 1к4');
-    const bless = { kind: 'edit', call: 'roll', param: 'bonus', op: 'add', die: { expr: '1к4' } } as unknown as Modifier;
+    const bless = { kind: 'edit', call: 'roll', param: 'bonus', op: 'add', die: { expr: '1d4' } } as unknown as Modifier;
     expect(modifierSentence(system, bless)).toBe('Бросок, бросает кто угодно: + 1к4');
   });
 });
@@ -64,7 +64,7 @@ describe('слова формул: итог вызова', () => {
     expect(formulaWords(withCall, '@попадание.попал', place)).toBe('«попадание»');
     expect(formulaWords(withCall, '@попадание.крит', place)).toBe('«попадание — крит»');
     expect(formulaWords(withCall, '@второй_удар.на_костях', place)).toBe('«второй удар — на костях»');
-    expect(formulaWords(withCall, 'не @попадание.попал', place)).toBe('не «попадание»');
+    expect(formulaWords(withCall, 'not @попадание.попал', place)).toBe('не «попадание»');
     expect(formulaWords(withCall, '@попадание.попал')).toBe('«попадание.попал»');
   });
 
@@ -126,13 +126,13 @@ describe('слова формул: «есть в списке» и переск�
   } as unknown as System;
 
   it('значение в «есть» — слово строки', () => {
-    expect(formulaWords(chosen, 'есть(@черты_выбраны, "edge")', new Map([['черты_выбраны', 'Черты']]), new Map([['черты_выбраны', 'черты']])))
+    expect(formulaWords(chosen, 'has(@черты_выбраны, "edge")', new Map([['черты_выбраны', 'Черты']]), new Map([['черты_выбраны', 'черты']])))
       .toBe('«Черты» содержит «Преимущество»');
   });
 
   it('таблицы, привязанные к именам, видны без отдельного параметра', () => {
     const names = withTables(new Map([['черта', 'Характеристика']]), new Map([['черта', 'черты']]));
-    expect(formulaWords(chosen, 'если(@черта == "edge", 1, 0)', names)).toBe('1, если «Характеристика» = «Преимущество», иначе 0');
+    expect(formulaWords(chosen, 'if(@черта == "edge", 1, 0)', names)).toBe('1, если «Характеристика» = «Преимущество», иначе 0');
   });
 });
 
@@ -143,7 +143,7 @@ describe('поле формулы: значение выбора — фишко�
   } as unknown as System;
 
   it('значения в сравнении и в «есть» получают слова, формула не меняется', () => {
-    const text = '@черта == "edge" или есть(@черты_выбраны, "magic")';
+    const text = '@черта == "edge" or has(@черты_выбраны, "magic")';
     const tables = new Map([['черта', 'черты'], ['черты_выбраны', 'черты']]);
     expect([...choiceLits(chosen, text, tables).values()]).toEqual(['Преимущество', 'Магия']);
   });

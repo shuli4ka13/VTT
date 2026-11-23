@@ -60,7 +60,7 @@ describe('новое ядро: сознательные изменения', () 
         label: 'Стойка', activation: 'passive',
         on: [{ ...mine, cost: [
           { id: 'запас', type: 'check', value: { expr: '@носитель.ки' }, versus: { expr: '1' } },
-          { type: 'branch', if: { expr: 'не @запас.success' } }, { type: 'stop' }, { type: 'end' },
+          { type: 'branch', if: { expr: 'not @запас.success' } }, { type: 'stop' }, { type: 'end' },
           hit('1', '@носитель.ки'),
         ], steps: [heal('5')] }],
       },
@@ -98,7 +98,7 @@ describe('новое ядро: сознательные изменения', () 
         { id: 'атака', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
         { id: 'защита', type: 'roll', die: 'к20', by: { expr: '@цель' } },
         { id: 'спор', type: 'check', value: { expr: '@атака' }, versus: { expr: '@защита' } },
-        { type: 'branch', if: { expr: 'не @спор.success' } }, { type: 'stop' }, { type: 'end' },
+        { type: 'branch', if: { expr: 'not @спор.success' } }, { type: 'stop' }, { type: 'end' },
         hit('3'),
       ]),
       неуловим: { label: 'Неуловим', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', if: { expr: '@против == @носитель' }, op: 'add', value: { expr: '-@носитель.уклон' } }] },
@@ -144,7 +144,7 @@ describe('новое ядро: сознательные изменения', () 
 
   it('кость прибавки к броску бросает свою кость, а не делит ключ с ведущей', () => {
     const system = world({
-      благо: { label: 'Благо', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', die: { expr: '1к4' }, if: { expr: '@бросающий == @носитель' } }] },
+      благо: { label: 'Благо', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', die: { expr: '1d4' }, if: { expr: '@бросающий == @носитель' } }] },
       удар: button([
         { id: 'бр', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
         { id: 'б', type: 'check', value: { expr: '@бр' }, versus: { expr: '100' } },
@@ -168,7 +168,7 @@ describe('новое ядро: сознательные изменения', () 
   it('«при наложении» двух копий одним действием — у каждой своя кость', () => {
     const system = world({
       удар: button([{ type: 'status', effect: 'яд', to: { expr: '@цель' } }, { type: 'status', effect: 'яд', to: { expr: '@цель' } }]),
-      яд: { label: 'Яд', activation: 'passive', reapply: 'stack', attach: [{ id: 'к', type: 'roll', die: { expr: '1к6' } }, hit('@к', '@носитель.хп')] },
+      яд: { label: 'Яд', activation: 'passive', reapply: 'stack', attach: [{ id: 'к', type: 'roll', die: { expr: '1d6' } }, hit('@к', '@носитель.хп')] },
     });
     const out = play(system, [sheet('а'), sheet('б')], 'б', [3, 4]);
     expect(value(out, 'б', 'хп')).toBe(13);

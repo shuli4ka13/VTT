@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { recordKinds, kindsFor, kindWord, choiceTables, ASKABLE } from '@vtt/engine';
+import { recordKinds, kindsFor, kindWord, choiceTables, ASKABLE, asDice, toDice } from '@vtt/engine';
 import { freeId, useWorld } from '../../../store/world.ts';
 import { followKey, paramUsed, keyOf, referenced } from '../keys.ts';
 import { KeyField } from '../../../ui/key-field.tsx';
@@ -345,12 +345,12 @@ function DefaultCell({ param, system, onChange }: { param: Loose; system: System
     );
   }
   return (
-    <Input value={value === undefined ? '' : String(value)} placeholder="—"
+    <Input value={value === undefined ? '' : kind === 'dice' ? asDice(String(value)) : String(value)} placeholder="—"
       onChange={text => {
         const trimmed = text.trim();
         if (!trimmed) { onChange(undefined); return; }
         const number = Number(trimmed.replace(',', '.'));
-        onChange(kind === 'number' && Number.isFinite(number) ? number : trimmed);
+        onChange(kind === 'number' && Number.isFinite(number) ? number : kind === 'dice' ? toDice(trimmed) : trimmed);
       }} />
   );
 }

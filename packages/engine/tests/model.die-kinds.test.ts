@@ -46,10 +46,10 @@ describe('виды костей', () => {
 
   it('места броска — и правила, и шаги со своей костью', () => {
     const sys = system({ к20: DICE.one[0] }, { а: rule('к20') }, {
-      effects: { удар: { label: 'Удар', params: [], steps: [{ id: 'урон', type: 'roll', die: { expr: '2к6' } }, { id: 'ещё', type: 'roll', die: { expr: '@оружие.кость' } }] } },
+      effects: { удар: { label: 'Удар', params: [], steps: [{ id: 'урон', type: 'roll', die: { expr: '2d6' } }, { id: 'ещё', type: 'roll', die: { expr: '@оружие.кость' } }] } },
     });
     expect(placesOf(sys).map(place => place.kind)).toEqual(['one', 'sum', null]);
-    const quoted = system({}, {}, { effects: { удар: { label: 'Удар', params: [], steps: [{ id: 'а', type: 'roll', die: { expr: "'2к6'" } }, { id: 'б', type: 'roll', die: { expr: '1к6' }, times: { expr: '3' } }] } }, initiative: { die: { expr: '1к6' }, count: { expr: '@n' } } });
+    const quoted = system({}, {}, { effects: { удар: { label: 'Удар', params: [], steps: [{ id: 'а', type: 'roll', die: { expr: "'2d6'" } }, { id: 'б', type: 'roll', die: { expr: '1d6' }, times: { expr: '3' } }] } }, initiative: { die: { expr: '1d6' }, count: { expr: '@n' } } });
     expect(placesOf(quoted).map(place => place.kind)).toEqual(['sum', 'sum', 'sum']);
     expect(kindsOf(sys)).toEqual(['one', 'sum']);
   });

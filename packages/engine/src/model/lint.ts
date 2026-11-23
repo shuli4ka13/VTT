@@ -880,7 +880,7 @@ function rollStepProblems(system: System, effect: Effect, steps: Step[], where: 
   return out;
 }
 
-export const throwsDice = (text: string): boolean => /(^|[^\p{L}\p{N}_])кинуть\s*\(/u.test(text);
+export const throwsDice = (text: string): boolean => /(^|[^\p{L}\p{N}_@#.])roll\s*\(/u.test(text);
 
 const DICE_IN_ADDEND = 'кость прибавки выберите в «Сколько», а не формулой';
 

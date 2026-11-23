@@ -6,7 +6,7 @@ import type { System } from '../src/model/types.ts';
 const шаг = (extra: Record<string, unknown>) => ({
   id: 'r', label: 'Р', activation: 'manual',
   params: [{ key: 'действующий', kind: 'sheet' }],
-  steps: [{ id: 'бросок', type: 'roll', die: { expr: '1к10' }, ...extra }],
+  steps: [{ id: 'бросок', type: 'roll', die: { expr: '1d10' }, ...extra }],
 });
 
 const play = (extra: Record<string, unknown>, ...faces: number[]) => {
@@ -33,7 +33,7 @@ group('шаг «Бросок»: оставить лучшие или худши�
 
 group('«кинуть(кость, сколько, оставить)» ушла из языка', () => {
   test('узнаётся и отвечает, что кости бросает шаг', () => {
-    const беда = throws(() => compile('кинуть("1к10", 3, 2)').evaluate(() => undefined));
+    const беда = throws(() => compile('roll("1d10", 3, 2)').evaluate(() => undefined));
     ok(String(беда.message).includes('шаг «Бросок»'), String(беда.message));
   });
 });

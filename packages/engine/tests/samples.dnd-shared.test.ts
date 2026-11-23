@@ -68,7 +68,7 @@ describe('D&D: «Ячейка заклинания» — одна строка �
 describe('D&D: «Лечение» — один шаг для всего, что лечит', () => {
   const disciple: Effect = {
     label: 'Ученик жизни', activation: 'passive', duration: { kind: 'permanent' },
-    modifiers: [{ kind: 'edit', call: 'heal', param: 'amount', op: 'add', value: { expr: '2 + @slot' }, if: { expr: 'не пусто(@slot)' } }],
+    modifiers: [{ kind: 'edit', call: 'heal', param: 'amount', op: 'add', value: { expr: '2 + @slot' }, if: { expr: 'not empty(@slot)' } }],
   } as unknown as Effect;
   const own = { ...system, effects: { ...system.effects, disciple } } as System;
   const healed = (actionId: string, inputs?: Record<string, number>) => {

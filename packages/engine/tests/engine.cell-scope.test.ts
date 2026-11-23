@@ -40,8 +40,8 @@ describe('клетка справочной таблицы, прочитанна
   });
 
   it('в клетке работают функции языка: «строки(…)» — как в формуле шага', () => {
-    const system = withProbe({ цель: 'сумма(строки("abilities", "score"))' });
-    system.effects.strike!.steps!.splice(2, 0, { id: 'прямо', type: 'roll', fixed: { expr: 'сумма(строки("abilities", "score"))' } } as never);
+    const system = withProbe({ цель: 'sum(rows("abilities", "score"))' });
+    system.effects.strike!.steps!.splice(2, 0, { id: 'прямо', type: 'roll', fixed: { expr: 'sum(rows("abilities", "score"))' } } as never);
     const out = exchange({ system, compendium: dnd.compendium as Compendium, die: () => 10, sheets: dnd.sheets as Sheet[], actionId: 'longsword:0', fromId: 'arven', toIds: ['goblin'] });
     const of = (step: string) => out.reports.flatMap(entry => entry.report.trace).find(one => (one as { step?: string }).step === step) as { total: number };
     expect(of('проба').total).toBe(of('прямо').total);
@@ -53,7 +53,7 @@ describe('клетка справочной таблицы, прочитанна
   });
 
   it('«кинуть» в клетке нельзя — кости бросает шаг «Бросок»', () => {
-    expect(() => totals(withProbe({ цель: 'кинуть(к6)' }))).toThrow(/кости бросает шаг «Бросок»/);
+    expect(() => totals(withProbe({ цель: 'roll(d6)' }))).toThrow(/кости бросает шаг «Бросок»/);
   });
 
   it('«Проблемы»: имя в клетке, которого нет в этом месте эффекта, — ошибка у шага, который читает колонку', () => {

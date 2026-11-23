@@ -340,8 +340,8 @@ describe('эффекты D&D собираются в конструкторе р
       within(card()).select('Какое слово', edit);
       within(card()).when(`=${when}`);
     };
-    rollEdit('advantage', '@против == @носитель и @бросающий == @кого');
-    rollEdit('disadvantage', '@бросающий == @носитель и @против == @кого');
+    rollEdit('advantage', '@против == @носитель and @бросающий == @кого');
+    rollEdit('disadvantage', '@бросающий == @носитель and @против == @кого');
     dump({ got: built('hidden'), goal });
     expect(built('hidden')).toEqual(goal);
   });

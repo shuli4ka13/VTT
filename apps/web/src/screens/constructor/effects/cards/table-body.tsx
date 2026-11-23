@@ -35,7 +35,7 @@ export function TableBody({ step, context, edit, system }: { step: Record<string
           options={[['value', 'по числу или формуле'], ['dice', 'бросить кость']]}
           onChange={next => edit(0, draft => {
             const d = loose(draft);
-            if (next === 'dice') { delete d.value; d.dice = dieEntries(system).find(([, c]) => (c.dice ?? []).length === 1)?.[0] ?? { expr: '"1к6"' }; }
+            if (next === 'dice') { delete d.value; d.dice = dieEntries(system).find(([, c]) => (c.dice ?? []).length === 1)?.[0] ?? { expr: '"1d6"' }; }
             else { delete d.dice; d.value = d.value ?? { expr: '0' }; }
           })}
         />

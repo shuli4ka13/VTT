@@ -25,9 +25,9 @@ const system = {
       params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }],
       steps: [
         { type: 'each', of: 'цели' },
-        { id: 'бросок', type: 'roll', die: { expr: '"1к20"' }, tags: ['спас'], by: { expr: '@цель' } },
+        { id: 'бросок', type: 'roll', die: { expr: '"1d20"' }, tags: ['спас'], by: { expr: '@цель' } },
         { id: 'п', type: 'check', value: { expr: '@бросок' }, versus: { expr: '@цель.броня' } },
-        { id: 'в', type: 'roll', die: { expr: '8к6' } },
+        { id: 'в', type: 'roll', die: { expr: '8d6' } },
       ],
     },
   },
@@ -79,8 +79,8 @@ group('журнал говорит словами стола, а не движк
   test('половина при успехе видна в строке: сколько выпало и сколько осталось', () => {
     const half = { ...system, effects: { шаблон: { ...(system.effects as any).шаблон,
       steps: [
-        { id: 'в', type: 'roll', die: { expr: '8к6' } },
-        { id: 'ост', type: 'roll', fixed: { expr: 'округлить вниз(@в / 2)' } },
+        { id: 'в', type: 'roll', die: { expr: '8d6' } },
+        { id: 'ост', type: 'roll', fixed: { expr: 'floor(@в / 2)' } },
       ] } } } as unknown as System;
     const trace = [
       { type: 'roll', step: 'в', rolls: [6, 6, 6, 6, 6, 6], fixed: 36, bonus: 0, total: 36 },
@@ -103,9 +103,9 @@ group('журнал называет чужие и общие поля слов�
   const owned = (bonus: string, versus: string) => ({ ...withColumn(system, { key: 'эскалация', label: 'Кость эскалации', kind: 'number' }, 'desk'),
     effects: { шаблон: { label: 'Удар', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }], steps: [
       { type: 'each', of: 'цели' },
-      { id: 'бросок', type: 'roll', die: { expr: '"1к20"' }, tags: ['атака'], bonus: { expr: bonus }, by: { expr: '@действующий' } },
+      { id: 'бросок', type: 'roll', die: { expr: '"1d20"' }, tags: ['атака'], bonus: { expr: bonus }, by: { expr: '@действующий' } },
       { id: 'п', type: 'check', value: { expr: '@бросок' }, versus: { expr: versus } },
-      { id: 'в', type: 'roll', fixed: { expr: 'если(@бросок.natural >= 20, 2, 1)' } },
+      { id: 'в', type: 'roll', fixed: { expr: 'if(@бросок.natural >= 20, 2, 1)' } },
     ] } } }) as unknown as System;
   const trace = [
     { type: 'roll', step: 'бросок', by: 'мирра', rolls: [12], total: 25, bonus: 13, tags: ['атака'] },

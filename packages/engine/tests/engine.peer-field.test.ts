@@ -10,7 +10,7 @@ const system = {
       columns: [
         { key: 'навык', label: 'Навык', kind: 'number' },
         { key: 'водитель', label: 'Водитель', kind: 'sheet' },
-        { key: 'управление', label: 'Управление', kind: 'number', expr: { expr: 'если(пусто(@водитель), 0, @водитель.навык)' } },
+        { key: 'управление', label: 'Управление', kind: 'number', expr: { expr: 'if(empty(@водитель), 0, @водитель.навык)' } },
       ],
     },
   },

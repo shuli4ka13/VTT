@@ -1,6 +1,9 @@
 import { FormulaRuntimeError } from './errors.ts';
 import { AND, OR, NOT } from './parse.ts';
 import { DICE_BY_STEP } from '../words/glossary.ts';
+import { RU_WORDS } from './words.ts';
+
+const saidName = (name: string): string => (RU_WORDS.functions as Record<string, string>)[name] ?? name;
 import type { Node, BinaryNode, CallNode } from './ast.ts';
 import type { Resolve } from '../model/types.ts';
 
@@ -19,12 +22,12 @@ interface Fn {
 }
 
 const FUNCTIONS: Record<string, Fn> = {
-  'округлить вниз': { arity: 1, apply: args => Math.floor(args[0]!) },
-  'округлить вверх': { arity: 1, apply: args => Math.ceil(args[0]!) },
-  'меньшее из': { arity: '1+', apply: () => 0, raw: args => Math.min(...numbers(args, 'меньшее из')) },
-  'большее из': { arity: '1+', apply: () => 0, raw: args => Math.max(...numbers(args, 'большее из')) },
-  сумма: { arity: '1+', apply: () => 0, raw: args => numbers(args, 'сумма', true).reduce((sum, value) => sum + value, 0) },
-  сколько: {
+  floor: { arity: 1, apply: args => Math.floor(args[0]!) },
+  ceil: { arity: 1, apply: args => Math.ceil(args[0]!) },
+  min: { arity: '1+', apply: () => 0, raw: args => Math.min(...numbers(args, 'меньшее из')) },
+  max: { arity: '1+', apply: () => 0, raw: args => Math.max(...numbers(args, 'большее из')) },
+  sum: { arity: '1+', apply: () => 0, raw: args => numbers(args, 'сумма', true).reduce((sum, value) => sum + value, 0) },
+  count: {
     arity: '1+',
     apply: () => 0,
     raw: args => {
@@ -33,7 +36,7 @@ const FUNCTIONS: Record<string, Fn> = {
       return args.length === 2 ? list.filter(value => String(value) === String(args[1])).length : list.length;
     },
   },
-  строки: {
+  rows: {
     arity: '1+',
     apply: () => 0,
     raw: (args, tools) => {
@@ -42,7 +45,7 @@ const FUNCTIONS: Record<string, Fn> = {
       return tools.rows(String(args[0]), String(args[1]), args.length === 3 ? String(args[2] ?? '') : undefined) as unknown as Value;
     },
   },
-  есть: {
+  has: {
     arity: 2,
     apply: () => 0,
     raw: args => {
@@ -51,7 +54,7 @@ const FUNCTIONS: Record<string, Fn> = {
       return Array.isArray(list) ? list.some(item => String(item) === wanted) : String(list) === wanted;
     },
   },
-  первый: {
+  first: {
     arity: 1,
     apply: () => 0,
     raw: args => {
@@ -59,12 +62,12 @@ const FUNCTIONS: Record<string, Fn> = {
       return (list[0] ?? null) as Value;
     },
   },
-  пусто: {
+  empty: {
     arity: 1,
     apply: () => 0,
     raw: args => args[0] === null || args[0] === undefined || args[0] === '' || (Array.isArray(args[0]) && !(args[0] as unknown[]).length),
   },
-  таблица: {
+  table: {
     arity: '1+',
     apply: () => 0,
     raw: (args, tools) => {
@@ -75,7 +78,7 @@ const FUNCTIONS: Record<string, Fn> = {
       return tools.table(String(args[0]), args[1] as Value, args.length > 2 ? String(args[2]) : null);
     },
   },
-  кость: {
+  die: {
     arity: '1+',
     apply: () => 0,
     raw: args => {
@@ -84,10 +87,10 @@ const FUNCTIONS: Record<string, Fn> = {
       const count = args.length > 1 ? Number(args[1]) : 1;
       if (!Number.isInteger(sides) || sides < 1) throw new FormulaRuntimeError(`«кость»: граней должно быть целое число от 1, получено ${String(args[0])}`);
       if (!Number.isInteger(count) || count < 1) throw new FormulaRuntimeError(`«кость»: костей должно быть целое число от 1, получено ${String(args[1])}`);
-      return `${count}к${sides}`;
+      return `${count}d${sides}`;
     },
   },
-  'максимум костей': {
+  dicemax: {
     arity: '1+',
     apply: args => args[0]!,
     raw: (args, tools) => {
@@ -102,7 +105,7 @@ const FUNCTIONS: Record<string, Fn> = {
 
 export const FUNCTION_NAMES = Object.keys(FUNCTIONS);
 
-const THROW_NAME = 'кинуть';
+const THROW_NAME = 'roll';
 
 export function evaluate(ast: Node, resolve: Resolve, tools: Tools = {}): Value {
   return visit(ast);
@@ -187,10 +190,10 @@ export function evaluate(ast: Node, resolve: Resolve, tools: Tools = {}): Value 
     if (!fn && node.name === THROW_NAME) throw new FormulaRuntimeError(DICE_BY_STEP);
     if (!fn) {
       throw new FormulaRuntimeError(
-        `нет функции «${node.name}»; доступны: ${FUNCTION_NAMES.join(', ')}`);
+        `нет функции «${saidName(node.name)}»; доступны: ${FUNCTION_NAMES.map(saidName).join(', ')}`);
     }
     if (fn.arity === '1+' && node.args.length < 1) {
-      throw new FormulaRuntimeError(`«${node.name}» требует хотя бы один аргумент`);
+      throw new FormulaRuntimeError(`«${saidName(node.name)}» требует хотя бы один аргумент`);
     }
     if (typeof fn.arity === 'number' && node.args.length !== fn.arity) {
       throw new FormulaRuntimeError(

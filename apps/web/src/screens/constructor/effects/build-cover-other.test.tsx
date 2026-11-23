@@ -269,8 +269,8 @@ describe('эффекты пресетов собираются руками: Sha
     param(ui, 'damage', 4, 'Куда попали', 'choice', 'aim', { from: 'aim_places', ask: 'empty' });
 
     const at = (k: number) => () => stepCard(new RegExp(`^${k} · `));
-    const body = '@aim == "по телу" и @damage_type.armor == "через броню"';
-    const headshot = '@aim == "по голове" и @damage_type.armor == "через броню"';
+    const body = '@aim == "по телу" and @damage_type.armor == "через броню"';
+    const headshot = '@aim == "по голове" and @damage_type.armor == "через броню"';
     const guarded = (flow: number, expr: string) => {
       ui.click('+ если');
       within(headOf(block(flow))).when(`=${expr}`);
@@ -304,7 +304,7 @@ describe('эффекты пресетов собираются руками: Sha
     guarded(2, headshot);
     check(2, 5, ['@amount', '@лист.sp_head'], 'сквозь_шлем');
     number(2, 7, '@сквозь_шлем.margin', 'в_голову_всего');
-    number(2, 8, 'если(да, округлить вниз((@в_голову_всего) * 2), @в_голову_всего)', 'в_голову');
+    number(2, 8, 'if(true, floor((@в_голову_всего) * 2), @в_голову_всего)', 'в_голову');
     apply(2, 9, 'hp', '@в_голову');
     apply(2, 9, 'sp_head', '1');
     guarded(4, '@damage_type.armor == "мимо брони"');

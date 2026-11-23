@@ -112,14 +112,14 @@ group('правка вызова: условие над аргументами',
   const mod = (cond: string) => [{ kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '0.5' }, if: { expr: cond } }];
 
   test('формула видит вход вызова: срезается только крупный огненный урон', () => {
-    const p = pass(mod('@тип == "огонь" и @сколько >= 10'));
+    const p = pass(mod('@тип == "огонь" and @сколько >= 10'));
     eq(edited(p, 'урон', 'сколько', 12, [], { тип: 'огонь', сколько: 12 }), 6);
     eq(edited(p, 'урон', 'сколько', 8, [], { тип: 'огонь', сколько: 8 }), 8);
     eq(edited(p, 'урон', 'сколько', 12, [], { тип: 'холод', сколько: 12 }), 12);
   });
 
   test('у броска есть @метки', () => {
-    const p = pass([{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '2' }, if: { expr: 'есть(@метки, "атака")' } }]);
+    const p = pass([{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '2' }, if: { expr: 'has(@метки, "атака")' } }]);
     eq(resolveRoll(p.system, p.sheet, ['атака'], p).bonus, 2);
     eq(resolveRoll(p.system, p.sheet, ['спасбросок'], p).bonus, 0);
   });

@@ -18,11 +18,11 @@ group('зависимости формулы', () => {
   });
 
   test('ссылки внутри вызова функции видны', () => {
-    deepEq(deps('округлить вниз((#str - 10) / 2)'), ['str']);
+    deepEq(deps('floor((#str - 10) / 2)'), ['str']);
   });
 
   test('ссылки во всех трёх частях «если» видны', () => {
-    deepEq(deps('если(@heavy, @ac_base, @ac_base + @dex_mod)'), ['heavy', 'ac_base', 'dex_mod']);
+    deepEq(deps('if(@heavy, @ac_base, @ac_base + @dex_mod)'), ['heavy', 'ac_base', 'dex_mod']);
   });
 
   test('ссылка под унарным минусом видна', () => {
@@ -30,6 +30,6 @@ group('зависимости формулы', () => {
   });
 
   test('ссылки в нескольких аргументах видны', () => {
-    deepEq(deps('большее из(#a, меньшее из(#b, #c))'), ['a', 'b', 'c']);
+    deepEq(deps('max(#a, min(#b, #c))'), ['a', 'b', 'c']);
   });
 });

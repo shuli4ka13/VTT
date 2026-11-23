@@ -115,7 +115,7 @@ describe('ленивые броски до «Для каждого из»', () =
     const steps = [IF('@a'), { id: 'x' }, ELSE, { id: 'y' }, END] as { type?: string; if?: unknown }[];
     const plan = lazyPlan(steps, index => index === 1 || index === 3);
     expect(plan.guards.get(1)).toBe('@a');
-    expect(plan.guards.get(3)).toBe('не @a');
+    expect(plan.guards.get(3)).toBe('not @a');
     expect([...plan.hidden].sort()).toEqual([0, 2, 4]);
   });
 });
@@ -154,7 +154,7 @@ describe('устройство блоков', () => {
   });
 
   it('линт: условие на обычном шаге и «Для каждого из» внутри блока — ошибки', () => {
-    const own = world([EACH, { ...sub('1'), if: { expr: 'да' } }]);
+    const own = world([EACH, { ...sub('1'), if: { expr: 'true' } }]);
     expect(errorsOf(lintSystem(own, book)).map(p => p.text)).toContain('у шага своё условие — условие теперь ставится блоком «Если»');
     const looped = world([IF('да'), EACH, END, sub('1')]);
     expect(errorsOf(lintSystem(looped, book)).map(p => p.text).join('\n')).toMatch(/не ставится внутрь «Если»/);

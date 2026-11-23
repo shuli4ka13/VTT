@@ -49,7 +49,7 @@ export function tight(part: string): string {
 
 export interface TableCall { table: string; arg: string; column: string | null }
 
-const TABLE = 'таблица';
+const TABLE = 'table';
 
 function splitArgs(inside: string): string[] | null {
   const out: string[] = [];

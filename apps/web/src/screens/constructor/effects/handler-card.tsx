@@ -69,7 +69,7 @@ function outcomesOf(system: System, listened: string, phase: Phase): (readonly [
     const index = steps.findIndex(step => step.id && output.ref.startsWith(`${step.id}.`));
     const path = output.ref.slice(String(steps[index]!.id).length);
     return phase === 'done' && split >= 0 && index > split
-      ? [`сколько(@${TARGETS_SEED}.${steps[index]!.id}${path}, да) >= 1`, `хоть по одной цели: ${output.label}`] as const
+      ? [`count(@${TARGETS_SEED}.${steps[index]!.id}${path}, true) >= 1`, `хоть по одной цели: ${output.label}`] as const
       : [`@${output.ref}`, output.label] as const;
   });
 }
@@ -81,7 +81,7 @@ function heardOutcomes(system: System, id: string, index: number): (readonly [st
     for (const child of one.children ?? []) {
       if (child.kind !== 'boolean') continue;
       out.push(one.name === TARGETS_SEED
-        ? [`сколько(@${one.name}${child.path}, да) >= 1`, `хоть по одной цели: ${child.label}`] as const
+        ? [`count(@${one.name}${child.path}, true) >= 1`, `хоть по одной цели: ${child.label}`] as const
         : [`@${one.name}${child.path}`, `${one.label} — ${child.label}`] as const);
     }
   }

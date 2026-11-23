@@ -38,7 +38,7 @@ describe('FormulaChips', () => {
   it('набрал @бон — подсказка по названию, клик вставляет тег в данные', () => {
     let value = '1d20 + @бон';
     render(<FormulaChips value={value} system={system} onChange={next => { value = next; }} />);
-    const input = screen.getByDisplayValue('1d20 + @бон') as HTMLInputElement;
+    const input = screen.getByDisplayValue('1к20 + @бон') as HTMLInputElement;
     input.focus();
     input.setSelectionRange(value.length, value.length);
     fireEvent.click(input);
@@ -91,7 +91,7 @@ describe('FormulaChips', () => {
     input.setSelectionRange(0, 0);
     fireEvent.click(input);
     fireEvent.mouseDown(screen.getByText('округлить вниз'));
-    expect(value).toBe('округлить вниз()2 + 2');
+    expect(value).toBe('floor()2 + 2');
   });
 
   it('без флага calculator ряда операций нет и в фокусе', () => {
@@ -187,7 +187,7 @@ describe('лист поля — часть имени', () => {
 describe('набор формулы не рвётся посреди имени', () => {
   it('недописанное имя остаётся в том же куске текста — нового пустого поля ввода не появляется', () => {
     const known = (tag: string) => tag === 'сила';
-    expect(partsOf('1к20 + @б', known)).toEqual([{ text: '1к20 + @б' }]);
+    expect(partsOf('1d20 + @б', known)).toEqual([{ text: '1d20 + @б' }]);
     expect(partsOf('@сила + @б', known)).toEqual([{ text: '' }, { tag: 'сила' }, { text: ' + @б' }]);
   });
 
@@ -202,7 +202,7 @@ describe('набор формулы не рвётся посреди имени'
   });
 
   it('у входа эффекта — метка «вход», а не лист', () => {
-    render(<FormulaChips value="1к20 + @бонус" system={system} onChange={() => {}}
+    render(<FormulaChips value="1d20 + @бонус" system={system} onChange={() => {}}
       extraNames={new Map([['бонус', 'Бонус атаки']])} badges={new Map([['бонус', 'вход']])} />);
     expect(screen.getByText('вход')).toBeTruthy();
   });
@@ -225,7 +225,7 @@ describe('«из таблицы» — кликами и фишками с наз
   } as unknown as System;
 
   it('таблица и колонка внутри «таблица(…)» — фишки с названиями, данные не меняются', () => {
-    const value = 'таблица("уровни", @уровень, "колонка")';
+    const value = 'table("уровни", @уровень, "колонка")';
     render(<FormulaChips value={value} system={withLevels} onChange={() => {}} />);
     expect(screen.getByText('Уровень персонажа')).toBeTruthy();
     expect(screen.getByText('Бонус мастерства')).toBeTruthy();

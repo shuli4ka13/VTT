@@ -18,7 +18,7 @@ const shieldWorld: any = {
     ...system.effects,
     shield: {
       label: 'Щит', activation: 'passive',
-      on: [{ on: 'before:атака', confirm: true, if: { expr: '@цель == @носитель и @hit.success' }, steps: [{ type: 'status', mode: 'apply', effect: 'shield_up', to: { expr: '@носитель' } }] }],
+      on: [{ on: 'before:атака', confirm: true, if: { expr: '@цель == @носитель and @hit.success' }, steps: [{ type: 'status', mode: 'apply', effect: 'shield_up', to: { expr: '@носитель' } }] }],
     },
     shield_up: {
       label: 'Под щитом', activation: 'passive', duration: { kind: 'turns', max: 1 },
@@ -82,7 +82,7 @@ group('увидев кости: решил докинуть', () => {
       ...system.effects,
       inspire: {
         label: 'Вдохновение: перебросить', activation: 'passive',
-        on: [{ on: 'seen', confirm: true, if: { expr: '@бросающий == @носитель и @носитель.inspiration > 0' }, steps: [{ type: 'apply', target: { expr: '@носитель.inspiration' }, direction: 'subtract', value: { expr: '1' } }, { type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
+        on: [{ on: 'seen', confirm: true, if: { expr: '@бросающий == @носитель and @носитель.inspiration > 0' }, steps: [{ type: 'apply', target: { expr: '@носитель.inspiration' }, direction: 'subtract', value: { expr: '1' } }, { type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
       },
     },
   };
@@ -113,11 +113,11 @@ group('подписка на исходящее: вампиризм и метк�
       vampiric: {
         label: 'Вампиризм', activation: 'passive', duration: { kind: 'permanent' },
         on: [{ on: 'after:damage', if: { expr: '@источник == @носитель' }, steps: [{ type: 'apply', target: { expr: '@носитель.hp_current' }, direction: 'add',
-          value: { expr: 'округлить вниз(@amount / 2)' } }] }],
+          value: { expr: 'floor(@amount / 2)' } }] }],
       },
       brand: {
         label: 'Метка охотника', activation: 'passive', duration: { kind: 'permanent' },
-        on: [{ on: 'after:fire_bolt', if: { expr: '@действующий == @носитель и @hit.success' }, steps: [{ type: 'status', mode: 'apply', effect: 'poisoned', to: { expr: '@цель' } }] }],
+        on: [{ on: 'after:fire_bolt', if: { expr: '@действующий == @носитель and @hit.success' }, steps: [{ type: 'status', mode: 'apply', effect: 'poisoned', to: { expr: '@цель' } }] }],
       },
     },
   };
@@ -200,7 +200,7 @@ group('реакция после разрешения: «на меня поде�
       ...system.effects,
       rebuke: {
         label: 'Возмездие', activation: 'passive',
-        on: [{ on: 'after:strike', confirm: true, if: { expr: '@цель == @носитель и @hit.success' }, steps: [{ type: 'apply', target: { expr: '@действующий.hp_current' }, direction: 'subtract', value: { expr: '3' } }] }],
+        on: [{ on: 'after:strike', confirm: true, if: { expr: '@цель == @носитель and @hit.success' }, steps: [{ type: 'apply', target: { expr: '@действующий.hp_current' }, direction: 'subtract', value: { expr: '3' } }] }],
       },
     },
   };

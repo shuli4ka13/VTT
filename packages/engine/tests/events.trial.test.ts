@@ -59,7 +59,7 @@ group('пробный прогон эффекта на манекенах', () =
 
   test('образцы аргументов по виду входы', () => {
     const system = SAMPLE_WORLDS[0]!.system as System;
-    eq(sampleArg('dice', system), '1к6');
+    eq(sampleArg('dice', system), '1d6');
     eq(sampleArg('number', system), 1);
     eq(typeof sampleArg('effect', system), 'string');
   });

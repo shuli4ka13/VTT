@@ -1,8 +1,9 @@
 import { group, test, eq, deepEq, throws } from './harness.ts';
 import { lex } from '../src/formula/lex.ts';
 import { FormulaSyntaxError } from '../src/formula/errors.ts';
+import { RU_WORDS } from '../src/formula/words.ts';
 
-const shape = src => lex(src).filter(t => t.type !== 'eof').map(t => `${t.type}:${t.value}`);
+const shape = (src, words?) => lex(src, words).filter(t => t.type !== 'eof').map(t => `${t.type}:${t.value}`);
 
 group('лексер', () => {
   test('целое число', () => {
@@ -32,11 +33,11 @@ group('лексер', () => {
   });
 
   test('вызов функции', () => {
-    deepEq(shape('округлить вниз(1.5)'), ['ident:округлить вниз', 'lparen:(', 'number:1.5', 'rparen:)']);
+    deepEq(shape('floor(1.5)'), ['ident:floor', 'lparen:(', 'number:1.5', 'rparen:)']);
   });
 
   test('запятая между аргументами', () => {
-    deepEq(shape('большее из(1, 2)'), ['ident:большее из', 'lparen:(', 'number:1', 'comma:,', 'number:2', 'rparen:)']);
+    deepEq(shape('max(1, 2)'), ['ident:max', 'lparen:(', 'number:1', 'comma:,', 'number:2', 'rparen:)']);
   });
 
   test('двухсимвольные сравнения не распадаются на одиночные', () => {
@@ -52,13 +53,14 @@ group('лексер', () => {
   });
 
   test('«если» — обычное имя функции, а знаки «?» и «:» формулам не нужны', () => {
-    deepEq(shape('если(1, 2, 3)'), ['ident:если', 'lparen:(', 'number:1', 'comma:,', 'number:2', 'comma:,', 'number:3', 'rparen:)']);
+    deepEq(shape('if(1, 2, 3)'), ['ident:if', 'lparen:(', 'number:1', 'comma:,', 'number:2', 'comma:,', 'number:3', 'rparen:)']);
     throws(() => lex('1 ? 2 : 3'), FormulaSyntaxError);
   });
 
   test('имя из двух слов читается целиком только перед скобкой', () => {
-    deepEq(shape('округлить вниз (1)'), ['ident:округлить вниз', 'lparen:(', 'number:1', 'rparen:)']);
-    deepEq(shape('округлить(1)'), ['ident:округлить', 'lparen:(', 'number:1', 'rparen:)']);
+    deepEq(shape('округлить вниз (1)', RU_WORDS), ['ident:округлить вниз', 'lparen:(', 'number:1', 'rparen:)']);
+    deepEq(shape('округлить(1)', RU_WORDS), ['ident:округлить', 'lparen:(', 'number:1', 'rparen:)']);
+    deepEq(shape('округлить вниз', RU_WORDS), ['ident:округлить', 'ident:вниз']);
   });
 
   test('позиция токена указывает на начало в исходной строке', () => {
@@ -96,24 +98,28 @@ group('лексер', () => {
 
 group('лексер: запись кости без кавычек', () => {
   test('кость — текст с признаком кости, счёт по умолчанию 1', () => {
-    deepEq(shape('к4'), ['text:1к4']);
-    deepEq(shape('1к4'), ['text:1к4']);
-    deepEq(shape('2к6'), ['text:2к6']);
-    deepEq(shape('д6'), ['text:1к6']);
-    eq(lex('2к6')[0].dice, true);
-    eq(lex('2к6')[0].text, '2к6');
+    deepEq(shape('d4'), ['text:1d4']);
+    deepEq(shape('1d4'), ['text:1d4']);
+    deepEq(shape('2d6'), ['text:2d6']);
+    eq(lex('2d6')[0].dice, true);
+    eq(lex('2d6')[0].text, '2d6');
+    deepEq(shape('к4', RU_WORDS), ['text:1d4']);
+    deepEq(shape('2d6', RU_WORDS), ['text:2d6']);
+    deepEq(shape('д6', RU_WORDS), ['text:1d6']);
+    deepEq(shape('к4'), ['ident:к4']);
   });
 
   test('кость внутри «кинуть»', () => {
-    deepEq(shape('кинуть(к4) + 1'), ['ident:кинуть', 'lparen:(', 'text:1к4', 'rparen:)', 'op:+', 'number:1']);
+    deepEq(shape('roll(d4) + 1'), ['ident:roll', 'lparen:(', 'text:1d4', 'rparen:)', 'op:+', 'number:1']);
   });
 
   test('не кость: буква или точка после цифр, дробный счёт, ссылка, кавычки, «да»', () => {
-    deepEq(shape('к6к'), ['ident:к6к']);
-    deepEq(shape('к4.5'), ['ident:к4.5']);
+    deepEq(shape('d6d'), ['ident:d6d']);
+    deepEq(shape('d4.5'), ['ident:d4.5']);
     deepEq(shape('1.5'), ['number:1.5']);
-    deepEq(shape('@к4'), ['ref:к4']);
-    eq(lex('"1к4"')[0].dice, undefined);
-    deepEq(shape('да'), ['ident:да']);
+    deepEq(shape('@d4'), ['ref:d4']);
+    eq(lex('"1d4"')[0].dice, undefined);
+    deepEq(shape('true'), ['ident:true']);
+    deepEq(shape('да', RU_WORDS), ['ident:да']);
   });
 });

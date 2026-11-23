@@ -49,7 +49,7 @@ group('«сколько вышло всего» — итог броска с т�
   });
 
   test('имя броска и его итог равны при прибавке шага', () => {
-    const steps = [EACH, { id: 'удар', type: 'roll', die: 'к20', bonus: { expr: '3' }, by: { expr: '@действующий' } }, hit('если(@удар == @удар.total, @удар.total, 0)')];
+    const steps = [EACH, { id: 'удар', type: 'roll', die: 'к20', bonus: { expr: '3' }, by: { expr: '@действующий' } }, hit('if(@удар == @удар.total, @удар.total, 0)')];
     eq(lost(build(steps), [11]), 14);
   });
 
@@ -60,7 +60,7 @@ group('«сколько вышло всего» — итог броска с т�
         { kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '2' }, if: { expr: '@бросающий == @носитель' } },
       ] },
     };
-    const steps = [EACH, { id: 'удар', type: 'roll', die: 'к20', by: { expr: '@действующий' } }, hit('если(@удар == @удар.total, @удар.total, 0)')];
+    const steps = [EACH, { id: 'удар', type: 'roll', die: 'к20', by: { expr: '@действующий' } }, hit('if(@удар == @удар.total, @удар.total, 0)')];
     eq(lost(build(steps, effects), [4, 17], sheet('боец', [{ effectId: 'везение' }])), 19);
   });
 });

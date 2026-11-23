@@ -10,10 +10,10 @@ const system = {
     чары: {
       shape: 'book', use: 'action', label: 'Чары', columns: [],
       bindings: [
-        { label: 'Сотворить', effect: 'колдовство', args: { держит: { expr: 'да' } } },
+        { label: 'Сотворить', effect: 'колдовство', args: { держит: { expr: 'true' } } },
         { label: 'Прекратить', effect: 'прекратить', args: {} },
         { label: 'Развеять', effect: 'развеять', args: {} },
-        { label: 'Мгновенное', effect: 'колдовство', args: { держит: { expr: 'нет' } } },
+        { label: 'Мгновенное', effect: 'колдовство', args: { держит: { expr: 'false' } } },
       ],
     },
   },
@@ -208,7 +208,7 @@ group('проверка системы: многоместное держани�
 
   test('«Какие снять» у наложения — не действует', () => {
     const bad = structuredClone(system) as System & { effects: Record<string, any> };
-    bad.effects.колдовство.steps[1].where = { expr: 'да' };
+    bad.effects.колдовство.steps[1].where = { expr: 'true' };
     ok(texts(bad).some(t => t.includes('«Какие снять» здесь не действует')));
   });
 });

@@ -17,9 +17,9 @@ const system = {
       label: 'Состязание', activation: 'manual',
       params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }, { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель' } }],
       steps: [
-        { id: 'мой', type: 'roll', die: { expr: 'кость(@действующий.ловкость)' }, by: { expr: '@действующий' } },
+        { id: 'мой', type: 'roll', die: { expr: 'die(@действующий.ловкость)' }, by: { expr: '@действующий' } },
         { type: 'each', of: 'цели' },
-        { id: 'его', type: 'roll', die: { expr: 'кость(@цель.ловкость)' }, by: { expr: '@цель' } },
+        { id: 'его', type: 'roll', die: { expr: 'die(@цель.ловкость)' }, by: { expr: '@цель' } },
         { id: 'итог', type: 'check', value: { expr: '@мой' }, versus: { expr: '@его' }, successWhen: 'over' },
         { type: 'branch', if: { expr: '@итог.success' } },
         { type: 'apply', target: { expr: '@действующий.победил' }, direction: 'add', value: { expr: '1' } },

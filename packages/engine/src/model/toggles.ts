@@ -51,7 +51,7 @@ const critOfCall = (system: System | undefined, step: Step): string | null => {
   const called = (step as { effect?: unknown }).effect;
   if (step.type !== 'emit' || !step.id || typeof called !== 'string') return null;
   const returns = system?.effects?.[called]?.returns ?? [];
-  if (returns.some(column => column.key === 'крит')) return `если(@${String(step.id)}.крит, 2, 1)`;
+  if (returns.some(column => column.key === 'крит')) return `if(@${String(step.id)}.крит, 2, 1)`;
   for (const column of returns) {
     if (column.kind !== 'choice' || !column.from || column.many) continue;
     const factor = (system?.tables?.[column.from]?.columns ?? []).find(one => (one.kind ?? 'number') === 'number');
@@ -76,7 +76,7 @@ const amountsAfterCheck = (steps: Step[], system?: System): { check: Step; amoun
     if (check && repeated(step)) { out.push({ check, amount: step, crit }); continue; }
     if (owned(step)) {
       check = step.id ? step : null;
-      crit = check ? `если(@${String(step.id)}.atMax >= 1, 2, 1)` : '';
+      crit = check ? `if(@${String(step.id)}.atMax >= 1, 2, 1)` : '';
       continue;
     }
     if (!check) continue;
@@ -85,7 +85,7 @@ const amountsAfterCheck = (steps: Step[], system?: System): { check: Step; amoun
   return out;
 };
 
-const DOUBLER = /^если\(.*,\s*2\s*,\s*1\s*\)$/;
+const DOUBLER = /^if\(.*,\s*2\s*,\s*1\s*\)$/;
 
 const OUTCOME_COLUMN = /^@([\p{L}\p{N}_]+)\.([\p{L}\p{N}_]+)\.[\p{L}\p{N}_]+$/u;
 
@@ -172,7 +172,7 @@ export function armorTail(choice: ArmorChoice, armor: string, hp: string, amount
   }
   const through = { type: 'check', value, versus: field(armor), successWhen: 'over', id: ARMOR_STEP } as Step;
   const held = [
-    { type: 'branch', if: { expr: `не @${ARMOR_STEP}.success` } } as Step,
+    { type: 'branch', if: { expr: `not @${ARMOR_STEP}.success` } } as Step,
     { type: 'stop', note: { expr: '"броня выдержала"' } } as Step,
     { type: 'end' } as Step,
   ];

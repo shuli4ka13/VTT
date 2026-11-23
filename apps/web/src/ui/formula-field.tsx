@@ -6,6 +6,7 @@ import { useFormulaBar } from '../store/formula-bar.ts';
 import type { BarOption } from '../store/formula-bar.ts';
 import { FormulaChips } from './formula-chips.tsx';
 import { useLookup } from '../store/lookup.ts';
+import { shownFormula } from './formula-lang.ts';
 
 export interface FormulaFieldProps {
   value: string;
@@ -31,7 +32,7 @@ export interface FormulaFieldProps {
 }
 
 function SpokenFormula({ words, formula, onOpen }: { words: string; formula: string; onOpen: () => void }) {
-  return <button type="button" className="formula-words" title={formula} onClick={onOpen}>{words}</button>;
+  return <button type="button" className="formula-words" title={shownFormula(formula)} onClick={onOpen}>{words}</button>;
 }
 
 export function FormulaField(props: FormulaFieldProps) {

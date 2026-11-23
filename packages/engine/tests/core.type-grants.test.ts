@@ -31,7 +31,7 @@ const world = (hull: boolean): System => flattenSystem({
       { type: 'emit', effect: 'урон', args: { кому: { expr: '@цель' }, сколько: { expr: '@бросок.total' } } },
     ] },
     корпус: { label: 'Корпус', activation: 'passive', modifiers: [
-      { kind: 'edit', call: 'урон', param: 'сколько', op: 'add', value: { expr: '0 - @сколько' }, if: { expr: '@кому == @носитель и @сколько <= @носитель.тело' } },
+      { kind: 'edit', call: 'урон', param: 'сколько', op: 'add', value: { expr: '0 - @сколько' }, if: { expr: '@кому == @носитель and @сколько <= @носитель.тело' } },
       { kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '-3' }, if: { expr: '@бросающий == @носитель' }, tags: ['атака'] },
     ] },
   },

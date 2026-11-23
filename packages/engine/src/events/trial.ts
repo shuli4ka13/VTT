@@ -35,7 +35,7 @@ export function sampleArg(
 ): unknown {
   const list = listOf(system, from);
   if (list?.length) return list[0]!.value;
-  if (kind === 'dice') return '1к6';
+  if (kind === 'dice') return '1d6';
   if (kind === 'number') return 1;
   if (kind === 'text') return 'проба';
   if (kind === 'effect') return Object.keys(system.effects)[0] ?? '';

@@ -6,7 +6,7 @@ import type { System, Sheet, Compendium } from '../src/model/types.ts';
 const system = {
   id: 'x', name: 'x',
   tables: { лист: { shape: 'single', columns: [
-    { key: 'кд', label: 'КД', expr: { expr: '10 + если(@отравлен >= 1, 0, 2)' } },
+    { key: 'кд', label: 'КД', expr: { expr: '10 + if(@отравлен >= 1, 0, 2)' } },
   ] } },
   effects: {
     отравлен: { label: 'Отравлен', activation: 'passive', reapply: 'stack', modifiers: [] },

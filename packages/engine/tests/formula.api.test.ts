@@ -3,8 +3,8 @@ import { compile, FormulaError, printFormula } from '../src/formula/index.ts';
 
 group('интерфейс модуля формул', () => {
   test('compile возвращает дерево, зависимости и исходную строку', () => {
-    const f = compile('округлить вниз((#str - 10) / 2)');
-    eq(f.source, 'округлить вниз((#str - 10) / 2)');
+    const f = compile('floor((#str - 10) / 2)');
+    eq(f.source, 'floor((#str - 10) / 2)');
     deepEq(f.deps, ['str']);
     eq(f.ast.kind, 'Call');
   });
@@ -31,16 +31,16 @@ group('интерфейс модуля формул', () => {
 
 group('запись кости: вычисление и печать', () => {
   test('кинуть(к4) узнаётся и отвечает, что кости бросает шаг «Бросок»', () => {
-    const беда = throws(() => compile('кинуть(к4) + 1').evaluate(() => 0));
+    const беда = throws(() => compile('roll(d4) + 1').evaluate(() => 0));
     ok(String(беда.message).includes('шаг «Бросок»'), String(беда.message));
   });
 
   test('голая кость в арифметике — ошибка вычисления, не тихий ноль', () => {
-    throws(() => compile('к4 + 1').evaluate(() => 0), FormulaError);
+    throws(() => compile('d4 + 1').evaluate(() => 0), FormulaError);
   });
 
   test('печать хранит запись автора без кавычек', () => {
-    eq(printFormula(compile('-кинуть(к4) + кинуть(2d6)').ast), '-кинуть(к4) + кинуть(2d6)');
-    eq(printFormula(compile('кинуть("1к4")').ast), 'кинуть("1к4")');
+    eq(printFormula(compile('-roll(d4) + roll(2d6)').ast), '-roll(d4) + roll(2d6)');
+    eq(printFormula(compile('roll("1d4")').ast), 'roll("1d4")');
   });
 });

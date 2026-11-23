@@ -7,7 +7,7 @@ import { ROLL_CALL } from '../words/calls.ts';
 import { DICE_TEXT } from '../words/glossary.ts';
 import { STEP_WORDS, type StepWords } from '../words/steps.ts';
 import type { System, Compendium, Effect, Step, Modifier, Guard, Param, Table } from './types.ts';
-import { compile, FUNCTION_NAMES } from '../formula/index.ts';
+import { compile, FUNCTION_NAMES, IF } from '../formula/index.ts';
 import { isFormulaCell } from './sheet-columns.ts';
 import type { Node } from '../formula/index.ts';
 import { registry, loopsAt, splitsTargets } from '../engine/steps/index.ts';
@@ -191,7 +191,7 @@ export const lookupColumnsIn = (source: string): [string, string][] => {
   const walk = (node: Node): void => {
     if (node.kind === 'Call') {
       const [first, , third] = node.args;
-      if (node.name === 'таблица' && first?.kind === 'Text' && third?.kind === 'Text') out.push([first.value, third.value]);
+      if (node.name === 'table' && first?.kind === 'Text' && third?.kind === 'Text') out.push([first.value, third.value]);
       node.args.forEach(walk);
     } else if (node.kind === 'Unary') walk(node.operand);
     else if (node.kind === 'Binary') { walk(node.left); walk(node.right); }
@@ -208,7 +208,7 @@ export const tablesIn = (source: string): string[] => {
   const walk = (node: Node): void => {
     if (node.kind === 'Call') {
       const first = node.args[0];
-      if (node.name === 'таблица' && first?.kind === 'Text' && !out.includes(first.value)) out.push(first.value);
+      if (node.name === 'table' && first?.kind === 'Text' && !out.includes(first.value)) out.push(first.value);
       node.args.forEach(walk);
     } else if (node.kind === 'Unary') walk(node.operand);
     else if (node.kind === 'Binary') { walk(node.left); walk(node.right); }
@@ -252,9 +252,9 @@ export const diceAsNumber = (source: string): boolean => {
   return walk(ast);
 };
 
-const KNOWN_FUNCTIONS = new Set([...FUNCTION_NAMES, 'если']);
+const KNOWN_FUNCTIONS = new Set([...FUNCTION_NAMES, IF]);
 
-const THROW_NAME = 'кинуть';
+const THROW_NAME = 'roll';
 
 export const unknownFunctions = (source: string): string[] => {
   let ast: Node;

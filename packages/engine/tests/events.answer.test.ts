@@ -26,7 +26,7 @@ const system = {
       steps: [
         { type: 'each', of: 'цели' },
         { id: 'нанесено', type: 'emit', effect: 'урон', args: { лист: { expr: '@цель' }, сколько: { expr: '10' } } },
-        { type: 'emit', effect: 'лечение', args: { лист: { expr: '@действующий' }, сколько: { expr: 'округлить вниз(@нанесено.amount / 2)' } } },
+        { type: 'emit', effect: 'лечение', args: { лист: { expr: '@действующий' }, сколько: { expr: 'floor(@нанесено.amount / 2)' } } },
       ],
     },
   },

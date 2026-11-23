@@ -11,8 +11,8 @@ const system = {
       shape: 'book', use: 'action', label: 'Чары',
       columns: [{ key: 'по_области', label: 'По области', kind: 'boolean', default: false }, { key: 'защита', label: 'Защита', kind: 'choice', from: 'защиты' }],
       bindings: [
-        { label: 'По области', effect: 'колдовать', args: { область: { expr: 'да' }, защита: { expr: '"воля"' } } },
-        { label: 'В одного', effect: 'колдовать', args: { область: { expr: 'нет' }, защита: { expr: '"порог"' } } },
+        { label: 'По области', effect: 'колдовать', args: { область: { expr: 'true' }, защита: { expr: '"воля"' } } },
+        { label: 'В одного', effect: 'колдовать', args: { область: { expr: 'false' }, защита: { expr: '"порог"' } } },
         { label: 'По записи', effect: 'колдовать', args: { область: { expr: '@по_области' }, защита: { expr: '@защита' } } },
       ],
     },

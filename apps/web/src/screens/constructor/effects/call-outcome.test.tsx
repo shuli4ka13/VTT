@@ -115,7 +115,7 @@ describe('шапка склеенного «Если» по вызову', () =>
     within(headOf(block(0))).select(pick(), 'формулой…');
     expect(isFused(block(0))).toBe(false);
     expect(steps().map(step => step.type)).toEqual(['emit', 'branch', 'end']);
-    expect(steps()[1]).toEqual({ type: 'branch', if: { expr: '@атака.попал == да' } });
+    expect(steps()[1]).toEqual({ type: 'branch', if: { expr: '@атака.попал == true' } });
     expect(headOf(block(0)).querySelector('.cond__formula, .formula-field, .formula-words')).not.toBeNull();
   });
 });

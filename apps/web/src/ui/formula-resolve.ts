@@ -1,5 +1,6 @@
 import { lex, FUNCTION_NAMES, BOOLEANS, AND, OR, NOT } from '@vtt/engine';
 import type { Token } from '@vtt/engine';
+import { formulaWords } from './formula-lang.ts';
 
 export interface KnownName { tag: string; label: string }
 
@@ -7,7 +8,12 @@ export interface Unknown { at: number; word: string; near: string | null; severa
 
 export interface Resolved { text: string; caret: number; unknown: Unknown[] }
 
-const WORDS = new Set<string>([...FUNCTION_NAMES, ...Object.keys(BOOLEANS), AND, OR, NOT]);
+const wordsNow = (): Set<string> => {
+  const own = formulaWords();
+  const set = new Set<string>([...FUNCTION_NAMES, ...Object.keys(BOOLEANS), AND, OR, NOT]);
+  for (const word of [own.and, own.or, own.not, own.yes, own.no, own.if, ...Object.values(own.functions)]) set.add(word.toLowerCase());
+  return set;
+};
 
 export const plain = (text: string): string => text.toLowerCase().replace(/ё/gu, 'е').replace(/_/gu, ' ').replace(/\s+/gu, ' ').trim();
 
@@ -67,6 +73,7 @@ interface Run { from: number; to: number; words: Token[] }
 
 const runsOf = (text: string, tokens: readonly Token[]): Run[] => {
   const out: Run[] = [];
+  const words = wordsNow();
   let run: Token[] = [];
   const close = () => {
     if (run.length) out.push({ from: run[0]!.pos, to: run.at(-1)!.pos + run.at(-1)!.text.length, words: run });
@@ -75,7 +82,7 @@ const runsOf = (text: string, tokens: readonly Token[]): Run[] => {
   tokens.forEach((token, at) => {
     const next = tokens[at + 1];
     const call = token.type === 'ident' && next?.type === 'lparen';
-    if (token.type !== 'ident' || call || WORDS.has(token.text.toLowerCase())) { close(); return; }
+    if (token.type !== 'ident' || call || words.has(token.text.toLowerCase())) { close(); return; }
     const last = run.at(-1);
     if (last && !/^ +$/u.test(text.slice(last.pos + last.text.length, token.pos))) close();
     run.push(token);
@@ -87,7 +94,7 @@ const runsOf = (text: string, tokens: readonly Token[]): Run[] => {
 export function resolveNames(text: string, known: readonly KnownName[], options: { caret?: number; final?: boolean } = {}): Resolved {
   const caret = options.caret ?? text.length;
   let tokens: Token[];
-  try { tokens = lex(text); } catch { return { text, caret, unknown: [] }; }
+  try { tokens = lex(text, formulaWords()); } catch { return { text, caret, unknown: [] }; }
   const index = indexOf(known);
   const edits: { from: number; to: number; put: string }[] = [];
   const unknown: Unknown[] = [];

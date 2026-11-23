@@ -13,7 +13,7 @@ const base = {
       label: 'Характеристики', owner: 'sheet',
       columns: [
         { key: 'score', label: 'Значение', kind: 'number', default: 10 },
-        { key: 'mod', label: 'Модификатор', kind: 'number', expr: { expr: 'округлить вниз((@строка.score - 10) / 2)' }, title: 'Модификатор: {label}' },
+        { key: 'mod', label: 'Модификатор', kind: 'number', expr: { expr: 'floor((@строка.score - 10) / 2)' }, title: 'Модификатор: {label}' },
       ],
       rows: [{ value: 'сила', label: 'Сила' }, { value: 'ловкость', label: 'Ловкость' }],
     },
@@ -76,7 +76,7 @@ group('таблица на листе: пустая клетка — ввод, �
     const own = copy();
     own.tables!.abilities!.rows![1]!.cells = { mod: { expr: '@строка.score * 2' } };
     deepEq(fieldsOf(own).filter(f => f.cell?.column === 'mod').map(f => (f.value as { expr: string }).expr),
-      ['округлить вниз((@abilities.сила.score - 10) / 2)', '@abilities.ловкость.score * 2']);
+      ['floor((@abilities.сила.score - 10) / 2)', '@abilities.ловкость.score * 2']);
   });
 
   test('вид одной клетки лежит у строки и перебивает вид колонки', () => {

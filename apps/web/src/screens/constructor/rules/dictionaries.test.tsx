@@ -235,7 +235,7 @@ describe('Словари: кости, правки броска, таблицы'
 
     const edits = useWorld.getState().system.roll_edits!;
     const [key] = Object.keys(edits);
-    expect(edits[key!]!.ops).toEqual([{ op: 'plus', die: '1к6' }]);
+    expect(edits[key!]!.ops).toEqual([{ op: 'plus', die: '1d6' }]);
     expect(screen.getByText('Прибавить 1к6.')).toBeTruthy();
   });
 
@@ -453,7 +453,7 @@ describe('Словари: кости, правки броска, таблицы'
       ...state,
       system: {
         ...emptySystem(),
-        tables: { лист: { shape: 'single', columns: [{ key: 'pb', label: 'Бонус мастерства', expr: { expr: 'таблица("proficiency", #level)' } }] }, proficiency: { label: 'Бонус мастерства', key: 'range',
+        tables: { лист: { shape: 'single', columns: [{ key: 'pb', label: 'Бонус мастерства', expr: { expr: 'table("proficiency", #level)' } }] }, proficiency: { label: 'Бонус мастерства', key: 'range',
           columns: [{ key: 'value', label: 'значение', kind: 'number' }], rows: [{ from: 1, to: 4, cells: { value: 2 } }] } },
       },
       activeEffectId: null,
@@ -591,7 +591,7 @@ describe('Быстрые настройки: крит и броня пишутс
     expect(tail.map(s => s.type)).toEqual(['check', 'branch', 'stop', 'end', 'apply']);
     expect((tail[0] as { successWhen?: string }).successWhen).toBe('over');
     expect((tail[0] as { versus?: { expr?: string } }).versus?.expr).toBe('@лист.броня');
-    expect(tail[1]).toEqual({ type: 'branch', if: { expr: `не @${String(tail[0]!.id)}.success` } });
+    expect(tail[1]).toEqual({ type: 'branch', if: { expr: `not @${String(tail[0]!.id)}.success` } });
     expect(tail[2]).toEqual({ type: 'stop', note: { expr: '"броня выдержала"' } });
   });
 });

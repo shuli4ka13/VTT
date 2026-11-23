@@ -443,7 +443,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
             const head = draft.steps![open] as { if?: { expr: string } };
             const text = String(head.if?.expr ?? '').trim();
             const { negated, inner } = negationOf(text);
-            head.if = { expr: `${operandText(inner.startsWith(refId) ? inner : text, '==')} == ${negated ? 'нет' : 'да'}` };
+            head.if = { expr: `${operandText(inner.startsWith(refId) ? inner : text, '==')} == ${negated ? 'false' : 'true'}` };
           })}
         />
       );

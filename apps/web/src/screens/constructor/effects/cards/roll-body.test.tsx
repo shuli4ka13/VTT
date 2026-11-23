@@ -75,8 +75,8 @@ describe('форма «Бросок»: кто бросает', () => {
   });
 
   it('бросающий не из списка листов остаётся пунктом с пометкой, а не подменяется первым листом', () => {
-    const view = body({ id: 'бросок', type: 'roll', die: 'lead', by: { expr: 'первый(@цели)' } });
-    expect(by(view).dataset.value).toBe('первый(@цели)');
+    const view = body({ id: 'бросок', type: 'roll', die: 'lead', by: { expr: 'first(@цели)' } });
+    expect(by(view).dataset.value).toBe('first(@цели)');
     expect(by(view).value).toBe('первый(@цели) — такого листа здесь нет');
   });
 });
@@ -130,10 +130,10 @@ describe('форма «Бросок»: что бросает', () => {
 
   it('из кости в поле: die, count, bonus и by снимаются, field получает голову прежнего бросающего', () => {
     const { draft, view } = edited({
-      id: 'бросок', type: 'roll', die: 'lead', count: { expr: '2' }, bonus: { expr: '1' }, by: { expr: '@цель' }, tags: ['атака'], if: { expr: 'да' },
+      id: 'бросок', type: 'roll', die: 'lead', count: { expr: '2' }, bonus: { expr: '1' }, by: { expr: '@цель' }, tags: ['атака'], if: { expr: 'true' },
     });
     within(view.container).select('Что бросает', 'field:skills.athletics.total');
-    expect(draft).toEqual({ id: 'бросок', type: 'roll', field: { expr: '@цель.skills.athletics.total' }, tags: ['атака'], if: { expr: 'да' } });
+    expect(draft).toEqual({ id: 'бросок', type: 'roll', field: { expr: '@цель.skills.athletics.total' }, tags: ['атака'], if: { expr: 'true' } });
   });
 
   it('из кости в поле без бросающего голова — первый лист', () => {
@@ -219,7 +219,7 @@ describe('форма «Бросок»: свои значения и сохран
   });
 
   it('кость формулой — поле «Своя кость», и холостое открытие ничего не меняет', () => {
-    const step = { id: 'бросок', type: 'roll', die: { expr: '"2к6"' }, by: { expr: '@действующий' } };
+    const step = { id: 'бросок', type: 'roll', die: { expr: '"2d6"' }, by: { expr: '@действующий' } };
     const { draft, view, calls } = edited(step);
     expect(what(view).dataset.value).toBe('own-die');
     expect(has(view, 'Своя кость')).toBe(true);
@@ -233,7 +233,7 @@ describe('форма «Бросок»: свои значения и сохран
     within(view.container).select('Что бросает', 'own-die');
     expect(has(view, 'Своя кость')).toBe(true);
     within(view.container).formula('Своя кость', '"2к6"');
-    expect(draft).toEqual({ id: 'бросок', type: 'roll', die: { expr: '"2к6"' }, by: { expr: '@действующий' } });
+    expect(draft).toEqual({ id: 'бросок', type: 'roll', die: { expr: '"2d6"' }, by: { expr: '@действующий' } });
   });
 
   it('ключи, которых форма не показывает, остаются на месте после любой правки', () => {

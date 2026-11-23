@@ -3,7 +3,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, it, expect } from 'vitest';
-import { FORBIDDEN_STEMS, dice, diceExample, TABS } from './words.ts';
+import { FORBIDDEN_STEMS, dice, diceSaid, asDice, toDice, diceExample, TABS } from './words.ts';
 
 const here = fileURLToPath(new URL('.', import.meta.url));
 const root = join(here, '..', '..', '..');
@@ -63,13 +63,16 @@ describe('одно слово на одно понятие', () => {
     expect(found, found.join('\n')).toEqual([]);
   });
 
-  it('кость в подписях пишется через «к»: одна функция на всех', () => {
-    expect(dice(1, 20)).toBe('1к20');
-    expect(dice(null, 6)).toBe('1к6');
-    expect(dice('сколько', 8)).toBe('сколькок8');
+  it('кость: в данных — через d, в подписях — через «к», по одной функции на каждое', () => {
+    expect(dice(1, 20)).toBe('1d20');
+    expect(dice(null, 6)).toBe('1d6');
+    expect(diceSaid(1, 20)).toBe('1к20');
     expect(diceExample).toBe('1к20');
-    const found = sources.filter(f => LATIN_DICE.test(f.code)).map(f => `${f.path}: ${f.code.match(LATIN_DICE)![0]}`);
-    expect(found, found.join('\n')).toEqual([]);
+    expect(asDice('2d6')).toBe('2к6');
+    expect(toDice('2к6')).toBe('2d6');
+    expect(toDice('д8')).toBe('1d8');
+    const said = sources.flatMap(f => f.code.split('\n').filter(line => /[а-яё]/i.test(line.replace(/\$\{[^}]*\}/g, '')) && LATIN_DICE.test(line) && !/expr|die:|dice:|toBe|toEqual|toContain|\bit\(/.test(line)).map(line => `${f.path}: ${line.trim().slice(0, 120)}`));
+    expect(said, said.join('\n')).toEqual([]);
   });
 
   it('имя поля пишется через собаку: решётку код больше не сочиняет', () => {

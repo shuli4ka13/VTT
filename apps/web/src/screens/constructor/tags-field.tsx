@@ -4,6 +4,7 @@ import type { System } from '@vtt/schema';
 import { tagWords } from '@vtt/engine';
 import { Chip, Input, Button } from '../../ui/primitives.tsx';
 import { focusNew } from '../../ui/focus-new.ts';
+import { shownFormula, storedFormula } from '../../ui/formula-lang.ts';
 
 export type TagValue = string | { expr: string };
 
@@ -56,7 +57,7 @@ export function TagsField({ system, value, onChange, known = [], templates = [],
 
   const commit = () => {
     const text = draft.trim();
-    if (text) add(typing === 'formula' ? { expr: text } : text);
+    if (text) add(typing === 'formula' ? { expr: storedFormula(text) } : text);
     setDraft('');
     setTyping(null);
   };
@@ -66,7 +67,7 @@ export function TagsField({ system, value, onChange, known = [], templates = [],
       {picked.map(tag => (
         <Chip key={keyOf(tag)} active={typeof tag === 'string'} onRemove={() => drop(tag)}
           {...(typeof tag === 'string' ? {} : { title: 'метка вычисляется формулой при броске' })}>
-          {typeof tag === 'string' ? (labels?.get(tag) ?? templates.find(t => t.value === tag)?.label ?? tag) : `= ${tag.expr}`}
+          {typeof tag === 'string' ? (labels?.get(tag) ?? templates.find(t => t.value === tag)?.label ?? tag) : `= ${shownFormula(tag.expr)}`}
           {typeof tag === 'string' && !dictionary.has(tag) ? <span className="faint tag-unknown" title="такой метки нет в словаре меток бросков"> · нет в словаре</span> : null}
         </Chip>
       ))}

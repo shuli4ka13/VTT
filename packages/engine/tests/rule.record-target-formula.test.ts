@@ -19,7 +19,7 @@ const spell: any = {
   steps: [
     EACH,
     { id: 'порог_взят', type: 'check', value: { expr: '@порог' }, versus: { expr: '@цель.хп' } },
-    { type: 'branch', if: { expr: 'не @порог_взят.success' } }, { type: 'stop' }, { type: 'end' },
+    { type: 'branch', if: { expr: 'not @порог_взят.success' } }, { type: 'stop' }, { type: 'end' },
     kill,
   ],
 };
@@ -29,7 +29,7 @@ const despair: any = {
   steps: [
     EACH,
     { id: 'порог_взят', type: 'check', value: { expr: '@цель.хп_макс / 2' }, versus: { expr: '@цель.хп' } },
-    { type: 'branch', if: { expr: 'не @порог_взят.success' } }, { type: 'stop' }, { type: 'end' },
+    { type: 'branch', if: { expr: 'not @порог_взят.success' } }, { type: 'stop' }, { type: 'end' },
     kill,
   ],
 };

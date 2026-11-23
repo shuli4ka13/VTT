@@ -11,7 +11,7 @@ const system = {
   id: 'с', name: 'с', effects: {},
   tables: {
     лист: { shape: 'single', columns: [
-      { key: 'настроено', label: 'Настроено', expr: { expr: 'сколько(строки("вещь", "настройка"), да)' }, max: 3 },
+      { key: 'настроено', label: 'Настроено', expr: { expr: 'count(rows("вещь", "настройка"), true)' }, max: 3 },
     ] },
     вещь: { shape: 'book', use: 'item', label: 'Вещь', columns: [{ key: 'настройка', label: 'Требует настройки', kind: 'boolean' }] },
   },

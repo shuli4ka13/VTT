@@ -27,7 +27,7 @@ const sys: any = {
         { type: 'each', of: 'цели' },
         { id: 'скрыт', type: 'roll', die: 'lead', bonus: { expr: '@действующий.скрытность' }, tags: ['скрытность'], by: { expr: '@действующий' } },
         { id: 'бросок', type: 'check', value: { expr: '@скрыт' }, versus: { expr: '15' } },
-        { type: 'branch', if: { expr: 'не @бросок.success' } }, { type: 'stop' }, { type: 'end' },
+        { type: 'branch', if: { expr: 'not @бросок.success' } }, { type: 'stop' }, { type: 'end' },
       ],
     },
   },

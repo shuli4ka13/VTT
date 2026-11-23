@@ -105,15 +105,15 @@ describe('счёт максимумов и единиц — по оставле�
 
 describe('разбор записи и отбор', () => {
   it('«2к6», «к20» и «2d6» — одна функция', () => {
-    expect(parse('2к6').terms).toEqual([{ count: 2, sides: 6 }]);
-    expect(parse('к20').terms).toEqual([{ count: 1, sides: 20 }]);
+    expect(parse('2d6').terms).toEqual([{ count: 2, sides: 6 }]);
+    expect(parse('d20').terms).toEqual([{ count: 1, sides: 20 }]);
     expect(parse(' 2d6 ').terms).toEqual([{ count: 2, sides: 6 }]);
-    expect(parse('2К6').terms).toEqual([{ count: 2, sides: 6 }]);
+    expect(parse('2d6').terms).toEqual([{ count: 2, sides: 6 }]);
     expect(() => parse('два кубика')).toThrow(/не понимаю/);
   });
 
   it('умножение записи множит все части', () => {
-    expect(times(parse('2к6'), 3).terms[0]!.count).toBe(6);
+    expect(times(parse('2d6'), 3).terms[0]!.count).toBe(6);
   });
 
   it('отбор не трогает чужие части', () => {
@@ -142,7 +142,7 @@ describe('бросок — одна функция, стороны явные', 
   const views = new Views(system, world.compendium);
 
   it('правка «по мне» с противника работает в любом броске, где он — против', () => {
-    const spec = parse('к20');
+    const spec = parse('d20');
     const sheets = [attacker, target];
     const holders = sheets.map(s => ({ id: s.id, view: views.of(sheets, s.id) }));
     const throwAgainst = (againstId: string | null) => throwDice({
@@ -155,12 +155,12 @@ describe('бросок — одна функция, стороны явные', 
   });
 
   it('«оставить» шага идёт через тот же отбор, «максимум костей» — без броска', () => {
-    const three = withKeep(withCount(parse('к6'), 3, 'т'), 2, 'т');
+    const three = withKeep(withCount(parse('d6'), 3, 'т'), 2, 'т');
     expect(result(start(three, [], replay([2, 6, 4]))).total).toBe(10);
-    const worst = withKeep(withCount(parse('к6'), 3, 'т'), 1, 'т', 'worst');
+    const worst = withKeep(withCount(parse('d6'), 3, 'т'), 1, 'т', 'worst');
     expect(result(start(worst, [], replay([2, 6, 4]))).total).toBe(2);
-    expect(diceTools().peak!('2к6', 2)).toBe(24);
-    expect(result(start(withCount(parse('к6'), 0, 'т'), [], replay([5]))).total).toBe(0);
+    expect(diceTools().peak!('2d6', 2)).toBe(24);
+    expect(result(start(withCount(parse('d6'), 0, 'т'), [], replay([5]))).total).toBe(0);
   });
 });
 
@@ -171,14 +171,14 @@ describe('подписи правок в броске — только то, ч�
   const faces = (...list: number[]) => () => list.shift() ?? 5;
 
   it('середина — ни один взрыв не сработал', () => {
-    expect(start(parse('1к10'), [up, down], faces(8)).edits).toEqual([]);
+    expect(start(parse('1d10'), [up, down], faces(8)).edits).toEqual([]);
   });
 
   it('максимум — только успех', () => {
-    expect(start(parse('1к10'), [up, down], faces(10, 4)).edits).toEqual(['Критический успех']);
+    expect(start(parse('1d10'), [up, down], faces(10, 4)).edits).toEqual(['Критический успех']);
   });
 
   it('правка заявки видна всегда', () => {
-    expect(start(parse('1к20'), [advantage], faces(7, 12)).edits).toEqual(['Преимущество']);
+    expect(start(parse('1d20'), [advantage], faces(7, 12)).edits).toEqual(['Преимущество']);
   });
 });

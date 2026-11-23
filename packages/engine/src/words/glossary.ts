@@ -13,12 +13,17 @@ export const TABS = {
 
 export const DIE_LETTER = 'к';
 
+export const DIE_MARK = 'd';
+
 export const dice = (count: number | string | null | undefined, sides: number | string): string =>
+  `${count ?? 1}${DIE_MARK}${sides}`;
+
+export const diceSaid = (count: number | string | null | undefined, sides: number | string): string =>
   `${count ?? 1}${DIE_LETTER}${sides}`;
 
-export const diceExample = dice(1, 20);
+export const diceExample = diceSaid(1, 20);
 
-export const DICE_TEXT = /^(\d+)?\s*[dдк]\s*(\d+)$/iu;
+export const DICE_TEXT = /^(\d+)?\s*d\s*(\d+)$/iu;
 
 const DICE_BARE = new Map<string, RegExp>();
 
@@ -27,7 +32,7 @@ const bareOf = (letters: string): RegExp => {
   return DICE_BARE.get(letters)!;
 };
 
-export function bareDiceAt(src: string, at: number, letters = 'dдк'): { end: number; count: number; sides: number } | null {
+export function bareDiceAt(src: string, at: number, letters = 'd'): { end: number; count: number; sides: number } | null {
   const bare = bareOf(letters);
   bare.lastIndex = at;
   const m = bare.exec(src);
@@ -37,8 +42,15 @@ export function bareDiceAt(src: string, at: number, letters = 'dдк'): { end: n
   return { end, count: m[1] ? Number(m[1]) : 1, sides: Number(m[2]) };
 }
 
+const DICE_TYPED = /^(\d+)?\s*[dдк]\s*(\d+)$/iu;
+
 export const asDice = (text: string): string => {
-  const m = DICE_TEXT.exec(text.trim());
+  const m = DICE_TYPED.exec(text.trim());
+  return m ? diceSaid(m[1] ?? 1, m[2]!) : text;
+};
+
+export const toDice = (text: string): string => {
+  const m = DICE_TYPED.exec(text.trim());
   return m ? dice(m[1] ?? 1, m[2]!) : text;
 };
 

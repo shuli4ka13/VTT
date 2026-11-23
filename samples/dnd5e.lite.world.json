@@ -167,7 +167,7 @@
             "key": "speed",
             "label": "Скорость, футов",
             "expr": {
-              "expr": "@race.speed или 30"
+              "expr": "@race.speed or 30"
             },
             "stages": [
               {
@@ -224,7 +224,7 @@
             "key": "ac_dex",
             "label": "Ловкость в классе брони",
             "expr": {
-              "expr": "если(пусто(@armor_heaviness), @abilities.ловкость.mod, @armor_heaviness.dex_ac)"
+              "expr": "if(empty(@armor_heaviness), @abilities.ловкость.mod, @armor_heaviness.dex_ac)"
             }
           },
           {
@@ -238,7 +238,7 @@
             "key": "hp_max",
             "label": "Максимум хитов",
             "expr": {
-              "expr": "если(пусто(@class_name), @hp_block, @class_name.hp) + @hp_bonus"
+              "expr": "if(empty(@class_name), @hp_block, @class_name.hp) + @hp_bonus"
             }
           },
           {
@@ -273,7 +273,7 @@
             "key": "hit_die",
             "label": "Кость хитов",
             "expr": {
-              "expr": "@class_name.hit_die или @race.size.hit_die или \"1к8\""
+              "expr": "@class_name.hit_die or @race.size.hit_die or \"1d8\""
             }
           },
           {
@@ -311,7 +311,7 @@
             "key": "down",
             "label": "Без сил",
             "expr": {
-              "expr": "@hp_max > 0 и @hp_current <= 0"
+              "expr": "@hp_max > 0 and @hp_current <= 0"
             },
             "sees": "none"
           },
@@ -319,7 +319,7 @@
             "key": "up",
             "label": "На ногах",
             "expr": {
-              "expr": "не @down"
+              "expr": "not @down"
             },
             "sees": "none"
           },
@@ -359,14 +359,14 @@
             "key": "sneak_dice",
             "label": "Костей скрытой атаки",
             "expr": {
-              "expr": "округлить вверх(@level / 2)"
+              "expr": "ceil(@level / 2)"
             }
           },
           {
             "key": "spell_mod",
             "label": "Заклинательный модификатор",
             "expr": {
-              "expr": "@class_name.spell_ability.mod или @abilities.харизма.mod"
+              "expr": "@class_name.spell_ability.mod or @abilities.харизма.mod"
             }
           },
           {
@@ -395,7 +395,7 @@
             "key": "attuned",
             "label": "Настроено предметов",
             "expr": {
-              "expr": "сколько(строки(\"wondrous\", \"attunement\"), да)"
+              "expr": "count(rows(\"wondrous\", \"attunement\"), true)"
             },
             "max": 3
           },
@@ -410,7 +410,7 @@
             "key": "rage_damage",
             "label": "Урон ярости",
             "expr": {
-              "expr": "если(@class_name.rage == да, @level.rage_damage, 0)"
+              "expr": "if(@class_name.rage == true, @level.rage_damage, 0)"
             }
           },
           {
@@ -907,8 +907,8 @@
               "prof": 2,
               "cantrips": 1,
               "rage_damage": 2,
-              "bardic_die": "1к6",
-              "superiority_die": "1к8"
+              "bardic_die": "1d6",
+              "superiority_die": "1d8"
             }
           },
           {
@@ -917,8 +917,8 @@
               "prof": 2,
               "cantrips": 1,
               "rage_damage": 2,
-              "bardic_die": "1к6",
-              "superiority_die": "1к8"
+              "bardic_die": "1d6",
+              "superiority_die": "1d8"
             }
           },
           {
@@ -927,8 +927,8 @@
               "prof": 2,
               "cantrips": 1,
               "rage_damage": 2,
-              "bardic_die": "1к6",
-              "superiority_die": "1к8"
+              "bardic_die": "1d6",
+              "superiority_die": "1d8"
             }
           },
           {
@@ -937,8 +937,8 @@
               "prof": 2,
               "cantrips": 1,
               "rage_damage": 2,
-              "bardic_die": "1к6",
-              "superiority_die": "1к8"
+              "bardic_die": "1d6",
+              "superiority_die": "1d8"
             }
           },
           {
@@ -947,8 +947,8 @@
               "prof": 3,
               "cantrips": 2,
               "rage_damage": 2,
-              "bardic_die": "1к8",
-              "superiority_die": "1к8"
+              "bardic_die": "1d8",
+              "superiority_die": "1d8"
             }
           },
           {
@@ -957,8 +957,8 @@
               "prof": 3,
               "cantrips": 2,
               "rage_damage": 2,
-              "bardic_die": "1к8",
-              "superiority_die": "1к8"
+              "bardic_die": "1d8",
+              "superiority_die": "1d8"
             }
           },
           {
@@ -967,8 +967,8 @@
               "prof": 3,
               "cantrips": 2,
               "rage_damage": 2,
-              "bardic_die": "1к8",
-              "superiority_die": "1к8"
+              "bardic_die": "1d8",
+              "superiority_die": "1d8"
             }
           },
           {
@@ -977,8 +977,8 @@
               "prof": 3,
               "cantrips": 2,
               "rage_damage": 2,
-              "bardic_die": "1к8",
-              "superiority_die": "1к8"
+              "bardic_die": "1d8",
+              "superiority_die": "1d8"
             }
           },
           {
@@ -987,8 +987,8 @@
               "prof": 4,
               "cantrips": 2,
               "rage_damage": 3,
-              "bardic_die": "1к8",
-              "superiority_die": "1к8"
+              "bardic_die": "1d8",
+              "superiority_die": "1d8"
             }
           },
           {
@@ -997,8 +997,8 @@
               "prof": 4,
               "cantrips": 2,
               "rage_damage": 3,
-              "bardic_die": "1к10",
-              "superiority_die": "1к10"
+              "bardic_die": "1d10",
+              "superiority_die": "1d10"
             }
           },
           {
@@ -1007,8 +1007,8 @@
               "prof": 4,
               "cantrips": 3,
               "rage_damage": 3,
-              "bardic_die": "1к10",
-              "superiority_die": "1к10"
+              "bardic_die": "1d10",
+              "superiority_die": "1d10"
             }
           },
           {
@@ -1017,8 +1017,8 @@
               "prof": 4,
               "cantrips": 3,
               "rage_damage": 3,
-              "bardic_die": "1к10",
-              "superiority_die": "1к10"
+              "bardic_die": "1d10",
+              "superiority_die": "1d10"
             }
           },
           {
@@ -1027,8 +1027,8 @@
               "prof": 5,
               "cantrips": 3,
               "rage_damage": 3,
-              "bardic_die": "1к10",
-              "superiority_die": "1к10"
+              "bardic_die": "1d10",
+              "superiority_die": "1d10"
             }
           },
           {
@@ -1037,8 +1037,8 @@
               "prof": 5,
               "cantrips": 3,
               "rage_damage": 3,
-              "bardic_die": "1к10",
-              "superiority_die": "1к10"
+              "bardic_die": "1d10",
+              "superiority_die": "1d10"
             }
           },
           {
@@ -1047,8 +1047,8 @@
               "prof": 5,
               "cantrips": 3,
               "rage_damage": 3,
-              "bardic_die": "1к12",
-              "superiority_die": "1к10"
+              "bardic_die": "1d12",
+              "superiority_die": "1d10"
             }
           },
           {
@@ -1057,8 +1057,8 @@
               "prof": 5,
               "cantrips": 3,
               "rage_damage": 4,
-              "bardic_die": "1к12",
-              "superiority_die": "1к10"
+              "bardic_die": "1d12",
+              "superiority_die": "1d10"
             }
           },
           {
@@ -1067,8 +1067,8 @@
               "prof": 6,
               "cantrips": 4,
               "rage_damage": 4,
-              "bardic_die": "1к12",
-              "superiority_die": "1к10"
+              "bardic_die": "1d12",
+              "superiority_die": "1d10"
             }
           },
           {
@@ -1077,8 +1077,8 @@
               "prof": 6,
               "cantrips": 4,
               "rage_damage": 4,
-              "bardic_die": "1к12",
-              "superiority_die": "1к12"
+              "bardic_die": "1d12",
+              "superiority_die": "1d12"
             }
           },
           {
@@ -1087,8 +1087,8 @@
               "prof": 6,
               "cantrips": 4,
               "rage_damage": 4,
-              "bardic_die": "1к12",
-              "superiority_die": "1к12"
+              "bardic_die": "1d12",
+              "superiority_die": "1d12"
             }
           },
           {
@@ -1097,8 +1097,8 @@
               "prof": 6,
               "cantrips": 4,
               "rage_damage": 4,
-              "bardic_die": "1к12",
-              "superiority_die": "1к12"
+              "bardic_die": "1d12",
+              "superiority_die": "1d12"
             }
           }
         ]
@@ -1730,10 +1730,10 @@
             "cells": {
               "reach": "ближний",
               "attack": {
-                "expr": "большее из(@abilities.сила.mod, @abilities.ловкость.mod) + @prof_bonus"
+                "expr": "max(@abilities.сила.mod, @abilities.ловкость.mod) + @prof_bonus"
               },
               "damage": {
-                "expr": "большее из(@abilities.сила.mod, @abilities.ловкость.mod)"
+                "expr": "max(@abilities.сила.mod, @abilities.ловкость.mod)"
               }
             }
           },
@@ -1774,7 +1774,7 @@
             "value": "средний",
             "cells": {
               "dex_ac": {
-                "expr": "меньшее из(@abilities.ловкость.mod, 2)"
+                "expr": "min(@abilities.ловкость.mod, 2)"
               }
             }
           },
@@ -1855,7 +1855,7 @@
             "label": "Модификатор",
             "kind": "number",
             "expr": {
-              "expr": "округлить вниз((@строка.score - 10) / 2)"
+              "expr": "floor((@строка.score - 10) / 2)"
             },
             "title": "Модификатор: {label}"
           },
@@ -1871,7 +1871,7 @@
             "label": "Владение",
             "kind": "number",
             "expr": {
-              "expr": "большее из(если(@строка.save_extra, 1, 0), если(есть(@class_name.saves, @строка), 1, 0))"
+              "expr": "max(if(@строка.save_extra, 1, 0), if(has(@class_name.saves, @строка), 1, 0))"
             },
             "title": "Владение: спасбросок {label}"
           },
@@ -2085,7 +2085,7 @@
             "label": "Хиты по уровню",
             "kind": "number",
             "expr": {
-              "expr": "максимум костей(@строка.hit_die) + (@level - 1) * (округлить вниз(максимум костей(@строка.hit_die) / 2) + 1) + @level * @abilities.телосложение.mod"
+              "expr": "dicemax(@строка.hit_die) + (@level - 1) * (floor(dicemax(@строка.hit_die) / 2) + 1) + @level * @abilities.телосложение.mod"
             }
           },
           {
@@ -2111,7 +2111,7 @@
           {
             "value": "варвар",
             "cells": {
-              "hit_die": "1к12",
+              "hit_die": "1d12",
               "saves": [
                 "сила",
                 "телосложение"
@@ -2122,7 +2122,7 @@
           {
             "value": "бард",
             "cells": {
-              "hit_die": "1к8",
+              "hit_die": "1d8",
               "saves": [
                 "ловкость",
                 "харизма"
@@ -2133,7 +2133,7 @@
           {
             "value": "жрец",
             "cells": {
-              "hit_die": "1к8",
+              "hit_die": "1d8",
               "saves": [
                 "мудрость",
                 "харизма"
@@ -2144,7 +2144,7 @@
           {
             "value": "друид",
             "cells": {
-              "hit_die": "1к8",
+              "hit_die": "1d8",
               "saves": [
                 "интеллект",
                 "мудрость"
@@ -2155,7 +2155,7 @@
           {
             "value": "воин",
             "cells": {
-              "hit_die": "1к10",
+              "hit_die": "1d10",
               "saves": [
                 "сила",
                 "телосложение"
@@ -2165,7 +2165,7 @@
           {
             "value": "монах",
             "cells": {
-              "hit_die": "1к8",
+              "hit_die": "1d8",
               "saves": [
                 "сила",
                 "ловкость"
@@ -2175,7 +2175,7 @@
           {
             "value": "паладин",
             "cells": {
-              "hit_die": "1к10",
+              "hit_die": "1d10",
               "saves": [
                 "мудрость",
                 "харизма"
@@ -2186,7 +2186,7 @@
           {
             "value": "следопыт",
             "cells": {
-              "hit_die": "1к10",
+              "hit_die": "1d10",
               "saves": [
                 "сила",
                 "ловкость"
@@ -2197,7 +2197,7 @@
           {
             "value": "плут",
             "cells": {
-              "hit_die": "1к8",
+              "hit_die": "1d8",
               "saves": [
                 "ловкость",
                 "интеллект"
@@ -2207,7 +2207,7 @@
           {
             "value": "чародей",
             "cells": {
-              "hit_die": "1к6",
+              "hit_die": "1d6",
               "saves": [
                 "телосложение",
                 "харизма"
@@ -2218,7 +2218,7 @@
           {
             "value": "колдун",
             "cells": {
-              "hit_die": "1к8",
+              "hit_die": "1d8",
               "saves": [
                 "мудрость",
                 "харизма"
@@ -2229,7 +2229,7 @@
           {
             "value": "волшебник",
             "cells": {
-              "hit_die": "1к6",
+              "hit_die": "1d6",
               "saves": [
                 "интеллект",
                 "мудрость"
@@ -2253,37 +2253,37 @@
           {
             "value": "крошечный",
             "cells": {
-              "hit_die": "1к4"
+              "hit_die": "1d4"
             }
           },
           {
             "value": "маленький",
             "cells": {
-              "hit_die": "1к6"
+              "hit_die": "1d6"
             }
           },
           {
             "value": "средний",
             "cells": {
-              "hit_die": "1к8"
+              "hit_die": "1d8"
             }
           },
           {
             "value": "большой",
             "cells": {
-              "hit_die": "1к10"
+              "hit_die": "1d10"
             }
           },
           {
             "value": "огромный",
             "cells": {
-              "hit_die": "1к12"
+              "hit_die": "1d12"
             }
           },
           {
             "value": "громадный",
             "cells": {
-              "hit_die": "1к20"
+              "hit_die": "1d20"
             }
           }
         ]
@@ -2576,7 +2576,7 @@
               "expr": "-10"
             },
             "if": {
-              "expr": "@abilities.сила.score < (@строка.str_req или 0) и @race.heavy_armor_ok != да"
+              "expr": "@abilities.сила.score < (@строка.str_req or 0) and @race.heavy_armor_ok != true"
             }
           },
           {
@@ -2588,7 +2588,7 @@
             "param": "edits",
             "edit": "disadvantage",
             "if": {
-              "expr": "@бросающий == @носитель и @строка.stealth == да"
+              "expr": "@бросающий == @носитель and @строка.stealth == true"
             }
           }
         ]
@@ -3039,7 +3039,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "не пусто(@status)"
+              "expr": "not empty(@status)"
             }
           },
           {
@@ -3378,7 +3378,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@стол.бой и @лист.turn.атаки.left < 1"
+              "expr": "@стол.бой and @лист.turn.атаки.left < 1"
             }
           },
           {
@@ -3780,7 +3780,7 @@
             "call": "damage",
             "param": "amount",
             "if": {
-              "expr": "@лист == @носитель и не пусто(@носитель.damage_types.[@damage_type].taken)"
+              "expr": "@лист == @носитель and not empty(@носитель.damage_types.[@damage_type].taken)"
             },
             "stage": "сопротивление"
           },
@@ -3793,7 +3793,7 @@
             "call": "damage",
             "param": "amount",
             "if": {
-              "expr": "@лист == @носитель и не пусто(@носитель.damage_types.[@damage_type].taken)"
+              "expr": "@лист == @носитель and not empty(@носитель.damage_types.[@damage_type].taken)"
             },
             "stage": "уязвимость"
           }
@@ -3888,7 +3888,7 @@
                 },
                 "direction": "add",
                 "value": {
-                  "expr": "меньшее из(1, @носитель.hasted)"
+                  "expr": "min(1, @носитель.hasted)"
                 }
               }
             ]
@@ -3926,7 +3926,7 @@
                 },
                 "direction": "add",
                 "value": {
-                  "expr": "меньшее из(1, @носитель.hasted)"
+                  "expr": "min(1, @носитель.hasted)"
                 }
               }
             ]
@@ -4110,7 +4110,7 @@
             "kind": "choice",
             "from": "attack_outcomes",
             "expr": {
-              "expr": "если(не @проверка.success, \"промах\", если(@проверка.natural >= @кто.crit_from, \"крит\", \"попадание\"))"
+              "expr": "if(not @проверка.success, \"промах\", if(@проверка.natural >= @кто.crit_from, \"крит\", \"попадание\"))"
             }
           },
           {

@@ -1,4 +1,6 @@
 import { EngineError } from '../engine/errors.ts';
+import { translateFormula, NEUTRAL_WORDS, RU_WORDS } from '../formula/words.ts';
+import type { FormulaWords } from '../formula/words.ts';
 import { hasDegrees } from '../engine/check.ts';
 import type { System, Table, TableRow, TableColumn, CellView, Field, FieldValue, CellMark, Holder, Placement } from './types.ts';
 import type { SheetPart, Control, SystemRoll, RollField } from '@vtt/schema';
@@ -163,7 +165,7 @@ export const ROW = 'строка';
 const ROW_REF = new RegExp(`@${ROW}((?:\\.[\\p{L}\\p{N}_]+)*)`, 'gu');
 
 const literal = (value: unknown): string =>
-  (typeof value === 'number' ? String(value) : typeof value === 'boolean' ? (value ? 'да' : 'нет') : JSON.stringify(String(value ?? '')));
+  (typeof value === 'number' ? String(value) : typeof value === 'boolean' ? (value ? 'true' : 'false') : JSON.stringify(String(value ?? '')));
 
 function rowPath(system: System, tableId: string, row: TableRow, path: string[]): string {
   const table = system.tables![tableId]!;
@@ -261,8 +263,8 @@ export function rowPieces(system: System, tableId: string, row: TableRow, expr: 
   return out;
 }
 
-export const rowWords = (system: System, tableId: string, row: TableRow, expr: string): string =>
-  rowPieces(system, tableId, row, expr).map(piece => ('chip' in piece ? piece.chip : piece.text)).join('');
+export const rowWords = (system: System, tableId: string, row: TableRow, expr: string, words: FormulaWords = RU_WORDS): string =>
+  rowPieces(system, tableId, row, translateFormula(expr, NEUTRAL_WORDS, words)).map(piece => ('chip' in piece ? piece.chip : piece.text)).join('');
 
 export const withRow = (system: System, tableId: string, row: TableRow, expr: string): string =>
   expr.replace(ROW_REF, (_, tail: string) => rowPath(system, tableId, row, tail ? tail.slice(1).split('.') : []));
@@ -315,7 +317,7 @@ function recordPath(system: System, tableId: string, cells: Record<string, unkno
   for (const step of rest) {
     const link = linkOf(spec);
     if (!link) throw new EngineError(`${where}: «${spec.label || spec.key}» — не ссылка, дальше «${step}» идти некуда`);
-    expr = `таблица(${JSON.stringify(link)}, ${expr}, ${JSON.stringify(step)})`;
+    expr = `table(${JSON.stringify(link)}, ${expr}, ${JSON.stringify(step)})`;
     const next: TableColumn | undefined = (system.tables?.[link]?.columns ?? []).find(c => c.key === step);
     if (!next) throw new EngineError(`${where}: у таблицы «${link}» нет колонки «${step}»`);
     spec = next;

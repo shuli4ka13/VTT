@@ -64,7 +64,7 @@ group('D&D: критическое попадание — всегда попа�
   test('итог «исход» — промах, попадание или крит; крит от порога персонажа', () => {
     const outcome = (die: number): number => {
       const system = JSON.parse(JSON.stringify(dnd.system)) as System;
-      system.effects.strike!.steps!.splice(2, 0, { id: 'исход', type: 'roll', fixed: { expr: 'если(@бросок.исход == "крит", 3, если(@бросок.исход == "попадание", 2, 1))' } } as never);
+      system.effects.strike!.steps!.splice(2, 0, { id: 'исход', type: 'roll', fixed: { expr: 'if(@бросок.исход == "крит", 3, if(@бросок.исход == "попадание", 2, 1))' } } as never);
       eq(errorsOf(lintSystem(system)).length, 0);
       const out = exchange({ system, compendium: dnd.compendium as Compendium, die: () => die, sheets: dnd.sheets as Sheet[], actionId: 'longsword:0', fromId: 'arven', toId: 'goblin' });
       return (out.reports.flatMap(entry => entry.report.trace).find(t => (t as { step?: string }).step === 'исход') as { total: number }).total;

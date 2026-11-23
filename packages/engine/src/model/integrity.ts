@@ -105,7 +105,7 @@ function conditionsIn(source: string, headTable: (head: string) => string | unde
   const walk = (node: Node): void => {
     if (node.kind === 'Call') {
       const [lookup, wanted] = node.args;
-      if (node.name === 'есть' && lookup?.kind === 'Call' && lookup.name === 'таблица' && wanted?.kind === 'Text'
+      if (node.name === 'has' && lookup?.kind === 'Call' && lookup.name === 'table' && wanted?.kind === 'Text'
         && wanted.at !== undefined && wanted.raw !== undefined) {
         const [table, , column] = lookup.args;
         if (table?.kind === 'Text' && column?.kind === 'Text') {

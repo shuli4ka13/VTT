@@ -11,7 +11,7 @@ const value = (id: string, tag: string) => calc(system, sheetOf(id), tag);
 
 group('D&D: класс и раса — ссылки, остальное из них следует', () => {
   test('воин: кость хитов к10, спасброски Силы и Телосложения из класса', () => {
-    eq(value('arven', 'hit_die'), '1к10');
+    eq(value('arven', 'hit_die'), '1d10');
     deepEq(['сила', 'ловкость', 'телосложение', 'интеллект', 'мудрость', 'харизма'].map(a => value('arven', `abilities.${a}.save_prof`)), [1, 0, 1, 0, 0, 0]);
   });
 
@@ -32,9 +32,9 @@ group('D&D: класс и раса — ссылки, остальное из н�
   });
 
   test('у монстра нет класса — кость хитов по размеру: гоблин к6, огр к10', () => {
-    eq(value('goblin', 'hit_die'), '1к6');
-    eq(value('ogre', 'hit_die'), '1к10');
-    eq(value('orc', 'hit_die'), '1к8');
+    eq(value('goblin', 'hit_die'), '1d6');
+    eq(value('ogre', 'hit_die'), '1d10');
+    eq(value('orc', 'hit_die'), '1d8');
   });
 
   test('уровень 5: бонус мастерства 3, костей заговора 2, ячеек 4/3/2', () => {
@@ -53,8 +53,8 @@ group('D&D: класс и раса — ссылки, остальное из н�
 group('функция «или»', () => {
   const run = (src: string, names: Record<string, unknown> = {}) => compile(src).evaluate(name => names[name] as never);
   test('берёт первое заданное', () => {
-    eq(run('@a или 7', { a: null }), 7);
-    eq(run('@a или 7', { a: 3 }), 3);
-    eq(run('@a или @b или "1к8"', { a: '', b: null }), '1к8');
+    eq(run('@a or 7', { a: null }), 7);
+    eq(run('@a or 7', { a: 3 }), 3);
+    eq(run('@a or @b or "1d8"', { a: '', b: null }), '1d8');
   });
 });
