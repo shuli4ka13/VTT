@@ -54,7 +54,7 @@ const strike = (system: System, sheets: Sheet[], to: string, dice: number[], ext
 describe('режимы операции', () => {
   const system = world({
     удар: button([{ id: 'к', type: 'roll', die: { expr: '1d6' } }, sub('@к')]),
-    щит: { label: 'Щит', activation: 'passive', on: [{ on: 'before:удар', if: { expr: '@цель == @носитель' }, confirm: true, steps: [] }] },
+    щит: { label: 'Щит', activation: 'passive', on: [{ on: 'before:удар', if: { expr: '@цель == @holder' }, confirm: true, steps: [] }] },
   });
   const sheets = [sheet('а'), sheet('б', {}, ['щит'])];
 
@@ -82,8 +82,8 @@ describe('проба внутри прогона', () => {
         { id: 'б_бросок', type: 'roll', die: 'к20', by: { expr: '@цель' } },
         { id: 'б', type: 'check', value: { expr: '@б_бросок' }, versus: { expr: '10' } },
       ]),
-      щит: { label: 'Щит', activation: 'passive', on: [{ on: 'before:удар', if: { expr: '@цель == @носитель' }, confirm: true, steps: [] }] },
-      удача: { label: 'Удача', activation: 'passive', on: [{ on: 'seen', if: { expr: '@бросающий == @носитель' }, confirm: true, steps: [{ type: 'roll-plus', value: { expr: '1' } }] }] },
+      щит: { label: 'Щит', activation: 'passive', on: [{ on: 'before:удар', if: { expr: '@цель == @holder' }, confirm: true, steps: [] }] },
+      удача: { label: 'Удача', activation: 'passive', on: [{ on: 'seen', if: { expr: '@roller == @holder' }, confirm: true, steps: [{ type: 'roll-plus', value: { expr: '1' } }] }] },
     });
     const sheets = [sheet('а'), sheet('б', {}, ['щит', 'удача'])];
     const first = act({ system, compendium: book, clock: null, sheets, die: queue(7, 7), journal: emptyJournal() }, { actionId: 'приём:0', fromId: 'а', toIds: ['б'] });
@@ -111,7 +111,7 @@ describe('пределы', () => {
   it('старт боя на двенадцати листах с подпиской каждого не упирается в бюджет', () => {
     const system = world({
       удар: button([]),
-      бодрость: { label: 'Бодрость', activation: 'passive', on: [{ on: 'moment:combat-start', steps: [add('1', '@носитель.ки')] }, { on: 'moment:round-start', steps: [add('1', '@носитель.ки')] }] },
+      бодрость: { label: 'Бодрость', activation: 'passive', on: [{ on: 'moment:combat-start', steps: [add('1', '@holder.ки')] }, { on: 'moment:round-start', steps: [add('1', '@holder.ки')] }] },
     });
     const many = Array.from({ length: 12 }, (_, i) => sheet(`л${i}`, {}, ['бодрость']));
     const out = perform({ system, compendium: book, clock: null, sheets: many, die: queue() }, { op: 'turn', turn: 'start', order: many.map(s => s.id) });
@@ -130,7 +130,7 @@ describe('имена в формулах', () => {
     const system = world({
       удар: button([{ type: 'emit', effect: 'урон', args: { раненый: { expr: '@цель' }, обидчик: { expr: '@действующий' } } }]),
       урон: { label: 'Урон', params: [{ key: 'раненый', label: 'Раненый', kind: 'sheet' }, { key: 'обидчик', label: 'обидчик', kind: 'sheet' }], steps: [sub('@раненый.ки', '@раненый.хп'), sub('@обидчик.ки', '@раненый.хп')] },
-      память: { label: 'Память', activation: 'passive', on: [{ on: 'after:урон', if: { expr: '@раненый == @носитель' }, steps: [add('@носитель.ки', '@носитель.хп')] }] },
+      память: { label: 'Память', activation: 'passive', on: [{ on: 'after:урон', if: { expr: '@раненый == @holder' }, steps: [add('@holder.ки', '@holder.хп')] }] },
     });
     const out = strike(system, [sheet('а', { ки: 2 }), sheet('б', { ки: 5 }, ['память'])], 'б', []);
     expect(value(out, 'б', 'хп')).toBe(20 - 5 - 2 + 5);
@@ -150,7 +150,7 @@ describe('бросок вне действия', () => {
   it('подписка «кости выпали» срабатывает на инициативе', () => {
     const system = world({
       удар: button([]),
-      шустрый: { label: 'Шустрый', activation: 'passive', on: [{ on: 'seen', if: { expr: '@бросающий == @носитель' }, steps: [{ type: 'roll-plus', value: { expr: '10' } }] }] },
+      шустрый: { label: 'Шустрый', activation: 'passive', on: [{ on: 'seen', if: { expr: '@roller == @holder' }, steps: [{ type: 'roll-plus', value: { expr: '10' } }] }] },
     }, { initiative: { die: 'к20' } });
     const out = perform({ system, compendium: book, clock: null, sheets: [sheet('а'), sheet('б', {}, ['шустрый'])], die: queue(15, 8) }, { op: 'turn', turn: 'start' });
     expect(out.kind).toBe('done');
@@ -193,15 +193,15 @@ describe('операции над листом', () => {
     expect(go('вдвое')).toThrow(/считает движок/);
     expect(go('имя')).toThrow(/не число/);
     expect(go('нет_такого')).toThrow(/не объявляет/);
-    expect(go('вещь:приём.вес')).toThrow(/значению вещи/);
+    expect(go('item:приём.вес')).toThrow(/значению вещи/);
   });
 
   it('группа: сам себе, вложенно и стол — отказ словами', () => {
     const system = world({ удар: button([]) });
-    const sheets = [sheet('а'), sheet('б', {}, [], { group: 'а' } as never), sheet('стол')];
+    const sheets = [sheet('а'), sheet('б', {}, [], { group: 'а' } as never), sheet('desk')];
     const go = (sheetId: string, group: string) => () => perform({ system, compendium: book, clock: null, sheets, die: queue() }, { op: 'group', sheetId, group });
     expect(go('а', 'а')).toThrow(/самому себе/);
-    expect(go('а', 'стол')).toThrow(/стол/);
+    expect(go('а', 'desk')).toThrow(/стол/);
     expect(go('а', 'б')).toThrow(/группа для других|не вкладываются|сам состоит/);
   });
 
@@ -236,7 +236,7 @@ describe('формы эффекта', () => {
         { type: 'branch', if: { expr: 'not @порог.success' } }, { type: 'stop' }, { type: 'end' },
         sub('10'),
       ]),
-      отметка: { label: 'Отметка', activation: 'passive', on: [{ on: 'after:удар', if: { expr: '@цель == @носитель' }, steps: [add('1', '@носитель.ки')] }] },
+      отметка: { label: 'Отметка', activation: 'passive', on: [{ on: 'after:удар', if: { expr: '@цель == @holder' }, steps: [add('1', '@holder.ки')] }] },
     });
     const out = strike(system, [sheet('а'), sheet('б', {}, ['отметка'])], 'б', []);
     expect(value(out, 'б', 'хп')).toBe(18);
@@ -247,8 +247,8 @@ describe('формы эффекта', () => {
     const system = world({
       удар: { label: 'Удар', activation: 'manual', params: [ACTOR, TARGETS], steps: [add('1', '@действующий.ки'), EACH, sub('5')] },
       итог: { label: 'Итог', activation: 'passive', on: [
-        { on: 'done:удар', if: { expr: '@действующий == @носитель' }, steps: [add('10', '@носитель.ки')] },
-        { on: 'before:удар', steps: [add('100', '@носитель.ки')] },
+        { on: 'done:удар', if: { expr: '@действующий == @holder' }, steps: [add('10', '@holder.ки')] },
+        { on: 'before:удар', steps: [add('100', '@holder.ки')] },
       ] },
     });
     const out = perform({ system, compendium: book, clock: null, sheets: [sheet('а', {}, ['итог'])], die: queue() }, { op: 'act', intent: { actionId: 'приём:0', fromId: 'а', toIds: [] } });
@@ -258,7 +258,7 @@ describe('формы эффекта', () => {
   it('подписку слышат все носители: третий лист отвечает на удар по соседу', () => {
     const system = world({
       удар: button([sub('3')]),
-      аура: { label: 'Аура', activation: 'passive', on: [{ on: 'after:удар', if: { expr: '@цель != @носитель' }, steps: [add('1', '@цель.хп')] }] },
+      аура: { label: 'Аура', activation: 'passive', on: [{ on: 'after:удар', if: { expr: '@цель != @holder' }, steps: [add('1', '@цель.хп')] }] },
     });
     const out = strike(system, [sheet('а'), sheet('б'), sheet('в', {}, ['аура'])], 'б', []);
     expect(value(out, 'б', 'хп')).toBe(18);
@@ -268,7 +268,7 @@ describe('формы эффекта', () => {
     const system = world({
       удар: button([{ type: 'status', effect: 'метка', to: { expr: '@цель' }, args: { сила: { expr: '4' } } }]),
       метка: { label: 'Метка', activation: 'passive', params: [{ key: 'сила', label: 'Сила', kind: 'number', optional: true }], on: [
-        { on: 'moment:turn-end', if: { expr: '@ходит == @носитель' }, steps: [sub('@сила', '@носитель.хп')] },
+        { on: 'moment:turn-end', if: { expr: '@mover == @holder' }, steps: [sub('@сила', '@holder.хп')] },
       ] },
     });
     const marked = strike(system, [sheet('а'), sheet('б')], 'б', []);
@@ -284,9 +284,9 @@ describe('по ревью постройки', () => {
     const system = world({
       удар: { ...button([sub('@бонус')]), params: [ACTOR, TARGETS, { key: 'бонус', label: 'Бонус', kind: 'number' }] },
       слух: { label: 'Слух', activation: 'passive', on: [
-        { on: 'before:удар', if: { expr: '@бонус > 2' }, steps: [add('1', '@носитель.ки')] },
-        { on: 'after:удар', if: { expr: '@бонус > 2' }, steps: [add('10', '@носитель.ки')] },
-        { on: 'done:удар', if: { expr: '@бонус > 2' }, steps: [add('100', '@носитель.ки')] },
+        { on: 'before:удар', if: { expr: '@бонус > 2' }, steps: [add('1', '@holder.ки')] },
+        { on: 'after:удар', if: { expr: '@бонус > 2' }, steps: [add('10', '@holder.ки')] },
+        { on: 'done:удар', if: { expr: '@бонус > 2' }, steps: [add('100', '@holder.ки')] },
       ] },
     }, {});
     (system.tables!.приём as { bindings: unknown[] }).bindings = [{ label: 'Удар', effect: 'удар', args: { бонус: { expr: '3' } } }];
@@ -298,7 +298,7 @@ describe('по ревью постройки', () => {
   it('автоматическая подписка «до» видит пробу тела', () => {
     const system = world({
       удар: button([{ id: 'п', type: 'check', value: { expr: '5' }, versus: { expr: '1' } }, sub('1')]),
-      чутьё: { label: 'Чутьё', activation: 'passive', on: [{ on: 'before:удар', if: { expr: '@цель == @носитель and @п.success' }, steps: [add('1', '@носитель.ки')] }] },
+      чутьё: { label: 'Чутьё', activation: 'passive', on: [{ on: 'before:удар', if: { expr: '@цель == @holder and @п.success' }, steps: [add('1', '@holder.ки')] }] },
     });
     const out = strike(system, [sheet('а'), sheet('б', {}, ['чутьё'])], 'б', []);
     expect(value(out, 'б', 'ки')).toBe(1);
@@ -309,9 +309,9 @@ describe('по ревью постройки', () => {
       удар: button([]),
       плюс: { label: 'Плюс', params: [{ key: 'лист', label: 'Лист', kind: 'sheet' }], steps: [add('1', '@лист.ки')] },
       реген: { label: 'Реген', activation: 'passive', on: [{ on: 'moment:round-start', steps: [
-        { type: 'emit', effect: 'плюс', args: { лист: { expr: '@носитель' } } },
-        { type: 'emit', effect: 'плюс', args: { лист: { expr: '@носитель' } } },
-        { type: 'emit', effect: 'плюс', args: { лист: { expr: '@носитель' } } },
+        { type: 'emit', effect: 'плюс', args: { лист: { expr: '@holder' } } },
+        { type: 'emit', effect: 'плюс', args: { лист: { expr: '@holder' } } },
+        { type: 'emit', effect: 'плюс', args: { лист: { expr: '@holder' } } },
       ] }] },
     });
     const many = Array.from({ length: 12 }, (_, i) => sheet(`л${i}`, {}, ['реген']));
@@ -334,7 +334,7 @@ describe('по ревью постройки', () => {
     const system = world({
       удар: button([{ type: 'emit', effect: 'урон', args: { лист: { expr: '@цель' }, сколько: { expr: '10' } } }]),
       урон: { label: 'Урон', tags: ['огонь'], params: [{ key: 'лист', label: 'Лист', kind: 'sheet' }, { key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }], steps: [sub('@сколько', '@лист.хп')] },
-      стойкость: { label: 'Стойкость', activation: 'passive', modifiers: [{ kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '0.5' }, anyTags: ['огонь'], if: { expr: '@лист == @носитель' } }] },
+      стойкость: { label: 'Стойкость', activation: 'passive', modifiers: [{ kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '0.5' }, anyTags: ['огонь'], if: { expr: '@лист == @holder' } }] },
     });
     const out = strike(system, [sheet('а'), sheet('б', {}, ['стойкость'])], 'б', []);
     expect(value(out, 'б', 'хп')).toBe(15);
@@ -343,7 +343,7 @@ describe('по ревью постройки', () => {
   it('проверка конструктора ловит формулу, которая не разбирается', () => {
     const system = world({
       удар: button([]),
-      слух: { label: 'Слух', activation: 'passive', on: [{ on: 'after:удар', if: { expr: '@цель == @носитель and' }, steps: [] }] },
+      слух: { label: 'Слух', activation: 'passive', on: [{ on: 'after:удар', if: { expr: '@цель == @holder and' }, steps: [] }] },
     });
     expect(errorsOf(lintSystem(system)).map(p => p.text).join('\n')).toMatch(/не разбирается/);
   });
@@ -357,7 +357,7 @@ describe('правка висящего видит его входы', () => {
     метка: {
       label: 'Метка охотника', activation: 'passive',
       params: [{ key: 'охотник', label: 'Охотник', kind: 'sheet' }, { key: 'прибавка', label: 'Прибавка', kind: 'number' }],
-      modifiers: [{ kind: 'edit', call: 'урон', param: 'сколько', op: 'add', value: { expr: '@прибавка' }, if: { expr: '@лист == @носитель and @источник == @охотник' } }],
+      modifiers: [{ kind: 'edit', call: 'урон', param: 'сколько', op: 'add', value: { expr: '@прибавка' }, if: { expr: '@лист == @holder and @источник == @охотник' } }],
     },
   });
   const marked = (hunter: string) => sheet('б', {}, [], { effects: [{ effectId: 'метка', args: { охотник: hunter, прибавка: 3 } }] } as never);

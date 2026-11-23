@@ -1,4 +1,4 @@
-import { NAMES } from '../words/names.ts';
+import { NAMES, saidName } from '../words/names.ts';
 import { isFormulaCell, itemExpr } from '../model/sheet-columns.ts';
 import { ITEM_NAME, asItem } from '../model/item-ref.ts';
 import type { ItemRef } from '../model/item-ref.ts';
@@ -272,7 +272,7 @@ function evaluate(expr: unknown, ctx: RefContext): unknown {
       }
     }
     if (ctx.sheets && !ctx.bare && !name.startsWith(`${DESK_NAME}.`)) {
-      throw new EngineError(`${who(ctx)}: «${name}» — чьё поле? Возьмите его у листа: ${Object.keys(ctx.sheets.bound).map(one => `«${one}»`).join(', ') || '«носитель»'}, затем «${name}»`);
+      throw new EngineError(`${who(ctx)}: «${name}» — чьё поле? Возьмите его у листа: ${Object.keys(ctx.sheets.bound).map(one => `«${saidName(one)}»`).join(', ') || '«носитель»'}, затем «${name}»`);
     }
     return ctx.pass.resolve(name);
   };
@@ -299,7 +299,7 @@ function namedValue(name: string, ctx: RefContext): unknown {
   const passed = Boolean(decl) && isGiven((ctx.params || {})[name]);
   if (!passed && ctx.inputs && name in ctx.inputs) {
     const answer = ctx.inputs[name];
-    return decl?.kind === 'boolean' && (answer === 'да' || answer === 'нет') ? answer === 'да' : answer;
+    return decl?.kind === 'boolean' && (answer === NAMES.yes || answer === NAMES.no) ? answer === NAMES.yes : answer;
   }
   if (!decl) return undefined;
   const value = ctx.params && name in ctx.params ? fromArgs(name, ctx) : undefined;

@@ -10,7 +10,7 @@ const world = (edits: Record<string, unknown>): System => ({
   roll_edits: edits,
   effects: Object.fromEntries(Object.keys(edits).map(key => [key, {
     label: key, activation: 'passive',
-    modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', edit: key, if: { expr: '@бросающий == @носитель' } }],
+    modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', edit: key, if: { expr: '@roller == @holder' } }],
   }])),
 } as unknown as System);
 

@@ -30,7 +30,7 @@ const raw = {
       { key: 'per', label: 'Сущность за рейтинг', kind: 'number' },
     ] },
     кожа: { shape: 'book', use: 'item', label: 'Кожа', extends: 'имплант', columns: [],
-      modifiers: [{ kind: 'value', target: 'защита', op: 'add', value: { expr: '@строка.rating' } }] },
+      modifiers: [{ kind: 'value', target: 'защита', op: 'add', value: { expr: '@row.rating' } }] },
     оружие: { shape: 'book', use: 'item', label: 'Оружие', extends: 'снаряжение',
       columns: [{ key: 'ar', label: 'ЗА', kind: 'number' }, { key: 'ammo_max', label: 'Боезапас', kind: 'number' }, { key: 'ammo', label: 'Патроны', kind: 'number', expr: { expr: '@ammo_max' } }],
       bindings: [{ label: 'Выстрел', effect: 'выстрел' }] },
@@ -38,9 +38,9 @@ const raw = {
   },
   effects: {
     выстрел: { label: 'Выстрел', activation: 'manual', params: [ACTOR], steps: [
-      { type: 'check', id: 'есть', value: { expr: '@вещь.ammo' }, versus: { expr: '1' }, successWhen: 'atLeast' },
-      { type: 'apply', target: { expr: '@вещь.ammo' }, direction: 'subtract', value: { expr: '1' } },
-      { type: 'apply', target: { expr: '@действующий.защита' }, direction: 'set', value: { expr: '@вещь.ar + sum(rows("мод", "ar_mod", @вещь))' } },
+      { type: 'check', id: 'есть', value: { expr: '@item.ammo' }, versus: { expr: '1' }, successWhen: 'atLeast' },
+      { type: 'apply', target: { expr: '@item.ammo' }, direction: 'subtract', value: { expr: '1' } },
+      { type: 'apply', target: { expr: '@действующий.защита' }, direction: 'set', value: { expr: '@item.ar + sum(rows("мод", "ar_mod", @item))' } },
     ] },
   },
 } as unknown as System;
@@ -67,7 +67,7 @@ describe('Д0: клетка-формула вещи считается в кон
     expect(at(sheet, 'сущность')).toBeCloseTo(6 - 3 * 0.7 - 2 * 0.3 * 0.8, 6);
   });
 
-  it('правка типа с @строка видит рейтинг экземпляра', () => {
+  it('правка типа с @row видит рейтинг экземпляра', () => {
     expect(at(hero([{ of: 'пластины', values: { rating: 4 } }]), 'защита')).toBe(4);
   });
 
@@ -138,12 +138,12 @@ describe('Д1: шаг «Изменение» пишет в свою вещь', (
     expect(out.sheets[0]!.has).toEqual([{ of: 'кольт', values: { ammo: 10 } }]);
   });
 
-  it('проверка мира не ругается на @вещь в эффекте кнопки вещи', () => {
+  it('проверка мира не ругается на @item в эффекте кнопки вещи', () => {
     expect(errorsOf(lintSystem(system, book)).map(p => p.text)).toEqual([]);
   });
 });
 
-describe('по ревью: экземпляры, круги, @вещь в клетке, живое чтение', () => {
+describe('по ревью: экземпляры, круги, @item в клетке, живое чтение', () => {
   it('убрать без указания экземпляра, когда их несколько, — отказ, а не «всё сразу»', () => {
     const sheet = hero([{ of: 'предатор' }, { of: 'предатор', id: 'п2' }, { of: 'лазер', in: 'п2' }]);
     expect(() => op([sheet], { op: 'belonging', sheetId: 'г', list: 'has', id: 'предатор', on: false })).toThrow(/укажите, какой экземпляр/);
@@ -154,11 +154,11 @@ describe('по ревью: экземпляры, круги, @вещь в кле
     expect(() => op([sheet], { op: 'belonging', sheetId: 'г', list: 'has', id: 'предатор', on: true, inst: 'п1', in: 'п2' })).toThrow(/сама в себя/);
   });
 
-  it('клетка-формула видит @вещь: занятая ёмкость — сумма того, что стоит в этой вещи', () => {
+  it('клетка-формула видит @item: занятая ёмкость — сумма того, что стоит в этой вещи', () => {
     const roomy = flattenSystem({
       ...raw,
-      tables: { ...raw.tables, оружие: { ...raw.tables!['оружие']!, columns: [...raw.tables!['оружие']!.columns!, { key: 'занято', label: 'Занято', kind: 'number', expr: { expr: 'sum(rows("мод", "cost", @вещь))' } }] } },
-      effects: { ...raw.effects, выстрел: { ...raw.effects['выстрел']!, steps: [{ type: 'apply', target: { expr: '@действующий.защита' }, direction: 'set', value: { expr: '@вещь.занято' } }] } },
+      tables: { ...raw.tables, оружие: { ...raw.tables!['оружие']!, columns: [...raw.tables!['оружие']!.columns!, { key: 'занято', label: 'Занято', kind: 'number', expr: { expr: 'sum(rows("мод", "cost", @item))' } }] } },
+      effects: { ...raw.effects, выстрел: { ...raw.effects['выстрел']!, steps: [{ type: 'apply', target: { expr: '@действующий.защита' }, direction: 'set', value: { expr: '@item.занято' } }] } },
     } as unknown as System);
     const sheet = hero([{ of: 'предатор', id: 'п1' }, { of: 'лазер', in: 'п1' }, { of: 'лазер', id: 'л2', in: 'п1' }, { of: 'предатор', id: 'п2' }]);
     const shot = (inst: string) => perform({ system: roomy, compendium: book, clock: null, sheets: [sheet], die: () => 1, newId: ids() },
@@ -170,12 +170,12 @@ describe('по ревью: экземпляры, круги, @вещь в кле
     expect(second.sheets[0]!.values['защита'] ?? 0).toBe(0);
   });
 
-  it('@вещь.x после записи в вещь видит новое значение, а не снимок начала действия', () => {
+  it('@item.x после записи в вещь видит новое значение, а не снимок начала действия', () => {
     const live = flattenSystem({
       ...raw,
       effects: { ...raw.effects, выстрел: { ...raw.effects['выстрел']!, steps: [
-        { type: 'apply', target: { expr: '@вещь.ammo' }, direction: 'subtract', value: { expr: '2' } },
-        { type: 'apply', target: { expr: '@действующий.защита' }, direction: 'set', value: { expr: '@вещь.ammo' } },
+        { type: 'apply', target: { expr: '@item.ammo' }, direction: 'subtract', value: { expr: '2' } },
+        { type: 'apply', target: { expr: '@действующий.защита' }, direction: 'set', value: { expr: '@item.ammo' } },
       ] } },
     } as unknown as System);
     const out = perform({ system: live, compendium: book, clock: null, sheets: [hero([{ of: 'кольт' }])], die: () => 1, newId: ids() },

@@ -24,7 +24,7 @@ const strike = {
 
 const reply = (on: string, expr: string, confirm: boolean) => ({
   label: 'Ответ', activation: 'passive',
-  on: [{ on, ...(confirm ? { confirm: true } : {}), if: { expr }, steps: [{ type: 'apply', target: { expr: '@носитель.хп' }, direction: 'subtract', value: { expr: '1' } }] }],
+  on: [{ on, ...(confirm ? { confirm: true } : {}), if: { expr }, steps: [{ type: 'apply', target: { expr: '@holder.хп' }, direction: 'subtract', value: { expr: '1' } }] }],
 });
 
 const system = (handler: ReturnType<typeof reply>): System => ({

@@ -474,7 +474,7 @@ describe('«+ бросок» и «+ проверка»: что кладётся 
     const real = { label: 'Тик', activation: 'passive', duration: { kind: 'permanent' }, on: [{ on: 'moment:turn-start', steps: [] }] };
     const handler = { ...real, steps: [] } as unknown as Effect;
     const roll = added('тик', real, index => ({ part: 'handler', handler: 0, index }), handler, '+ бросок');
-    expect(roll).toMatchObject({ type: 'roll', by: { expr: '@носитель' } });
+    expect(roll).toMatchObject({ type: 'roll', by: { expr: '@holder' } });
   });
 
   it('в ветке «Если» после «Для каждого из» бросающий всё тот же вход, а не лист цикла', () => {

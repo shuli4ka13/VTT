@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Card, CardHead, Button, DangerButton, Input, Select, Empty } from '../../../ui/primitives.tsx';
 import { MultiCombo } from '../../../ui/combo.tsx';
-import { NO_BLOCK, resultsOf, fieldsOf, onSheet, isSingle, STEP_WORDS, ROLL_NUMBER_WORDS, rollNumberWord, numbersOf, shapeOf } from '@vtt/engine';
+import { NAMES, NAME_LABELS, NO_BLOCK, resultsOf, fieldsOf, onSheet, isSingle, STEP_WORDS, ROLL_NUMBER_WORDS, rollNumberWord, numbersOf, shapeOf } from '@vtt/engine';
 import type { DieConstant } from '@vtt/engine';
 import { TagsField } from '../tags-field.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
@@ -20,21 +20,21 @@ type EditSystem = WorldState['editSystem'];
 const ZERO_WORDS = [['', 'ничего не бросаем'], ['worst', 'бросаем две, берём худшую'], ['best', 'бросаем две, берём лучшую']] as const;
 
 const RULE_WORDS = [
-  ['бросок', 'бросок', 'сам бросок; после точки — его части, как у шага «Бросок»'],
-  ['выпало', 'выпало', 'что выпало на кости этого броска'],
-  ['число', 'число поля', 'число брошенного поля как есть — например, «Итог: Атлетика»'],
-  ['порог', 'порог', 'с чем сравнивают выпавшее: число поля с поправкой шага «Бросок»'],
+  [NAMES.roll, NAME_LABELS.roll, 'сам бросок; после точки — его части, как у шага «Бросок»'],
+  [NAMES.rolled, NAME_LABELS.rolled, 'что выпало на кости этого броска'],
+  [NAMES.number, 'число поля', 'число брошенного поля как есть — например, «Итог: Атлетика»'],
+  [NAMES.threshold, NAME_LABELS.threshold, 'с чем сравнивают выпавшее: число поля с поправкой шага «Бросок»'],
 ] as const;
 
 const DEGREE_WORDS = [
   ...RULE_WORDS,
-  ['успех', 'успех', 'да или нет — итог строки «Успех, если» этого броска'],
-  ['степени', 'степени', 'число — итог строки «Степени числом» этого броска'],
+  [NAMES.success, NAME_LABELS.success, 'да или нет — итог строки «Успех, если» этого броска'],
+  [NAMES.margin, NAME_LABELS.margin, 'число — итог строки «Степени числом» этого броска'],
 ] as const;
 
 const namesFor = (words: readonly (readonly [string, string, string])[], system: System, roll: SystemRoll) => {
   const out = new Map<string, string>(words.map(([key, label]) => [key, label]));
-  for (const one of resultsOf(system, [], { type: 'roll', die: roll.die } as never)) if (one.path) out.set(`бросок${one.path}`, one.label);
+  for (const one of resultsOf(system, [], { type: 'roll', die: roll.die } as never)) if (one.path) out.set(`${NAMES.roll}${one.path}`, one.label);
   return out;
 };
 const EMPTY_HINT = 'пусто — успех считает «Проверка» в эффекте';
@@ -225,7 +225,7 @@ function RollRow({ id, roll, system, editSystem }: { id: string; roll: SystemRol
         <div className="dict-row roll-line roll-line--top">
           <span className="dict-row__label">Что приходит</span>
           <div className="roll-form__body">
-            <Arrived words={graded ? DEGREE_WORDS : DEGREE_WORDS.filter(([key]) => key === 'бросок' || key === 'выпало' || key === 'число')} />
+            <Arrived words={graded ? DEGREE_WORDS : DEGREE_WORDS.filter(([key]) => key === NAMES.roll || key === NAMES.rolled || key === NAMES.number)} />
           </div>
         </div>
         {([

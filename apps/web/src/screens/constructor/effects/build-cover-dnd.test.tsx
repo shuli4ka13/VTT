@@ -140,7 +140,7 @@ describe('эффекты D&D собираются в конструкторе р
     within(card()).select('Кроме меток', 'магический');
     within(card()).select('Где у метки', 'damage_types\u0000nature');
     within(within(card()).field('Где у метки')).select(within(card()).field('Где у метки').querySelectorAll('[role="combobox"]')[1] as HTMLElement, 'физический');
-    within(card()).select('Кого касается', '@лист == @носитель');
+    within(card()).select('Кого касается', '@лист == @holder');
     dump({ got: built('stoneskin'), goal });
     expect(built('stoneskin')).toEqual(goal);
   });
@@ -155,8 +155,8 @@ describe('эффекты D&D собираются в конструкторе р
       within(card()).select('Чей вызов', 'damage');
       within(card()).formula('На сколько', one.value.expr);
       within(card()).select('Этап', one.stage);
-      within(card()).select('Кого касается', '@лист == @носитель');
-      within(card()).when('=не пусто(@носитель.damage_types.[@damage_type].taken)');
+      within(card()).select('Кого касается', '@лист == @holder');
+      within(card()).when('=не пусто(@holder.damage_types.[@damage_type].taken)');
     }
     dump({ got: built('taken_rule'), goal });
     expect(built('taken_rule')).toEqual(goal);
@@ -176,7 +176,7 @@ describe('эффекты D&D собираются в конструкторе р
     card = stepCard(/^1 · /);
     within(card).select('Что делаем', 'remove');
     within(card).select('Какое', 'concentration');
-    within(card).formula('С кого', '@носитель');
+    within(card).formula('С кого', '@holder');
     dump({ got: built('incapacitated'), goal });
     expect(built('incapacitated')).toEqual(goal);
   });
@@ -200,14 +200,14 @@ describe('эффекты D&D собираются в конструкторе р
     ui.click('+ когда');
     within(handlerHead(1)).select('Что случилось', 'moment');
     within(handlerHead(1)).select('Когда', 'turn-end');
-    within(handlerHead(1)).select('Кого касается', '@ходит == @носитель');
+    within(handlerHead(1)).select('Кого касается', '@mover == @holder');
     within(handlerHead(1)).when('=(@запомнено или 0) > 0');
 
     within(handlerAt(1)).click('+ изменение');
     const made = () => stepCard(/^1 · /, handlerAt(1));
     within(made()).click('вызов');
     within(made()).select('Какой эффект', 'repeat_save');
-    within(made()).formula(within(made()).arg('Кто спасается'), '@носитель');
+    within(made()).formula(within(made()).arg('Кто спасается'), '@holder');
     within(made()).formula(within(made()).arg('Чем спасается'), '"мудрость"');
     within(made()).formula(within(made()).arg('Сложность'), '@запомнено');
     within(made()).select(within(made()).arg('Что снимается').querySelector<HTMLElement>('[role="combobox"]')!, 'paralyzed');
@@ -229,8 +229,8 @@ describe('эффекты D&D собираются в конструкторе р
     ui.type(ui.cell('Имя в формулах', 0), 'кость');
     lifetime('uses');
     within(handlerHead(1)).select('Что случилось', 'seen');
-    within(handlerHead(1)).select('Кого касается', '@бросающий == @носитель');
-    within(handlerHead(1)).when('=@бросающий == @носитель и (есть(@roll.tags, "атака") или есть(@roll.tags, "спасбросок") или есть(@roll.tags, "проверка"))');
+    within(handlerHead(1)).select('Кого касается', '@roller == @holder');
+    within(handlerHead(1)).when('=@roller == @holder и (есть(@roll.tags, "атака") или есть(@roll.tags, "спасбросок") или есть(@roll.tags, "проверка"))');
     within(handlerHead(1)).select('Решение', 'ask');
     within(handlerAt(1)).click('+ прибавить');
     const card = stepCard(/^1 · /, handlerAt(1));
@@ -244,7 +244,7 @@ describe('эффекты D&D собираются в конструкторе р
     fresh('+ висит', goal!.label!, 'inspire', 'Реакции', goal!.description!);
     within().click('+ когда');
     within(handlerHead(1)).select('Что случилось', 'seen');
-    within(handlerHead(1)).select('Кого касается', '@бросающий == @носитель');
+    within(handlerHead(1)).select('Кого касается', '@roller == @holder');
     within(handlerHead(1)).select('Решение', 'ask');
 
     within(handlerAt(1)).click('+ изменение');
@@ -292,21 +292,21 @@ describe('эффекты D&D собираются в конструкторе р
     within().click('+ когда');
     within(handlerHead(1)).select('Что именно', 'атака');
     within(handlerHead(1)).select('Когда именно', 'before');
-    within(handlerHead(1)).select('Кого касается', '@цель == @носитель');
+    within(handlerHead(1)).select('Кого касается', '@цель == @holder');
     within(handlerHead(1)).when('=@бросок.исход.hit');
     within(handlerHead(1)).select('Решение', 'ask');
 
     ui.select(handlerAt(1).querySelector<HTMLElement>('.add-cost [role="combobox"]')!, 'cost_reaction');
     let card = stepCard(/^1 · /, handlerAt(1));
-    within(card).formula(within(card).arg('Лист'), '@носитель');
-    within(card).formula(within(card).arg('Источник'), '@носитель');
+    within(card).formula(within(card).arg('Лист'), '@holder');
+    within(card).formula(within(card).arg('Источник'), '@holder');
     within(handlerAt(1)).click('+ изменение');
     card = stepCard(/^2 · /, handlerAt(1));
     within(card).click('вызов');
     card = stepCard(/^2 · /, handlerAt(1));
     within(card).select('Какой эффект', 'spell_slot');
     for (const name of within(card).args()) {
-      within(card).formula(within(card).arg(name), name === 'Лист' || name === 'Источник' ? '@носитель' : '1');
+      within(card).formula(within(card).arg(name), name === 'Лист' || name === 'Источник' ? '@holder' : '1');
     }
     within(stepCard(/^2 · /, handlerAt(1))).click('↑');
 
@@ -315,7 +315,7 @@ describe('эффекты D&D собираются в конструкторе р
     within(card).click('состояние');
     card = stepCard(/^3 · /, handlerAt(1));
     within(card).select('Какое', 'shield_up');
-    within(card).formula('На кого', '@носитель');
+    within(card).formula('На кого', '@holder');
     dump({ got: built('shield'), goal });
     expect(built('shield')).toEqual(goal);
   });
@@ -340,8 +340,8 @@ describe('эффекты D&D собираются в конструкторе р
       within(card()).select('Какое слово', edit);
       within(card()).when(`=${when}`);
     };
-    rollEdit('advantage', '@против == @носитель and @бросающий == @кого');
-    rollEdit('disadvantage', '@бросающий == @носитель and @против == @кого');
+    rollEdit('advantage', '@against == @holder and @roller == @кого');
+    rollEdit('disadvantage', '@roller == @holder and @against == @кого');
     dump({ got: built('hidden'), goal });
     expect(built('hidden')).toEqual(goal);
   });
@@ -424,9 +424,9 @@ describe('общие эффекты D&D собираются руками: ци�
     within(handlerAt(1)).click('+ для каждого из списка');
     rows(handlerAt(1), 'resources', 'ресурс');
     within(handlerAt(1)).click('+ если');
-    within(headOf(block(0, handlerAt(1)))).when('=@носитель.ресурс.short');
+    within(headOf(block(0, handlerAt(1)))).when('=@holder.ресурс.short');
     addToArm(block(0, handlerAt(1)), 0, 'change');
-    change(() => stepCard(/^2 · /, handlerAt(1)), 'носитель', 'ресурс.left', 'set', '@носитель.ресурс.max');
+    change(() => stepCard(/^2 · /, handlerAt(1)), 'holder', 'ресурс.left', 'set', '@holder.ресурс.max');
 
     ui.click('+ когда');
     within(handlerHead(2)).select('Что случилось', 'moment');
@@ -434,7 +434,7 @@ describe('общие эффекты D&D собираются руками: ци�
     within(handlerAt(2)).click('+ для каждого из списка');
     rows(handlerAt(2), 'resources', 'ресурс');
     within(handlerAt(2)).click('+ изменение');
-    change(() => stepCard(/^2 · /, handlerAt(2)), 'носитель', 'ресурс.left', 'set', '@носитель.ресурс.max');
+    change(() => stepCard(/^2 · /, handlerAt(2)), 'holder', 'ресурс.left', 'set', '@holder.ресурс.max');
 
     dump({ got: built('resources_rest'), goal });
     expect(built('resources_rest')).toEqual(goal);

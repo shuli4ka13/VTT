@@ -39,7 +39,7 @@ group('степени успеха', () => {
       ...sys.effects,
       [id]: {
         label: id, activation: 'passive', duration: { kind: 'permanent' },
-        modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['ход'], if: { expr: '@бросающий == @носитель' }, edit }],
+        modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['ход'], if: { expr: '@roller == @holder' }, edit }],
       },
     },
   });
@@ -177,12 +177,12 @@ group('ступени «Проверки» списком учитывают п�
         { id: 'бросок', type: 'roll', die: 'пара', tags: ['ход'], by: { expr: '@действующий' } },
         { type: 'each', of: 'цели' },
         { id: 'ход', type: 'check', value: { expr: '@бросок' }, versus: { expr: '7' }, degrees: [
-          { label: 'с запасом', if: { expr: '@степени >= 1' } },
-          { label: 'впритык', if: { expr: '@успех' } },
+          { label: 'с запасом', if: { expr: '@margin >= 1' } },
+          { label: 'впритык', if: { expr: '@success' } },
           { label: 'мимо', if: { expr: 'true' } },
         ] },
       ] },
-      кураж: { label: 'кураж', activation: 'passive', duration: { kind: 'permanent' }, modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['ход'], if: { expr: '@бросающий == @носитель' }, edit: 'кураж' }] },
+      кураж: { label: 'кураж', activation: 'passive', duration: { kind: 'permanent' }, modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['ход'], if: { expr: '@roller == @holder' }, edit: 'кураж' }] },
     },
   };
   const book: any = { records: [{ id: 'правило', table: 'приём', label: 'правило', bindings: [{ label: 'правило', effect: 'правило', args: {} }] }] };

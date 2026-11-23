@@ -3,7 +3,7 @@ import { BY_FORMULA } from './typed-pick.tsx';
 import type { System } from '@vtt/schema';
 import { Field, Select } from '../../ui/primitives.tsx';
 import { FieldPick } from '../../ui/field-pick.tsx';
-import { fieldsOf, readableFields, cellSource, DESK_ID } from '@vtt/engine';
+import { fieldsOf, readableFields, cellSource, DESK_ID, NAME_LABELS } from '@vtt/engine';
 import type { SlotContext } from './slots.tsx';
 
 const fieldTarget = (target: unknown): { sheet: string; tag: string } | null => {
@@ -42,7 +42,7 @@ export function TargetPick({ target, context, onChange, formula }: {
   const owner = byFormula ? BY_FORMULA : picked?.sheet ?? (param ? `:${param}` : chosen ?? sheets[0]?.[0] ?? '');
   const options: (readonly [string, string])[] = [
     ...sheets.map(([name, label]) => [name, `«${label}»`] as const),
-    ...(desk ? [[DESK_ID, 'стол'] as const] : []),
+    ...(desk ? [[DESK_ID, NAME_LABELS.desk] as const] : []),
     ...fieldParams.map(p => [`:${p.key}`, `поле из входа «${p.label ?? p.key}»`] as const),
     ...(formula ? [[BY_FORMULA, 'формулой…'] as const] : []),
   ];

@@ -25,8 +25,8 @@ const system = {
     слух: {
       label: 'Слух', activation: 'passive', duration: { kind: 'permanent' },
       on: [
-        { on: 'rolled', if: { expr: '@бросающий == @носитель' }, tags: ['защита'], steps: [{ type: 'apply', target: { expr: '@носитель.счёт' }, direction: 'add', value: { expr: '1' } }] },
-        { on: 'rolled', if: { expr: '@бросающий == @носитель' }, notTags: ['защита'], steps: [{ type: 'apply', target: { expr: '@носитель.счёт' }, direction: 'add', value: { expr: '10' } }] },
+        { on: 'rolled', if: { expr: '@roller == @holder' }, tags: ['защита'], steps: [{ type: 'apply', target: { expr: '@holder.счёт' }, direction: 'add', value: { expr: '1' } }] },
+        { on: 'rolled', if: { expr: '@roller == @holder' }, notTags: ['защита'], steps: [{ type: 'apply', target: { expr: '@holder.счёт' }, direction: 'add', value: { expr: '10' } }] },
       ],
     },
   },
@@ -49,16 +49,16 @@ group('подписка на бросок с фильтром меток', () =>
     const shaky = structuredClone(system) as System & { effects: Record<string, any> };
     shaky.effects.дрожь = {
       label: 'Дрожь', activation: 'passive', duration: { kind: 'permanent' },
-      modifiers: [{ kind: 'edit', call: 'roll', param: 'tags', value: { expr: '"защита"' }, if: { expr: '@бросающий == @носитель' } }],
+      modifiers: [{ kind: 'edit', call: 'roll', param: 'tags', value: { expr: '"защита"' }, if: { expr: '@roller == @holder' } }],
     };
     const sheet = { ...me(), effects: [{ effectId: 'слух' }, { effectId: 'дрожь' }] } as Sheet;
     eq(exchange({ system: shaky, compendium, die: () => 3, sheets: [sheet], actionId: 'кнопки:1', fromId: 'я', toIds: [] }).sheets[0]!.values.счёт, 1);
   });
 
-  test('подписка висящего видит «@осталось» — остаток срока', () => {
+  test('подписка висящего видит «@left» — остаток срока', () => {
     const timed = structuredClone(system) as System & { effects: Record<string, any> };
     timed.effects.слух.duration = { kind: 'turns', max: 3 };
-    timed.effects.слух.on = [{ on: 'rolled', if: { expr: '@бросающий == @носитель' }, steps: [{ type: 'apply', target: { expr: '@носитель.счёт' }, direction: 'add', value: { expr: '@осталось' } }] }];
+    timed.effects.слух.on = [{ on: 'rolled', if: { expr: '@roller == @holder' }, steps: [{ type: 'apply', target: { expr: '@holder.счёт' }, direction: 'add', value: { expr: '@left' } }] }];
     const sheet = { ...me(), effects: [{ effectId: 'слух', turnsLeft: 2 }] } as Sheet;
     eq(exchange({ system: timed, compendium, die: () => 3, sheets: [sheet], actionId: 'кнопки:1', fromId: 'я', toIds: [] }).sheets[0]!.values.счёт, 2);
     deepEq(errorsOf(lintSystem(timed, compendium)).map(p => p.text), []);

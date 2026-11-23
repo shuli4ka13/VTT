@@ -226,12 +226,12 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
       () => press(findAnchor({ guide: 'add-column' })!),
       () => labelColumn('таблица', 'колонка', 'Модификатор'),
       () => { openBar(''); typeBar('floor(('); },
-      () => typeBar('floor((@строка.value'),
-      () => typeBar('floor((@строка.value - 10) / 2)'),
+      () => typeBar('floor((@row.value'),
+      () => typeBar('floor((@row.value - 10) / 2)'),
       () => edit(d => {
         const column = d.tables!.таблица!.columns!.find(c => c.key === 'колонка')!;
         delete (column as { kind?: string }).kind;
-        (column as { expr?: unknown }).expr = { expr: 'floor((@строка.value - 10) / 2)' };
+        (column as { expr?: unknown }).expr = { expr: 'floor((@row.value - 10) / 2)' };
       }),
     ],
     sample: () => press(findAnchor({ text: 'образец листа' })!),
@@ -268,16 +268,16 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
       () => press(findAnchor({ guide: 'add-column' })!),
       () => labelColumn('таблица_2', 'колонка_2', 'Итог'),
       () => openBar(''),
-      () => typeBar('@строка.колонка.колонка'),
-      () => typeBar('@строка.колонка.колонка + '),
-      () => typeBar('@строка.колонка.колонка + @строка.value'),
+      () => typeBar('@row.колонка.колонка'),
+      () => typeBar('@row.колонка.колонка + '),
+      () => typeBar('@row.колонка.колонка + @row.value'),
       () => edit(d => {
         const column = d.tables!.таблица_2!.columns!.find(c => c.key === 'колонка_2')!;
         delete (column as { kind?: string }).kind;
-        (column as { expr?: unknown }).expr = { expr: '@строка.колонка.колонка + @строка.value' };
+        (column as { expr?: unknown }).expr = { expr: '@row.колонка.колонка + @row.value' };
       }),
     ],
-    save: () => edit(d => { d.tables!.таблица!.columns!.push({ key: 'колонка_3', label: 'Спасбросок', expr: { expr: '@строка.колонка' } } as never); }),
+    save: () => edit(d => { d.tables!.таблица!.columns!.push({ key: 'колонка_3', label: 'Спасбросок', expr: { expr: '@row.колонка' } } as never); }),
   },
   links: {
     called: [
@@ -401,12 +401,12 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
       () => edit(d => { d.effects.горение!.on = [{ on: 'gained:' }]; }),
       () => edit(d => { d.effects.горение!.on = [{ on: 'gained:гасит огонь' }]; }),
     ],
-    who: () => edit(d => { d.effects.горение!.on![0]!.if = { expr: '@лист == @носитель' }; }),
+    who: () => edit(d => { d.effects.горение!.on![0]!.if = { expr: '@sheet == @holder' }; }),
     remove: [
       () => edit(d => { d.effects.горение!.on![0]!.steps = [{ type: 'apply' }]; }),
       () => edit(d => { d.effects.горение!.on![0]!.steps = [{ type: 'status' }]; }),
       () => edit(d => { d.effects.горение!.on![0]!.steps = [{ type: 'status', mode: 'remove' }]; }),
-      () => edit(d => { d.effects.горение!.on![0]!.steps = [{ type: 'status', mode: 'remove', effect: 'горение', to: { expr: '@лист' } }]; }),
+      () => edit(d => { d.effects.горение!.on![0]!.steps = [{ type: 'status', mode: 'remove', effect: 'горение', to: { expr: '@sheet' } }]; }),
     ],
     seen: [
       () => pick({ activeEffectId: 'удача' }),
@@ -457,7 +457,7 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
     op: () => edit(d => { (d.sheets!.по_заготовке!.modifiers![0] as { op: string }).op = 'set'; }),
     value: [
       () => openBar(''),
-      () => edit(d => { (d.sheets!.по_заготовке!.modifiers![0] as { value: unknown }).value = { expr: '@заготовка.[@строка]' }; }),
+      () => edit(d => { (d.sheets!.по_заготовке!.modifiers![0] as { value: unknown }).value = { expr: '@заготовка.[@row]' }; }),
     ],
     when: [
       () => openBar(''),
@@ -472,8 +472,8 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
       () => pick({ activeEffectId: 'удар' }),
       () => edit(d => setSteps(d, 'удар', [{ type: 'branch' }, { type: 'end' }])),
       () => openBar(''),
-      () => typeBar('@стол.бой'),
-      () => edit(d => setSteps(d, 'удар', [{ type: 'branch', if: { expr: '@стол.бой' } }, { type: 'end' }])),
+      () => typeBar('@desk.combat'),
+      () => edit(d => setSteps(d, 'удар', [{ type: 'branch', if: { expr: '@desk.combat' } }, { type: 'end' }])),
     ],
     spend: [
       () => edit(d => setSteps(d, 'удар', beforeEnd(steps('удар'), { type: 'apply' }))),
@@ -483,7 +483,7 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
     ],
     problems: openProblems,
     refuse: () => edit(d => setSteps(d, 'удар', [
-      { type: 'branch', if: { expr: '@стол.бой and @действующий.действий_осталось < 1' } },
+      { type: 'branch', if: { expr: '@desk.combat and @действующий.действий_осталось < 1' } },
       { type: 'stop' },
       { type: 'end' },
       ...steps('удар'),
@@ -546,10 +546,10 @@ const BAD: Record<string, Record<string, Wrong[]>> = {
     rows: [d => { d.tables!.таблица!.rows = [{ value: 'сила' }, { value: 'ум' }]; }],
     modifier: [
       d => { d.tables!.таблица!.rows = [{ value: 'сила' }]; },
-      setExpr('таблица', 'колонка', '@строка.value / 2'),
-      setExpr('таблица', 'колонка', '(@строка.value - 10) / 2'),
-      setExpr('таблица', 'колонка', '@строка.value - 10'),
-      setExpr('таблица', 'колонка', 'floor((@строка.value - 10) / 2) + 1'),
+      setExpr('таблица', 'колонка', '@row.value / 2'),
+      setExpr('таблица', 'колонка', '(@row.value - 10) / 2'),
+      setExpr('таблица', 'колонка', '@row.value - 10'),
+      setExpr('таблица', 'колонка', 'floor((@row.value - 10) / 2) + 1'),
     ],
     armor: [
       setExpr('лист', 'класс_брони', '10 + @таблица.сила.колонка'),
@@ -562,11 +562,11 @@ const BAD: Record<string, Record<string, Wrong[]>> = {
     link: [d => { col(d, 'таблица_2', 'колонка').kind = 'number'; }, d => { col(d, 'таблица_2', 'колонка').from = 'лист'; }],
     pick: [d => { d.tables!.таблица_2!.rows = [{ value: 'атлетика', cells: { колонка: 'ловкость' } }]; }],
     through: [
-      setExpr('таблица_2', 'колонка_2', '@строка.колонка.колонка - @строка.value'),
-      setExpr('таблица_2', 'колонка_2', '@строка.колонка.колонка'),
-      setExpr('таблица_2', 'колонка_2', '@строка.value + @строка.value'),
+      setExpr('таблица_2', 'колонка_2', '@row.колонка.колонка - @row.value'),
+      setExpr('таблица_2', 'колонка_2', '@row.колонка.колонка'),
+      setExpr('таблица_2', 'колонка_2', '@row.value + @row.value'),
     ],
-    save: [setExpr('таблица', 'колонка_3', '@строка.колонка + 1'), setExpr('таблица', 'колонка_3', '@строка.value'), broken],
+    save: [setExpr('таблица', 'колонка_3', '@row.колонка + 1'), setExpr('таблица', 'колонка_3', '@row.value'), broken],
   },
   links: {
     called: [d => { d.effects.урон!.label = 'Вред'; }],
@@ -619,7 +619,7 @@ const BAD: Record<string, Record<string, Wrong[]>> = {
   tags: {
     tag: [d => { d.effects.сырость!.tags = ['гасит воду']; }],
     when: [d => { d.effects.горение!.on![0]!.on = 'gained:'; }, d => { d.effects.горение!.on![0]!.on = 'gained:гасит воду'; }],
-    who: [d => { d.effects.горение!.on![0]!.if = formula('@лист != @носитель'); }, d => { d.effects.горение!.on![0]!.if = formula('@лист'); }],
+    who: [d => { d.effects.горение!.on![0]!.if = formula('@sheet != @holder'); }, d => { d.effects.горение!.on![0]!.if = formula('@sheet'); }],
     remove: [
       d => { (d.effects.горение!.on![0]!.steps![0] as unknown as { to: unknown }).to = formula('@действующий'); },
       d => { (d.effects.горение!.on![0]!.steps![0] as unknown as { effect: string }).effect = 'сырость'; },
@@ -652,7 +652,7 @@ const BAD: Record<string, Record<string, Wrong[]>> = {
     op: [d => { (d.sheets!.по_заготовке!.modifiers![0] as { op: string }).op = 'add'; }],
     value: [
       d => { (d.sheets!.по_заготовке!.modifiers![0] as { value: unknown }).value = formula('@заготовка'); },
-      d => { (d.sheets!.по_заготовке!.modifiers![0] as { value: unknown }).value = formula('@заготовка.[@строка] + 1'); },
+      d => { (d.sheets!.по_заготовке!.modifiers![0] as { value: unknown }).value = formula('@заготовка.[@row] + 1'); },
     ],
     when: [d => { (d.sheets!.по_заготовке!.modifiers![0] as { if: unknown }).if = formula('empty(@заготовка)'); }],
     problems: [closed],
@@ -662,12 +662,12 @@ const BAD: Record<string, Record<string, Wrong[]>> = {
     ],
   },
   combat: {
-    if: [d => { stepOf(d, 'удар', 'branch').if = formula('not @стол.бой'); }],
+    if: [d => { stepOf(d, 'удар', 'branch').if = formula('not @desk.combat'); }],
     spend: [d => { stepOf(d, 'удар', 'apply').value = formula('2'); }, d => { stepOf(d, 'удар', 'apply').direction = 'add'; }],
     problems: [closed],
     refuse: [
       d => { stepsIn(d, 'удар')[0]!.if = formula('@действующий.действий_осталось < 1'); },
-      d => { stepsIn(d, 'удар')[0]!.if = formula('@стол.бой'); },
+      d => { stepsIn(d, 'удар')[0]!.if = formula('@desk.combat'); },
     ],
   },
   ready: {
@@ -1069,7 +1069,7 @@ describe('уроки конструктора', () => {
     const refuse = lesson.steps.find(step => step.id === 'refuse')!;
     const system = structuredClone(lesson.seed);
     system.effects.удар!.steps = [
-      { type: 'branch', if: { expr: 'not @стол.бой' } },
+      { type: 'branch', if: { expr: 'not @desk.combat' } },
       { type: 'orElse', if: { expr: '@действующий.действий_осталось < 1' } },
       { type: 'stop' },
       { type: 'end' },

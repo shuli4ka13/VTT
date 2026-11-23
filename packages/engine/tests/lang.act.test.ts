@@ -21,7 +21,7 @@ const D20 = { constants: { к20: { label: 'к20', kind: 'die', dice: [{ count: 1
 
 const button = (steps: unknown[]) => ({ label: 'Удар', activation: 'manual', params: [ACTOR, TARGETS], steps });
 const strike = (steps: unknown[]) => button([EACH, ...steps]);
-const mine = { on: 'after:удар', if: { expr: '@цель == @носитель' } };
+const mine = { on: 'after:удар', if: { expr: '@цель == @holder' } };
 
 const world = (effects: Record<string, unknown>, extra: Record<string, unknown> = {}): System => ({
   id: 'ядро', name: 'Ядро',

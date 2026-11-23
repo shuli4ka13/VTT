@@ -7,7 +7,7 @@ import { SAMPLE_WORLDS } from '../src/model/systems.ts';
 import { flattenSystem } from '../src/model/inherit.ts';
 import type { System, Compendium } from '../src/model/types.ts';
 
-const holder = { expr: '@бросающий == @носитель' };
+const holder = { expr: '@roller == @holder' };
 
 const edit = (tags: string[], extra: Record<string, unknown> = {}) => ({ kind: 'edit', call: 'roll', param: 'count', op: 'add', value: { expr: '-2' }, tags, if: holder, ...extra });
 
@@ -62,7 +62,7 @@ group('«Проблемы»: метку, которую ждёт правка б
   test('метку «если(…, "текст", "")» видно; формулу, которую не развернуть, — система «открыта», замечаний нет', () => {
     const literal = system({ удар: strike([{ expr: 'if(@стихия == "огонь", "жаркий", "")' }]), жар: { label: 'Жар', activation: 'passive', modifiers: [edit(['жаркий'])] } });
     eq(unreached(literal).join(' | '), '');
-    const open = system({ удар: strike([{ expr: '@носитель.ловкость' }]), слепота: { label: 'Слепота', activation: 'passive', modifiers: [edit(['зрение'])] } });
+    const open = system({ удар: strike([{ expr: '@holder.ловкость' }]), слепота: { label: 'Слепота', activation: 'passive', modifiers: [edit(['зрение'])] } });
     eq(rollTagReach(open).open, true);
     eq(unreached(open).join(' | '), '');
   });
@@ -91,7 +91,7 @@ group('«Проблемы»: метку, которую ждёт правка б
   });
 
   test('подписка «кости выпали» с меткой, которую никто не ставит, — замечание у подписки', () => {
-    const s = system({ удача: { label: 'Удача', activation: 'passive', on: [{ on: 'seen', tags: ['зрение'], if: { expr: '@бросающий == @носитель' }, steps: [] }] } });
+    const s = system({ удача: { label: 'Удача', activation: 'passive', on: [{ on: 'seen', tags: ['зрение'], if: { expr: '@roller == @holder' }, steps: [] }] } });
     const found = lintSystem(s).filter(p => p.text.includes('не ставит ни правило броска'));
     eq(found.length, 1);
     ok(found[0]!.text.includes('подписка сработает, только если'), found[0]!.text);
@@ -106,14 +106,14 @@ group('«Проблемы»: метку, которую ждёт правка б
 
   test('правка «метка броску» у типа листа «стол» ставит метку — замечания нет', () => {
     const s = system({ ночь: { label: 'Ночь', activation: 'passive', modifiers: [edit(['ночь'])] } }, {
-      sheets: { стол: { label: 'Стол', modifiers: [{ kind: 'edit', call: 'roll', param: 'tags', value: { expr: '"ночь"' }, if: holder }] } },
+      sheets: { desk: { label: 'Стол', modifiers: [{ kind: 'edit', call: 'roll', param: 'tags', value: { expr: '"ночь"' }, if: holder }] } },
     });
     eq(unreached(s).join(' | '), '');
   });
 
   test('«метка броску» записи по её свойству: выбор — строки справочника, свободный текст — система «открыта»', () => {
     const kinds = (kind: string) => ({ чары: { label: 'Чары', shape: 'book', columns: [{ key: 'вид', label: 'Вид', kind, ...(kind === 'choice' ? { from: 'стихии' } : {}) }] } });
-    const mark = { kind: 'edit', call: 'roll', param: 'tags', value: { expr: '@строка.вид' }, if: holder };
+    const mark = { kind: 'edit', call: 'roll', param: 'tags', value: { expr: '@row.вид' }, if: holder };
     const book = { id: 'b', records: [{ id: 'искра', table: 'чары', cells: { вид: 'огонь' }, modifiers: [mark] }] } as unknown as Compendium;
     const make = (kind: string) => {
       const s = system({ холод: { label: 'Холод', activation: 'passive', modifiers: [edit(['холод'])] } });

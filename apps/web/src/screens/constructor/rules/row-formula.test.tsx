@@ -24,7 +24,7 @@ describe('формула колонки у строки — словами эт�
   });
 
   it('справка по «строка.ability.mod» объясняет путь, а не «не найдено»', () => {
-    const told = explainName(dnd, undefined, null, 'строка.ability.mod', new Map() as never, 'skills');
+    const told = explainName(dnd, undefined, null, 'row.ability.mod', new Map() as never, 'skills');
     expect(told.kind).toBe('клетка этой строки');
     expect(told.title).toBe('Характеристика · Модификатор');
     expect(told.facts.find(([term]) => term === 'пример')?.[1]).toBe('у «Атлетика»: Сила · Модификатор');

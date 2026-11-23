@@ -9,7 +9,7 @@ const explain = (name: string, effect: string | null = null) => explainName(dnd,
 
 describe('откуда это: щелчок по фишке объясняет имя', () => {
   it('поле листа: как получается, где видно, кто пользуется, чей лист', () => {
-    const told = explain('носитель.ac');
+    const told = explain('holder.ac');
     expect(told.kind).toBe('колонка листа');
     expect(told.facts).toContainEqual(['чьё', 'лист «носитель»']);
     expect(told.shown[0]).toMatch(/^на листе, блок/);

@@ -255,9 +255,9 @@ describe('ссылка числом и колонка по значению', ()
   } as unknown as System;
 
   it('колонка по значению — одна часть, собирается обратно без потерь', () => {
-    const value = '@заклинатель.[@строка.circle] + 1';
+    const value = '@заклинатель.[@row.circle] + 1';
     const parts = partsOf(value);
-    expect(parts).toEqual([{ text: '' }, { tag: 'заклинатель', by: '@строка.circle' }, { text: ' + 1' }]);
+    expect(parts).toEqual([{ text: '' }, { tag: 'заклинатель', by: '@row.circle' }, { text: ' + 1' }]);
     expect(joinParts(parts)).toBe(value);
     expect(joinParts(partsOf('@a.["x"].b'))).toBe('@a.["x"].b');
   });
@@ -268,7 +268,7 @@ describe('ссылка числом и колонка по значению', ()
   });
 
   it('колонка по значению — фишка «[Уровень заклинателя · колонка по [Колонка ячеек]]»', () => {
-    render(<FormulaChips value="@заклинатель.[@строка.circle]" system={linked} table="круги" onChange={() => {}} />);
+    render(<FormulaChips value="@заклинатель.[@row.circle]" system={linked} table="круги" onChange={() => {}} />);
     expect(screen.getByText('Уровень заклинателя · колонка по [Колонка ячеек]')).toBeTruthy();
   });
 
@@ -278,7 +278,7 @@ describe('ссылка числом и колонка по значению', ()
     const input = screen.getByDisplayValue('@колон') as HTMLInputElement;
     fireEvent.focus(input);
     fireEvent.mouseDown(screen.getByText('Уровень заклинателя · колонка по [Колонка ячеек]'));
-    expect(value).toBe('@заклинатель.[@строка.circle]');
+    expect(value).toBe('@заклинатель.[@row.circle]');
   });
 });
 

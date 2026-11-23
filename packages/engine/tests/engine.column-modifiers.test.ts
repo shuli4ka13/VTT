@@ -16,7 +16,7 @@ const system = {
   effects: {
     уровень: {
       label: 'По уровню', activation: 'passive', duration: { kind: 'permanent' },
-      modifiers: [{ kind: 'value', target: 'cell:навыки.*.ранг', op: 'add', value: { expr: '@уровень + @строка.база' }, if: { expr: '@строка != "никакой"' } }],
+      modifiers: [{ kind: 'value', target: 'cell:навыки.*.ранг', op: 'add', value: { expr: '@уровень + @row.база' }, if: { expr: '@row != "никакой"' } }],
     },
   },
 } as unknown as System;
@@ -26,7 +26,7 @@ const sheet = (effects: object[]): Sheet => ({ id: 'я', systemId: 'x', name: '�
 const read = (s: Sheet, tag: string): unknown => calc(system, s, tag, newPass(system, s, { compendium }));
 
 group('правка по всей колонке таблицы листа', () => {
-  test('«любая строка» правит каждую живую клетку, «@строка» — своя строка', () => {
+  test('«любая строка» правит каждую живую клетку, «@row» — своя строка', () => {
     const s = sheet([{ effectId: 'уровень' }]);
     deepEq([read(s, 'навыки.бег.ранг'), read(s, 'навыки.плавание.ранг')], [5, 5]);
   });
@@ -38,7 +38,7 @@ group('правка по всей колонке таблицы листа', () 
 });
 
 group('правка по всей колонке: проверка системы', () => {
-  test('«@строка» в правке «любая строка» — не ошибка', () => {
+  test('«@row» в правке «любая строка» — не ошибка', () => {
     deepEq(errorsOf(lintSystem(system, compendium)).map(p => p.text), []);
   });
 });

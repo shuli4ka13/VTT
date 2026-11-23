@@ -18,7 +18,7 @@ const system = {
     },
     сопротивление: {
       label: 'Сопротивление', activation: 'passive', duration: { kind: 'permanent' },
-      modifiers: [{ kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '0.5' }, if: { expr: '@лист == @носитель' } }],
+      modifiers: [{ kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '0.5' }, if: { expr: '@лист == @holder' } }],
     },
     касание: {
       label: 'Вампирское касание', activation: 'manual',

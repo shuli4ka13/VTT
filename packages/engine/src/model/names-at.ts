@@ -1,3 +1,4 @@
+import { NAMES } from '../words/names.ts';
 import { armsOf, sees } from './flow.ts';
 import { loopOf, loopParam } from '../engine/steps/each.ts';
 import { loopsAt, splitsTargets } from '../engine/steps/index.ts';
@@ -36,11 +37,11 @@ export interface NameAt {
 }
 
 const HEARD_LABELS: Record<string, string> = {
-  бросающий: 'кто бросает',
-  против: 'против кого бросок',
-  число: 'число поля, которое бросают',
-  ходит: 'чей ход',
-  лист: 'лист, с которым это случилось',
+  [NAMES.roller]: 'кто бросает',
+  [NAMES.against]: 'против кого бросок',
+  [NAMES.number]: 'число поля, которое бросают',
+  [NAMES.mover]: 'чей ход',
+  [NAMES.sheet]: 'лист, с которым это случилось',
   [CALL_TAGS]: 'метки вызова',
   [TARGETS_SEED]: 'итоги по каждой цели',
 };

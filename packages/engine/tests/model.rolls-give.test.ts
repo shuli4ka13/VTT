@@ -11,13 +11,13 @@ describe('rollsGive: что дают все правила броска вмес
   });
 
   it('правила ждут порог или не считают итог — ничего не даётся', () => {
-    const give = rollsGive(sys({ a: rule({ success: { expr: '@выпало >= @порог' } }), b: rule({}) }));
+    const give = rollsGive(sys({ a: rule({ success: { expr: '@rolled >= @threshold' } }), b: rule({}) }));
     expect(give).toEqual({ success: false, margin: false, degree: false });
   });
 
   it('порог у правила или у поля — успех и степени есть; расходятся — да', () => {
     expect(rollsGive(sys({ a: rule({ number: 'under' }), b: rule({}) }))).toMatchObject({ success: true, margin: true });
     expect(rollsGive(sys({ a: rule({ fields: [{ table: 'лист', column: 'a', threshold: 3 }] }) }))).toMatchObject({ success: true });
-    expect(rollsGive(sys({ a: rule({ success: { expr: '@выпало >= 5' } }) }))).toMatchObject({ success: true, margin: false });
+    expect(rollsGive(sys({ a: rule({ success: { expr: '@rolled >= 5' } }) }))).toMatchObject({ success: true, margin: false });
   });
 });

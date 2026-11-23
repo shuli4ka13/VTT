@@ -65,7 +65,7 @@ const sheets = [
   sheet('мирра', { тайна: 42, заметки: 'клятва' }),
   sheet('гоблин', { тайна: 43, заметки: 'злоба' }),
   sheet('банда', { казна: 90, заметки: 'общак' }),
-  sheet('стол', { засада: 5 }),
+  sheet('desk', { засада: 5 }),
 ];
 
 const room: Room = {
@@ -117,8 +117,8 @@ describe('роли поля: кто правит', () => {
   it('поле группы владельца правит участник группы; поле стола ведущего — только ведущий', () => {
     expect(authorize(room, 'игрок-а', set('арвен', 'казна'))).toBeNull();
     expect(authorize(room, 'игрок-м', set('мирра', 'казна'))).toBeNull();
-    expect(authorize(room, 'игрок-а', set('стол', 'засада'))).toMatch(/стол правит ведущий|поле стола правит ведущий/);
-    expect(authorize(room, 'ведущий', set('стол', 'засада'))).toBeNull();
+    expect(authorize(room, 'игрок-а', set('desk', 'засада'))).toMatch(/стол правит ведущий|поле стола правит ведущий/);
+    expect(authorize(room, 'ведущий', set('desk', 'засада'))).toBeNull();
   });
 
   it('бросок по полю, которого игрок не видит, — отказ: итог броска выдал бы значение', () => {
@@ -159,7 +159,7 @@ describe('роли поля: кто знает значение', () => {
 
   it('игроку не уходит поле ведущего ни у своего листа, ни у чужого, ни у стола', () => {
     for (const id of ['арвен', 'мирра', 'гоблин']) expect(Object.hasOwn(seen('игрок-а', id), 'тайна')).toBe(false);
-    expect(seen('игрок-а', 'стол')).toEqual({});
+    expect(seen('игрок-а', 'desk')).toEqual({});
   });
 
   it('поле владельца уходит тому, кто играет листом, и не уходит соседям', () => {
@@ -254,7 +254,7 @@ describe('«Проблемы»: роли', () => {
     const one = base([
       { key: 'тайна', label: 'Тайна', kind: 'number', sees: 'gm', edits: 'gm' },
       { key: 'скорость', label: 'Скорость', kind: 'number', default: 30 },
-    ], { effects: { страх: { label: 'Страх', activation: 'passive', modifiers: [{ kind: 'value', target: 'скорость', op: 'add', value: { expr: '@носитель.тайна' } }] } } });
+    ], { effects: { страх: { label: 'Страх', activation: 'passive', modifiers: [{ kind: 'value', target: 'скорость', op: 'add', value: { expr: '@holder.тайна' } }] } } });
     expect(found(one, 'error').some(text => text.includes('«Скорость» правится по полю «Тайна»'))).toBe(true);
   });
 

@@ -25,11 +25,11 @@ describe('«Правила → Броски»: успех и степени чи
 
   it('у броска «не больше» правила пишутся и снимаются пустыми', () => {
     const { system, view } = run({ number: 'under' });
-    within(view.container).formula(row(view.container, 'Успех, если'), '@выпало <= @порог');
-    within(view.container).formula(row(view.container, 'Степени числом'), '@порог - @выпало');
-    expect(system.rolls!.r).toMatchObject({ success: { expr: '@выпало <= @порог' }, margin: { expr: '@порог - @выпало' } });
+    within(view.container).formula(row(view.container, 'Успех, если'), '@rolled <= @threshold');
+    within(view.container).formula(row(view.container, 'Степени числом'), '@threshold - @rolled');
+    expect(system.rolls!.r).toMatchObject({ success: { expr: '@rolled <= @threshold' }, margin: { expr: '@threshold - @rolled' } });
     cleanup();
-    const again = run({ number: 'under', success: { expr: '@порог' } });
+    const again = run({ number: 'under', success: { expr: '@threshold' } });
     within(again.view.container).formula(row(again.view.container, 'Успех, если'), '');
     expect(again.system.rolls!.r).not.toHaveProperty('success');
   });
@@ -151,7 +151,7 @@ describe('«Правила → Броски»: ступени и встроен�
   afterEach(cleanup);
 
   it('последняя ступень «да» показана словом «иначе», новая ступень встаёт перед ней', () => {
-    const { system, view } = run({ number: 'under', degrees: [{ label: 'Успех', if: { expr: '@успех' } }, { label: 'Провал', if: { expr: 'true' } }] });
+    const { system, view } = run({ number: 'under', degrees: [{ label: 'Успех', if: { expr: '@success' } }, { label: 'Провал', if: { expr: 'true' } }] });
     expect(row(view.container, 'Ступени').textContent).toContain('иначе');
     expect(view.container.textContent).toContain('Берётся первая подходящая сверху.');
     fireEvent.click([...view.container.querySelectorAll('button')].find(b => b.textContent === '+ ступень')!);

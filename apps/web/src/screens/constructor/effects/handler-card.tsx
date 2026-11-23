@@ -102,7 +102,7 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove, startO
   const subject = subjectOf(handler.on ?? '');
   const phase = callHappening(handler.on)?.phase ?? 'before';
   const sheets = sheetsAt(system, id, { part: 'handler-if', handler: index });
-  const names = [...sheets].filter(([name]) => name !== 'носитель');
+  const names = [...sheets].filter(([name]) => name !== HOLDER);
   const own = kind === 'call' && subject ? outcomesOf(system, subject, phase) : [];
   const outcomes = own.length || kind !== 'call' ? own : heardOutcomes(system, id, index);
   const watchable = fieldsOf(system).filter(f => f.value.kind !== 'stored' || f.value.type === 'boolean');

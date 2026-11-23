@@ -1,4 +1,4 @@
-import { NAMES as SERVICE } from '../words/names.ts';
+import { NAMES as SERVICE, NAME_LABELS, saidName } from '../words/names.ts';
 import { hasDegrees } from '../engine/check.ts';
 import { translateFormula, NEUTRAL_WORDS, RU_WORDS } from '../formula/words.ts';
 import { paramStages, targetStages } from '../engine/stages.ts';
@@ -39,7 +39,7 @@ import {
   type Where, type Reference, type RefKind, type Declared, type Listener,
   LISTEN, contractsOf, HOLDER, DESK_NAME, holderNameOf, tiedToHolder,
 } from './references.ts';
-import { fieldsOf, fieldOf, fieldProblems, onSheet, isSingle, holderOf, rowKeyOf, hasField, rollEntryOf, ROW, isFormulaCell, misfit, isNoteField, cellSource } from './sheet-columns.ts';
+import { fieldsOf, fieldOf, fieldProblems, onSheet, isSingle, holderOf, rowKeyOf, hasField, rollEntryOf, ROW, isFormulaCell, misfit, isNoteField, cellSource, INPUT_SLOT } from './sheet-columns.ts';
 import { newPass, calc } from '../engine/calc.ts';
 import { CycleError } from '../engine/errors.ts';
 import { hasDesk } from '../events/desk.ts';
@@ -120,7 +120,7 @@ function ownerText(ref: Reference, system: System): string | null {
   return null;
 }
 
-const HOLDER_ONLY = `«${HOLDER}» есть только у того, что висит на листе: подписка, правка, наложение. В кнопке лист приходит входом — например, «Кто действует»`;
+const HOLDER_ONLY = `«${NAME_LABELS.holder}» есть только у того, что висит на листе: подписка, правка, наложение. В кнопке лист приходит входом — например, «Кто действует»`;
 
 const said = (formula: string): string => translateFormula(formula, NEUTRAL_WORDS, RU_WORDS);
 
@@ -718,7 +718,7 @@ function fieldRollProblems(system: System): Problem[] {
       return [...new Set((formulaDeps(expr) ?? []).filter(dep => dep.startsWith(`${ROLL_NAME}.`)).map(dep => dep.split('.')[1]!).filter(key => !rollKeys.has(key)))];
     };
     for (const ref of [roll.total, roll.success, roll.margin, ...(Array.isArray(roll.degrees) ? roll.degrees.map(one => one.if) : [])]) {
-      for (const key of strays(ref)) out.push({ where, level: 'error', text: `бросок «${name}»: у броска нет итога «${key}» — после «${ROLL_NAME}» выберите итог из списка` });
+      for (const key of strays(ref)) out.push({ where, level: 'error', text: `бросок «${name}»: у броска нет итога «${key}» — после «${NAME_LABELS.roll}» выберите итог из списка` });
     }
     if (roll.zero && roll.number !== 'count') out.push({ where, level: 'error', text: `бросок «${name}»: «если костей ноль» — только когда число поля задаёт, сколько костей бросить` });
     const early = [THRESHOLD_NAME, SUCCESS_NAME, MARGIN_NAME].filter(word => new RegExp(`@${word}(?![\\p{L}\\p{N}_])`, 'u').test(String(roll.total?.expr ?? '')));
@@ -740,7 +740,7 @@ function fieldRollProblems(system: System): Problem[] {
     }
     if (listed.length || roll.success || roll.margin || roll.total) {
       for (const taken of [ROLLED_NAME, ROLL_NAME, NUMBER_NAME]) {
-        if (fieldsOf(system).some(field => field.tag === taken)) out.push({ where, level: 'error', text: `бросок «${name}»: имя «${taken}» в формулах броска значит сам бросок, его итог или число поля, а так зовётся и поле листа — переименуйте поле` });
+        if (fieldsOf(system).some(field => field.tag === taken)) out.push({ where, level: 'error', text: `бросок «${name}»: имя «${saidName(taken)}» в формулах броска значит сам бросок, его итог или число поля, а так зовётся и поле листа — переименуйте поле` });
       }
     }
     for (const entry of roll.fields) {
@@ -896,7 +896,7 @@ const DICE_TEXTS = [DICE_BY_STEP, DICE_IN_ADDEND, DICE_NOT_HERE];
 
 const ANYONE_ROLLS = 'правка действует на броски всех листов в комнате — в условии нет носителя; обычно «бросает носитель» или «бросают против носителя»';
 
-const AGAINST_NAME = /@против(?![\p{L}\p{N}_])/u;
+const AGAINST_NAME = new RegExp(`@${SERVICE.against}(?![\\p{L}\\p{N}_])`, 'u');
 
 const readsAgainst = (guard: unknown): boolean => AGAINST_NAME.test(String((guard as { expr?: unknown } | undefined)?.expr ?? ''));
 
@@ -1163,7 +1163,7 @@ function editProblems(system: System, compendium?: Compendium): Problem[] {
     for (const mod of modifiers) {
       if (mod.kind === 'value') {
         const at = { ...where, part: 'modifiers' };
-        const slotted = /\{@(?!строка\.)([\p{L}\p{N}_]+)((?:\.[\p{L}\p{N}_]+)*)\}/u.exec(String(mod.target));
+        const slotted = new RegExp(INPUT_SLOT.source, 'u').exec(String(mod.target));
         if (slotted) {
           const owner = (where as { effect?: string }).effect ? system.effects?.[(where as { effect?: string }).effect!] : undefined;
           const param = (owner?.params ?? []).find(one => one.key === slotted[1]);
@@ -1373,6 +1373,9 @@ const ENGINE_WORDS = new Map<string, string>([
   [ROW, 'так зовётся своя строка записи'],
   [HOLDER, 'так зовётся лист, на котором висит эффект'],
   [DESK_NAME, 'так зовётся стол'],
+  ['строка', 'так зовётся своя строка записи'],
+  ['носитель', 'так зовётся лист, на котором висит эффект'],
+  ['стол', 'так зовётся стол'],
 ]);
 
 function paramProblems(system: System, compendium?: Compendium): Problem[] {
@@ -1384,7 +1387,7 @@ function paramProblems(system: System, compendium?: Compendium): Problem[] {
       if (word) {
         out.push({
           where: { tab: 'effects', effect: id, part: 'params', key: param.key }, level: 'error',
-          text: `вход «${param.label ?? param.key}» назван «${param.key}» — это слово движка: ${word}; переименуйте вход`,
+          text: `вход «${param.label ?? param.key}» назван «${saidName(param.key)}» — это слово движка: ${word}; переименуйте вход`,
         });
       }
       if (!fields.has(param.key)) continue;
@@ -1506,7 +1509,7 @@ function nameClashProblems(system: System): Problem[] {
     if (!params.length) continue;
     const report = (where: Where, param: Param, source: string) => out.push({
       where, level: 'error',
-      text: `вход «${param.label || param.key}» у «${effect.label || id}» совпадает с «${param.key}» у «${source}»: здесь «${param.key}» — значение «${source}». Переименуйте свой вход`,
+      text: `вход «${param.label || param.key}» у «${effect.label || id}» совпадает с «${saidName(param.key)}» у «${source}»: здесь «${saidName(param.key)}» — значение «${source}». Переименуйте свой вход`,
     });
     (effect.on ?? []).forEach((handler, index) => {
       const heard = listenerOf(handler);
@@ -1540,7 +1543,7 @@ function recordCellProblems(system: System, compendium?: Compendium): Problem[] 
       if (mod.kind !== 'value') continue;
       const used = namesUsedIn(mod.if, mod.value);
       for (const key of shared) {
-        if (used.has(key)) out.push({ where, level: 'warn', text: `«${key}» — поле листа; клетку записи берут у строки: в списке «${ROW}» → «${key}»` });
+        if (used.has(key)) out.push({ where, level: 'warn', text: `«${key}» — поле листа; клетку записи берут у строки: в списке «${NAME_LABELS.row}» → «${key}»` });
       }
     }
   };
@@ -1693,14 +1696,14 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
         for (const name of ranked) {
           out.push({
             where: chain.where(index), level: 'warn',
-            text: `«${name}» в условиях ступеней проверки значит её ${name === SUCCESS_NAME ? 'успех' : 'степени'} — ${step.id === name ? STEP.one : 'вход'} с этим именем там не прочесть; лучше переименовать`,
+            text: `«${saidName(name)}» в условиях ступеней проверки значит её ${name === SUCCESS_NAME ? 'успех' : 'степени'} — ${step.id === name ? STEP.one : 'вход'} с этим именем там не прочесть; лучше переименовать`,
           });
         }
         const word = step.id ? ENGINE_WORDS.get(step.id) : undefined;
         if (word) {
           out.push({
             where: chain.where(index), level: 'error',
-            text: `${STEP.one} не может зваться «${step.id}» — это слово движка: ${word}`,
+            text: `${STEP.one} не может зваться «${saidName(step.id ?? '')}» — это слово движка: ${word}`,
           });
         }
       });
@@ -1854,7 +1857,7 @@ function rowLoopProblems(system: System, effect: Effect, steps: Step[], index: n
     [recordKinds(system).some(([, kind]) => (kind.columns ?? []).some(prop => prop.key === as)), 'свойство записи'],
   ];
   const clash = taken.find(([hit]) => hit);
-  if (clash) out.push({ where: at, level: 'error', text: `имя строки «${as}» уже занято: так зовётся ${clash[1]}` });
+  if (clash) out.push({ where: at, level: 'error', text: `имя строки «${saidName(as)}» уже занято: так зовётся ${clash[1]}` });
   return out;
 }
 

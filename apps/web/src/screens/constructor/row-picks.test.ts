@@ -11,7 +11,7 @@ describe('правка «у каждой строки»: клетка загот
     const written: string[] = [];
     for (const option of picks.options) option.onPick(piece => piece, { write: text => { written.push(text); }, dismiss: () => {} });
     expect(picks.options.map(option => [option.group, option.label])).toEqual([['эта строка', '«Заготовка» → клетка этой строки']]);
-    expect(written).toEqual(['@заготовка.[@строка]']);
+    expect(written).toEqual(['@заготовка.[@row]']);
   });
 
   it('в «Только если» — «выбрано»', () => {

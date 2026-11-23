@@ -28,10 +28,10 @@ const system = {
     горение: {
       label: 'Горение', activation: 'passive', duration: { kind: 'permanent' },
       on: [{
-        on: 'gained:гасит горение', if: { expr: '@лист == @носитель' },
+        on: 'gained:гасит горение', if: { expr: '@sheet == @holder' },
         steps: [
-          { type: 'apply', target: { expr: '@носитель.счёт' }, direction: 'add', value: { expr: '1' } },
-          { type: 'apply', target: { expr: '@носитель.кто' }, direction: 'set', value: { expr: '@эффект' } },
+          { type: 'apply', target: { expr: '@holder.счёт' }, direction: 'add', value: { expr: '1' } },
+          { type: 'apply', target: { expr: '@holder.кто' }, direction: 'set', value: { expr: '@effect' } },
         ],
       }],
     },

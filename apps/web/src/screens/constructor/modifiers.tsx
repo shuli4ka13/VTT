@@ -1,5 +1,5 @@
 import type { System, Modifier, Stage } from '@vtt/schema';
-import { paramStages, targetStages, targets, installMethod, recipesToInstall, tagsOf, tagTablesOf, listOf as rowsFrom, amountParamOf, calledOf, ROLL_CALL, CALL_WORDS, placesMatching, wordFits, cancels, callNamesOf, holderConditionOf } from '@vtt/engine';
+import { paramStages, targetStages, targets, installMethod, recipesToInstall, tagsOf, tagTablesOf, listOf as rowsFrom, amountParamOf, calledOf, ROLL_CALL, CALL_WORDS, placesMatching, wordFits, cancels, callNamesOf, holderConditionOf, NAMES } from '@vtt/engine';
 import { modifierSentence, rowNamesOf, inputNamesOf } from './modifier-words.ts';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
@@ -463,7 +463,7 @@ function Concern({ system, modifier, names, onChange }: {
 }) {
   const call = String(modifier.call ?? ROLL_CALL);
   const params = new Map((system.effects[call]?.params ?? []).map(p => [p.key, p.label ?? p.key]));
-  const words: Record<string, string> = { бросающий: 'бросает носитель', против: 'бросают против носителя' };
+  const words: Record<string, string> = { [NAMES.roller]: 'бросает носитель', [NAMES.against]: 'бросают против носителя' };
   const holders = callNamesOf(system, call).sheets.map(name => [name, words[name] ?? `«${params.get(name) ?? name}» — носитель`] as const);
   return (
     <div className="row">

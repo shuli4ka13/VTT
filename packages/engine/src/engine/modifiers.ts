@@ -1,3 +1,4 @@
+import { NAMES } from '../words/names.ts';
 import { compile } from '../formula/index.ts';
 import { assertTarget } from './targets.ts';
 import { ROLL_CALL, CALL_WORDS } from '../words/calls.ts';
@@ -153,7 +154,7 @@ export function applyValueModifiers(
 function onRow(mod: SourcedModifier, table: string, row: TableRow, system: System): SourcedModifier {
   const value = (mod as { value?: { expr?: string } }).value?.expr;
   const condition = (mod as { if?: { expr?: string } }).if?.expr;
-  const rowed = (expr: string | undefined): boolean => typeof expr === 'string' && expr.includes('@строка');
+  const rowed = (expr: string | undefined): boolean => typeof expr === 'string' && expr.includes(`@${NAMES.row}`);
   if (!rowed(value) && !rowed(condition)) return mod;
   return {
     ...mod,

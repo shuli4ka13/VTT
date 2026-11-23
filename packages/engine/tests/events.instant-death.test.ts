@@ -19,10 +19,10 @@ const sys: any = {
     },
     мгновенная_смерть: {
       label: 'Мгновенная смерть', activation: 'passive',
-      on: [{ on: 'after:удар', if: { expr: '@цель == @носитель' }, steps: [
-        { id: 'перебор', type: 'check', value: { expr: '@рана.overkill' }, versus: { expr: '@носитель.хп_макс' }, successWhen: 'atLeast' },
+      on: [{ on: 'after:удар', if: { expr: '@цель == @holder' }, steps: [
+        { id: 'перебор', type: 'check', value: { expr: '@рана.overkill' }, versus: { expr: '@holder.хп_макс' }, successWhen: 'atLeast' },
         { type: 'branch', if: { expr: 'not @перебор.success' } }, { type: 'stop' }, { type: 'end' },
-        { type: 'status', mode: 'apply', effect: 'мёртв', to: { expr: '@носитель' } },
+        { type: 'status', mode: 'apply', effect: 'мёртв', to: { expr: '@holder' } },
       ] }],
     },
     мёртв: { label: 'Мёртв', activation: 'passive' },

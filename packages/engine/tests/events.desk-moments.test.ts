@@ -4,7 +4,7 @@ import { grantedTo } from '../src/engine/effects.ts';
 import { idleClock } from '../src/engine/clock.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
-const tick = { type: 'apply', target: { expr: '@носитель.раунды' }, direction: 'set', value: { expr: 'if(@moment.round > 1, @носитель.раунды + 1, 0)' } };
+const tick = { type: 'apply', target: { expr: '@holder.раунды' }, direction: 'set', value: { expr: 'if(@moment.round > 1, @holder.раунды + 1, 0)' } };
 
 const system = {
   id: 'с', name: 'с',
@@ -12,7 +12,7 @@ const system = {
     лист: { shape: 'single', columns: [{ key: 'хп', label: 'Хиты', kind: 'number', default: 5 }] },
     стол: { shape: 'single', owner: 'desk', columns: [{ key: 'раунды', label: 'Раунды', kind: 'number', default: 0 }] },
   },
-  sheets: { стол: { label: 'Стол', grants: ['счёт'] } },
+  sheets: { desk: { label: 'Стол', grants: ['счёт'] } },
   grants: ['всем'],
   effects: {
     счёт: { label: 'Счёт', activation: 'passive', on: [{ on: 'moment:round-start', steps: [tick] }] },
@@ -22,7 +22,7 @@ const system = {
 
 const sheets = (): Sheet[] => [
   ...['а', 'б', 'в'].map(id => ({ id, systemId: 'с', name: id, values: {}, has: [], effects: [] } as unknown as Sheet)),
-  { id: 'стол', systemId: 'с', name: 'Стол', values: {}, has: [], effects: [] } as unknown as Sheet,
+  { id: 'desk', systemId: 'с', name: 'Стол', values: {}, has: [], effects: [] } as unknown as Sheet,
 ];
 
 group('моменты стола', () => {
@@ -37,7 +37,7 @@ group('моменты стола', () => {
     const compendium = { records: [] } as unknown as Compendium;
     let out = perform({ system, compendium, clock: idleClock(), sheets: sheets(), die: () => 1 }, { op: 'turn', turn: 'start', order: ids });
     if (out.kind !== 'done') throw new Error('ход не дошёл до конца');
-    const desk = () => out.kind === 'done' ? out.sheets.find(s => s.id === 'стол')!.values.раунды ?? 0 : -1;
+    const desk = () => out.kind === 'done' ? out.sheets.find(s => s.id === 'desk')!.values.раунды ?? 0 : -1;
     eq(desk(), 0, 'первый раунд — ноль');
     for (let turn = 0; turn < 3; turn++) {
       if (out.kind !== 'done') throw new Error('ход не дошёл до конца');

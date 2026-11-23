@@ -56,14 +56,14 @@ describe('«когда»: исходы под момент', () => {
   it('после «Для каждого из» исход — «хоть по одной цели»: в условие ложится счёт по итогам целей', () => {
     const { get } = card({ on: 'done:каждому', steps: [] }, { каждому: eachEffect });
     within(document.body).when('хоть по одной цели: Проверка — пройдена');
-    expect(get().if?.expr).toBe('count(@итоги.спас.success, true) >= 1');
+    expect(get().if?.expr).toBe('count(@results.спас.success, true) >= 1');
   });
 
   it('«завершено» не предлагает итог одной цели: условие — формулой, и она знает таблицу итогов по целям', () => {
     const { get } = card({ on: 'done:удар', steps: [] });
     expect(get().if).toBeUndefined();
-    within(document.body).formula(document.querySelector<HTMLElement>('.cond__formula')!, 'count(@итоги.hit.success, true) >= 2');
-    expect(get().if?.expr).toBe('count(@итоги.hit.success, true) >= 2');
+    within(document.body).formula(document.querySelector<HTMLElement>('.cond__formula')!, 'count(@results.hit.success, true) >= 2');
+    expect(get().if?.expr).toBe('count(@results.hit.success, true) >= 2');
   });
 
   it('у «завершено» нет выбора «Кому», зато есть «Кого касается»', () => {
@@ -85,14 +85,14 @@ describe('«увидев кости»', () => {
   it('«Кого касается» называет бросающего и того, против кого бросают; выбор пишется условием про носителя', () => {
     const { view, get } = card({ on: 'seen', steps: [] });
     const whose = view.getByDisplayValue('всех — без условия');
-    expect(comboOptions(whose).map(o => o.value)).toEqual(['', '@бросающий == @носитель', '@против == @носитель']);
+    expect(comboOptions(whose).map(o => o.value)).toEqual(['', '@roller == @holder', '@against == @holder']);
     expect(comboOptions(whose).map(o => o.label)).toEqual(['всех — без условия', '«кто бросает» — носитель', '«против кого бросок» — носитель']);
-    pickCombo(whose, '@против == @носитель');
-    expect(get().if?.expr).toBe('@против == @носитель');
+    pickCombo(whose, '@against == @holder');
+    expect(get().if?.expr).toBe('@against == @holder');
   });
 
   it('уход с момента стирает условие про носителя', () => {
-    const { view, get } = card({ on: 'seen', if: { expr: '@бросающий == @носитель' }, steps: [] });
+    const { view, get } = card({ on: 'seen', if: { expr: '@roller == @holder' }, steps: [] });
     pickCombo(comboWith('seen', view.container), 'call');
     expect(get().if).toBeUndefined();
     expect(get().on).toBe('before:*');

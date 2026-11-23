@@ -18,7 +18,7 @@ const shieldWorld: any = {
     ...system.effects,
     shield: {
       label: 'Щит', activation: 'passive',
-      on: [{ on: 'before:атака', confirm: true, if: { expr: '@цель == @носитель and @hit.success' }, steps: [{ type: 'status', mode: 'apply', effect: 'shield_up', to: { expr: '@носитель' } }] }],
+      on: [{ on: 'before:атака', confirm: true, if: { expr: '@цель == @holder and @hit.success' }, steps: [{ type: 'status', mode: 'apply', effect: 'shield_up', to: { expr: '@holder' } }] }],
     },
     shield_up: {
       label: 'Под щитом', activation: 'passive', duration: { kind: 'turns', max: 1 },
@@ -82,7 +82,7 @@ group('увидев кости: решил докинуть', () => {
       ...system.effects,
       inspire: {
         label: 'Вдохновение: перебросить', activation: 'passive',
-        on: [{ on: 'seen', confirm: true, if: { expr: '@бросающий == @носитель and @носитель.inspiration > 0' }, steps: [{ type: 'apply', target: { expr: '@носитель.inspiration' }, direction: 'subtract', value: { expr: '1' } }, { type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
+        on: [{ on: 'seen', confirm: true, if: { expr: '@roller == @holder and @holder.inspiration > 0' }, steps: [{ type: 'apply', target: { expr: '@holder.inspiration' }, direction: 'subtract', value: { expr: '1' } }, { type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
       },
     },
   };
@@ -112,12 +112,12 @@ group('подписка на исходящее: вампиризм и метк�
       ...system.effects,
       vampiric: {
         label: 'Вампиризм', activation: 'passive', duration: { kind: 'permanent' },
-        on: [{ on: 'after:damage', if: { expr: '@источник == @носитель' }, steps: [{ type: 'apply', target: { expr: '@носитель.hp_current' }, direction: 'add',
+        on: [{ on: 'after:damage', if: { expr: '@источник == @holder' }, steps: [{ type: 'apply', target: { expr: '@holder.hp_current' }, direction: 'add',
           value: { expr: 'floor(@amount / 2)' } }] }],
       },
       brand: {
         label: 'Метка охотника', activation: 'passive', duration: { kind: 'permanent' },
-        on: [{ on: 'after:fire_bolt', if: { expr: '@действующий == @носитель and @hit.success' }, steps: [{ type: 'status', mode: 'apply', effect: 'poisoned', to: { expr: '@цель' } }] }],
+        on: [{ on: 'after:fire_bolt', if: { expr: '@действующий == @holder and @hit.success' }, steps: [{ type: 'status', mode: 'apply', effect: 'poisoned', to: { expr: '@цель' } }] }],
       },
     },
   };
@@ -161,7 +161,7 @@ group('вопрос «увидев кости» видит факты собст
       ...system.effects,
       inspire: {
         label: 'Вдохновение: перебросить', activation: 'passive',
-        on: [{ on: 'seen', confirm: true, if: { expr: '@бросающий == @носитель' }, steps: [{ type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
+        on: [{ on: 'seen', confirm: true, if: { expr: '@roller == @holder' }, steps: [{ type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
       },
     },
   };
@@ -200,7 +200,7 @@ group('реакция после разрешения: «на меня поде�
       ...system.effects,
       rebuke: {
         label: 'Возмездие', activation: 'passive',
-        on: [{ on: 'after:strike', confirm: true, if: { expr: '@цель == @носитель and @hit.success' }, steps: [{ type: 'apply', target: { expr: '@действующий.hp_current' }, direction: 'subtract', value: { expr: '3' } }] }],
+        on: [{ on: 'after:strike', confirm: true, if: { expr: '@цель == @holder and @hit.success' }, steps: [{ type: 'apply', target: { expr: '@действующий.hp_current' }, direction: 'subtract', value: { expr: '3' } }] }],
       },
     },
   };
@@ -234,7 +234,7 @@ group('триггер до разрешения: срабатывает молч
       ...system.effects,
       brace: {
         label: 'Стойка', activation: 'passive',
-        on: [{ on: 'before:strike', if: { expr: '@цель == @носитель' }, steps: [{ type: 'status', mode: 'apply', effect: 'wall', to: { expr: '@носитель' } }] }],
+        on: [{ on: 'before:strike', if: { expr: '@цель == @holder' }, steps: [{ type: 'status', mode: 'apply', effect: 'wall', to: { expr: '@holder' } }] }],
       },
       wall: {
         label: 'Стена', activation: 'passive', duration: { kind: 'turns', max: 1 },

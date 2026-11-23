@@ -1,3 +1,4 @@
+import { NAMES } from '../words/names.ts';
 import { isSingle, rollEntryOf } from './sheet-columns.ts';
 import { hasDegrees } from '../engine/check.ts';
 import type { System, Param, Step } from './types.ts';
@@ -26,7 +27,7 @@ export function fieldGives(system: System, params: readonly Param[], step: Step)
   const kind = found.roll.number;
   const graded = kind === 'under' || kind === 'over' || found.entry.threshold !== undefined;
   const waits = (ref: unknown): boolean =>
-    /@порог(?![\p{L}\p{N}_])/u.test(String((ref as { expr?: unknown } | undefined)?.expr ?? ''));
+    new RegExp(`@${NAMES.threshold}(?![\\p{L}\\p{N}_])`, 'u').test(String((ref as { expr?: unknown } | undefined)?.expr ?? ''));
   return {
     success: graded || (Boolean(found.roll.success) && !waits(found.roll.success)),
     margin: graded || (Boolean(found.roll.margin) && !waits(found.roll.margin)),
@@ -35,7 +36,7 @@ export function fieldGives(system: System, params: readonly Param[], step: Step)
 }
 
 const waitsThreshold = (ref: unknown): boolean =>
-  /@порог(?![\p{L}\p{N}_])/u.test(String((ref as { expr?: unknown } | undefined)?.expr ?? ''));
+  new RegExp(`@${NAMES.threshold}(?![\\p{L}\\p{N}_])`, 'u').test(String((ref as { expr?: unknown } | undefined)?.expr ?? ''));
 
 export function rollsGive(system: System): Graded | null {
   const rolls = Object.values(system.rolls ?? {});

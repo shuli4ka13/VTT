@@ -33,7 +33,7 @@ group('«Проблемы» ловят опечатку в итоге шага',
   });
 
   test('в формулах правила броска — то же для @бросок', () => {
-    eq(errors(system('1', { success: { expr: '@бросок.natral == 20' } })).some(text => text.includes('бросок «Проверка»: у броска нет итога «natral»')), true);
-    deepEq(errors(system('1', { degrees: [{ label: 'крит', if: { expr: '@бросок.natural == 20' } }] })), []);
+    eq(errors(system('1', { success: { expr: '@roll.natral == 20' } })).some(text => text.includes('бросок «Проверка»: у броска нет итога «natral»')), true);
+    deepEq(errors(system('1', { degrees: [{ label: 'крит', if: { expr: '@roll.natural == 20' } }] })), []);
   });
 });

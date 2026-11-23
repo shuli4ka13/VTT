@@ -2476,7 +2476,7 @@
             "label": "К значению атаки: остаток очереди и гашение",
             "kind": "number",
             "expr": {
-              "expr": "min(0, if(@выстрелов >= 1 and @выстрелов < @строка.rounds, 0 - @выстрелов, @строка.ar) + @строка.ease)"
+              "expr": "min(0, if(@выстрелов >= 1 and @выстрелов < @row.rounds, 0 - @выстрелов, @row.ar) + @row.ease)"
             }
           },
           {
@@ -2484,7 +2484,7 @@
             "label": "К урону: остаток очереди",
             "kind": "number",
             "expr": {
-              "expr": "if(@выстрелов >= 1 and @выстрелов < @строка.rounds, if(@выстрелов >= 2, 1, 0), @строка.dv)"
+              "expr": "if(@выстрелов >= 1 and @выстрелов < @row.rounds, if(@выстрелов >= 2, 1, 0), @row.dv)"
             }
           }
         ],
@@ -2724,7 +2724,7 @@
             "label": "Набор",
             "kind": "number",
             "expr": {
-              "expr": "max(0, if(@строка.rank > 0, @строка.rank + @строка.attribute, if(@строка.untrained, @строка.attribute - 1, 0)) + @wound_mod + @condition_mod)"
+              "expr": "max(0, if(@row.rank > 0, @row.rank + @row.attribute, if(@row.untrained, @row.attribute - 1, 0)) + @wound_mod + @condition_mod)"
             },
             "title": "{label}: набор"
           }
@@ -3024,7 +3024,7 @@
             "label": "Прицел: к значению атаки",
             "kind": "number",
             "expr": {
-              "expr": "max(0, rows(\"weapon_mod\", \"aim\", @вещь), if(@smartlink, max(0, @smart, rows(\"weapon_mod\", \"aim_link\", @вещь)), 0))"
+              "expr": "max(0, rows(\"weapon_mod\", \"aim\", @item), if(@smartlink, max(0, @smart, rows(\"weapon_mod\", \"aim_link\", @item)), 0))"
             }
           },
           {
@@ -3032,7 +3032,7 @@
             "label": "Опора лёжа: к значению атаки (сошка)",
             "kind": "number",
             "expr": {
-              "expr": "max(0, rows(\"weapon_mod\", \"brace\", @вещь))"
+              "expr": "max(0, rows(\"weapon_mod\", \"brace\", @item))"
             }
           },
           {
@@ -3040,7 +3040,7 @@
             "label": "Гашение отдачи очередей",
             "kind": "number",
             "expr": {
-              "expr": "sum(rows(\"weapon_mod\", \"ease_burst\", @вещь))"
+              "expr": "sum(rows(\"weapon_mod\", \"ease_burst\", @item))"
             }
           },
           {
@@ -3048,7 +3048,7 @@
             "label": "Гашение отдачи непрерывного огня",
             "kind": "number",
             "expr": {
-              "expr": "sum(rows(\"weapon_mod\", \"ease_full\", @вещь))"
+              "expr": "sum(rows(\"weapon_mod\", \"ease_full\", @item))"
             }
           },
           {
@@ -3056,7 +3056,7 @@
             "label": "Сила, чтобы стрелять, с модификациями",
             "kind": "number",
             "expr": {
-              "expr": "@str_min - sum(rows(\"weapon_mod\", \"str_ease\", @вещь))"
+              "expr": "@str_min - sum(rows(\"weapon_mod\", \"str_ease\", @item))"
             }
           },
           {
@@ -3064,7 +3064,7 @@
             "label": "Патроны: к значению атаки",
             "kind": "number",
             "expr": {
-              "expr": "sum(rows(\"ammo_kind\", \"ar_mod\", @вещь))"
+              "expr": "sum(rows(\"ammo_kind\", \"ar_mod\", @item))"
             }
           },
           {
@@ -3072,7 +3072,7 @@
             "label": "Патроны: к силе урона",
             "kind": "number",
             "expr": {
-              "expr": "sum(rows(\"ammo_kind\", \"dv_mod\", @вещь))"
+              "expr": "sum(rows(\"ammo_kind\", \"dv_mod\", @item))"
             }
           },
           {
@@ -3080,7 +3080,7 @@
             "label": "Патроны: урон оглушающий",
             "kind": "boolean",
             "expr": {
-              "expr": "count(rows(\"ammo_kind\", \"stun\", @вещь), true) >= 1"
+              "expr": "count(rows(\"ammo_kind\", \"stun\", @item), true) >= 1"
             }
           },
           {
@@ -3088,7 +3088,7 @@
             "label": "Патроны: урон электрический",
             "kind": "boolean",
             "expr": {
-              "expr": "count(rows(\"ammo_kind\", \"electric\", @вещь), true) >= 1"
+              "expr": "count(rows(\"ammo_kind\", \"electric\", @item), true) >= 1"
             }
           },
           {
@@ -3114,7 +3114,7 @@
                 "expr": "@skill.pool"
               },
               "оружие": {
-                "expr": "@вещь"
+                "expr": "@item"
               }
             }
           },
@@ -3123,7 +3123,7 @@
             "effect": "reload",
             "args": {
               "оружие": {
-                "expr": "@вещь"
+                "expr": "@item"
               }
             }
           }
@@ -3134,7 +3134,7 @@
             "label": "СУ в эпицентре",
             "kind": "number",
             "expr": {
-              "expr": "max(0, rows(\"blast_item\", \"dv_e\", @вещь))"
+              "expr": "max(0, rows(\"blast_item\", \"dv_e\", @item))"
             }
           },
           {
@@ -3142,7 +3142,7 @@
             "label": "СУ вплотную",
             "kind": "number",
             "expr": {
-              "expr": "max(0, rows(\"blast_item\", \"dv_c\", @вещь))"
+              "expr": "max(0, rows(\"blast_item\", \"dv_c\", @item))"
             }
           },
           {
@@ -3150,7 +3150,7 @@
             "label": "СУ близко",
             "kind": "number",
             "expr": {
-              "expr": "max(0, rows(\"blast_item\", \"dv_n\", @вещь))"
+              "expr": "max(0, rows(\"blast_item\", \"dv_n\", @item))"
             }
           },
           {
@@ -3158,7 +3158,7 @@
             "label": "Урон физический",
             "kind": "boolean",
             "expr": {
-              "expr": "count(rows(\"blast_item\", \"damage_kind\", @вещь), \"оглушающий\") < 1"
+              "expr": "count(rows(\"blast_item\", \"damage_kind\", @item), \"оглушающий\") < 1"
             }
           },
           {
@@ -3166,7 +3166,7 @@
             "label": "Электрический",
             "kind": "boolean",
             "expr": {
-              "expr": "count(rows(\"blast_item\", \"electric\", @вещь), true) >= 1"
+              "expr": "count(rows(\"blast_item\", \"electric\", @item), true) >= 1"
             }
           },
           {
@@ -3174,7 +3174,7 @@
             "label": "Заряд поставлен",
             "kind": "boolean",
             "expr": {
-              "expr": "count(rows(\"blast_item\", \"dv_e\", @вещь)) >= 1"
+              "expr": "count(rows(\"blast_item\", \"dv_e\", @item)) >= 1"
             }
           }
         ]
@@ -3205,7 +3205,7 @@
                 "expr": "@skill"
               },
               "оружие": {
-                "expr": "@вещь"
+                "expr": "@item"
               }
             }
           },
@@ -3214,7 +3214,7 @@
             "effect": "reload",
             "args": {
               "оружие": {
-                "expr": "@вещь"
+                "expr": "@item"
               }
             }
           }
@@ -3257,7 +3257,7 @@
                 "expr": "@skill"
               },
               "оружие": {
-                "expr": "@вещь"
+                "expr": "@item"
               }
             }
           }
@@ -3281,7 +3281,7 @@
             "target": "armor_worn",
             "op": "add",
             "value": {
-              "expr": "@строка.rating"
+              "expr": "@row.rating"
             }
           }
         ]
@@ -4001,7 +4001,7 @@
                 "expr": "@skill.pool"
               },
               "оружие": {
-                "expr": "@вещь"
+                "expr": "@item"
               }
             }
           }
@@ -4070,7 +4070,7 @@
             "effect": "detonate",
             "args": {
               "оружие": {
-                "expr": "@вещь"
+                "expr": "@item"
               }
             }
           }
@@ -4091,7 +4091,7 @@
             "target": "armor_extra",
             "op": "add",
             "value": {
-              "expr": "@строка.rating"
+              "expr": "@row.rating"
             }
           }
         ]
@@ -4111,7 +4111,7 @@
             "target": "armor_extra",
             "op": "add",
             "value": {
-              "expr": "@строка.rating"
+              "expr": "@row.rating"
             }
           }
         ]
@@ -5365,7 +5365,7 @@
             "target": "dev_rating",
             "op": "set",
             "value": {
-              "expr": "@строка.device_rating"
+              "expr": "@row.device_rating"
             },
             "stage": "основа"
           },
@@ -5374,7 +5374,7 @@
             "target": "dev_attack",
             "op": "set",
             "value": {
-              "expr": "@строка.m_attack"
+              "expr": "@row.m_attack"
             },
             "stage": "основа"
           },
@@ -5383,7 +5383,7 @@
             "target": "dev_sleaze",
             "op": "set",
             "value": {
-              "expr": "@строка.m_sleaze"
+              "expr": "@row.m_sleaze"
             },
             "stage": "основа"
           },
@@ -5392,7 +5392,7 @@
             "target": "dev_dp",
             "op": "set",
             "value": {
-              "expr": "@строка.m_dp"
+              "expr": "@row.m_dp"
             },
             "stage": "основа"
           },
@@ -5401,7 +5401,7 @@
             "target": "dev_firewall",
             "op": "set",
             "value": {
-              "expr": "@строка.m_firewall"
+              "expr": "@row.m_firewall"
             },
             "stage": "основа"
           },
@@ -5410,7 +5410,7 @@
             "target": "noise",
             "op": "add",
             "value": {
-              "expr": "0 - @строка.noise_cut"
+              "expr": "0 - @row.noise_cut"
             }
           }
         ]
@@ -5437,7 +5437,7 @@
             "target": "hack_programs",
             "op": "add",
             "value": {
-              "expr": "if(@строка.category.hacking, 1, 0)"
+              "expr": "if(@row.category.hacking, 1, 0)"
             }
           },
           {
@@ -5622,7 +5622,7 @@
                 "expr": "@урон"
               },
               "действие": {
-                "expr": "@вещь"
+                "expr": "@item"
               }
             }
           }
@@ -5648,7 +5648,7 @@
                 "expr": "@pool"
               },
               "действие": {
-                "expr": "@вещь"
+                "expr": "@item"
               }
             }
           }
@@ -7128,7 +7128,7 @@
                 "expr": "@duration.sustained"
               },
               "заклинание": {
-                "expr": "@вещь"
+                "expr": "@item"
               }
             }
           },
@@ -7221,24 +7221,24 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "focus_kinds.{@строка.focus_kind}.force",
+            "target": "focus_kinds.{@row.focus_kind}.force",
             "op": "add",
             "value": {
-              "expr": "@строка.rating"
+              "expr": "@row.rating"
             },
             "if": {
-              "expr": "not @строка.focus_kind.by_category"
+              "expr": "not @row.focus_kind.by_category"
             }
           },
           {
             "kind": "value",
-            "target": "spell_categories.{@строка.category}.focus",
+            "target": "spell_categories.{@row.category}.focus",
             "op": "add",
             "value": {
-              "expr": "@строка.rating"
+              "expr": "@row.rating"
             },
             "if": {
-              "expr": "@строка.focus_kind.by_category"
+              "expr": "@row.focus_kind.by_category"
             }
           },
           {
@@ -7246,7 +7246,7 @@
             "target": "focus_force_total",
             "op": "add",
             "value": {
-              "expr": "@строка.rating"
+              "expr": "@row.rating"
             }
           }
         ]
@@ -7382,7 +7382,7 @@
                 "expr": "@duration.sustained"
               },
               "сложная_форма": {
-                "expr": "@вещь"
+                "expr": "@item"
               }
             }
           },
@@ -7458,7 +7458,7 @@
             "effect": "sprite_power_use",
             "args": {
               "способность_спрайта": {
-                "expr": "@вещь"
+                "expr": "@item"
               }
             }
           }
@@ -10027,7 +10027,7 @@
             "op": "set",
             "stage": "основа",
             "value": {
-              "expr": "if(@строка.as_skill == \"маневрирование\", @строка.rating, 0)"
+              "expr": "if(@row.as_skill == \"маневрирование\", @row.rating, 0)"
             }
           },
           {
@@ -10036,7 +10036,7 @@
             "op": "set",
             "stage": "основа",
             "value": {
-              "expr": "if(@строка.as_skill == \"прицеливание\", @строка.rating, 0)"
+              "expr": "if(@row.as_skill == \"прицеливание\", @row.rating, 0)"
             }
           },
           {
@@ -10045,7 +10045,7 @@
             "op": "set",
             "stage": "основа",
             "value": {
-              "expr": "if(@строка.as_skill == \"РЭБ\", @строка.rating, 0)"
+              "expr": "if(@row.as_skill == \"РЭБ\", @row.rating, 0)"
             }
           },
           {
@@ -10054,7 +10054,7 @@
             "op": "set",
             "stage": "основа",
             "value": {
-              "expr": "if(@строка.as_skill == \"скрытность\", @строка.rating, 0)"
+              "expr": "if(@row.as_skill == \"скрытность\", @row.rating, 0)"
             }
           },
           {
@@ -10063,7 +10063,7 @@
             "op": "set",
             "stage": "основа",
             "value": {
-              "expr": "if(@строка.as_skill == \"уклонение\", @строка.rating, 0)"
+              "expr": "if(@row.as_skill == \"уклонение\", @row.rating, 0)"
             }
           },
           {
@@ -10072,7 +10072,7 @@
             "op": "set",
             "stage": "основа",
             "value": {
-              "expr": "if(@строка.as_skill == \"чистый взгляд\", @строка.rating, 0)"
+              "expr": "if(@row.as_skill == \"чистый взгляд\", @row.rating, 0)"
             }
           },
           {
@@ -10107,7 +10107,7 @@
             "target": "mounts_used",
             "op": "add",
             "value": {
-              "expr": "@строка.mount_slots"
+              "expr": "@row.mount_slots"
             }
           }
         ]
@@ -10166,7 +10166,7 @@
             "effect": "intoxicate",
             "args": {
               "токсин": {
-                "expr": "@вещь"
+                "expr": "@item"
               }
             }
           }
@@ -15383,7 +15383,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@стол.бой"
+              "expr": "@desk.combat"
             }
           },
           {
@@ -15594,7 +15594,7 @@
           {
             "on": "seen",
             "if": {
-              "expr": "@бросающий == @носитель and not @roll.atMin * 2 > @roll.rolled"
+              "expr": "@roller == @holder and not @roll.atMin * 2 > @roll.rolled"
             },
             "notTags": [
               "инициатива",
@@ -15607,7 +15607,7 @@
                 "effect": "spend_edge",
                 "args": {
                   "лист": {
-                    "expr": "@носитель"
+                    "expr": "@holder"
                   },
                   "amount": {
                     "expr": "4"
@@ -15641,7 +15641,7 @@
           {
             "on": "seen",
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             },
             "notTags": [
               "инициатива",
@@ -15654,7 +15654,7 @@
                 "effect": "spend_edge",
                 "args": {
                   "лист": {
-                    "expr": "@носитель"
+                    "expr": "@holder"
                   },
                   "amount": {
                     "expr": "4"
@@ -15666,7 +15666,7 @@
               {
                 "type": "roll-add",
                 "count": {
-                  "expr": "@носитель.edge"
+                  "expr": "@holder.edge"
                 },
                 "explode": true
               }
@@ -15689,7 +15689,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.edge_gained"
+                  "expr": "@holder.edge_gained"
                 },
                 "direction": "set",
                 "value": {
@@ -15704,11 +15704,11 @@
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.edge_left"
+                  "expr": "@holder.edge_left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "min(@носитель.edge_left, @носитель.edge)"
+                  "expr": "min(@holder.edge_left, @holder.edge)"
                 }
               }
             ]
@@ -15719,11 +15719,11 @@
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.edge_left"
+                  "expr": "@holder.edge_left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "min(@носитель.edge_left, @носитель.edge)"
+                  "expr": "min(@holder.edge_left, @holder.edge)"
                 }
               }
             ]
@@ -15742,23 +15742,23 @@
           {
             "on": "moment:turn-start",
             "if": {
-              "expr": "@ходит == @носитель"
+              "expr": "@mover == @holder"
             },
             "steps": [
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.simple_left"
+                  "expr": "@holder.simple_left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "min(5, 1 + @носитель.init_dice)"
+                  "expr": "min(5, 1 + @holder.init_dice)"
                 }
               },
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.complex_left"
+                  "expr": "@holder.complex_left"
                 },
                 "direction": "set",
                 "value": {
@@ -15768,13 +15768,13 @@
               {
                 "type": "branch",
                 "if": {
-                  "expr": "@носитель.action_lock >= 1"
+                  "expr": "@holder.action_lock >= 1"
                 }
               },
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.simple_left"
+                  "expr": "@holder.simple_left"
                 },
                 "direction": "set",
                 "value": {
@@ -15784,7 +15784,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.complex_left"
+                  "expr": "@holder.complex_left"
                 },
                 "direction": "set",
                 "value": {
@@ -15797,13 +15797,13 @@
               {
                 "type": "branch",
                 "if": {
-                  "expr": "@носитель.nausea_lost >= 2"
+                  "expr": "@holder.nausea_lost >= 2"
                 }
               },
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.simple_left"
+                  "expr": "@holder.simple_left"
                 },
                 "direction": "set",
                 "value": {
@@ -15813,7 +15813,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.complex_left"
+                  "expr": "@holder.complex_left"
                 },
                 "direction": "set",
                 "value": {
@@ -15823,13 +15823,13 @@
               {
                 "type": "orElse",
                 "if": {
-                  "expr": "@носитель.nausea_lost >= 1"
+                  "expr": "@holder.nausea_lost >= 1"
                 }
               },
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.simple_left"
+                  "expr": "@holder.simple_left"
                 },
                 "direction": "subtract",
                 "value": {
@@ -15855,7 +15855,7 @@
           {
             "on": "rolled",
             "if": {
-              "expr": "@бросающий == @носитель and @roll.atMin * 2 > @roll.rolled and @roll.natural >= 1"
+              "expr": "@roller == @holder and @roll.atMin * 2 > @roll.rolled and @roll.natural >= 1"
             },
             "notTags": [
               "инициатива"
@@ -15876,7 +15876,7 @@
           {
             "on": "rolled",
             "if": {
-              "expr": "@бросающий == @носитель and @roll.atMin * 2 > @roll.rolled and @roll.natural == 0"
+              "expr": "@roller == @holder and @roll.atMin * 2 > @roll.rolled and @roll.natural == 0"
             },
             "notTags": [
               "инициатива"
@@ -15903,7 +15903,7 @@
               "expr": "-2"
             },
             "if": {
-              "expr": "@цель == @носитель"
+              "expr": "@цель == @holder"
             }
           }
         ]
@@ -16082,7 +16082,7 @@
               "expr": "-4"
             },
             "if": {
-              "expr": "@бросающий == @носитель and @против == @источник"
+              "expr": "@roller == @holder and @against == @источник"
             },
             "notTags": [
               "лечение"
@@ -16129,14 +16129,14 @@
           {
             "on": "field:knocked_out",
             "if": {
-              "expr": "@лист == @носитель"
+              "expr": "@sheet == @holder"
             },
             "steps": [
               {
                 "type": "status",
                 "effect": "unconscious",
                 "to": {
-                  "expr": "@носитель"
+                  "expr": "@holder"
                 }
               }
             ]
@@ -16155,14 +16155,14 @@
           {
             "on": "field:bleeding_out",
             "if": {
-              "expr": "@лист == @носитель"
+              "expr": "@sheet == @holder"
             },
             "steps": [
               {
                 "type": "status",
                 "effect": "bleeding",
                 "to": {
-                  "expr": "@носитель"
+                  "expr": "@holder"
                 }
               }
             ]
@@ -16181,7 +16181,7 @@
           {
             "on": "field:is_dead",
             "if": {
-              "expr": "@лист == @носитель"
+              "expr": "@sheet == @holder"
             },
             "steps": [
               {
@@ -16189,14 +16189,14 @@
                 "mode": "remove",
                 "effect": "bleeding",
                 "to": {
-                  "expr": "@носитель"
+                  "expr": "@holder"
                 }
               },
               {
                 "type": "status",
                 "effect": "dead",
                 "to": {
-                  "expr": "@носитель"
+                  "expr": "@holder"
                 }
               }
             ]
@@ -16215,7 +16215,7 @@
           {
             "on": "field:conscious",
             "if": {
-              "expr": "@лист == @носитель"
+              "expr": "@sheet == @holder"
             },
             "steps": [
               {
@@ -16223,7 +16223,7 @@
                 "mode": "remove",
                 "effect": "unconscious",
                 "to": {
-                  "expr": "@носитель"
+                  "expr": "@holder"
                 }
               },
               {
@@ -16231,7 +16231,7 @@
                 "mode": "remove",
                 "effect": "bleeding",
                 "to": {
-                  "expr": "@носитель"
+                  "expr": "@holder"
                 }
               }
             ]
@@ -16316,10 +16316,10 @@
             "param": "count",
             "op": "add",
             "value": {
-              "expr": "@носитель.skills.атлетика.rank"
+              "expr": "@holder.skills.атлетика.rank"
             },
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             },
             "tags": [
               "защита"
@@ -16330,7 +16330,7 @@
           {
             "on": "rolled",
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             },
             "tags": [
               "защита"
@@ -16355,10 +16355,10 @@
             "param": "count",
             "op": "add",
             "value": {
-              "expr": "@носитель.skills.ближний_бой.rank"
+              "expr": "@holder.skills.ближний_бой.rank"
             },
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             },
             "tags": [
               "защита",
@@ -16370,7 +16370,7 @@
           {
             "on": "rolled",
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             },
             "tags": [
               "защита",
@@ -16396,10 +16396,10 @@
             "param": "count",
             "op": "add",
             "value": {
-              "expr": "@носитель.willpower"
+              "expr": "@holder.willpower"
             },
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             },
             "tags": [
               "защита"
@@ -16965,7 +16965,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@лист.edge_no_gain >= 1 or @лист.edge_left >= 7 or (@стол.бой and @лист.edge_gained >= 2)"
+              "expr": "@лист.edge_no_gain >= 1 or @лист.edge_left >= 7 or (@desk.combat and @лист.edge_gained >= 2)"
             }
           },
           {
@@ -16990,7 +16990,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@стол.бой"
+              "expr": "@desk.combat"
             }
           },
           {
@@ -17251,7 +17251,7 @@
                 "effect": "resist_damage",
                 "args": {
                   "лист": {
-                    "expr": "@носитель"
+                    "expr": "@holder"
                   },
                   "величина": {
                     "expr": "@level"
@@ -17263,7 +17263,7 @@
           {
             "on": "gained:гасит горение",
             "if": {
-              "expr": "@лист == @носитель"
+              "expr": "@sheet == @holder"
             },
             "steps": [
               {
@@ -17271,7 +17271,7 @@
                 "mode": "remove",
                 "effect": "burning",
                 "to": {
-                  "expr": "@носитель"
+                  "expr": "@holder"
                 }
               }
             ]
@@ -17283,7 +17283,7 @@
             "mode": "remove",
             "effect": "гасит горение",
             "to": {
-              "expr": "@носитель"
+              "expr": "@holder"
             },
             "by": "tag"
           }
@@ -17315,7 +17315,7 @@
               "expr": "-3"
             },
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             },
             "tags": [
               "атака"
@@ -17363,7 +17363,7 @@
             "mode": "remove",
             "effect": "урон в раунд",
             "to": {
-              "expr": "@носитель"
+              "expr": "@holder"
             },
             "by": "tag"
           }
@@ -17397,7 +17397,7 @@
               "expr": "if(@level >= 3, -99, -3 * @level)"
             },
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             },
             "tags": [
               "зрение"
@@ -17412,7 +17412,7 @@
             "param": "edits",
             "edit": "auto_fail",
             "if": {
-              "expr": "@бросающий == @носитель and @level >= 3"
+              "expr": "@roller == @holder and @level >= 3"
             },
             "tags": [
               "зрение"
@@ -17430,7 +17430,7 @@
               "expr": "99"
             },
             "if": {
-              "expr": "@бросающий == @носитель and @level >= 3"
+              "expr": "@roller == @holder and @level >= 3"
             },
             "tags": [
               "зрение"
@@ -17477,7 +17477,7 @@
                 "effect": "resist_damage",
                 "args": {
                   "лист": {
-                    "expr": "@носитель"
+                    "expr": "@holder"
                   },
                   "величина": {
                     "expr": "@level"
@@ -17492,7 +17492,7 @@
                 "mode": "remove",
                 "effect": "poisoned",
                 "to": {
-                  "expr": "@носитель"
+                  "expr": "@holder"
                 }
               },
               {
@@ -17505,7 +17505,7 @@
                 "type": "status",
                 "effect": "poisoned",
                 "to": {
-                  "expr": "@носитель"
+                  "expr": "@holder"
                 },
                 "args": {
                   "level": {
@@ -17554,7 +17554,7 @@
                 "effect": "resist_damage",
                 "args": {
                   "лист": {
-                    "expr": "@носитель"
+                    "expr": "@holder"
                   },
                   "величина": {
                     "expr": "@level"
@@ -17586,7 +17586,7 @@
               "expr": "-6"
             },
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             },
             "tags": [
               "сопротивление"
@@ -17616,10 +17616,10 @@
                 "effect": "attr_test",
                 "args": {
                   "лист": {
-                    "expr": "@носитель"
+                    "expr": "@holder"
                   },
                   "набор": {
-                    "expr": "@носитель.body + @носитель.willpower"
+                    "expr": "@holder.body + @holder.willpower"
                   },
                   "порог": {
                     "expr": "2"
@@ -17629,7 +17629,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.nausea_lost"
+                  "expr": "@holder.nausea_lost"
                 },
                 "direction": "set",
                 "value": {
@@ -17643,7 +17643,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@носитель.nausea_lost"
+              "expr": "@holder.nausea_lost"
             },
             "direction": "set",
             "value": {
@@ -17688,7 +17688,7 @@
               "expr": "-2"
             },
             "if": {
-              "expr": "@бросающий == @носитель and @level >= 4"
+              "expr": "@roller == @holder and @level >= 4"
             },
             "tags": [
               "атака"
@@ -17711,7 +17711,7 @@
           {
             "on": "seen",
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             },
             "notTags": [
               "без Преимущества"
@@ -17723,7 +17723,7 @@
                 "effect": "spend_edge",
                 "args": {
                   "лист": {
-                    "expr": "@носитель"
+                    "expr": "@holder"
                   },
                   "amount": {
                     "expr": "1"
@@ -17755,7 +17755,7 @@
           {
             "on": "seen",
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             },
             "notTags": [
               "инициатива",
@@ -17768,7 +17768,7 @@
                 "effect": "spend_edge",
                 "args": {
                   "лист": {
-                    "expr": "@носитель"
+                    "expr": "@holder"
                   },
                   "amount": {
                     "expr": "2"
@@ -17802,7 +17802,7 @@
           {
             "on": "seen",
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             },
             "tags": [
               "инициатива"
@@ -17814,7 +17814,7 @@
                 "effect": "spend_edge",
                 "args": {
                   "лист": {
-                    "expr": "@носитель"
+                    "expr": "@holder"
                   },
                   "amount": {
                     "expr": "1"
@@ -17848,7 +17848,7 @@
           {
             "on": "seen",
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             },
             "notTags": [
               "инициатива",
@@ -17861,7 +17861,7 @@
                 "effect": "spend_edge",
                 "args": {
                   "лист": {
-                    "expr": "@носитель"
+                    "expr": "@holder"
                   },
                   "amount": {
                     "expr": "3"
@@ -17899,7 +17899,7 @@
               "expr": "4"
             },
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             },
             "tags": [
               "проверка"
@@ -17922,7 +17922,7 @@
           {
             "on": "seen",
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             },
             "tags": [
               "бонус Преимущества"
@@ -17933,7 +17933,7 @@
                 "effect": "gain_edge",
                 "args": {
                   "лист": {
-                    "expr": "@носитель"
+                    "expr": "@holder"
                   }
                 }
               }
@@ -18013,7 +18013,7 @@
           {
             "on": "after:урон Матрицы",
             "if": {
-              "expr": "@источник == @носитель"
+              "expr": "@источник == @holder"
             },
             "steps": [
               {
@@ -18039,7 +18039,7 @@
           {
             "on": "after:урон Матрицы",
             "if": {
-              "expr": "@источник == @носитель"
+              "expr": "@источник == @holder"
             },
             "steps": [
               {
@@ -18235,7 +18235,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.overwatch"
+                  "expr": "@holder.overwatch"
                 },
                 "direction": "add",
                 "value": {
@@ -18290,13 +18290,13 @@
           {
             "on": "field:converged",
             "if": {
-              "expr": "@лист == @носитель"
+              "expr": "@sheet == @holder"
             },
             "steps": [
               {
                 "type": "branch",
                 "if": {
-                  "expr": "@носитель.matrix_mode == \"холодная ВР\" or @носитель.matrix_mode == \"горячая ВР\""
+                  "expr": "@holder.matrix_mode == \"холодная ВР\" or @holder.matrix_mode == \"горячая ВР\""
                 }
               },
               {
@@ -18304,7 +18304,7 @@
                 "effect": "dumpshock",
                 "args": {
                   "лист": {
-                    "expr": "@носитель"
+                    "expr": "@holder"
                   }
                 }
               },
@@ -18314,17 +18314,17 @@
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.matrix_damage"
+                  "expr": "@holder.matrix_damage"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@носитель.matrix_cm"
+                  "expr": "@holder.matrix_cm"
                 }
               },
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.overwatch"
+                  "expr": "@holder.overwatch"
                 },
                 "direction": "set",
                 "value": {
@@ -18347,13 +18347,13 @@
           {
             "on": "field:device_dead",
             "if": {
-              "expr": "@лист == @носитель and (@носитель.matrix_mode.online or @носитель.implant_dead_dv >= 1)"
+              "expr": "@sheet == @holder and (@holder.matrix_mode.online or @holder.implant_dead_dv >= 1)"
             },
             "steps": [
               {
                 "type": "branch",
                 "if": {
-                  "expr": "@носитель.matrix_mode.vr"
+                  "expr": "@holder.matrix_mode.vr"
                 }
               },
               {
@@ -18361,7 +18361,7 @@
                 "effect": "dumpshock",
                 "args": {
                   "лист": {
-                    "expr": "@носитель"
+                    "expr": "@holder"
                   }
                 }
               },
@@ -18371,7 +18371,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.matrix_mode"
+                  "expr": "@holder.matrix_mode"
                 },
                 "direction": "set",
                 "value": {
@@ -18381,7 +18381,7 @@
               {
                 "type": "branch",
                 "if": {
-                  "expr": "@носитель.implant_dead_dv >= 1"
+                  "expr": "@holder.implant_dead_dv >= 1"
                 }
               },
               {
@@ -18389,10 +18389,10 @@
                 "effect": "implant_blast",
                 "args": {
                   "лист": {
-                    "expr": "@носитель"
+                    "expr": "@holder"
                   },
                   "су": {
-                    "expr": "@носитель.implant_dead_dv"
+                    "expr": "@holder.implant_dead_dv"
                   }
                 }
               },
@@ -19842,7 +19842,7 @@
               "expr": "-2"
             },
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             },
             "notTags": [
               "защита",
@@ -20947,7 +20947,7 @@
                 "mode": "remove",
                 "effect": "sprite_trap",
                 "to": {
-                  "expr": "@носитель"
+                  "expr": "@holder"
                 },
                 "where": {
                   "expr": "@спрайт == @действующий"
@@ -20995,7 +20995,7 @@
                 "effect": "matrix_hurt",
                 "args": {
                   "лист": {
-                    "expr": "@носитель"
+                    "expr": "@holder"
                   },
                   "amount": {
                     "expr": "@спрайт.resonance"
@@ -21007,7 +21007,7 @@
           {
             "on": "field:matrix_damage",
             "if": {
-              "expr": "@лист == @спрайт"
+              "expr": "@sheet == @спрайт"
             },
             "steps": [
               {
@@ -21015,10 +21015,10 @@
                 "mode": "remove",
                 "effect": "sprite_storm",
                 "to": {
-                  "expr": "@носитель"
+                  "expr": "@holder"
                 },
                 "where": {
-                  "expr": "@спрайт == @лист"
+                  "expr": "@спрайт == @sheet"
                 }
               }
             ]
@@ -21052,7 +21052,7 @@
               "expr": "max(1, @amount)"
             },
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             },
             "anyTags": [
               "электроника",
@@ -21550,14 +21550,14 @@
           {
             "on": "lost:dg_jazz",
             "if": {
-              "expr": "@лист == @носитель"
+              "expr": "@sheet == @holder"
             },
             "steps": [
               {
                 "type": "status",
                 "effect": "dazed",
                 "to": {
-                  "expr": "@лист"
+                  "expr": "@sheet"
                 }
               }
             ]
@@ -21565,14 +21565,14 @@
           {
             "on": "lost:dg_long_way",
             "if": {
-              "expr": "@лист == @носитель"
+              "expr": "@sheet == @holder"
             },
             "steps": [
               {
                 "type": "status",
                 "effect": "fatigued",
                 "to": {
-                  "expr": "@лист"
+                  "expr": "@sheet"
                 }
               }
             ]
@@ -21580,7 +21580,7 @@
           {
             "on": "lost:dg_zubrila",
             "if": {
-              "expr": "@лист == @носитель"
+              "expr": "@sheet == @holder"
             },
             "steps": [
               {
@@ -21588,7 +21588,7 @@
                 "effect": "take_damage",
                 "args": {
                   "лист": {
-                    "expr": "@лист"
+                    "expr": "@sheet"
                   },
                   "amount": {
                     "expr": "6"
@@ -21603,7 +21603,7 @@
           {
             "on": "lost:dg_kamikaze",
             "if": {
-              "expr": "@лист == @носитель"
+              "expr": "@sheet == @holder"
             },
             "steps": [
               {
@@ -21611,7 +21611,7 @@
                 "effect": "take_damage",
                 "args": {
                   "лист": {
-                    "expr": "@лист"
+                    "expr": "@sheet"
                   },
                   "amount": {
                     "expr": "6"
@@ -21625,7 +21625,7 @@
                 "type": "status",
                 "effect": "dg_kamikaze_crash",
                 "to": {
-                  "expr": "@лист"
+                  "expr": "@sheet"
                 },
                 "args": {
                   "dur": {
@@ -21638,7 +21638,7 @@
           {
             "on": "lost:dg_nitro",
             "if": {
-              "expr": "@лист == @носитель"
+              "expr": "@sheet == @holder"
             },
             "steps": [
               {
@@ -21646,7 +21646,7 @@
                 "effect": "take_damage",
                 "args": {
                   "лист": {
-                    "expr": "@лист"
+                    "expr": "@sheet"
                   },
                   "amount": {
                     "expr": "9"
@@ -21660,7 +21660,7 @@
                 "type": "status",
                 "effect": "dg_nitro_crash",
                 "to": {
-                  "expr": "@лист"
+                  "expr": "@sheet"
                 },
                 "args": {
                   "dur": {
@@ -22081,10 +22081,10 @@
                 "effect": "attr_test",
                 "args": {
                   "лист": {
-                    "expr": "@носитель"
+                    "expr": "@holder"
                   },
                   "набор": {
-                    "expr": "@носитель.willpower"
+                    "expr": "@holder.willpower"
                   },
                   "порог": {
                     "expr": "2"
@@ -22101,7 +22101,7 @@
                 "type": "status",
                 "effect": "insecurity_shaken",
                 "to": {
-                  "expr": "@носитель"
+                  "expr": "@holder"
                 }
               },
               {
@@ -22303,7 +22303,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@стол.scatter"
+              "expr": "@desk.scatter"
             },
             "direction": "set",
             "value": {
@@ -23155,7 +23155,7 @@
             "type": "status",
             "effect": "fatigued",
             "to": {
-              "expr": "@носитель"
+              "expr": "@holder"
             },
             "args": {
               "level": {
@@ -23170,7 +23170,7 @@
             "mode": "remove",
             "effect": "fatigued",
             "to": {
-              "expr": "@носитель"
+              "expr": "@holder"
             },
             "where": {
               "expr": "@level == 2"
@@ -23207,7 +23207,7 @@
               "expr": "-2"
             },
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             }
           }
         ]
@@ -23224,10 +23224,10 @@
             "param": "count",
             "op": "add",
             "value": {
-              "expr": "@носитель.matrix_wound - @носитель.noise"
+              "expr": "@holder.matrix_wound - @holder.noise"
             },
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             },
             "tags": [
               "матрица"
@@ -23250,7 +23250,7 @@
               "expr": "-2"
             },
             "if": {
-              "expr": "@бросающий == @носитель and @носитель.astral_mode.active"
+              "expr": "@roller == @holder and @holder.astral_mode.active"
             },
             "notTags": [
               "магия",
@@ -23278,7 +23278,7 @@
               "expr": "0 - @amount"
             },
             "if": {
-              "expr": "@лист == @носитель and not @physical_hit and not @electric and (@dv or @amount) <= @носитель.veh_body"
+              "expr": "@лист == @holder and not @physical_hit and not @electric and (@dv or @amount) <= @holder.veh_body"
             }
           }
         ]
@@ -23295,10 +23295,10 @@
             "param": "count",
             "op": "add",
             "value": {
-              "expr": "0 - @носитель.veh_speed_pen"
+              "expr": "0 - @holder.veh_speed_pen"
             },
             "if": {
-              "expr": "@бросающий == @носитель and @носитель.veh_speed_pen >= 1"
+              "expr": "@roller == @holder and @holder.veh_speed_pen >= 1"
             },
             "tags": [
               "атака"
@@ -23631,7 +23631,7 @@
             "op": "set",
             "stage": "основа",
             "value": {
-              "expr": "@npc_template.[@строка]"
+              "expr": "@npc_template.[@row]"
             },
             "if": {
               "expr": "not empty(@npc_template)"
@@ -23936,7 +23936,7 @@
               "expr": "min(10, @spirit_force)"
             },
             "if": {
-              "expr": "if(empty(@spirit_kind), false, has(@spirit_kind.skills, @строка))"
+              "expr": "if(empty(@spirit_kind), false, has(@spirit_kind.skills, @row))"
             }
           }
         ]
@@ -25275,7 +25275,7 @@
               "лечение"
             ],
             "if": {
-              "expr": "@бросающий == @носитель and @строка.wireless"
+              "expr": "@roller == @holder and @row.wireless"
             }
           },
           {
@@ -25356,7 +25356,7 @@
             "target": "dev_dp",
             "op": "set",
             "value": {
-              "expr": "@строка.rating + 3"
+              "expr": "@row.rating + 3"
             },
             "stage": "основа"
           },
@@ -25365,7 +25365,7 @@
             "target": "dev_firewall",
             "op": "set",
             "value": {
-              "expr": "@строка.rating + 2"
+              "expr": "@row.rating + 2"
             },
             "stage": "основа"
           },
@@ -25374,7 +25374,7 @@
             "target": "init_dice",
             "op": "add",
             "value": {
-              "expr": "if(@matrix_mode.vr, if(@строка.rating >= 4, 2, 1), 0)"
+              "expr": "if(@matrix_mode.vr, if(@row.rating >= 4, 2, 1), 0)"
             }
           },
           {
@@ -25471,7 +25471,7 @@
             "target": "armor_extra",
             "op": "add",
             "value": {
-              "expr": "@строка.rating"
+              "expr": "@row.rating"
             }
           }
         ]
@@ -25500,10 +25500,10 @@
             "param": "threshold",
             "op": "add",
             "value": {
-              "expr": "0 - @строка.rating"
+              "expr": "0 - @row.rating"
             },
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             },
             "tags": [
               "прыжок"
@@ -25537,7 +25537,7 @@
           "avail_base": 2,
           "cap_use": 1,
           "dv": {
-            "expr": "if(@носитель.strength >= 7, 4, 3)"
+            "expr": "if(@holder.strength >= 7, 4, 3)"
           },
           "damage_kind": "физический",
           "ar1": 6,
@@ -25606,14 +25606,14 @@
             "param": "count",
             "op": "add",
             "value": {
-              "expr": "@строка.rating"
+              "expr": "@row.rating"
             },
             "tags": [
               "сопротивление",
               "физический"
             ],
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             }
           },
           {
@@ -25621,7 +25621,7 @@
             "target": "unarmed_dv",
             "op": "set",
             "value": {
-              "expr": "if(@строка.rating >= 3, 4, 3)"
+              "expr": "if(@row.rating >= 3, 4, 3)"
             }
           },
           {
@@ -25637,7 +25637,7 @@
             "target": "unarmed_ar_bonus",
             "op": "add",
             "value": {
-              "expr": "if(@строка.rating == 1, 1, if(@строка.rating == 4, 3, 2))"
+              "expr": "if(@row.rating == 1, 1, if(@row.rating == 4, 3, 2))"
             }
           }
         ]
@@ -25663,7 +25663,7 @@
               "expr": "-1"
             },
             "if": {
-              "expr": "@лист == @носитель and @amount >= 2 and @physical_hit"
+              "expr": "@лист == @holder and @amount >= 2 and @physical_hit"
             }
           }
         ]
@@ -25682,7 +25682,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "skills.{@строка.skill}.rank",
+            "target": "skills.{@row.skill}.rank",
             "op": "add",
             "value": {
               "expr": "1"
@@ -25729,7 +25729,7 @@
             "target": "physical_max",
             "op": "add",
             "value": {
-              "expr": "@строка.level"
+              "expr": "@row.level"
             }
           }
         ]
@@ -25805,7 +25805,7 @@
               "взлом замков"
             ],
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             },
             "notTags": [
               "защита"
@@ -25868,7 +25868,7 @@
             "target": "melee_dv_bonus",
             "op": "add",
             "value": {
-              "expr": "@строка.level"
+              "expr": "@row.level"
             }
           }
         ]
@@ -25887,10 +25887,10 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "skills.{@строка.skill}.rank",
+            "target": "skills.{@row.skill}.rank",
             "op": "add",
             "value": {
-              "expr": "@строка.level"
+              "expr": "@row.level"
             },
             "stage": "адепт"
           }
@@ -25914,7 +25914,7 @@
             "target": "reaction",
             "op": "add",
             "value": {
-              "expr": "@строка.level"
+              "expr": "@row.level"
             },
             "stage": "аугментация"
           },
@@ -25923,7 +25923,7 @@
             "target": "init_dice",
             "op": "add",
             "value": {
-              "expr": "@строка.level"
+              "expr": "@row.level"
             }
           }
         ]
@@ -25957,7 +25957,7 @@
               "сопротивление"
             ],
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             }
           }
         ]
@@ -26221,7 +26221,7 @@
               "слух"
             ],
             "if": {
-              "expr": "@бросающий == @носитель and @строка.wireless"
+              "expr": "@roller == @holder and @row.wireless"
             }
           },
           {
@@ -26236,7 +26236,7 @@
               "слух"
             ],
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             }
           }
         ]
@@ -26323,7 +26323,7 @@
               "взлом замков"
             ],
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             }
           }
         ]
@@ -26374,7 +26374,7 @@
             "param": "count",
             "op": "add",
             "value": {
-              "expr": "@строка.rating"
+              "expr": "@row.rating"
             },
             "tags": [
               "сопротивление",
@@ -26382,7 +26382,7 @@
               "вдыхаемый"
             ],
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             }
           }
         ]
@@ -26661,13 +26661,13 @@
             "param": "count",
             "op": "add",
             "value": {
-              "expr": "@носитель.initiate_grade"
+              "expr": "@holder.initiate_grade"
             },
             "tags": [
               "сопротивление истощению"
             ],
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             }
           }
         ]
@@ -26946,7 +26946,7 @@
             "target": "armor_natural",
             "op": "add",
             "value": {
-              "expr": "@строка.level"
+              "expr": "@row.level"
             }
           }
         ]
@@ -27298,7 +27298,7 @@
       "effects": []
     },
     {
-      "id": "стол",
+      "id": "desk",
       "systemId": "shadowrun6",
       "name": "Стол",
       "values": {},

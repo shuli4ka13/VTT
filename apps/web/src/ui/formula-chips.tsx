@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import type { System } from '@vtt/schema';
 import { matchTagQuery } from './tag-suggest.tsx';
 import { fieldPaths, sheetPathLabel } from './paths.ts';
-import { DESK_ID, fieldsOf, readableFields, hasField, fieldLinkOf, ROW, tagWords, typeColumns, callAt, partAt, FUNCTION_SPECS } from '@vtt/engine';
+import { DESK_ID, NAME_LABELS, fieldsOf, readableFields, hasField, fieldLinkOf, ROW, tagWords, typeColumns, callAt, partAt, FUNCTION_SPECS } from '@vtt/engine';
 import type { FunctionSpec } from '@vtt/engine';
 import { plainLabel, pickTail } from './formula-labels.ts';
 import { formulaWords, useFormulaWords, shownFormula, storedFormula, functionIdOf, localName, localSpec } from './formula-lang.ts';
@@ -261,7 +261,7 @@ export type NameOption = { tag: string; label: string; group: string };
 export function namesOf(system: System, scope: { extraNames?: Map<string, string> | undefined; extraOptions?: { name?: string }[] | undefined; sheets?: SheetNames | undefined; table?: string | undefined }): NameOption[] {
   const { extraNames, extraOptions, sheets, table } = scope;
   const paths = fieldPaths(system);
-  const desk = readableFields(system).filter(f => f.lives === 'desk').map(f => ({ tag: `${DESK_ID}.${f.tag}`, label: f.label ?? f.tag, group: 'стол' }));
+  const desk = readableFields(system).filter(f => f.lives === 'desk').map(f => ({ tag: `${DESK_ID}.${f.tag}`, label: f.label ?? f.tag, group: NAME_LABELS.desk }));
   const sheet = [
     ...readableFields(system).filter(f => f.lives !== 'desk').map(f => ({ tag: f.tag, label: f.label ?? f.tag, via: false })),
     ...[...paths].map(([tag, label]) => ({ tag, label, via: true })),
@@ -378,8 +378,8 @@ function LocalChips({ value, onChange, onFinal, system, table, placeholder, onKe
     const owned = onSheet(tag, sheets);
     if (!owned) return null;
     return (
-      <span className={`chips__side chips__side--${owned.head === DESK_ID ? 'desk' : 'sheet'}`} title={owned.head === DESK_ID ? 'поле стола' : `поле листа «${sheets?.get(owned.head) ?? owned.head}»`}>
-        {owned.head === DESK_ID ? 'стол' : sheets?.get(owned.head) ?? owned.head}
+      <span className={`chips__side chips__side--${owned.head === DESK_ID ? 'desk' : 'sheet'}`} title={owned.head === DESK_ID ? `поле «${NAME_LABELS.desk}»` : `поле листа «${sheets?.get(owned.head) ?? owned.head}»`}>
+        {owned.head === DESK_ID ? NAME_LABELS.desk : sheets?.get(owned.head) ?? owned.head}
       </span>
     );
   };

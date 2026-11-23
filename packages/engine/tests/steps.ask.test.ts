@@ -47,7 +47,7 @@ group('шаг «Спросить»', () => {
     const out = play(world({ steps: [EACH, ASK, ...byAnswer] }));
     eq(out.kind, 'paused');
     if (out.kind !== 'paused') return;
-    eq(out.question.sheetId, 'стол');
+    eq(out.question.sheetId, 'desk');
     eq(out.question.window, 'step');
     eq(out.question.label, 'Кто победил?');
     eq(out.question.offers.map(o => o.label).join('/'), 'Бьющий/Защитник');
@@ -57,17 +57,17 @@ group('шаг «Спросить»', () => {
 
   test('ответ «да» и ответ «нет» ведут по своим веткам', () => {
     const system = world({ steps: [EACH, ASK, ...byAnswer] });
-    const yes = answered(system, ['да']).out;
+    const yes = answered(system, ['yes']).out;
     eq(yes.kind, 'done');
     eq(hp(yes, 'б'), 15);
-    const no = answered(system, ['нет']).out;
+    const no = answered(system, ['no']).out;
     eq(no.kind, 'done');
     eq(hp(no, 'б'), 19);
   });
 
   test('две цели — два вопроса, у каждой свой ответ', () => {
     const system = world({ steps: [EACH, ASK, ...byAnswer] });
-    const { out, asked } = answered(system, ['да', 'нет'], ['б', 'в']);
+    const { out, asked } = answered(system, ['yes', 'no'], ['б', 'в']);
     eq(out.kind, 'done');
     eq(asked.length, 2);
     eq(hp(out, 'б'), 15);
@@ -76,7 +76,7 @@ group('шаг «Спросить»', () => {
 
   test('до «Для каждого из»: один вопрос на действие', () => {
     const system = world({ steps: [ASK, EACH, ...byAnswer] });
-    const { out, asked } = answered(system, ['да'], ['б', 'в']);
+    const { out, asked } = answered(system, ['yes'], ['б', 'в']);
     eq(out.kind, 'done');
     eq(asked.length, 1);
     eq(hp(out, 'б'), 15);
@@ -89,7 +89,7 @@ group('шаг «Спросить»', () => {
       { ничья: { label: 'Ничья', activation: 'manual', params: [], steps: [ASK], returns: [{ key: 'победил', label: 'победил', kind: 'bool', expr: { expr: '@решение' } }] } },
     );
     eq(play(system).kind, 'paused');
-    const { out } = answered(system, ['да']);
+    const { out } = answered(system, ['yes']);
     eq(out.kind, 'done');
     eq(hp(out, 'б'), 15);
   });
@@ -100,9 +100,9 @@ group('шаг «Спросить»', () => {
       steps: [EACH, hit(5)],
     });
     eq(play(system).kind, 'paused');
-    eq(hp(answered(system, ['да']).out, 'б'), 15);
+    eq(hp(answered(system, ['yes']).out, 'б'), 15);
     let refused = '';
-    try { answered(system, ['нет']); } catch (err) { refused = (err as Error).message; }
+    try { answered(system, ['no']); } catch (err) { refused = (err as Error).message; }
     ok(refused.includes('не состоялось'), refused);
   });
 
@@ -124,7 +124,7 @@ group('шаг «Спросить»', () => {
     if (first.kind !== 'paused') throw new Error('вопроса не было');
     const withAnswer = (chosen: string[]) => () => play(system, { ...first.journal, answers: { [first.question.key]: chosen } });
     let both = '';
-    try { withAnswer(['да', 'нет'])(); } catch (err) { both = (err as Error).message; }
+    try { withAnswer(['yes', 'no'])(); } catch (err) { both = (err as Error).message; }
     ok(both.includes('один ответ'), both);
     let none = '';
     try { withAnswer([])(); } catch (err) { none = (err as Error).message; }
@@ -132,7 +132,7 @@ group('шаг «Спросить»', () => {
   });
 
   test('журнал называет вопрос и ответ', () => {
-    const { out } = answered(world({ steps: [EACH, ASK, ...byAnswer] }), ['да']);
+    const { out } = answered(world({ steps: [EACH, ASK, ...byAnswer] }), ['yes']);
     ok(out.log.join('\n').includes('«Кто победил?»: Бьющий'), out.log.join('\n'));
   });
 
@@ -150,8 +150,8 @@ group('шаг «Спросить»', () => {
     eq(errors(paid).length, 0);
     ok(!warns(paid).some(text => text.includes('не плата')));
     const hung = (handler: Record<string, unknown>) => world({ steps: [EACH, hit(5)] }, { щит: { label: 'Щит', activation: 'passive', on: [handler] } });
-    ok(errors(hung({ on: 'after:удар', if: { expr: '@цель == @носитель' }, cost: [ASK], steps: [] })).some(text => text.includes('в плате подписки')));
-    ok(errors(hung({ on: 'rolled', if: { expr: '@бросающий == @носитель' }, steps: [ASK] })).some(text => text.includes('не спрашивает')));
+    ok(errors(hung({ on: 'after:удар', if: { expr: '@цель == @holder' }, cost: [ASK], steps: [] })).some(text => text.includes('в плате подписки')));
+    ok(errors(hung({ on: 'rolled', if: { expr: '@roller == @holder' }, steps: [ASK] })).some(text => text.includes('не спрашивает')));
   });
 
   test('«Проблемы»: у шага лишнее поле или значение не того вида — ошибка', () => {

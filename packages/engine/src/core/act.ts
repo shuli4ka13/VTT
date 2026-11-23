@@ -1,3 +1,4 @@
+import { NAMES } from '../words/names.ts';
 import { lazyPlan } from '../model/flow.ts';
 import { actionOf, effectLabelOf } from '../events/actions.ts';
 import { asksOf } from '../model/asks.ts';
@@ -132,7 +133,7 @@ export function runAct(run: Run, intent: ActIntent, root: Path, upTo?: 'cost'): 
   const claims: Claims = intent.claims ?? {};
   const table = tableOf(effect);
 
-  const bound: Record<string, Bound> = { носитель: actor };
+  const bound: Record<string, Bound> = { [NAMES.holder]: actor };
   for (const param of paramDefs) {
     if (param.kind !== 'sheet') continue;
     bound[param.key] = table[param.key] === 'actor' ? actor : table[param.key] === 'targets' ? (param.many ? targets : targets[0] ?? null) : null;
@@ -260,7 +261,7 @@ export function runAct(run: Run, intent: ActIntent, root: Path, upTo?: 'cost'): 
     Object.assign(summaries, delivered[0].results);
     Object.assign(doneRolls, delivered[0].rolls);
   }
-  const rows = delivered.filter(out => out.call.subject).map(out => ({ ...out.results, лист: out.call.subject }));
+  const rows = delivered.filter(out => out.call.subject).map(out => ({ ...out.results, [NAMES.sheet]: out.call.subject }));
   const sink = newSink();
   const seed = { ...run.argValues(top(root.phase('done'), label)), ...summaries, [TARGETS_SEED]: rows };
   run.hear({ keys: keys.map(key => `done:${key}`), names: bound, seed, rolls: doneRolls, path: root.phase('done'), hop: 0, owner: sub => `«${sub.effect.label || sub.effectId}» — «${action.label}» завершено` }, sink);

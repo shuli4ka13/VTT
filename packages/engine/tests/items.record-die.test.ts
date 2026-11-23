@@ -9,7 +9,7 @@ const system = flattenSystem({
   tables: {
     лист: { shape: 'single', owner: 'sheet', columns: [{ key: 'урон', label: 'Урон', kind: 'number', default: 0 }] },
     оружие: { shape: 'book', use: 'item', label: 'Оружие', columns: [{ key: 'кость', label: 'Кость урона', kind: 'dice' }],
-      bindings: [{ label: 'Удар', effect: 'удар', args: { оружие: { expr: '@вещь' } } }] },
+      bindings: [{ label: 'Удар', effect: 'удар', args: { оружие: { expr: '@item' } } }] },
   },
   effects: {
     удар: { label: 'Удар', activation: 'manual', params: [

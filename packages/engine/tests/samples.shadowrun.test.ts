@@ -74,7 +74,7 @@ group('Shadowrun 6: атака', () => {
 });
 
 group('Shadowrun 6: Преимущество и действия', () => {
-  const desk = { id: 'стол', systemId: 'shadowrun6', name: 'Стол', values: {}, has: [], effects: [] } as unknown as Sheet;
+  const desk = { id: 'desk', systemId: 'shadowrun6', name: 'Стол', values: {}, has: [], effects: [] } as unknown as Sheet;
   const hit = (from: Sheet, to: Sheet, action: string, die: () => number, inputs: Record<string, unknown>, battle = false) => exchange({
     system, compendium, die, sheets: [from, to, desk], ...(battle ? { clock: fight(from.id, to.id) } : {}), actionId: action, fromId: from.id, toId: to.id,
     inputs: { ...(/^(stun_baton|katana|sap|combat_knife):/.test(action) ? {} : { дистанция: 'близкая' }), ...inputs } as never,
@@ -141,7 +141,7 @@ group('Shadowrun 6: Преимущество — книга, шаг 8', () => {
 });
 
 group('Shadowrun 6: оружие — книга, шаг 8', () => {
-  const deskIn = { id: 'стол', systemId: 'shadowrun6', name: 'Стол', values: {}, has: [], effects: [] } as unknown as Sheet;
+  const deskIn = { id: 'desk', systemId: 'shadowrun6', name: 'Стол', values: {}, has: [], effects: [] } as unknown as Sheet;
   const reloadIn = (weapon: string, smartlink: boolean) => {
     const holder = { ...sheetOf('silk', { complex_left: 1, simple_left: 3, smartlink }), has: [{ of: weapon, values: { ammo: 0 } }] } as Sheet;
     return exchange({ system, compendium, die: () => 1, sheets: [holder, deskIn], clock: fight('silk'), actionId: `${weapon}:1`, fromId: 'silk', toIds: [] }).sheets.find(s => s.id === 'silk')!;

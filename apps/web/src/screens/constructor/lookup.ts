@@ -1,4 +1,4 @@
-import { emittedChoices, tagWords, splitPath, choiceTableOf, recordsOf, argsWithProps, propKeysOf, recordKinds, isUnder, kindWord, fieldOf, rowSteps, ROW } from '@vtt/engine';
+import { emittedChoices, tagWords, splitPath, choiceTableOf, recordsOf, argsWithProps, propKeysOf, recordKinds, isUnder, kindWord, fieldOf, rowSteps, ROW, NAMES, nameLabel } from '@vtt/engine';
 import type { RefKind } from '@vtt/engine';
 import { TABS } from '../../words.ts';
 import type { System, Compendium, Effect } from '@vtt/schema';
@@ -108,7 +108,7 @@ export function explainName(
   const effect = effectId ? system.effects?.[effectId] : undefined;
   const params = effect?.params ?? [];
   const dot = name.indexOf('.');
-  const sheet = dot > 0 ? params.find(p => p.kind === 'sheet' && p.key === name.slice(0, dot)) ?? (['носитель', 'стол', 'цель'].includes(name.slice(0, dot)) ? { key: name.slice(0, dot), label: name.slice(0, dot) } : undefined) : undefined;
+  const sheet = dot > 0 ? params.find(p => p.kind === 'sheet' && p.key === name.slice(0, dot)) ?? ([NAMES.holder, NAMES.desk, 'цель'].includes(name.slice(0, dot)) ? { key: name.slice(0, dot), label: nameLabel(name.slice(0, dot)) ?? name.slice(0, dot) } : undefined) : undefined;
   const rest = sheet ? name.slice(dot + 1) : name;
   const owner = sheet ? `лист «${sheet.label ?? sheet.key}»` : null;
   const head = splitPath(rest)?.head ?? rest;

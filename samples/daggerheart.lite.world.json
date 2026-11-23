@@ -1519,13 +1519,13 @@
               {
                 "label": "успех с надеждой",
                 "if": {
-                  "expr": "@успех and @бросок_бросок.parts.надежда > @бросок_бросок.parts.страх"
+                  "expr": "@success and @бросок_бросок.parts.надежда > @бросок_бросок.parts.страх"
                 }
               },
               {
                 "label": "успех со страхом",
                 "if": {
-                  "expr": "@успех"
+                  "expr": "@success"
                 }
               },
               {
@@ -1684,13 +1684,13 @@
               {
                 "label": "успех с надеждой",
                 "if": {
-                  "expr": "@успех and @бросок_бросок.parts.надежда > @бросок_бросок.parts.страх"
+                  "expr": "@success and @бросок_бросок.parts.надежда > @бросок_бросок.parts.страх"
                 }
               },
               {
                 "label": "успех со страхом",
                 "if": {
-                  "expr": "@успех"
+                  "expr": "@success"
                 }
               },
               {
@@ -1889,13 +1889,13 @@
           {
             "on": "done:action_roll",
             "if": {
-              "expr": "@действующий == @носитель and @бросок.parts.надежда > @бросок.parts.страх"
+              "expr": "@действующий == @holder and @бросок.parts.надежда > @бросок.parts.страх"
             },
             "steps": [
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.hope"
+                  "expr": "@holder.hope"
                 },
                 "direction": "add",
                 "value": {
@@ -1907,13 +1907,13 @@
           {
             "on": "done:action_roll",
             "if": {
-              "expr": "@действующий == @носитель and @бросок.parts.страх > @бросок.parts.надежда"
+              "expr": "@действующий == @holder and @бросок.parts.страх > @бросок.parts.надежда"
             },
             "steps": [
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@стол.fear"
+                  "expr": "@desk.fear"
                 },
                 "direction": "add",
                 "value": {
@@ -1925,13 +1925,13 @@
           {
             "on": "done:action_roll",
             "if": {
-              "expr": "@действующий == @носитель and @бросок.parts.надежда == @бросок.parts.страх"
+              "expr": "@действующий == @holder and @бросок.parts.надежда == @бросок.parts.страх"
             },
             "steps": [
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.hope"
+                  "expr": "@holder.hope"
                 },
                 "direction": "add",
                 "value": {
@@ -1941,13 +1941,13 @@
               {
                 "type": "branch",
                 "if": {
-                  "expr": "@носитель.stress >= 1"
+                  "expr": "@holder.stress >= 1"
                 }
               },
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.stress"
+                  "expr": "@holder.stress"
                 },
                 "value": {
                   "expr": "1"
@@ -1961,13 +1961,13 @@
           {
             "on": "done:hero_attack",
             "if": {
-              "expr": "@действующий == @носитель and @бросок_бросок.parts.надежда > @бросок_бросок.parts.страх"
+              "expr": "@действующий == @holder and @бросок_бросок.parts.надежда > @бросок_бросок.parts.страх"
             },
             "steps": [
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.hope"
+                  "expr": "@holder.hope"
                 },
                 "direction": "add",
                 "value": {
@@ -1979,13 +1979,13 @@
           {
             "on": "done:hero_attack",
             "if": {
-              "expr": "@действующий == @носитель and @бросок_бросок.parts.страх > @бросок_бросок.parts.надежда"
+              "expr": "@действующий == @holder and @бросок_бросок.parts.страх > @бросок_бросок.parts.надежда"
             },
             "steps": [
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@стол.fear"
+                  "expr": "@desk.fear"
                 },
                 "direction": "add",
                 "value": {
@@ -1997,13 +1997,13 @@
           {
             "on": "done:hero_attack",
             "if": {
-              "expr": "@действующий == @носитель and @бросок_бросок.parts.надежда == @бросок_бросок.parts.страх"
+              "expr": "@действующий == @holder and @бросок_бросок.parts.надежда == @бросок_бросок.parts.страх"
             },
             "steps": [
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.hope"
+                  "expr": "@holder.hope"
                 },
                 "direction": "add",
                 "value": {
@@ -2013,13 +2013,13 @@
               {
                 "type": "branch",
                 "if": {
-                  "expr": "@носитель.stress >= 1"
+                  "expr": "@holder.stress >= 1"
                 }
               },
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.stress"
+                  "expr": "@holder.stress"
                 },
                 "value": {
                   "expr": "1"
@@ -2690,7 +2690,7 @@
       "effects": []
     },
     {
-      "id": "стол",
+      "id": "desk",
       "systemId": "daggerheart",
       "name": "Стол",
       "values": {

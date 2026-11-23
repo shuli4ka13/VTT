@@ -175,29 +175,29 @@ describe('эффекты пресетов собираются в констру
 
     ui.select('Что именно', 'damage');
     ui.select('Когда именно', 'after');
-    ui.select('Кого касается', '@лист == @носитель');
-    ui.when('=не пусто(@источник) и @источник != @носитель');
+    ui.select('Кого касается', '@лист == @holder');
+    ui.when('=не пусто(@источник) и @источник != @holder');
     ui.select('Решение', 'ask');
 
     ui.select(document.querySelector<HTMLElement>('.add-cost [role="combobox"]')!, 'cost_reaction');
     let card = stepCard(/^1 · /);
-    within(card).formula(within(card).arg('Лист'), '@носитель');
-    within(card).formula(within(card).arg('Источник'), '@носитель');
+    within(card).formula(within(card).arg('Лист'), '@holder');
+    within(card).formula(within(card).arg('Источник'), '@holder');
     ui.click('+ изменение');
     card = stepCard(/^2 · /);
     within(card).click('вызов');
     card = stepCard(/^2 · /);
     within(card).select('Какой эффект', 'spell_slot');
     for (const name of within(card).args()) {
-      within(card).formula(within(card).arg(name), name === 'Лист' || name === 'Источник' ? '@носитель' : '1');
+      within(card).formula(within(card).arg(name), name === 'Лист' || name === 'Источник' ? '@holder' : '1');
     }
     within(card).click('↑');
 
-    savingThrow(3, [['Кто спасается', '@источник'], ['Чем спасается', '"ловкость"'], ['Сложность', '@носитель.spell_dc']]);
+    savingThrow(3, [['Кто спасается', '@источник'], ['Чем спасается', '"ловкость"'], ['Сложность', '@holder.spell_dc']]);
 
     ui.click('+ бросок');
     card = stepCard(/^4 · /);
-    within(card).select('Кто бросает', '@носитель');
+    within(card).select('Кто бросает', '@holder');
     within(card).select('Что бросает', 'own-die');
     within(card).formula('Своя кость', "'2d10'");
     card = stepCard(/^4 · /);
@@ -214,7 +214,7 @@ describe('эффекты пресетов собираются в констру
     within(card).click('вызов');
     card = stepCard(/^6 · /);
     within(card).select('Какой эффект', 'damage');
-    for (const [name, text] of [['Сколько урона', '@урон'], ['Тип урона', '"огонь"'], ['Источник урона', '"магический"'], ['Лист', '@источник'], ['Источник', '@носитель']] as const) {
+    for (const [name, text] of [['Сколько урона', '@урон'], ['Тип урона', '"огонь"'], ['Источник урона', '"магический"'], ['Лист', '@источник'], ['Источник', '@holder']] as const) {
       within(card).formula(within(card).arg(name), text);
     }
     dump({ got: built('hellish_rebuke') ?? useWorld.getState().system.effects, goal });
@@ -337,9 +337,9 @@ describe('эффекты пресетов собираются в констру
     ui.type('Описание', goal!.description!);
     ui.select('Что именно', 'damage');
     ui.select('Когда именно', 'after');
-    ui.select('Кого касается', '@лист == @носитель');
+    ui.select('Кого касается', '@лист == @holder');
 
-    savingThrow(1, [['Кто спасается', '@носитель'], ['Чем спасается', '"телосложение"'], ['Сложность', '(max(10, floor(@amount / 2)))']]);
+    savingThrow(1, [['Кто спасается', '@holder'], ['Чем спасается', '"телосложение"'], ['Сложность', '(max(10, floor(@amount / 2)))']]);
     let card: HTMLElement;
 
     const kept = callIf(1, 'Спасбросок', 'не спасся');
@@ -349,7 +349,7 @@ describe('эффекты пресетов собираются в констру
     card = stepCard(/^2 · /);
     within(card).select('Что делаем', 'remove');
     within(card).select('Какое', 'concentration');
-    within(card).formula('С кого', '@носитель');
+    within(card).formula('С кого', '@holder');
 
     dump({ got: built('concentration') ?? useWorld.getState().system.effects, goal });
     expect(built('concentration')).toEqual(goal);
@@ -445,11 +445,11 @@ describe('эффекты пресетов собираются в констру
       const head = () => stepCard(new RegExp(`^Когда №${n}`));
       within(head()).select('Что именно', listened);
       within(head()).select('Когда именно', 'done');
-      within(head()).select('Кого касается', '@действующий == @носитель');
+      within(head()).select('Кого касается', '@действующий == @holder');
       within(head()).when(`=${rule}`);
-      if (gain === 'fear') change(n, 1, 'стол', 'fear', 'add', '1');
-      else change(n, 1, 'носитель', 'hope', 'add', '1');
-      if (gain === 'crit') change(n, 2, 'носитель', 'stress', 'subtract', '1', '@носитель.stress >= 1');
+      if (gain === 'fear') change(n, 1, 'desk', 'fear', 'add', '1');
+      else change(n, 1, 'holder', 'hope', 'add', '1');
+      if (gain === 'crit') change(n, 2, 'holder', 'stress', 'subtract', '1', '@holder.stress >= 1');
     });
 
     dump({ got: built('duality'), goal });

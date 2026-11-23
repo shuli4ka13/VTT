@@ -83,7 +83,7 @@ group('Shadowrun 6: спрайты', () => {
   });
 
   const compiled = (kind: string, level = 4) => after(act([technomancer(), blankSprite()], 'tm_sprite_compile:0', ['sp'], tape(...six(5), ...one(5), 6, ...one(7), ...six(8)), { kind, level }), 'sp');
-  const desk = { id: 'стол', systemId: 'shadowrun6', name: 'Стол', values: {}, has: [], effects: [] } as unknown as Sheet;
+  const desk = { id: 'desk', systemId: 'shadowrun6', name: 'Стол', values: {}, has: [], effects: [] } as unknown as Sheet;
   const withPerform = (sheets: Sheet[], op: Record<string, unknown>) => {
     const out = perform({ system, compendium, clock: null, sheets, die: () => 1 }, op as never);
     if (out.kind !== 'done') throw new Error(out.kind);

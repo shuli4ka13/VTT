@@ -11,10 +11,10 @@ const system = {
       shape: 'book', use: 'item', label: 'Вещь',
       columns: [
         { key: 'провода', label: 'Беспроводной режим', kind: 'boolean', default: false },
-        { key: 'заряды', label: 'Заряды', kind: 'number', min: 0, max: { expr: '@строка.ёмкость' } },
+        { key: 'заряды', label: 'Заряды', kind: 'number', min: 0, max: { expr: '@row.ёмкость' } },
         { key: 'ёмкость', label: 'Ёмкость', kind: 'number' },
         { key: 'урон', label: 'Урон', kind: 'dice' },
-        { key: 'вес', label: 'Вес', kind: 'number', expr: { expr: '@строка.ёмкость * 2' } },
+        { key: 'вес', label: 'Вес', kind: 'number', expr: { expr: '@row.ёмкость * 2' } },
         { key: 'цена', label: 'Цена', kind: 'number' },
         { key: 'тайна', label: 'Тайна', kind: 'text', onSheet: false },
         { key: 'рейтинг', label: 'Рейтинг', kind: 'number' },
@@ -25,7 +25,7 @@ const system = {
 } as unknown as System;
 
 const compendium = {
-  records: [{ id: 'фонарь', table: 'вещь', label: 'Фонарь', cells: { заряды: 3, ёмкость: 5, урон: '1d4', цена: { expr: '@строка.ёмкость * 10' } } }],
+  records: [{ id: 'фонарь', table: 'вещь', label: 'Фонарь', cells: { заряды: 3, ёмкость: 5, урон: '1d4', цена: { expr: '@row.ёмкость * 10' } } }],
 } as unknown as Compendium;
 
 const hero: Sheet = { id: 'герой', systemId: 'вещи', name: 'Герой', values: {}, has: [{ of: 'фонарь' }], effects: [] };

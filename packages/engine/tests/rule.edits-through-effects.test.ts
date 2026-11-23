@@ -12,7 +12,7 @@ const queue = (...values: number[]) => {
 const ACTOR = { key: 'действующий', kind: 'sheet' };
 const TARGETS = { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } };
 const EACH = { type: 'each', of: 'цели' };
-const OWN = { expr: '@бросающий == @носитель' };
+const OWN = { expr: '@roller == @holder' };
 
 const passive = (label: string, edit: string) => ({
   label, activation: 'passive', duration: { kind: 'permanent' },

@@ -52,7 +52,7 @@ const sticker = {
   type: 'наклейка-заглушка',
   label: 'Наклейка',
   slots: [],
-  finish: (step, ctx) => { ctx.attach(ctx.sheet({ expr: '@носитель' }, 'кого'), step.status, {}); return { value: step.status, trace: { повесил: step.status } }; },
+  finish: (step, ctx) => { ctx.attach(ctx.sheet({ expr: '@holder' }, 'кого'), step.status, {}); return { value: step.status, trace: { повесил: step.status } }; },
 };
 
 for (const mod of [echo, stop, reader, writer, sticker]) registerStepType(mod);
@@ -104,7 +104,7 @@ group('ядро правил', () => {
       const out = run([
         { id: 'a', type: 'эхо-заглушка', note: 1 },
         { id: 'стоп', type: 'стоп-заглушка' },
-        { id: 'после', type: 'писатель-заглушка', target: { expr: '@носитель.x' }, to: 999 },
+        { id: 'после', type: 'писатель-заглушка', target: { expr: '@holder.x' }, to: 999 },
       ]);
       deepEq(out.stopped, { step: 'стоп', type: 'стоп-заглушка', reason: 'заглушка сказала хватит' });
       eq(out.trace.length, 2, 'шаг после обрыва трассы не оставил');
@@ -119,21 +119,21 @@ group('ядро правил', () => {
 
   group('изменения листа идут только через ядро', () => {
     test('write ведёт журнал изменений и возвращает НОВЫЙ лист', () => {
-      const out = run([{ id: 'w', type: 'писатель-заглушка', target: { expr: '@носитель.x' }, to: 1 }]);
+      const out = run([{ id: 'w', type: 'писатель-заглушка', target: { expr: '@holder.x' }, to: 1 }]);
       deepEq(out.changes, [{ tag: 'x', from: 5, to: 1, sheetId: sheet.id }]);
       eq(out.sheet.values.x, 1);
       eq(sheet.values.x, 5, 'исходный лист не мутирован');
     });
 
     test('read видит умолчание системы, когда в листе значения нет', () => {
-      const out = run([{ id: 'w', type: 'писатель-заглушка', target: { expr: '@носитель.y' }, to: 3 }]);
+      const out = run([{ id: 'w', type: 'писатель-заглушка', target: { expr: '@holder.y' }, to: 3 }]);
       deepEq(out.changes, [{ tag: 'y', from: 0, to: 3, sheetId: sheet.id }]);
     });
 
     test('два шага пишут в два разных поля — оба изменения в журнале', () => {
       const out = run([
-        { id: 'w1', type: 'писатель-заглушка', target: { expr: '@носитель.x' }, to: 1 },
-        { id: 'w2', type: 'писатель-заглушка', target: { expr: '@носитель.y' }, to: 2 },
+        { id: 'w1', type: 'писатель-заглушка', target: { expr: '@holder.x' }, to: 1 },
+        { id: 'w2', type: 'писатель-заглушка', target: { expr: '@holder.y' }, to: 2 },
       ]);
       deepEq(out.changes.map(c => c.tag), ['x', 'y']);
       eq(out.sheet.values.x, 1);
@@ -142,8 +142,8 @@ group('ядро правил', () => {
 
     test('второй шаг видит запись первого: величины считаются от текущего, а не исходного', () => {
       const out = run([
-        { id: 'w1', type: 'писатель-заглушка', target: { expr: '@носитель.x' }, to: 1 },
-        { id: 'w2', type: 'писатель-заглушка', target: { expr: '@носитель.x' }, to: 2 },
+        { id: 'w1', type: 'писатель-заглушка', target: { expr: '@holder.x' }, to: 1 },
+        { id: 'w2', type: 'писатель-заглушка', target: { expr: '@holder.x' }, to: 2 },
       ]);
       deepEq(out.changes, [{ tag: 'x', from: 5, to: 1, sheetId: sheet.id }, { tag: 'x', from: 1, to: 2, sheetId: sheet.id }]);
     });

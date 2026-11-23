@@ -99,7 +99,7 @@ export function runSteps(system: System, sheets: Sheet[], sheetId: string, steps
   const run = runOf({ system, compendium, die }, sheets);
   const sink = newSink();
   const ran = run.exec({
-    path: Path.op('rule'), effectId: 'e', label: 'тест', owner: 'тест', home: sheetId, bound: { носитель: sheetId },
+    path: Path.op('rule'), effectId: 'e', label: 'тест', owner: 'тест', home: sheetId, bound: { holder: sheetId },
     args, paramDefs, props: null, claims: {}, hop: 0, inSub: false,
   }, steps, sink);
   return { ...ran, sink, sheets: [...run.state.sheets] };

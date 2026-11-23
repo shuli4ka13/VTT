@@ -29,7 +29,7 @@ describe('слово не из вариантов — ошибка «Пробл�
   });
 
   it('колонка вещи — класс оружия', () => {
-    const system = swap(copy('shadowrun6'), 'not @режим.always and not', '@вещь.class != \\"луук\\" and not @режим.always and not');
+    const system = swap(copy('shadowrun6'), 'not @режим.always and not', '@item.class != \\"луук\\" and not @режим.always and not');
     expect(words(system, 'shadowrun6')).toEqual([expect.stringContaining('«луук» — в таблице «Классы оружия»')]);
   });
 });

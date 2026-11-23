@@ -54,7 +54,7 @@ const система = (): System => ({
       label: 'Ячейки по кругам', key: 'word', owner: 'sheet',
       columns: [
         { key: 'circle', label: 'Колонка', kind: 'column', from: 'ячейки' },
-        { key: 'max', label: 'Всего', kind: 'number', expr: { expr: '@заклинатель.[@строка.circle]' } },
+        { key: 'max', label: 'Всего', kind: 'number', expr: { expr: '@заклинатель.[@row.circle]' } },
       ],
       rows: [{ value: 'круг_1', label: '1-й круг', cells: { circle: 'круг_1' } }, { value: 'круг_2', label: '2-й круг', cells: { circle: 'круг_2' } }],
     },
@@ -105,8 +105,8 @@ group('числовое поле — строка таблицы с ключом
 
 group('колонка по значению: «@поле.[значение]»', () => {
   test('разбор и печать', () => {
-    const ast = compile('@заклинатель.[@строка.circle] + 1').ast;
-    eq(printFormula(ast), '@заклинатель.[@строка.circle] + 1');
+    const ast = compile('@заклинатель.[@row.circle] + 1').ast;
+    eq(printFormula(ast), '@заклинатель.[@row.circle] + 1');
     eq(printFormula(compile('@a.["x"].b').ast), '@a.["x"].b');
     deepEq([...compile('@a.[@b] * @c').deps], ['a', 'b', 'c']);
   });
@@ -135,7 +135,7 @@ group('колонка по значению: «@поле.[значение]»', 
     const s = система();
     forgetFields(s);
     const row = s.tables!['круги']!.rows![0]!;
-    eq(rowWords(s, 'круги', row, '@заклинатель.[@строка.circle]'), 'Уровень заклинателя · 1-й круг');
-    eq(rowWords(s, 'круги', row, '@заклинатель.[@строка.max] + 1'), 'Уровень заклинателя · колонка по значению + 1');
+    eq(rowWords(s, 'круги', row, '@заклинатель.[@row.circle]'), 'Уровень заклинателя · 1-й круг');
+    eq(rowWords(s, 'круги', row, '@заклинатель.[@row.max] + 1'), 'Уровень заклинателя · колонка по значению + 1');
   });
 });

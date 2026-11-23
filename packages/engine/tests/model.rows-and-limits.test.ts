@@ -48,7 +48,7 @@ const system = {
         { key: 'настройка', label: 'Требует настройки', kind: 'boolean' },
         { key: 'материал', label: 'Материал', kind: 'choice', from: 'материал' },
       ],
-      modifiers: [{ kind: 'value', target: 'нагрузка', op: 'add', value: { expr: '@строка.вес * @строка.материал.множитель' } }],
+      modifiers: [{ kind: 'value', target: 'нагрузка', op: 'add', value: { expr: '@row.вес * @row.материал.множитель' } }],
     },
   },
 } as unknown as System;
@@ -71,10 +71,10 @@ group('правило, написанное у типа, видит свою з�
     eq(at(off, 'настроено'), 1);
   });
 
-  test('проверка знает @строка у типа и ловит колонку, которой нет', () => {
+  test('проверка знает @row у типа и ловит колонку, которой нет', () => {
     deepEq(errorsOf(lintSystem(system, book)).map(p => p.text), []);
     const typo = structuredClone(system);
-    (typo.tables!.вещь!.modifiers![0] as { value: { expr: string } }).value.expr = '@строка.веc';
+    (typo.tables!.вещь!.modifiers![0] as { value: { expr: string } }).value.expr = '@row.веc';
     ok(errorsOf(lintSystem(typo, book)).length > 0);
   });
 });

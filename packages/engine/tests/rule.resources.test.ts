@@ -7,7 +7,7 @@ import type { System, Sheet, Compendium } from '../src/model/types.ts';
 const ACTOR = { key: 'действующий', label: 'Кто действует', kind: 'sheet' };
 const TARGETS = { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель' } };
 const EACH = { type: 'each', of: 'цели' };
-const OWN = { expr: '@бросающий == @носитель' };
+const OWN = { expr: '@roller == @holder' };
 
 const system = {
   id: 'r', name: 'r',
@@ -56,7 +56,7 @@ const system = {
     },
     сон: {
       label: 'Долгий отдых: ячейки', activation: 'passive',
-      on: [{ on: 'moment:long-rest', steps: [{ type: 'apply', target: { expr: '@носитель.ячейки_1' }, direction: 'set', value: { expr: '@носитель.ячейки_1_всего' } }] }],
+      on: [{ on: 'moment:long-rest', steps: [{ type: 'apply', target: { expr: '@holder.ячейки_1' }, direction: 'set', value: { expr: '@holder.ячейки_1_всего' } }] }],
     },
   },
   grants: ['сон'],
@@ -244,7 +244,7 @@ group('наложенное помнит число, штрафная кость
     effects: {
       горит: {
         label: 'Горит', activation: 'passive', params: [{ key: 'сила', label: 'Сила', kind: 'number', optional: true }],
-        on: [{ on: 'moment:turn-start', steps: [{ type: 'apply', target: { expr: '@носитель.хиты' }, direction: 'subtract', value: { expr: '@сила' } }] }],
+        on: [{ on: 'moment:turn-start', steps: [{ type: 'apply', target: { expr: '@holder.хиты' }, direction: 'subtract', value: { expr: '@сила' } }] }],
       },
       поджечь: { label: 'Поджечь', activation: 'manual', params: [ACTOR, TARGETS], steps: [EACH, { type: 'status', mode: 'apply', effect: 'горит', to: { expr: '@цель' }, args: { сила: { expr: '4' } } }] },
       порченый: { label: 'Порченый', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['атака'], if: OWN, edit: 'порча' }] },
@@ -261,10 +261,10 @@ group('наложенное помнит число, штрафная кость
       },
       парирование: {
         label: 'Парирование', activation: 'passive',
-        on: [{ on: 'before:удар', if: { expr: '@цель == @носитель' }, confirm: true, cost: [
-          { id: 'есть_заряд', type: 'check', value: { expr: '@носитель.заряды' }, versus: { expr: '1' } },
+        on: [{ on: 'before:удар', if: { expr: '@цель == @holder' }, confirm: true, cost: [
+          { id: 'есть_заряд', type: 'check', value: { expr: '@holder.заряды' }, versus: { expr: '1' } },
           { type: 'branch', if: { expr: 'not @есть_заряд.success' } }, { type: 'stop' }, { type: 'end' },
-          { type: 'apply', target: { expr: '@носитель.заряды' }, direction: 'subtract', value: { expr: '1' } },
+          { type: 'apply', target: { expr: '@holder.заряды' }, direction: 'subtract', value: { expr: '1' } },
         ], steps: [] }],
       },
     },

@@ -1,4 +1,4 @@
-import { NAMES } from '../words/names.ts';
+import { NAMES, NAME_LABELS } from '../words/names.ts';
 import { EngineError } from '../engine/errors.ts';
 import { translateFormula, NEUTRAL_WORDS, RU_WORDS } from '../formula/words.ts';
 import type { FormulaWords } from '../formula/words.ts';
@@ -17,13 +17,13 @@ export const slugOf = (value: unknown): string => String(value ?? '').replace(/[
 
 export const rowKeyOf = (row: TableRow): string => slugOf(row.value);
 
-export const TARGET_SLOT = /\{@строка\.([\p{L}\p{N}_]+)\}/gu;
+export const TARGET_SLOT = new RegExp(`\\{@${NAMES.row}\\.([\\p{L}\\p{N}_]+)\\}`, 'gu');
 
-export const hasTargetSlot = (target: string): boolean => target.includes('{@строка.');
+export const hasTargetSlot = (target: string): boolean => target.includes(`{@${NAMES.row}.`);
 
-export const INPUT_SLOT = /\{@(?!строка\.)([\p{L}\p{N}_]+)((?:\.[\p{L}\p{N}_]+)*)\}/gu;
+export const INPUT_SLOT = new RegExp(`\\{@(?!${NAMES.row}\\.)([\\p{L}\\p{N}_]+)((?:\\.[\\p{L}\\p{N}_]+)*)\\}`, 'gu');
 
-export const hasInputSlot = (target: string): boolean => /\{@(?!строка\.)/u.test(target);
+export const hasInputSlot = (target: string): boolean => new RegExp(`\\{@(?!${NAMES.row}\\.)`, 'u').test(target);
 
 export function inputTarget(system: System, target: string, params: readonly { key: string; kind?: string; from?: string; default?: unknown }[], args: Record<string, unknown>): string | null {
   let missing = false;
@@ -308,7 +308,7 @@ function recordPath(system: System, tableId: string, cells: Record<string, unkno
   const table = system.tables?.[tableId];
   const where = `тип «${table?.label || tableId}»`;
   const [head, ...rest] = path;
-  if (!head) throw new EngineError(`${where}: «${ROW}» без колонки — напишите, какую клетку записи взять`);
+  if (!head) throw new EngineError(`${where}: «${NAME_LABELS.row}» без колонки — напишите, какую клетку записи взять`);
   const found = (table?.columns ?? []).find(c => c.key === head);
   if (!found) throw new EngineError(`${where}: колонки «${head}» нет`);
   let spec: TableColumn = found;

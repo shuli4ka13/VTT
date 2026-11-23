@@ -141,7 +141,7 @@ describe('«Для каждой строки таблицы»', () => {
   const refill = (filter = false) => [
     { type: 'each', rows: 'запасы', as: 'запас' },
     ...(filter ? [{ type: 'branch', if: { expr: '@запас.коротко' } }] : []),
-    { type: 'apply', target: { expr: '@носитель.запас.осталось' }, direction: 'set', value: { expr: '@носитель.запас.всего' } },
+    { type: 'apply', target: { expr: '@holder.запас.осталось' }, direction: 'set', value: { expr: '@holder.запас.всего' } },
     ...(filter ? [{ type: 'end' }] : []),
   ];
   const full = { 'запасы.ки.всего': 3, 'запасы.ярость.всего': 2, 'запасы.ки.осталось': 0, 'запасы.ярость.осталось': 0 };
@@ -179,7 +179,7 @@ describe('«Для каждой строки таблицы»', () => {
           { type: 'apply', target: { expr: '@лист.запас.осталось' }, direction: 'set', value: { expr: '@лист.запас.всего' } },
         ],
       },
-      отдых: { label: 'Отдых', activation: 'passive', duration: { kind: 'permanent' }, on: [{ on: 'moment:long-rest', steps: [{ type: 'emit', effect: 'заново', args: { лист: { expr: '@носитель' } } }] }] },
+      отдых: { label: 'Отдых', activation: 'passive', duration: { kind: 'permanent' }, on: [{ on: 'moment:long-rest', steps: [{ type: 'emit', effect: 'заново', args: { лист: { expr: '@holder' } } }] }] },
     }, []);
     const out = fireMoments([{ moment: 'long-rest', sheetId: 'а' }], [sheet('а', full, ['отдых'])], { system, compendium: book, die: () => 1 } as never);
     expect(out.sheets[0]!.values['запасы.ки.осталось']).toBe(3);
@@ -282,7 +282,7 @@ describe('плата подписки, вложенная в несколько 
     удар: { label: 'Удар', activation: 'manual', params: [ACTOR, TARGETS], steps: [{ type: 'each', of: 'цели' }, spend('@цель.хп')] },
     щит: {
       label: 'Щит', activation: 'passive', duration: { kind: 'permanent' },
-      on: [{ on: 'before:удар', if: { expr: '@цель == @носитель' }, confirm: true, cost: [{ type: 'emit', effect: 'плата', args: { лист: { expr: '@носитель' } } }], steps: [] }],
+      on: [{ on: 'before:удар', if: { expr: '@цель == @holder' }, confirm: true, cost: [{ type: 'emit', effect: 'плата', args: { лист: { expr: '@holder' } } }], steps: [] }],
     },
   }, [{ label: 'Удар', effect: 'удар', args: {} }]);
 

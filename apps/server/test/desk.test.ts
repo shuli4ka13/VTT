@@ -22,8 +22,8 @@ const system = {
       params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }, { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель' } }],
       steps: [
         { type: 'each', of: 'цели' },
-        { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '2 + @стол.страх' } },
-        { type: 'apply', target: { expr: '@стол.страх' }, direction: 'add', value: { expr: '1' } },
+        { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '2 + @desk.страх' } },
+        { type: 'apply', target: { expr: '@desk.страх' }, direction: 'add', value: { expr: '1' } },
       ],
     },
   },
@@ -68,14 +68,14 @@ describe('стол комнаты', () => {
     const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол' })).body.id as string;
 
     const before = (await as(http().get(`/rooms/${roomId}`))).body;
-    const desk = before.sheets.find((s: { id: string }) => s.id === 'стол');
+    const desk = before.sheets.find((s: { id: string }) => s.id === 'desk');
     expect(desk?.name).toBe('Стол');
 
     await as(http().post(`/rooms/${roomId}/act`)).send({ roomId, actionId: 'удар:0', fromId: 'бьёт', toIds: ['держит'] }).then(r => { if (r.status !== 201) throw new Error(JSON.stringify(r.body)); });
     await as(http().post(`/rooms/${roomId}/act`)).send({ roomId, actionId: 'удар:0', fromId: 'бьёт', toIds: ['держит'] }).then(r => { if (r.status !== 201) throw new Error(JSON.stringify(r.body)); });
 
     const after = (await as(http().get(`/rooms/${roomId}`))).body;
-    expect(after.sheets.find((s: { id: string }) => s.id === 'стол').values.страх).toBe(2);
+    expect(after.sheets.find((s: { id: string }) => s.id === 'desk').values.страх).toBe(2);
     expect(after.sheets.find((s: { id: string }) => s.id === 'держит').values.хп).toBe(20 - 2 - 3);
   });
 });
@@ -92,7 +92,7 @@ describe('стол нельзя закрепить за игроком', () => {
     const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол' })).body.id as string;
     const rooms = app.get(RoomsService);
     const me = (await as(http().get('/auth/me'))).body.userId as string;
-    await expect(rooms.claimSheet(me, roomId, 'стол')).rejects.toThrow(/стол общий/);
+    await expect(rooms.claimSheet(me, roomId, 'desk')).rejects.toThrow(/стол общий/);
   });
 });
 
@@ -143,7 +143,7 @@ describe('поле: место фишки', () => {
     await expect(rooms.placePiece(player.userId, roomId, 'арен', { x: 0, y: 0 })).rejects.toThrow('чужая фишка');
     await rooms.placePiece(player.userId, roomId, 'бора', null);
     expect((await rooms.state(roomId)).places).toEqual({ арен: { x: 1, y: 2 } });
-    await expect(rooms.placePiece(gm.userId, roomId, 'стол', { x: 0, y: 0 })).rejects.toThrow('не стоят');
+    await expect(rooms.placePiece(gm.userId, roomId, 'desk', { x: 0, y: 0 })).rejects.toThrow('не стоят');
 
     const plain = await make({ ...system, id: 'без поля', name: 'без поля' });
     await expect(rooms.placePiece(gm.userId, plain, 'арен', { x: 0, y: 0 })).rejects.toThrow('нет сетки');

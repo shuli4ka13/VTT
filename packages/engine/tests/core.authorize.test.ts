@@ -7,7 +7,7 @@ const sheet = (id: string): Sheet => ({ id, systemId: 'с', name: id, values: {}
 
 const room: Room = {
   system: { id: 'с', name: 'с', tables: {}, effects: {} } as unknown as System,
-  sheets: [sheet('арвен'), sheet('мирра'), sheet('стол')],
+  sheets: [sheet('арвен'), sheet('мирра'), sheet('desk')],
   members: [
     { userId: 'ведущий', role: 'gm', sheetId: null },
     { userId: 'игрок-а', role: 'player', sheetId: 'арвен' },
@@ -40,7 +40,7 @@ describe('права: следующий ход', () => {
 
 describe('права: стол и листы', () => {
   it('стол правит ведущий', () => {
-    const set = { kind: 'world' as const, op: { op: 'kind' as const, sheetId: 'стол', of: null } };
+    const set = { kind: 'world' as const, op: { op: 'kind' as const, sheetId: 'desk', of: null } };
     expect(authorize(room, 'ведущий', set)).toBeNull();
     expect(authorize(room, 'зритель', set)).toMatch(/стол правит ведущий/);
   });
@@ -58,23 +58,23 @@ describe('права: прибавить и отнять', () => {
   it('свой лист — можно, чужой и стол — нельзя, ведущему — любой', () => {
     expect(authorize(room, 'игрок-а', shift('арвен'))).toBeNull();
     expect(authorize(room, 'игрок-а', shift('мирра'))).toMatch(/чужой лист/);
-    expect(authorize(room, 'игрок-а', shift('стол'))).toMatch(/стол правит ведущий/);
+    expect(authorize(room, 'игрок-а', shift('desk'))).toMatch(/стол правит ведущий/);
     expect(authorize(room, 'ведущий', shift('мирра'))).toBeNull();
   });
 
   it('значение вещи — по тому же разрешению, что «вписать»', () => {
-    expect(authorize(room, 'игрок-а', shift('арвен', 'вещь:фонарь.заряд'))).toMatch(/значения вещей меняет ведущий/);
+    expect(authorize(room, 'игрок-а', shift('арвен', 'item:фонарь.заряд'))).toMatch(/значения вещей меняет ведущий/);
   });
 });
 
 describe('права: значения вещи', () => {
-  const tag = 'вещь:фонарь.провода';
+  const tag = 'item:фонарь.провода';
   const write = (sheetId: string) => ({ kind: 'world' as const, op: { op: 'set' as const, sheetId, tag, value: true } });
   const trusted: Room = { ...room, members: room.members.map(m => (m.userId === 'игрок-а' ? { ...m, editsItems: true } : m)) };
 
   it('ведущий меняет значения вещей у любого листа', () => {
     expect(authorize(room, 'ведущий', write('мирра'))).toBeNull();
-    expect(authorize(room, 'ведущий', write('стол'))).toBeNull();
+    expect(authorize(room, 'ведущий', write('desk'))).toBeNull();
   });
 
   it('игрок без разрешения ведущего — даже у своего листа нельзя', () => {
@@ -84,7 +84,7 @@ describe('права: значения вещи', () => {
   it('с разрешением — у своего листа можно, у чужого и у стола нельзя', () => {
     expect(authorize(trusted, 'игрок-а', write('арвен'))).toBeNull();
     expect(authorize(trusted, 'игрок-а', write('мирра'))).toMatch(/чужой лист/);
-    expect(authorize(trusted, 'игрок-а', write('стол'))).toMatch(/стол правит ведущий/);
+    expect(authorize(trusted, 'игрок-а', write('desk'))).toMatch(/стол правит ведущий/);
   });
 
   it('разрешает только ведущий и только игроку за этим столом', () => {
@@ -106,7 +106,7 @@ describe('права: полная матрица', () => {
   const grouped = (id: string, group?: string): Sheet => ({ ...sheet(id), ...(group ? { group } : {}) });
   const full: Room = {
     system: sys,
-    sheets: [grouped('арвен', 'банда'), grouped('мирра', 'банда'), grouped('огр'), grouped('банда'), sheet('стол')],
+    sheets: [grouped('арвен', 'банда'), grouped('мирра', 'банда'), grouped('огр'), grouped('банда'), sheet('desk')],
     members: [
       { userId: 'ведущий', role: 'gm', sheetId: null },
       { userId: 'игрок-а', role: 'player', sheetId: 'арвен' },
@@ -135,7 +135,7 @@ describe('права: полная матрица', () => {
     ['отмена — игрок — нет', 'игрок-а', { kind: 'cancel' }, false],
     ['закрепить свободный лист', 'зритель', { kind: 'claim', sheetId: 'огр' }, true],
     ['закрепить занятый лист — нет', 'зритель', { kind: 'claim', sheetId: 'арвен' }, false],
-    ['закрепить стол — нет', 'зритель', { kind: 'claim', sheetId: 'стол' }, false],
+    ['закрепить стол — нет', 'зритель', { kind: 'claim', sheetId: 'desk' }, false],
     ['отпустить лист', 'игрок-а', { kind: 'claim', sheetId: null }, true],
     ['завести лист — любой участник', 'зритель', world({ op: 'sheet', name: 'Новый' }), true],
   ];

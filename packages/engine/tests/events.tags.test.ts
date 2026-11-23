@@ -118,9 +118,9 @@ group('вызываемый эффект как провод: действующ
 group('сопротивления по тегам', () => {
   const resist = world({
     огнеупор: passive('Сопротивление огню', [
-      { kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '0.5' }, anyTags: ['огонь'], if: { expr: '@лист == @носитель' } }]),
+      { kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '0.5' }, anyTags: ['огонь'], if: { expr: '@лист == @holder' } }]),
     броня: passive('Тяжёлая броня', [
-      { kind: 'edit', call: 'урон', param: 'сколько', op: 'add', value: { expr: '-3' }, notTags: ['магический'], if: { expr: '@лист == @носитель' } }]),
+      { kind: 'edit', call: 'урон', param: 'сколько', op: 'add', value: { expr: '-3' }, notTags: ['магический'], if: { expr: '@лист == @holder' } }]),
   });
 
   test('сопротивление огню половинит огонь и молчит на рубящий', () => {
@@ -144,11 +144,11 @@ group('реакции слушают слово, а не имя эффекта',
   const spiky = world({
     шипы: {
       label: 'Шипы', activation: 'passive', duration: { kind: 'permanent' },
-      on: [{ on: 'after:урон', if: { expr: '@лист == @носитель and not empty(@обидчик) and @обидчик != @носитель' }, steps: [{ type: 'emit', effect: 'урон', args: damageArgs({ expr: '@сколько' }, ['колющий'], { expr: '@обидчик' }, { expr: '@носитель' }) }] }],
+      on: [{ on: 'after:урон', if: { expr: '@лист == @holder and not empty(@обидчик) and @обидчик != @holder' }, steps: [{ type: 'emit', effect: 'урон', args: damageArgs({ expr: '@сколько' }, ['колющий'], { expr: '@обидчик' }, { expr: '@holder' }) }] }],
     },
     сторож: {
       label: 'Сторож', activation: 'passive', duration: { kind: 'permanent' },
-      on: [{ on: 'after:тревога', if: { expr: '@лист == @носитель' }, steps: [{ type: 'apply', target: { expr: '@носитель.хп' }, direction: 'add', value: { expr: '1' } }] }],
+      on: [{ on: 'after:тревога', if: { expr: '@лист == @holder' }, steps: [{ type: 'apply', target: { expr: '@holder.хп' }, direction: 'add', value: { expr: '1' } }] }],
     },
   });
 
@@ -178,7 +178,7 @@ group('реакции слушают слово, а не имя эффекта',
       ...spiky.effects,
       сосредоточен: {
         label: 'Сосредоточен', activation: 'passive', duration: { kind: 'permanent' },
-        on: [{ on: 'after:урон', if: { expr: '@лист == @носитель' }, steps: [{ type: 'status', mode: 'remove', effect: 'сосредоточен', to: { expr: '@носитель' } }] }],
+        on: [{ on: 'after:урон', if: { expr: '@лист == @holder' }, steps: [{ type: 'status', mode: 'remove', effect: 'сосредоточен', to: { expr: '@holder' } }] }],
       },
     });
     const r = exchange({
@@ -194,7 +194,7 @@ group('реакции слушают слово, а не имя эффекта',
     ...spiky.effects,
     шипы: {
       label: 'Шипы', activation: 'passive', duration: { kind: 'permanent' },
-      on: [{ on: 'after:урон', if: { expr: '@лист == @носитель and not empty(@обидчик) and @обидчик != @носитель' }, steps: [{ type: 'emit', effect: 'урон', args: damageArgs({ expr: '8' }, ['колющий'], { expr: '@обидчик' }, { expr: '@носитель' }) }] }],
+      on: [{ on: 'after:урон', if: { expr: '@лист == @holder and not empty(@обидчик) and @обидчик != @holder' }, steps: [{ type: 'emit', effect: 'урон', args: damageArgs({ expr: '8' }, ['колющий'], { expr: '@обидчик' }, { expr: '@holder' }) }] }],
     },
   });
   const spikesAgainstSpikes = (sys: any) => exchange({
@@ -225,9 +225,9 @@ group('реакции слушают слово, а не имя эффекта',
       ...spiky.effects,
       шипы: {
         label: 'Вампирские шипы', activation: 'passive', duration: { kind: 'permanent' },
-        on: [{ on: 'after:урон', if: { expr: '@лист == @носитель and not empty(@обидчик) and @обидчик != @носитель' }, steps: [
-          { type: 'emit', effect: 'урон', args: damageArgs({ expr: '4' }, ['колющий'], { expr: '@обидчик' }, { expr: '@носитель' }) },
-          { type: 'emit', effect: 'лечение', args: { лист: { expr: '@носитель' }, сколько: { expr: '4' } } },
+        on: [{ on: 'after:урон', if: { expr: '@лист == @holder and not empty(@обидчик) and @обидчик != @holder' }, steps: [
+          { type: 'emit', effect: 'урон', args: damageArgs({ expr: '4' }, ['колющий'], { expr: '@обидчик' }, { expr: '@holder' }) },
+          { type: 'emit', effect: 'лечение', args: { лист: { expr: '@holder' }, сколько: { expr: '4' } } },
         ] }],
       },
       лечение: {
@@ -254,8 +254,8 @@ group('«я совершил действие» — один раз на все 
   const tally = world({
     итог: {
       label: 'Итог', activation: 'passive', duration: { kind: 'uses', max: 2 },
-      on: [{ on: 'done:удар', if: { expr: '@действующий == @носитель' }, steps: [
-        { type: 'apply', target: { expr: '@носитель.хп' }, direction: 'set', value: { expr: 'sum(@итоги.n) + count(@итоги.лист)' } },
+      on: [{ on: 'done:удар', if: { expr: '@действующий == @holder' }, steps: [
+        { type: 'apply', target: { expr: '@holder.хп' }, direction: 'set', value: { expr: 'sum(@results.n) + count(@results.sheet)' } },
       ] }],
     },
   });
@@ -285,7 +285,7 @@ group('«я совершил действие» — один раз на все 
   });
 
   test('кривое условие подписки — подписка молчит, ход не падает', () => {
-    const broken = world({ итог: { ...tally.effects.итог, on: [{ ...tally.effects.итог.on[0], if: { expr: '@итоги.n > 0' } }] } });
+    const broken = world({ итог: { ...tally.effects.итог, on: [{ ...tally.effects.итог.on[0], if: { expr: '@results.n > 0' } }] } });
     const r = exchange({
       system: broken as any, compendium: book as any, die: queue(), sheets: [hero(['итог']) as any, foe() as any],
       actionId: 'удар:0', fromId: 'герой', toId: 'враг',

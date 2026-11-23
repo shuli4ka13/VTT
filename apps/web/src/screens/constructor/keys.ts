@@ -1,7 +1,7 @@
 import { slugOf, freeId } from '../../store/world.ts';
 import { usageIndex, inUse } from './usage.ts';
 import type { System, Compendium } from '@vtt/schema';
-import { splitsTargets } from '@vtt/engine';
+import { splitsTargets, NAMES, NAME_LABELS, nameLabel } from '@vtt/engine';
 
 const escape = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -94,13 +94,13 @@ export function renameStep(node: unknown, from: string, to: string): void {
   walk(node);
 }
 
-export const RESERVED_NAMES: readonly string[] = ['строка', 'носитель', 'стол'];
+export const RESERVED_NAMES: readonly string[] = [NAMES.row, NAMES.holder, NAMES.desk, NAME_LABELS.row, NAME_LABELS.holder, NAME_LABELS.desk];
 
 export function stepNameTrouble(typed: string, current: string, taken: readonly string[]): string | null {
   const next = keyOf(typed);
   if (!next) return 'имя не может быть пустым';
   if (next === current) return null;
-  if (RESERVED_NAMES.includes(next)) return `имя «${next}» занято системой`;
+  if (RESERVED_NAMES.includes(next)) return `имя «${nameLabel(next) ?? next}» занято системой`;
   if (taken.includes(next)) return `имя «${next}» уже занято`;
   return null;
 }

@@ -517,7 +517,7 @@
             "kind": "number",
             "min": 0,
             "max": {
-              "expr": "@строка.max"
+              "expr": "@row.max"
             },
             "title": "{label}"
           },
@@ -629,7 +629,7 @@
             "label": "Всего",
             "kind": "number",
             "expr": {
-              "expr": "@caster_level.[@строка.circle]"
+              "expr": "@caster_level.[@row.circle]"
             },
             "title": "Всего ячеек: {label}"
           },
@@ -639,7 +639,7 @@
             "kind": "number",
             "min": 0,
             "max": {
-              "expr": "@строка.max"
+              "expr": "@row.max"
             },
             "title": "Ячейки: {label}",
             "default": 0
@@ -751,7 +751,7 @@
             "kind": "number",
             "min": 0,
             "max": {
-              "expr": "@строка.max"
+              "expr": "@row.max"
             },
             "title": "{label}: осталось",
             "default": 0
@@ -1856,7 +1856,7 @@
             "label": "Модификатор",
             "kind": "number",
             "expr": {
-              "expr": "floor((@строка.score - 10) / 2)"
+              "expr": "floor((@row.score - 10) / 2)"
             },
             "title": "Модификатор: {label}"
           },
@@ -1872,7 +1872,7 @@
             "label": "Владение",
             "kind": "number",
             "expr": {
-              "expr": "max(if(@строка.save_extra, 1, 0), if(has(@class_name.saves, @строка), 1, 0))"
+              "expr": "max(if(@row.save_extra, 1, 0), if(has(@class_name.saves, @row), 1, 0))"
             },
             "title": "Владение: спасбросок {label}"
           },
@@ -1881,7 +1881,7 @@
             "label": "Спасбросок",
             "kind": "number",
             "expr": {
-              "expr": "@строка.mod + @строка.save_prof * @prof_bonus"
+              "expr": "@row.mod + @row.save_prof * @prof_bonus"
             },
             "title": "Спасбросок: {label}"
           }
@@ -1937,7 +1937,7 @@
             "label": "Навык",
             "kind": "number",
             "expr": {
-              "expr": "@строка.ability.mod + @строка.prof * @prof_bonus"
+              "expr": "@row.ability.mod + @row.prof * @prof_bonus"
             },
             "title": "{label}"
           }
@@ -2086,7 +2086,7 @@
             "label": "Хиты по уровню",
             "kind": "number",
             "expr": {
-              "expr": "dicemax(@строка.hit_die) + (@level - 1) * (floor(dicemax(@строка.hit_die) / 2) + 1) + @level * @abilities.телосложение.mod"
+              "expr": "dicemax(@row.hit_die) + (@level - 1) * (floor(dicemax(@row.hit_die) / 2) + 1) + @level * @abilities.телосложение.mod"
             }
           },
           {
@@ -2558,7 +2558,7 @@
             "target": "ac_base",
             "op": "set",
             "value": {
-              "expr": "@строка.ac"
+              "expr": "@row.ac"
             }
           },
           {
@@ -2566,7 +2566,7 @@
             "target": "armor_heaviness",
             "op": "set",
             "value": {
-              "expr": "@строка.heaviness"
+              "expr": "@row.heaviness"
             }
           },
           {
@@ -2577,7 +2577,7 @@
               "expr": "-10"
             },
             "if": {
-              "expr": "@abilities.сила.score < (@строка.str_req or 0) and @race.heavy_armor_ok != true"
+              "expr": "@abilities.сила.score < (@row.str_req or 0) and @race.heavy_armor_ok != true"
             }
           },
           {
@@ -2589,7 +2589,7 @@
             "param": "edits",
             "edit": "disadvantage",
             "if": {
-              "expr": "@бросающий == @носитель and @строка.stealth == true"
+              "expr": "@roller == @holder and @row.stealth == true"
             }
           }
         ]
@@ -3379,7 +3379,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@стол.бой and @лист.turn.атаки.left < 1"
+              "expr": "@desk.combat and @лист.turn.атаки.left < 1"
             }
           },
           {
@@ -3410,7 +3410,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@стол.бой"
+              "expr": "@desk.combat"
             }
           },
           {
@@ -3734,7 +3734,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@стол.бой"
+              "expr": "@desk.combat"
             }
           },
           {
@@ -3775,26 +3775,26 @@
           {
             "op": "mul",
             "value": {
-              "expr": "@носитель.damage_types.[@damage_type].taken.resist"
+              "expr": "@holder.damage_types.[@damage_type].taken.resist"
             },
             "kind": "edit",
             "call": "damage",
             "param": "amount",
             "if": {
-              "expr": "@лист == @носитель and not empty(@носитель.damage_types.[@damage_type].taken)"
+              "expr": "@лист == @holder and not empty(@holder.damage_types.[@damage_type].taken)"
             },
             "stage": "сопротивление"
           },
           {
             "op": "mul",
             "value": {
-              "expr": "@носитель.damage_types.[@damage_type].taken.vuln"
+              "expr": "@holder.damage_types.[@damage_type].taken.vuln"
             },
             "kind": "edit",
             "call": "damage",
             "param": "amount",
             "if": {
-              "expr": "@лист == @носитель and not empty(@носитель.damage_types.[@damage_type].taken)"
+              "expr": "@лист == @holder and not empty(@holder.damage_types.[@damage_type].taken)"
             },
             "stage": "уязвимость"
           }
@@ -3855,7 +3855,7 @@
             "param": "edits",
             "edit": "advantage",
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             }
           }
         ],
@@ -3878,18 +3878,18 @@
                 "effect": "turn_reset",
                 "args": {
                   "лист": {
-                    "expr": "@носитель"
+                    "expr": "@holder"
                   }
                 }
               },
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.turn.действие.left"
+                  "expr": "@holder.turn.действие.left"
                 },
                 "direction": "add",
                 "value": {
-                  "expr": "min(1, @носитель.hasted)"
+                  "expr": "min(1, @holder.hasted)"
                 }
               }
             ]
@@ -3908,7 +3908,7 @@
           {
             "on": "moment:turn-start",
             "if": {
-              "expr": "@ходит == @носитель"
+              "expr": "@mover == @holder"
             },
             "steps": [
               {
@@ -3916,18 +3916,18 @@
                 "effect": "turn_reset",
                 "args": {
                   "лист": {
-                    "expr": "@носитель"
+                    "expr": "@holder"
                   }
                 }
               },
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.turn.действие.left"
+                  "expr": "@holder.turn.действие.left"
                 },
                 "direction": "add",
                 "value": {
-                  "expr": "min(1, @носитель.hasted)"
+                  "expr": "min(1, @holder.hasted)"
                 }
               }
             ]

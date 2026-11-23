@@ -263,7 +263,7 @@ describe('сумка: значения вещи', () => {
     fireEvent.click(screen.getByText('Значения'));
     const box = screen.getByLabelText('Беспроводной режим');
     fireEvent.click(box);
-    expect(sets.at(-1)).toEqual(['к', 'а', 'вещь:фонарь.провода', true]);
+    expect(sets.at(-1)).toEqual(['к', 'а', 'item:фонарь.провода', true]);
   });
 
   it('игрок без разрешения «Значений» не видит, с разрешением — видит', () => {

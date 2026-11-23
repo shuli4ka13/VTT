@@ -1,4 +1,4 @@
-import { loopOf, splitsTargets, amountParamOf, ASK_YES, ASK_NO, ASK_WHOM, fieldOf, hasField } from '@vtt/engine';
+import { loopOf, splitsTargets, amountParamOf, ASK_WHOM, fieldOf, hasField, HOLDER, DESK_ID, NAME_LABELS } from '@vtt/engine';
 import { pickedRow } from './choice-rows.ts';
 import type { System, Effect, Step, SystemConstant } from '@vtt/schema';
 import { labelOfTag, formulaAsLabels } from '../../ui/formula.tsx';
@@ -47,7 +47,7 @@ export function readingWord(system: System, name: string): string | null {
 
 export type Names = Map<string, string>;
 
-const SHEET_WORDS: Record<string, string> = { носитель: 'носитель', стол: 'стол' };
+const SHEET_WORDS: Record<string, string> = { [HOLDER]: NAME_LABELS.holder, [DESK_ID]: NAME_LABELS.desk };
 
 const sheetLabel = (effect: Effect, name: string): string | null => {
   const param = effect.params?.find(p => p.key === name && p.kind === 'sheet');
@@ -228,7 +228,7 @@ export function askReadback(step: Step, effect: Effect): Segment[] {
   const word = (value: unknown, fallback: string) => (typeof value === 'string' && value.trim() ? value.trim() : fallback);
   const to = s.to ? whoOf(effect, s.to) : ASK_WHOM;
   const question = typeof s.label === 'string' && s.label.trim() ? `«${s.label.trim()}»` : '⟨вопрос?⟩';
-  return [{ text: `спросить ${to}: ${question} — ${word(s.yes, ASK_YES)} / ${word(s.no, ASK_NO)}` }];
+  return [{ text: `спросить ${to}: ${question} — ${word(s.yes, NAME_LABELS.yes)} / ${word(s.no, NAME_LABELS.no)}` }];
 }
 
 export function sendReadback(step: Step, system: System, effect: Effect, names?: Names): Segment[] {

@@ -203,7 +203,7 @@
             "label": "Модификатор",
             "kind": "number",
             "expr": {
-              "expr": "floor((@строка.score - 10) / 2)"
+              "expr": "floor((@row.score - 10) / 2)"
             },
             "title": "Модификатор: {label}"
           }
@@ -446,7 +446,7 @@
             "effect": "attack_roll",
             "args": {
               "бонус": {
-                "expr": "@attack_with + @действующий.level + @стол.escalation"
+                "expr": "@attack_with + @действующий.level + @desk.escalation"
               },
               "кто": {
                 "expr": "@действующий"
@@ -637,11 +637,11 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@стол.escalation"
+              "expr": "@desk.escalation"
             },
             "direction": "set",
             "value": {
-              "expr": "min(6, @стол.escalation + 1)"
+              "expr": "min(6, @desk.escalation + 1)"
             }
           }
         ],
@@ -675,7 +675,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@стол.escalation"
+              "expr": "@desk.escalation"
             },
             "direction": "set",
             "value": {
@@ -724,7 +724,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@стол.бой"
+              "expr": "@desk.combat"
             }
           },
           {
@@ -771,7 +771,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.turn_standard"
+                  "expr": "@holder.turn_standard"
                 },
                 "direction": "set",
                 "value": {
@@ -781,7 +781,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.turn_move"
+                  "expr": "@holder.turn_move"
                 },
                 "direction": "set",
                 "value": {
@@ -791,7 +791,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.turn_quick"
+                  "expr": "@holder.turn_quick"
                 },
                 "direction": "set",
                 "value": {
@@ -814,13 +814,13 @@
           {
             "on": "moment:turn-start",
             "if": {
-              "expr": "@ходит == @носитель"
+              "expr": "@mover == @holder"
             },
             "steps": [
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.turn_standard"
+                  "expr": "@holder.turn_standard"
                 },
                 "direction": "set",
                 "value": {
@@ -830,7 +830,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.turn_move"
+                  "expr": "@holder.turn_move"
                 },
                 "direction": "set",
                 "value": {
@@ -840,7 +840,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.turn_quick"
+                  "expr": "@holder.turn_quick"
                 },
                 "direction": "set",
                 "value": {
@@ -866,11 +866,11 @@
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@стол.escalation"
+                  "expr": "@desk.escalation"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "if(@moment.round > 1, min(6, @стол.escalation + 1), 0)"
+                  "expr": "if(@moment.round > 1, min(6, @desk.escalation + 1), 0)"
                 }
               }
             ]
@@ -963,7 +963,7 @@
         "icon": "👹",
         "hint": "Лист противника."
       },
-      "стол": {
+      "desk": {
         "label": "Стол",
         "icon": "🎲",
         "hint": "Общий стол комнаты: кость эскалации и бой.",
@@ -1347,7 +1347,7 @@
       "group": "goblin_mob"
     },
     {
-      "id": "стол",
+      "id": "desk",
       "systemId": "13age",
       "name": "Стол",
       "values": {

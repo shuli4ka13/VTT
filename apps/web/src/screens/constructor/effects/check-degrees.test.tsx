@@ -35,7 +35,7 @@ describe('«Проверка»: ступени списком', () => {
   });
 
   it('готовый список показан названиями ступеней', () => {
-    open(system => { (system.effects.saving_throw!.steps!.find((s: any) => s.type === 'check') as any).degrees = [{ label: 'крит', if: { expr: '@степени >= 5' } }]; });
+    open(system => { (system.effects.saving_throw!.steps!.find((s: any) => s.type === 'check') as any).degrees = [{ label: 'крит', if: { expr: '@margin >= 5' } }]; });
     expect([...document.querySelectorAll<HTMLInputElement>('.roll-degree input')].map(i => i.value)).toContain('крит');
   });
 });

@@ -17,8 +17,8 @@ const system = {
       params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }, { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель' } }],
       steps: [
         { type: 'each', of: 'цели' },
-        { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '3 + @стол.эскалация' } },
-        { type: 'apply', target: { expr: '@стол.страх' }, direction: 'add', value: { expr: '1' } },
+        { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '3 + @desk.эскалация' } },
+        { type: 'apply', target: { expr: '@desk.страх' }, direction: 'add', value: { expr: '1' } },
       ],
     },
   },
@@ -27,7 +27,7 @@ const system = {
 
 const book = { records: [{ id: 'удар', table: 'приём', label: 'Удар', bindings: [{ label: 'Удар', effect: 'удар', args: {} }] }] } as unknown as Compendium;
 const pc = (id: string): Sheet => ({ id, systemId: 'стол', name: id, values: {}, has: [{ of: 'удар' }], effects: [] } as unknown as Sheet);
-const desk = (values: Record<string, number>): Sheet => ({ id: 'стол', systemId: 'стол', name: 'Стол', values, has: [], effects: [] } as unknown as Sheet);
+const desk = (values: Record<string, number>): Sheet => ({ id: 'desk', systemId: 'стол', name: 'Стол', values, has: [], effects: [] } as unknown as Sheet);
 
 const hit = (deskValues: Record<string, number>) => exchange({
   system, compendium: book, die: () => 1,
@@ -42,7 +42,7 @@ group('стол — третий участник с полями', () => {
 
   test('эффект меняет поле стола, а не лист цели', () => {
     const out = hit({ эскалация: 0, страх: 4 });
-    eq(out.sheets.find(s => s.id === 'стол')!.values.страх, 5);
+    eq(out.sheets.find(s => s.id === 'desk')!.values.страх, 5);
     ok(!('страх' in out.sheets.find(s => s.id === 'держит')!.values), 'страх не лёг на лист цели');
   });
 
@@ -83,14 +83,14 @@ group('стол в формулах листа', () => {
     return withColumn(system, { key: 'атака', label: 'Атака', expr: { expr } }, desk ? 'desk' : 'sheet');
   };
 
-  test('поле листа читает стол через @стол', async () => {
+  test('поле листа читает стол через @desk', async () => {
     const { calc, newPass } = await import('../src/engine/calc.ts');
-    const s = withSheetFormula('5 + @стол.эскалация');
+    const s = withSheetFormula('5 + @desk.эскалация');
     const hero = pc('герой');
     eq(calc(s, hero, 'атака', newPass(s, hero, { shared: [desk({ эскалация: 3 })] })), 8);
   });
 
-  test('поле стола без @стол в формуле листа — ошибка словами', async () => {
+  test('поле стола без @desk в формуле листа — ошибка словами', async () => {
     const { lintSystem, errorsOf } = await import('../src/model/lint.ts');
     const texts = errorsOf(lintSystem(withSheetFormula('5 + @эскалация'), book)).map(p => p.text);
     ok(texts.some(t => t.includes('лежит на столе')), texts.join(' | '));

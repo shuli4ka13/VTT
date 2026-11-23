@@ -81,8 +81,8 @@ describe('правка броска говорит, что складывает�
       tables: { лист: { shape: 'single', columns: [{ key: 'ловкость', label: 'Ловкость', kind: 'number' }] } },
       rolls: { проверка: { label: 'Проверка', die: 'pool', number: 'count', fields: [{ table: 'лист', column: 'ловкость' }] } },
       effects: {
-        sustain: { label: 'Поддержание', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'count', op: 'add', value: { expr: '-2' }, tags: ['проверка'], if: { expr: '@бросающий == @носитель' } }] },
-        luck: { label: 'Удача', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '1' }, if: { expr: '@бросающий == @носитель' } }] },
+        sustain: { label: 'Поддержание', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'count', op: 'add', value: { expr: '-2' }, tags: ['проверка'], if: { expr: '@roller == @holder' } }] },
+        luck: { label: 'Удача', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '1' }, if: { expr: '@roller == @holder' } }] },
         other: { label: 'Чужое', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '1' }, tags: ['атака'] }] },
         skip: { label: 'Мимо', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '1' }, notTags: ['проверка'] }] },
       },

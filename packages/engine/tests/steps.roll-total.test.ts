@@ -56,8 +56,8 @@ group('«сколько вышло всего» — итог броска с т�
   test('имя броска и его итог равны под преимуществом и прибавкой правкой', () => {
     const effects = {
       везение: { label: 'Везение', activation: 'passive', modifiers: [
-        { kind: 'edit', call: 'roll', param: 'edits', edit: 'advantage', if: { expr: '@бросающий == @носитель' } },
-        { kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '2' }, if: { expr: '@бросающий == @носитель' } },
+        { kind: 'edit', call: 'roll', param: 'edits', edit: 'advantage', if: { expr: '@roller == @holder' } },
+        { kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '2' }, if: { expr: '@roller == @holder' } },
       ] },
     };
     const steps = [EACH, { id: 'удар', type: 'roll', die: 'к20', by: { expr: '@действующий' } }, hit('if(@удар == @удар.total, @удар.total, 0)')];

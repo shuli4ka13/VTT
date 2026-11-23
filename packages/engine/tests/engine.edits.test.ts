@@ -42,7 +42,7 @@ group('правка вызова работает', () => {
     const p = pass([freshEdit]);
     deepEq(resolveRoll(p.system, p.sheet, ['атака'], p).edits.map(e => e.label), ['Преимущество']);
     deepEq(resolveRoll(p.system, p.sheet, ['спасбросок'], p).edits, []);
-    const freshAdd = { kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '-2' }, if: { expr: '@носитель.ранен' } };
+    const freshAdd = { kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '-2' }, if: { expr: '@holder.ранен' } };
     const hurt = pass([freshAdd], { ранен: true });
     eq(resolveRoll(hurt.system, hurt.sheet, [], hurt).bonus, -2);
     const fine = pass([freshAdd], { ранен: false });
@@ -50,7 +50,7 @@ group('правка вызова работает', () => {
   });
 
   test('бросок по мне — условие «против = носитель»', () => {
-    const fresh = { kind: 'edit', call: 'roll', param: 'edits', edit: 'disadvantage', tags: ['атака'], if: { expr: '@против == @носитель' } };
+    const fresh = { kind: 'edit', call: 'roll', param: 'edits', edit: 'disadvantage', tags: ['атака'], if: { expr: '@against == @holder' } };
     const p = pass([fresh]);
     const other = newPass(p.system, { id: 'другой', systemId: 'п', name: 'другой', values: {}, has: [], effects: [] } as never, { compendium: { records: [] } });
     const holders = [{ id: p.sheet.id, view: p }, { id: 'другой', view: other }];
@@ -103,7 +103,7 @@ group('правка вызова в проверке системы', () => {
   test('верная правка урона и броска — чисто', async () => {
     eq(await lint([
       { kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '0.5' }, anyTags: ['огонь'] },
-      { kind: 'edit', call: 'roll', param: 'edits', edit: 'advantage', if: { expr: '@против == @носитель' } },
+      { kind: 'edit', call: 'roll', param: 'edits', edit: 'advantage', if: { expr: '@against == @holder' } },
     ]), '');
   });
 });
@@ -118,8 +118,8 @@ group('правка вызова: условие над аргументами',
     eq(edited(p, 'урон', 'сколько', 12, [], { тип: 'холод', сколько: 12 }), 12);
   });
 
-  test('у броска есть @метки', () => {
-    const p = pass([{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '2' }, if: { expr: 'has(@метки, "атака")' } }]);
+  test('у броска есть @tags', () => {
+    const p = pass([{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '2' }, if: { expr: 'has(@tags, "атака")' } }]);
     eq(resolveRoll(p.system, p.sheet, ['атака'], p).bonus, 2);
     eq(resolveRoll(p.system, p.sheet, ['спасбросок'], p).bonus, 0);
   });

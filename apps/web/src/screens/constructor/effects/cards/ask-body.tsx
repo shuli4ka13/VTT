@@ -5,7 +5,7 @@ import { TypedPick } from '../../typed-pick.tsx';
 import { sheetChoices } from '../../slots.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
-import { ASK_YES, ASK_NO, ASK_WHOM } from '@vtt/engine';
+import { NAME_LABELS, ASK_WHOM } from '@vtt/engine';
 
 
 const loose = (draft: unknown): Record<string, unknown> => draft as Record<string, unknown>;
@@ -30,13 +30,13 @@ export function AskBody({ step, context, edit, system }: { step: Record<string, 
           </TypedPick>
         </Field>
       </div>
-      <Fold title="ещё" summary={given ? `${text('yes') || ASK_YES} / ${text('no') || ASK_NO}` : undefined}>
+      <Fold title="ещё" summary={given ? `${text('yes') || NAME_LABELS.yes} / ${text('no') || NAME_LABELS.no}` : undefined}>
         <div className="row">
           <Field label="Ответ «да» словами" hint="Подпись кнопки. Пусто — «да».">
-            <Input value={text('yes')} placeholder={ASK_YES} onChange={set('yes')} />
+            <Input value={text('yes')} placeholder={NAME_LABELS.yes} onChange={set('yes')} />
           </Field>
           <Field label="Ответ «нет» словами" hint="Подпись кнопки. Пусто — «нет».">
-            <Input value={text('no')} placeholder={ASK_NO} onChange={set('no')} />
+            <Input value={text('no')} placeholder={NAME_LABELS.no} onChange={set('no')} />
           </Field>
         </div>
       </Fold>

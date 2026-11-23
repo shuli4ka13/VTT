@@ -56,7 +56,7 @@ group('проверка ловит опечатки в путях', () => {
   });
 
   test('опечатка в имени строки цикла называет настоящее имя', () => {
-    const found = fresh(s => { (s.effects.resources_rest!.on![0]!.steps![1] as { if: unknown }).if = { expr: '@носитель.ресурсы.short' }; });
+    const found = fresh(s => { (s.effects.resources_rest!.on![0]!.steps![1] as { if: unknown }).if = { expr: '@holder.ресурсы.short' }; });
     ok(found.some(text => text.startsWith('у листа нет поля «ресурсы»; здесь есть «ресурс»')), found.join('\n'));
   });
 });
@@ -106,7 +106,7 @@ group('расчёт не молчит об опечатке в адресе', ()
 
 group('неизвестная функция — ошибка проверки, а не расчёта', () => {
   test('«все(…)» больше нет — проверка говорит, какой функции нет', () => {
-    const found = fresh(s => { (s.effects.resources_rest!.on![0]!.steps![1] as { if: unknown }).if = { expr: 'все(@носитель.ресурс.short, true)' }; });
+    const found = fresh(s => { (s.effects.resources_rest!.on![0]!.steps![1] as { if: unknown }).if = { expr: 'все(@holder.ресурс.short, true)' }; });
     ok(found.some(text => text.includes('нет функции «все»')), found.join('\n'));
   });
 });

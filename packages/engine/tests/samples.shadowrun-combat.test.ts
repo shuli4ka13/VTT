@@ -205,7 +205,7 @@ group('Shadowrun 6, глава «Инициатива и действия»: с�
 });
 
 group('Shadowrun 6: действия защиты (стр. 42–43)', () => {
-  const desk = { id: 'стол', systemId: 'shadowrun6', name: 'Стол', values: {}, has: [], effects: [] } as unknown as Sheet;
+  const desk = { id: 'desk', systemId: 'shadowrun6', name: 'Стол', values: {}, has: [], effects: [] } as unknown as Sheet;
   const prepare = (who: Sheet, pick: string, battle = false) => {
     const out = exchange({ system, compendium, die: tape(), sheets: [who, desk], ...(battle ? { clock: fight(who.id) } : {}), actionId: '+defense_action', fromId: who.id, toIds: [], inputs: { действие: pick } });
     return after(out, who.id);

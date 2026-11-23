@@ -9,7 +9,7 @@ const system = {
   effects: {
     слабость: {
       label: 'Слабость', activation: 'passive', duration: { kind: 'turns', max: 3 },
-      modifiers: [{ kind: 'value', target: 'защита', op: 'add', value: { expr: '0 - @осталось' } }],
+      modifiers: [{ kind: 'value', target: 'защита', op: 'add', value: { expr: '0 - @left' } }],
     },
   },
 } as unknown as System;
@@ -17,7 +17,7 @@ const compendium = { records: [] } as unknown as Compendium;
 const sheet = (left: number): Sheet => ({ id: 'я', systemId: 'x', name: 'я', values: { защита: 5 }, has: [], effects: [{ effectId: 'слабость', turnsLeft: left }] } as unknown as Sheet);
 const read = (s: Sheet): unknown => calc(system, s, 'защита', newPass(system, s, { compendium }));
 
-group('«@осталось» в правке висящего', () => {
+group('«@left» в правке висящего', () => {
   test('правка тает вместе со сроком', () => {
     deepEq([read(sheet(3)), read(sheet(1))], [2, 4]);
   });

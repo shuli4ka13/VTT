@@ -117,7 +117,7 @@ describe('пробный расчёт и итог бросают одни кос
       ...dnd,
       effects: {
         ...dnd.effects,
-        watch: { label: 'Настороже', activation: 'passive', duration: { kind: 'permanent' }, params: [], on: [{ on: 'before:save', if: { expr: '@цель == @носитель' }, confirm: true, steps: [] }] },
+        watch: { label: 'Настороже', activation: 'passive', duration: { kind: 'permanent' }, params: [], on: [{ on: 'before:save', if: { expr: '@цель == @holder' }, confirm: true, steps: [] }] },
       },
     };
     const token = (await http().post('/auth/login').send({ name: 'Страж' })).body.token as string;
@@ -250,7 +250,7 @@ describe('моменты хода', () => {
         отравление: {
           label: 'Отравление', activation: 'passive',
           duration: { kind: 'permanent' },
-          on: [{ on: 'moment:turn-start', if: { expr: '@ходит == @носитель' }, steps: [sub('@носитель.хиты', '3')] }],
+          on: [{ on: 'moment:turn-start', if: { expr: '@mover == @holder' }, steps: [sub('@holder.хиты', '3')] }],
         },
       },
     };
@@ -302,7 +302,7 @@ describe('ячейка тратится один раз на действие', 
         }),
         счёт: {
           label: 'Счёт целей', activation: 'passive', duration: { kind: 'permanent' },
-          on: [{ on: 'done:шар', if: { expr: '@действующий == @носитель' }, steps: [sub('@носитель.целей', 'count(@цели)', 'add')] }],
+          on: [{ on: 'done:шар', if: { expr: '@действующий == @holder' }, steps: [sub('@holder.целей', 'count(@цели)', 'add')] }],
         },
       },
       
@@ -342,7 +342,7 @@ describe('появилось и ушло с листа', () => {
     const as = (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
     const me = (await as(http().get('/auth/me'))).body.userId as string;
 
-    const add = (tag: string) => sub(`@носитель.${tag}`, '1', 'add');
+    const add = (tag: string) => sub(`@holder.${tag}`, '1', 'add');
     const system = {
       id: 'вещи', name: 'С вещами',
       tables: { лист: { shape: 'single', columns: [
@@ -352,7 +352,7 @@ describe('появилось и ушло с листа', () => {
       effects: {
         заточка: { label: 'Заточка', activation: 'passive', attach: [add('надето')] },
         бафф: { label: 'Бафф', activation: 'passive', duration: { kind: 'permanent' }, modifiers: [] },
-        сторож: { label: 'Сторож', activation: 'passive', on: [{ on: 'lost:бафф', if: { expr: '@лист == @носитель' }, steps: [add('снято')] }] },
+        сторож: { label: 'Сторож', activation: 'passive', on: [{ on: 'lost:бафф', if: { expr: '@sheet == @holder' }, steps: [add('снято')] }] },
       },
       grants: ['сторож'],
       
@@ -402,7 +402,7 @@ describe('вопросы к человеку не теряют названно�
         }),
         вдохновение: {
           label: 'Вдохновение', activation: 'passive',
-          on: [{ on: 'seen', if: { expr: '@бросающий == @носитель' }, confirm: true, steps: [{ type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
+          on: [{ on: 'seen', if: { expr: '@roller == @holder' }, confirm: true, steps: [{ type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
         },
       },
       
@@ -457,7 +457,7 @@ describe('цель правит свой бросок, увидев его', () 
         ]),
         везение: {
           label: 'Везение', activation: 'passive',
-          on: [{ on: 'seen', if: { expr: '@бросающий == @носитель' }, confirm: true, steps: [{ type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
+          on: [{ on: 'seen', if: { expr: '@roller == @holder' }, confirm: true, steps: [{ type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
         },
       },
       
@@ -508,7 +508,7 @@ describe('поле стало верным', () => {
         без_сознания: { label: 'Без сознания', activation: 'passive', duration: { kind: 'permanent' }, modifiers: [] },
         падение: {
           label: 'Падение', activation: 'passive',
-          on: [{ on: 'field:без_сил', if: { expr: '@лист == @носитель' }, steps: [{ type: 'status', mode: 'apply', effect: 'без_сознания', to: { expr: '@носитель' } }] }],
+          on: [{ on: 'field:без_сил', if: { expr: '@sheet == @holder' }, steps: [{ type: 'status', mode: 'apply', effect: 'без_сознания', to: { expr: '@holder' } }] }],
         },
       },
       grants: ['падение'],
@@ -568,7 +568,7 @@ describe('права за столом', () => {
     const owner = (await http().post('/auth/login').send({ name: 'Хозяйка меча' })).body;
     await http().post(`/rooms/${roomId}/join`).set('Authorization', `Bearer ${owner.token}`).expect(201);
     await rooms.claimSheet(owner.userId, roomId, arven.id);
-    const sword = 'вещь:longsword-item.damage_type';
+    const sword = 'item:longsword-item.damage_type';
     const swordOf = (delta: { sheets: { id: string; has: { of: string; values?: unknown }[] }[] }) =>
       delta.sheets.find(sheet => sheet.id === arven.id)?.has.find(entry => entry.of === 'longsword-item');
 
@@ -579,7 +579,7 @@ describe('права за столом', () => {
     await rooms.allowItems(gm, roomId, owner.userId, true);
     expect((await rooms.state(roomId)).members.find(m => m.userId === owner.userId)?.editsItems).toBe(true);
     expect(swordOf(await rooms.setValue(owner.userId, roomId, arven.id, sword, 'колющий'))?.values).toEqual({ damage_type: 'колющий' });
-    await expect(rooms.setValue(owner.userId, roomId, mirra.id, 'вещь:poison-spray.damage_type', 'огонь')).rejects.toThrow('чужой лист');
+    await expect(rooms.setValue(owner.userId, roomId, mirra.id, 'item:poison-spray.damage_type', 'огонь')).rejects.toThrow('чужой лист');
 
     await rooms.allowItems(gm, roomId, owner.userId, false);
     expect((await rooms.state(roomId)).members.find(m => m.userId === owner.userId)?.editsItems).toBeUndefined();
@@ -647,7 +647,7 @@ describe('отмена действия ведущим', () => {
       tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] }, приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
       effects: {
         удар: button('Удар', [sub('@цель.хиты', '5')]),
-        ответ: { label: 'Ответ', activation: 'passive', on: [{ on: 'after:удар', if: { expr: '@цель == @носитель' }, confirm: true, steps: [sub('@действующий.хиты', '1')] }] },
+        ответ: { label: 'Ответ', activation: 'passive', on: [{ on: 'after:удар', if: { expr: '@цель == @holder' }, confirm: true, steps: [sub('@действующий.хиты', '1')] }] },
       },
     };
     const book = { records: [{ id: 'приём', table: 'приём', label: 'Удар', cells: {} }] };
@@ -711,7 +711,7 @@ describe('вопросы на ответках', () => {
         удар: button('Удар', [{ type: 'emit', effect: 'урон', args: { раненый: { expr: '@цель' }, обидчик: { expr: '@действующий' }, сколько: { expr: '5' } } }]),
         возмездие: {
           label: 'Возмездие', activation: 'passive',
-          on: [{ on: 'after:урон', if: { expr: '@раненый == @носитель' }, confirm: true, steps: [{ type: 'emit', effect: 'урон', args: { раненый: { expr: '@обидчик' }, обидчик: { expr: '@раненый' }, сколько: { expr: '2' } } }] }],
+          on: [{ on: 'after:урон', if: { expr: '@раненый == @holder' }, confirm: true, steps: [{ type: 'emit', effect: 'урон', args: { раненый: { expr: '@обидчик' }, обидчик: { expr: '@раненый' }, сколько: { expr: '2' } } }] }],
         },
       },
     };
@@ -756,12 +756,12 @@ describe('вопросы на ответках', () => {
         удар: button('Удар', [{ type: 'emit', effect: 'урон', args: { раненый: { expr: '@цель' }, обидчик: { expr: '@действующий' }, сколько: { expr: '5' } } }]),
         шипы: {
           label: 'Шипы', activation: 'passive',
-          on: [{ on: 'after:урон', if: { expr: '@раненый == @носитель' }, steps: [{ type: 'emit', effect: 'шип', args: { жертва: { expr: '@обидчик' } } }] }],
+          on: [{ on: 'after:урон', if: { expr: '@раненый == @holder' }, steps: [{ type: 'emit', effect: 'шип', args: { жертва: { expr: '@обидчик' } } }] }],
         },
         шип: { label: 'Шип', params: [{ key: 'жертва', label: 'жертва', kind: 'sheet' }], steps: [sub('@жертва.хиты', '2')] },
         заслон: {
           label: 'Заслон', activation: 'passive',
-          on: [{ on: 'before:шип', if: { expr: '@жертва == @носитель' }, confirm: true, steps: [sub('@носитель.хиты', '3', 'add')] }],
+          on: [{ on: 'before:шип', if: { expr: '@жертва == @holder' }, confirm: true, steps: [sub('@holder.хиты', '3', 'add')] }],
         },
       },
     };
@@ -807,7 +807,7 @@ describe('реакция после разрешения', () => {
       effects: {
         итог: {
           label: 'Итог', activation: 'passive',
-          on: [{ on: 'done:удар', if: { expr: '@действующий == @носитель' }, steps: [sub('@носитель.видел', '@носитель.хиты', 'set')] }],
+          on: [{ on: 'done:удар', if: { expr: '@действующий == @holder' }, steps: [sub('@holder.видел', '@holder.хиты', 'set')] }],
         },
         удар: button('Удар', [
           { id: 'бросок_к', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
@@ -817,7 +817,7 @@ describe('реакция после разрешения', () => {
         ]),
         возмездие: {
           label: 'Возмездие', activation: 'passive',
-          on: [{ on: 'after:удар', if: { expr: '@цель == @носитель' }, confirm: true, steps: [sub('@действующий.хиты', '2')] }],
+          on: [{ on: 'after:удар', if: { expr: '@цель == @holder' }, confirm: true, steps: [sub('@действующий.хиты', '2')] }],
         },
       },
       
@@ -891,7 +891,7 @@ describe('отдых и плата ячейкой', () => {
         }),
         сон: {
           label: 'Сон', activation: 'passive',
-          on: [{ on: 'moment:long-rest', steps: [sub('@носитель.ячейки', '1', 'set')] }],
+          on: [{ on: 'moment:long-rest', steps: [sub('@holder.ячейки', '1', 'set')] }],
         },
       },
       grants: ['сон'],

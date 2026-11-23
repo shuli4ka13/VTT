@@ -5,7 +5,7 @@ import { lifecycleChanges } from '../src/events/lifecycle.ts';
 import { fireLifecycle } from './kit.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
-const add = (tag: string, n: number) => ({ type: 'apply', target: { expr: `@носитель.${tag}` }, direction: 'add', value: { expr: `${JSON.stringify(n)}` } });
+const add = (tag: string, n: number) => ({ type: 'apply', target: { expr: `@holder.${tag}` }, direction: 'add', value: { expr: `${JSON.stringify(n)}` } });
 
 const system = {
   id: 'x', name: 'x',
@@ -23,12 +23,12 @@ const system = {
     буйство: { label: 'Буйство', activation: 'passive', grants: ['ярость'] },
     сторож: {
       label: 'Сторож', activation: 'passive',
-      on: [{ on: 'gained:ярость', if: { expr: '@лист == @носитель' }, steps: [add('замечено', 1)] }, { on: 'lost:ярость', if: { expr: '@лист == @носитель' }, steps: [add('замечено', 10)] }],
+      on: [{ on: 'gained:ярость', if: { expr: '@sheet == @holder' }, steps: [add('замечено', 1)] }, { on: 'lost:ярость', if: { expr: '@sheet == @holder' }, steps: [add('замечено', 10)] }],
     },
     впасть: { label: 'Впасть в ярость', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }], steps: [{ type: 'each', of: 'цели' }, { type: 'status', mode: 'apply', effect: 'ярость', to: { expr: '@цель' } }] },
     успокоиться: { label: 'Успокоиться', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }], steps: [{ type: 'each', of: 'цели' }, { type: 'status', mode: 'remove', effect: 'ярость', to: { expr: '@цель' } }] },
-    пинг: { label: 'Пинг', activation: 'passive', attach: [{ type: 'status', mode: 'remove', effect: 'пинг', to: { expr: '@носитель' } }, { type: 'status', mode: 'apply', effect: 'понг', to: { expr: '@носитель' } }] },
-    понг: { label: 'Понг', activation: 'passive', attach: [{ type: 'status', mode: 'remove', effect: 'понг', to: { expr: '@носитель' } }, { type: 'status', mode: 'apply', effect: 'пинг', to: { expr: '@носитель' } }] },
+    пинг: { label: 'Пинг', activation: 'passive', attach: [{ type: 'status', mode: 'remove', effect: 'пинг', to: { expr: '@holder' } }, { type: 'status', mode: 'apply', effect: 'понг', to: { expr: '@holder' } }] },
+    понг: { label: 'Понг', activation: 'passive', attach: [{ type: 'status', mode: 'remove', effect: 'понг', to: { expr: '@holder' } }, { type: 'status', mode: 'apply', effect: 'пинг', to: { expr: '@holder' } }] },
   },
   
 } as unknown as System;

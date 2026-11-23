@@ -62,25 +62,25 @@ const world = (steps: unknown[]): System => ({
   },
   effects: {
     удар: { label: 'Удар', activation: 'manual', params: [ACTOR, TARGETS], steps },
-    парализован: edit('Парализован', 'advantage', '@против == @носитель'),
-    уклоняется: edit('Уклоняется', 'disadvantage', '@против == @носитель'),
-    отравлен: edit('Отравлен', 'disadvantage', '@бросающий == @носитель'),
-    уязвим: edit('Уязвим', 'boon', '@против == @носитель'),
-    укрыт: edit('Укрыт', 'cover', '@против == @носитель'),
+    парализован: edit('Парализован', 'advantage', '@against == @holder'),
+    уклоняется: edit('Уклоняется', 'disadvantage', '@against == @holder'),
+    отравлен: edit('Отравлен', 'disadvantage', '@roller == @holder'),
+    уязвим: edit('Уязвим', 'boon', '@against == @holder'),
+    укрыт: edit('Укрыт', 'cover', '@against == @holder'),
     вдохновлён: {
       label: 'Вдохновлён', activation: 'passive', duration: { kind: 'permanent' },
-      on: [{ on: 'seen', if: { expr: '@бросающий == @носитель' }, steps: [{ type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
+      on: [{ on: 'seen', if: { expr: '@roller == @holder' }, steps: [{ type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
     },
     меткий: {
       label: 'Меткий', activation: 'passive', duration: { kind: 'permanent' },
-      modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '@против.кд' }, tags: ['атака'], if: { expr: '@бросающий == @носитель' } }],
+      modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '@against.кд' }, tags: ['атака'], if: { expr: '@roller == @holder' } }],
     },
     испуган: {
       label: 'Испуг', activation: 'passive', duration: { kind: 'permanent' },
       params: [{ key: 'источник', kind: 'sheet' }],
       modifiers: [{
         kind: 'edit', call: 'roll', param: 'count', op: 'add', value: { expr: '-4' }, notTags: ['лечение'],
-        if: { expr: '@бросающий == @носитель and @против == @источник' },
+        if: { expr: '@roller == @holder and @against == @источник' },
       }],
     },
   },
@@ -219,13 +219,13 @@ group('линт правок «против»', () => {
 
   test('правка «против» с перебросом — ошибка', () => {
     const system = world(single) as unknown as { effects: Record<string, unknown> };
-    system.effects.кривой = edit('Кривой', 'reroll', '@против == @носитель');
+    system.effects.кривой = edit('Кривой', 'reroll', '@against == @holder');
     ok(texts(system as unknown as System).some(text => text.includes('может только добавлять и убирать кости') && text.includes('«reroll»')));
   });
 
   test('«увидев кости» с @против в условии — предупреждение', () => {
     const system = world(single) as unknown as { effects: Record<string, unknown> };
-    system.effects.насмешка = { label: 'Насмешка', activation: 'passive', on: [{ on: 'seen', if: { expr: '@против == @носитель' }, steps: [{ type: 'roll-plus', value: { expr: '-1' } }] }] };
+    system.effects.насмешка = { label: 'Насмешка', activation: 'passive', on: [{ on: 'seen', if: { expr: '@against == @holder' }, steps: [{ type: 'roll-plus', value: { expr: '-1' } }] }] };
     ok(texts(system as unknown as System).some(text => text.includes('«увидев кости» с условием «против кого бросок»')));
   });
 

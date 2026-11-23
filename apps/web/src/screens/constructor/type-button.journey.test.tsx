@@ -57,7 +57,7 @@ describe('новый тип с нуля: «+ кнопка» → «Атака» �
     pickCombo(screen.getByPlaceholderText('— какой эффект —'), 'взмах');
 
     const kind = useWorld.getState().system.tables!.mag!;
-    expect(kind.bindings![0]!.args).toEqual({ оружие: { expr: '@вещь' }, доспех: { expr: '@доспех' } });
+    expect(kind.bindings![0]!.args).toEqual({ оружие: { expr: '@item' }, доспех: { expr: '@доспех' } });
     expect((kind.columns ?? []).map(column => column.key)).toEqual(['доспех']);
   });
 });

@@ -13,7 +13,7 @@ const system = {
         { key: 'предел', label: 'Предел', kind: 'number' },
       ],
       rows: [
-        { value: 'тело', label: 'Тело', cells: { предел: 6 }, view: { значение: { max: { expr: '@строка.предел' } } } },
+        { value: 'тело', label: 'Тело', cells: { предел: 6 }, view: { значение: { max: { expr: '@row.предел' } } } },
         { value: 'воля', label: 'Воля', cells: { предел: 6 } },
         { value: 'магия', label: 'Магия', cells: { предел: 6 }, view: { значение: { default: 2, min: 0, max: 4 } } },
       ],
@@ -41,7 +41,7 @@ group('строка уточняет колонку: умолчание и пр�
     eq(fieldOf(system, 'черты.тело.значение')?.value.kind === 'stored' && fieldOf(system, 'черты.тело.значение')?.value.default, 3);
   });
 
-  test('предел строки обрезает «Изменение», соседняя строка живёт по пределу колонки, формула с @строка считается', () => {
+  test('предел строки обрезает «Изменение», соседняя строка живёт по пределу колонки, формула с @row считается', () => {
     const out = exchange({ system, compendium, sheets: [sheet], actionId: 'приём:0', fromId: 'я', toId: 'я', die: () => 1 });
     const values = out.sheets[0]!.values;
     eq(values['черты.тело.значение'], 6);

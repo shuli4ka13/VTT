@@ -1,5 +1,6 @@
 import { group, test, eq, ok, deepEq } from './harness.ts';
 import { lintSystem, lintStep, errorsOf } from '../src/model/lint.ts';
+import { nameLabel } from '../src/words/names.ts';
 import { referencesOf, listenerOf, heardNames, holderNameOf } from '../src/model/references.ts';
 import { PLAYABLE_SYSTEMS as SAMPLE_SYSTEMS, PLAYABLE_WORLDS as SAMPLE_WORLDS } from '../src/model/systems.ts';
 import type { System, Effect, Step } from '../src/model/types.ts';
@@ -159,7 +160,7 @@ group('линт: чьё поле', () => {
   });
 
   test('поле стола — через стол; через лист — отказ с подсказкой', () => {
-    const good = withEffect('a', { params: [WHO] as never, steps: [mend('@стол.страх')] });
+    const good = withEffect('a', { params: [WHO] as never, steps: [mend('@desk.страх')] });
     eq(errorTexts(good).join(''), '');
     const viaSheet = withEffect('a', { params: [WHO] as never, steps: [mend('@действующий.страх')] });
     ok(errorTexts(viaSheet).some(text => text.includes('лежит на столе') && text.includes('«Стол» → «Страх»')), errorTexts(viaSheet).join('\n'));
@@ -167,13 +168,13 @@ group('линт: чьё поле', () => {
     ok(errorTexts(bareDesk).some(text => text.includes('лежит на столе') && text.includes('«Стол» → «Страх»')), errorTexts(bareDesk).join('\n'));
   });
 
-  test('поле листа через @стол — отказ: оно лежит на листе', () => {
-    const system = withEffect('a', { params: [WHO] as never, steps: [mend('@стол.hp')] });
+  test('поле листа через @desk — отказ: оно лежит на листе', () => {
+    const system = withEffect('a', { params: [WHO] as never, steps: [mend('@desk.hp')] });
     ok(errorTexts(system).some(text => text.includes('лежит на листе, а не на столе')), errorTexts(system).join('\n'));
   });
 
-  test('@носитель в подписке — лист, на котором она висит', () => {
-    const system = withEffect('a', { activation: 'passive', on: [{ on: 'moment:turn-start', if: { expr: '@ходит == @носитель' }, steps: [mend('@носитель.hp')] }] });
+  test('@holder в подписке — лист, на котором она висит', () => {
+    const system = withEffect('a', { activation: 'passive', on: [{ on: 'moment:turn-start', if: { expr: '@mover == @holder' }, steps: [mend('@holder.hp')] }] });
     eq(errorTexts(system).join(''), '');
   });
 });
@@ -201,7 +202,7 @@ group('линт: подписки, круги, входы', () => {
     eq(texts({ on: 'before:*' }).length, 0, 'любое действие — законно');
     eq(texts({
       on: 'done:strike', if: { expr: 'count(@цели.hit.success, true) >= 1' },
-      steps: [{ type: 'apply', target: { expr: '@носитель.hp' }, direction: 'add', value: { expr: 'sum(@цели.dmg)' } }],
+      steps: [{ type: 'apply', target: { expr: '@holder.hp' }, direction: 'add', value: { expr: 'sum(@цели.dmg)' } }],
     }).length, 0, '«завершено» знает таблицу целей');
     eq(texts({ on: 'done:strike', if: { expr: 'count(@цели) >= 2' }, steps: [] }).length, 0, 'и голое @цели — тоже');
   });
@@ -211,14 +212,14 @@ group('линт: подписки, круги, входы', () => {
       params: [WHO, { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель' } }] as never,
       steps: [{ type: 'each', of: 'цели' }, { id: 'hit', type: 'check', value: { expr: '1' }, versus: { expr: '0' } }, { type: 'branch', if: { expr: 'not @hit.success' } }, { type: 'stop' }, { type: 'end' }] as Step[],
     });
-    system.effects.r = { label: 'r', activation: 'passive', on: [{ on: 'before:удар', if: { expr: '@цель == @носитель and @действующий != @носитель' }, steps: [] }] } as Effect;
+    system.effects.r = { label: 'r', activation: 'passive', on: [{ on: 'before:удар', if: { expr: '@цель == @holder and @действующий != @holder' }, steps: [] }] } as Effect;
     eq(errorTexts(system).join(''), '');
-    system.effects.r = { label: 'r', activation: 'passive', on: [{ on: 'before:удар', if: { expr: '@враг == @носитель' }, steps: [] }] } as Effect;
+    system.effects.r = { label: 'r', activation: 'passive', on: [{ on: 'before:удар', if: { expr: '@враг == @holder' }, steps: [] }] } as Effect;
     ok(errorTexts(system).some(t => t.includes('«враг» — нет ни входа, ни шага')), errorTexts(system).join('|'));
   });
 
   test('у броска подписка видит бросающего и противника', () => {
-    const system = withEffect('r', { activation: 'passive', on: [{ on: 'seen', if: { expr: '@бросающий == @носитель or @против == @носитель' }, steps: [] }] });
+    const system = withEffect('r', { activation: 'passive', on: [{ on: 'seen', if: { expr: '@roller == @holder or @against == @holder' }, steps: [] }] });
     eq(errorTexts(system).join(''), '');
   });
 
@@ -331,7 +332,7 @@ group('линт одного шага — то, что раньше считал
   });
 
   test('формула с именем шага выше — не беда, с чужим именем — беда', () => {
-    const step = { type: 'apply', target: { expr: '@носитель.hp' }, value: { expr: '@n + 1' } } as unknown as Step;
+    const step = { type: 'apply', target: { expr: '@holder.hp' }, value: { expr: '@n + 1' } } as unknown as Step;
     eq(lintStep(step, bare(), effect, [{ id: 'n', type: 'roll' }]), null);
     const problem = lintStep(step, bare(), effect, []);
     eq(problem?.fix?.tag, 'n');
@@ -366,14 +367,14 @@ group('ссылки и подписки', () => {
       params: [WHO, { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель' } }, { key: 'бонус', label: 'Бонус', kind: 'number' }] as never,
       steps: [{ type: 'each', of: 'цели' }, { id: 'hit', type: 'check', value: { expr: '1' }, versus: { expr: '0' } }, { type: 'branch', if: { expr: 'not @hit.success' } }, { type: 'stop' }, { type: 'end' }] as Step[],
     });
-    deepEq(heardNames(system, listenerOf({ on: 'seen' })).sheets, ['бросающий', 'против']);
-    deepEq(heardNames(system, listenerOf({ on: 'moment:turn-start' })).sheets, ['ходит']);
-    deepEq(heardNames(system, listenerOf({ on: 'gained:x' })).sheets, ['лист']);
+    deepEq(heardNames(system, listenerOf({ on: 'seen' })).sheets, ['roller', 'against']);
+    deepEq(heardNames(system, listenerOf({ on: 'moment:turn-start' })).sheets, ['mover']);
+    deepEq(heardNames(system, listenerOf({ on: 'gained:x' })).sheets, ['sheet']);
     const struck = heardNames(system, listenerOf({ on: 'after:удар' }));
     deepEq(struck.sheets, ['действующий', 'цели', 'цель']);
-    deepEq(struck.seeds, ['бонус', 'hit', 'метки']);
+    deepEq(struck.seeds, ['бонус', 'hit', 'tags']);
     const done = heardNames(system, listenerOf({ on: 'done:удар' }));
-    ok(done.seeds.includes('итоги'));
+    ok(done.seeds.includes('results'));
     ok(!done.seeds.includes('hit'), 'итог шага внутри цикла у каждой цели свой — в «завершено» его нет');
   });
 });
@@ -395,7 +396,7 @@ group('линт: моменты хода', () => {
 group('линт: вопрос «до» у вложенного вызова', () => {
   const nested = (from: 'steps' | 'handler'): System => {
     const system = withEffect('шип', { params: [{ key: 'жертва', label: 'жертва', kind: 'sheet' }] as never, steps: [mend('@жертва.hp')] });
-    const emit = { type: 'emit', effect: 'шип', args: { жертва: { expr: '@носитель' } } } as unknown as Step;
+    const emit = { type: 'emit', effect: 'шип', args: { жертва: { expr: '@holder' } } } as unknown as Step;
     system.effects.удар = { label: 'Удар', activation: 'manual', params: [WHO] as never, steps: from === 'steps' ? [emit] : [] } as Effect;
     system.effects.шипы = { label: 'Шипы', activation: 'passive', on: from === 'handler' ? [{ on: 'after:удар', steps: [emit] }] : [] } as Effect;
     system.effects.заслон = { label: 'Заслон', activation: 'passive', on: [{ on: 'before:шип', confirm: true, steps: [] }] } as Effect;
@@ -460,11 +461,11 @@ group('колонка из таблицы — ссылкой, а не совпа
   };
 
   test('строка ссылается на колонку другой таблицы — ошибок нет', () => {
-    eq(errorsOf(lintSystem(lookups('круг_1', 'table("ячейки", 1, @строка.circle)'))).length, 0);
+    eq(errorsOf(lintSystem(lookups('круг_1', 'table("ячейки", 1, @row.circle)'))).length, 0);
   });
 
   test('ссылка на колонку, которой нет, — ошибка словами', () => {
-    ok(errorsOf(lintSystem(lookups('круг_9', 'table("ячейки", 1, @строка.circle)'))).some(p => /указывает на колонку, которой/.test(p.text)));
+    ok(errorsOf(lintSystem(lookups('круг_9', 'table("ячейки", 1, @row.circle)'))).some(p => /указывает на колонку, которой/.test(p.text)));
   });
 
   test('«из таблицы» с несуществующей колонкой — ошибка, а не тихое «—»', () => {
@@ -513,16 +514,16 @@ group('линт: правка, не привязанная к носителю',
 
   test('условие про носителя — тихо, в том числе внутри «все(…)» и через поле носителя', () => {
     const system = holding([
-      { kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '1' }, if: { expr: '@бросающий == @носитель' } },
-      { kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '0.5' }, if: { expr: '@лист == @носитель and @носитель.hp > 0' } },
+      { kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '1' }, if: { expr: '@roller == @holder' } },
+      { kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '0.5' }, if: { expr: '@лист == @holder and @holder.hp > 0' } },
     ]);
     eq(warned(system).join('|'), '');
   });
 
   test('поле носителя без «… == носитель» — не привязка: «пока носитель истощён» бьёт по броскам всех', () => {
-    const system = holding([{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '-1' }, if: { expr: '@носитель.hp >= 1' } }]);
+    const system = holding([{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '-1' }, if: { expr: '@holder.hp >= 1' } }]);
     eq(warned(system).length, 1, texts(system).join('|'));
-    const apart = holding([{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '1' }, if: { expr: '@бросающий != @носитель' } }]);
+    const apart = holding([{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '1' }, if: { expr: '@roller != @holder' } }]);
     eq(warned(apart).join('|'), '', '«все, кроме носителя» — сравнение с носителем, это осознанно');
   });
 
@@ -534,11 +535,11 @@ group('линт: правка, не привязанная к носителю',
     eq(holderNameOf(system, 'без_листов'), null);
     eq(holderNameOf(system, 'список'), null);
     eq(holderNameOf(system, 'кто'), 'кто');
-    eq(holderNameOf(system, 'roll'), 'бросающий');
+    eq(holderNameOf(system, 'roll'), 'roller');
   });
 
   test('правка вызова с условием не про носителя — предупреждение с подсказкой входа-цели', () => {
-    const system = holding([{ kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '0.5' }, if: { expr: '@стол.страх > 0' } }]);
+    const system = holding([{ kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '0.5' }, if: { expr: '@desk.страх > 0' } }]);
     eq(warned(system).length, 1, texts(system).join('|'));
     ok(warned(system)[0]!.includes('«урон»') && warned(system)[0]!.includes('«Лист — носитель»'), warned(system)[0]);
   });
@@ -585,7 +586,7 @@ group('линт: «Перебросить» — два режима', () => {
 group('линт: вход висящего эффекта и имена, которые видны от вызова', () => {
   const NUM = (key: string, label = key) => ({ key, label, kind: 'number' });
   const LIST = (key: string) => ({ key, label: key, kind: 'sheet' });
-  const pay = { type: 'apply', target: { expr: '@носитель.hp' }, direction: 'subtract', value: { expr: '@бонус' } } as unknown as Step;
+  const pay = { type: 'apply', target: { expr: '@holder.hp' }, direction: 'subtract', value: { expr: '@бонус' } } as unknown as Step;
 
   const struck = (): System => withEffect('удар', {
     label: 'Удар',
@@ -609,7 +610,7 @@ group('линт: вход висящего эффекта и имена, кот�
   });
 
   test('совпадение, которым не пользуются, безвредно: ни в условии, ни в шагах, ни в цене имени нет', () => {
-    const system = hung([NUM('бонус')], { on: 'after:удар', if: { expr: 'true' }, steps: [mend('@носитель.hp', '1')], cost: [{ ...pay, value: { expr: '1' } } as Step] });
+    const system = hung([NUM('бонус')], { on: 'after:удар', if: { expr: 'true' }, steps: [mend('@holder.hp', '1')], cost: [{ ...pay, value: { expr: '1' } } as Step] });
     eq(clashes(system).length, 0, errorTexts(system).join('|'));
   });
 
@@ -627,10 +628,10 @@ group('линт: вход висящего эффекта и имена, кот�
   });
 
   test('побеждает вызов: его лист закрывает и лист, и число; свой лист закрывает только значение вызова', () => {
-    const asSheet = { on: 'after:удар', if: { expr: '@действующий == @носитель' } };
+    const asSheet = { on: 'after:удар', if: { expr: '@действующий == @holder' } };
     eq(clashes(hung([LIST('действующий')], asSheet)).length, 1, 'лист против листа');
     eq(clashes(hung([NUM('действующий')], asSheet)).length, 1, 'число против листа');
-    eq(clashes(hung([LIST('бонус')], { on: 'after:удар', if: { expr: '@бонус == @носитель' } })).length, 0, 'лист против числа: читается свой лист');
+    eq(clashes(hung([LIST('бонус')], { on: 'after:удар', if: { expr: '@бонус == @holder' } })).length, 0, 'лист против числа: читается свой лист');
   });
 
   test('итоги вызова видны подписке «после», в «до» их ещё нет', () => {
@@ -641,15 +642,15 @@ group('линт: вход висящего эффекта и имена, кот�
   });
 
   test('«любое действие» имён не даёт — совпадать нечему', () => {
-    const both = { if: { expr: '@бонус > @метки' } };
-    eq(clashes(hung([NUM('бонус'), NUM('метки')], { on: 'before:удар', ...both })).length, 2, 'у конкретного вызова оба имени заняты');
-    eq(clashes(hung([NUM('бонус'), NUM('метки')], { on: 'before:*', ...both })).length, 0);
+    const both = { if: { expr: '@бонус > @tags' } };
+    eq(clashes(hung([NUM('бонус'), NUM('tags')], { on: 'before:удар', ...both })).length, 2, 'у конкретного вызова оба имени заняты');
+    eq(clashes(hung([NUM('бонус'), NUM('tags')], { on: 'before:*', ...both })).length, 0);
   });
 
   test('метка с договором: вызов зовётся меткой, имена — входы её договора', () => {
     const system = struck();
     system.tags = { атака: { label: 'Любая атака', inputs: [{ key: 'цель', label: 'Цель', kind: 'sheet' }] } } as never;
-    const found = clashes(hung([LIST('цель')], { on: 'before:атака', if: { expr: '@цель == @носитель' } }, system));
+    const found = clashes(hung([LIST('цель')], { on: 'before:атака', if: { expr: '@цель == @holder' } }, system));
     eq(found.join('|'), 'вход «цель» у «Заслон» совпадает с «цель» у «Любая атака»: здесь «цель» — значение «Любая атака». Переименуйте свой вход');
   });
 
@@ -657,15 +658,15 @@ group('линт: вход висящего эффекта и имена, кот�
     const system = struck();
     system.effects.яд = { label: 'Яд', activation: 'passive' } as Effect;
     const cases: [string, string, string][] = [
-      ['seen', 'бросающий', 'кости выпали'],
-      ['moment:turn-end', 'ходит', 'в конце своего хода'],
-      ['gained:яд', 'лист', 'Яд появилось'],
-      ['lost:яд', 'лист', 'Яд ушло'],
-      ['field:hp', 'лист', 'Хиты стало верным'],
+      ['seen', 'roller', 'кости выпали'],
+      ['moment:turn-end', 'mover', 'в конце своего хода'],
+      ['gained:яд', 'sheet', 'Яд появилось'],
+      ['lost:яд', 'sheet', 'Яд ушло'],
+      ['field:hp', 'sheet', 'Хиты стало верным'],
     ];
     for (const [on, name, source] of cases) {
-      const found = clashes(hung([LIST(name)], { on, if: { expr: `@${name} == @носитель` } }, system));
-      eq(found.join('|'), `вход «${name}» у «Заслон» совпадает с «${name}» у «${source}»: здесь «${name}» — значение «${source}». Переименуйте свой вход`, on);
+      const found = clashes(hung([LIST(name)], { on, if: { expr: `@${name} == @holder` } }, system));
+      eq(found.join('|'), `вход «${name}» у «Заслон» совпадает с «${nameLabel(name)}» у «${source}»: здесь «${nameLabel(name)}» — значение «${source}». Переименуйте свой вход`, on);
       eq(clashes(hung([LIST(name)], { on, if: { expr: 'true' } }, system)).length, 0, `${on}: не используется`);
     }
   });
@@ -677,7 +678,7 @@ group('линт: вход висящего эффекта и имена, кот�
     });
     system.effects.щит = {
       label: 'Щит', activation: 'passive', params,
-      modifiers: [{ kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '0.5' }, if: { expr: '@лист == @носитель' }, ...mod }],
+      modifiers: [{ kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '0.5' }, if: { expr: '@лист == @holder' }, ...mod }],
     } as unknown as Effect;
     return system;
   };
@@ -703,12 +704,12 @@ group('линт: вход висящего эффекта и имена, кот�
 
   test('правка броска: «бросающий» и «против» — имена броска, он назван «Бросок»', () => {
     const system = withEffect('щит', {
-      label: 'Щит', activation: 'passive', params: [LIST('против'), NUM('метки')] as never,
-      modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '1' }, if: { expr: '@бросающий == @носитель' } }] as never,
+      label: 'Щит', activation: 'passive', params: [LIST('against'), NUM('tags')] as never,
+      modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '1' }, if: { expr: '@roller == @holder' } }] as never,
     });
     eq(clashes(system).length, 0, 'не читают — тишина');
-    system.effects.щит!.modifiers = [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '1' }, if: { expr: '@против != @носитель and @бросающий == @носитель' } }] as never;
-    eq(clashes(system).join('|'), 'вход «против» у «Щит» совпадает с «против» у «Бросок»: здесь «против» — значение «Бросок». Переименуйте свой вход');
+    system.effects.щит!.modifiers = [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '1' }, if: { expr: '@against != @holder and @roller == @holder' } }] as never;
+    eq(clashes(system).join('|'), 'вход «against» у «Щит» совпадает с «против» у «Бросок»: здесь «против» — значение «Бросок». Переименуйте свой вход');
   });
 });
 
@@ -769,7 +770,7 @@ group('линт: слово «строка» занято', () => {
   });
 
   test('«для каждой строки» не может звать строку словом «строка»', () => {
-    ok(errorTexts(looping('строка')).some(t => t.includes('имя строки «строка» уже занято: так зовётся слово движка')), errorTexts(looping('строка')).join('|'));
+    ok(errorTexts(looping('row')).some(t => t.includes('имя строки «строка» уже занято: так зовётся слово движка')), errorTexts(looping('row')).join('|'));
     eq(errorTexts(looping('запас')).join(''), '');
   });
 
@@ -809,15 +810,15 @@ group('линт: клетка записи в правке типа и поле 
     eq(errorsOf(lintSystem(typed([bump('@hp')]))).filter(p => p.text.includes('клетку записи')).length, 0);
   });
 
-  test('записанная как @строка.колонка, чужая колонка и колонка без поля — тишина', () => {
-    eq(cellWarns(typed([bump('@строка.hp')])).length, 0);
+  test('записанная как @row.колонка, чужая колонка и колонка без поля — тишина', () => {
+    eq(cellWarns(typed([bump('@row.hp')])).length, 0);
     eq(cellWarns(typed([bump('@вес')])).length, 0, 'вес — не поле листа');
     const other = typed([bump('@hp')], { columns: [{ key: 'вес', label: 'Вес', kind: 'number' }] });
     eq(cellWarns(other).length, 0, 'у типа нет колонки hp');
   });
 
   test('правка вызова с голым полем и так ошибка «чьё поле?» — второго сообщения нет', () => {
-    const system = typed([{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '@hp' }, if: { expr: '@бросающий == @носитель' } }]);
+    const system = typed([{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '@hp' }, if: { expr: '@roller == @holder' } }]);
     eq(cellWarns(system).length, 0);
     ok(errorTexts(system).some(t => t.includes('«Хиты» — чьё поле?')), errorTexts(system).join('|'));
   });
@@ -836,7 +837,7 @@ group('линт: клетка записи в правке типа и поле 
     const system = typed([]);
     const book = { records: [
       { id: 'меч', table: 'оружие', label: 'Меч', modifiers: [bump('@hp')] },
-      { id: 'лук', table: 'оружие', label: 'Лук', modifiers: [bump('@строка.hp')] },
+      { id: 'лук', table: 'оружие', label: 'Лук', modifiers: [bump('@row.hp')] },
       { id: 'свиток', label: 'Свиток', modifiers: [bump('@hp')] },
     ] };
     const found = cellWarns(system, book);
@@ -915,7 +916,7 @@ group('линт: наложение не заполняет вход налож�
     const system = applied({ params: [{ key: 'кто', label: 'Кто', kind: 'sheet', role: 'actor' }, NUM] as never }, {}, { steps: [] });
     system.effects.заслон = {
       label: 'Заслон', activation: 'passive',
-      on: [{ on: 'after:вешает', steps: [{ type: 'status', effect: 'метка', to: { expr: '@носитель' }, args: { кто: { expr: '@носитель' } } }] }],
+      on: [{ on: 'after:вешает', steps: [{ type: 'status', effect: 'метка', to: { expr: '@holder' }, args: { кто: { expr: '@holder' } } }] }],
     } as unknown as Effect;
     const [problem] = lintSystem(system).filter(p => p.text.includes('не заполняет его вход'));
     eq(problem?.text, 'наложение «Метка» не заполняет его вход «Сила»');
@@ -1009,7 +1010,7 @@ group('линт: слова движка у входов и шагов — «н�
   });
 
   test('висящий эффект: вход «носитель» недостижим в подписке, потому ошибка и там, где он объявлен', () => {
-    const system = withEffect('щит', { activation: 'passive', params: [input('носитель')] as never, on: [{ on: 'moment:turn-start', if: { expr: '@носитель == @носитель' }, steps: [] }] as never });
+    const system = withEffect('щит', { activation: 'passive', params: [input('носитель')] as never, on: [{ on: 'moment:turn-start', if: { expr: '@holder == @holder' }, steps: [] }] as never });
     eq(found(system).length, 1);
   });
 });
@@ -1031,8 +1032,8 @@ group('линт: подписка «после» видит итоги вызо�
 
   test('heardNames: итоги вызываемого — в именах фазы «после» и только в ней', () => {
     const system = called();
-    deepEq(heardNames(system, listenerOf({ on: 'after:удар' })).seeds, ['бросок', 'попал', 'урон', 'метки']);
-    deepEq(heardNames(system, listenerOf({ on: 'before:удар' })).seeds, ['бросок', 'метки']);
+    deepEq(heardNames(system, listenerOf({ on: 'after:удар' })).seeds, ['бросок', 'попал', 'урон', 'tags']);
+    deepEq(heardNames(system, listenerOf({ on: 'before:удар' })).seeds, ['бросок', 'tags']);
     ok(!heardNames(system, listenerOf({ on: 'done:удар' })).seeds.includes('попал'));
     deepEq(heardNames(system, listenerOf({ on: 'after:*' })).seeds, []);
   });
@@ -1047,7 +1048,7 @@ group('линт: подписка «после» видит итоги вызо�
     const system = called();
     system.effects.заслон = {
       label: 'Заслон', activation: 'passive',
-      on: [{ on: 'after:удар', cost: [mend('@носитель.hp', '@урон')], steps: [mend('@носитель.hp', '@урон')] }],
+      on: [{ on: 'after:удар', cost: [mend('@holder.hp', '@урон')], steps: [mend('@holder.hp', '@урон')] }],
     } as unknown as Effect;
     eq(dangling(system).length, 0, errorTexts(system).join('|'));
   });

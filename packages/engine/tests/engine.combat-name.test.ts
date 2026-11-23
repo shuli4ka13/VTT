@@ -13,14 +13,14 @@ const system = {
   effects: {
     метка: {
       label: 'Метка', activation: 'manual', params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }],
-      steps: [{ type: 'apply', target: { expr: '@действующий.счёт' }, direction: 'add', value: { expr: 'if(@стол.бой, 10, 1)' } }],
+      steps: [{ type: 'apply', target: { expr: '@действующий.счёт' }, direction: 'add', value: { expr: 'if(@desk.combat, 10, 1)' } }],
     },
   },
 } as unknown as System;
 const compendium = { records: [{ id: 'кнопки', table: 'кнопки', label: 'Кнопки', cells: {} }] } as unknown as Compendium;
 const me: Sheet = { id: 'я', systemId: 'x', name: 'я', values: { счёт: 0 }, has: [{ of: 'кнопки' }], effects: [] } as unknown as Sheet;
 
-group('«@стол.бой» — идёт ли бой', () => {
+group('«@desk.combat» — идёт ли бой', () => {
   test('вне боя — нет', () => {
     eq(exchange({ system, compendium, die: () => 1, sheets: [me], actionId: 'кнопки:0', fromId: 'я', toIds: [] }).sheets[0]!.values.счёт, 1);
   });

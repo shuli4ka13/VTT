@@ -385,11 +385,11 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@стол.alarm"
+              "expr": "@desk.alarm"
             },
             "direction": "set",
             "value": {
-              "expr": "min(8, @стол.alarm + 1)"
+              "expr": "min(8, @desk.alarm + 1)"
             }
           },
           {
@@ -401,11 +401,11 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@стол.alarm"
+              "expr": "@desk.alarm"
             },
             "direction": "set",
             "value": {
-              "expr": "min(8, @стол.alarm + 2)"
+              "expr": "min(8, @desk.alarm + 2)"
             }
           },
           {
@@ -588,7 +588,7 @@
               "expr": "\"нулевой\""
             },
             "if": {
-              "expr": "@бросающий == @носитель and @число == 0"
+              "expr": "@roller == @holder and @number == 0"
             }
           },
           {
@@ -603,7 +603,7 @@
               "expr": "1"
             },
             "if": {
-              "expr": "@бросающий == @носитель and @число == 0"
+              "expr": "@roller == @holder and @number == 0"
             }
           },
           {
@@ -615,7 +615,7 @@
             "param": "edits",
             "edit": "zero_rating",
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             }
           }
         ]
@@ -803,7 +803,7 @@
             "effect": "risky_action",
             "args": {
               "rating": {
-                "expr": "@носитель.skirmish"
+                "expr": "@holder.skirmish"
               }
             }
           }
@@ -820,7 +820,7 @@
             "effect": "risky_action",
             "args": {
               "rating": {
-                "expr": "@носитель.prowl"
+                "expr": "@holder.prowl"
               }
             }
           }
@@ -837,7 +837,7 @@
             "effect": "risky_action",
             "args": {
               "rating": {
-                "expr": "@носитель.sway"
+                "expr": "@holder.sway"
               }
             }
           }
@@ -949,7 +949,7 @@
       "effects": []
     },
     {
-      "id": "стол",
+      "id": "desk",
       "systemId": "blades",
       "name": "Стол",
       "values": {

@@ -12,9 +12,9 @@ const system = flattenSystem({
     стойка: { label: 'Стойка', activation: 'passive', duration: { kind: 'combat' } },
     шок: { label: 'Шок', activation: 'passive', duration: { kind: 'rounds', max: 3 } },
     счёт: { label: 'Счёт', activation: 'passive', on: [
-      { on: 'moment:turn-end', if: { expr: '@ходит == @носитель' }, steps: [{ type: 'apply', target: { expr: '@носитель.концы' }, direction: 'add', value: { expr: '1' } }] },
-      { on: 'moment:combat-end', steps: [{ type: 'apply', target: { expr: '@носитель.кончился' }, direction: 'add', value: { expr: '1' } }] },
-      { on: 'moment:combat-leave', steps: [{ type: 'apply', target: { expr: '@носитель.вышел' }, direction: 'add', value: { expr: '1' } }] },
+      { on: 'moment:turn-end', if: { expr: '@mover == @holder' }, steps: [{ type: 'apply', target: { expr: '@holder.концы' }, direction: 'add', value: { expr: '1' } }] },
+      { on: 'moment:combat-end', steps: [{ type: 'apply', target: { expr: '@holder.кончился' }, direction: 'add', value: { expr: '1' } }] },
+      { on: 'moment:combat-leave', steps: [{ type: 'apply', target: { expr: '@holder.вышел' }, direction: 'add', value: { expr: '1' } }] },
     ] },
   },
 } as unknown as System);
@@ -41,8 +41,8 @@ describe('бой по выбранным участникам', () => {
   });
 
   it('стол и группу в бой не берут; бросок и порядок руками вместе — отказ', () => {
-    const desk = { ...sheet('стол', 'Стол', 0) } as Sheet;
-    expect(() => run([a, desk], idle, { op: 'turn', turn: 'start', who: ['стол'] })).toThrow('стол в бою не участвует');
+    const desk = { ...sheet('desk', 'Стол', 0) } as Sheet;
+    expect(() => run([a, desk], idle, { op: 'turn', turn: 'start', who: ['desk'] })).toThrow('стол в бою не участвует');
     expect(() => run([a, b], idle, { op: 'turn', turn: 'start', who: ['а'], order: ['б'] })).toThrow('не оба');
   });
 

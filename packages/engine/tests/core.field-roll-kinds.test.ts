@@ -72,20 +72,20 @@ describe('число поля в броске: грани, не больше, н
   });
 
   it('«Итог» формулой: число минус выпавшее', () => {
-    const system = world('bonus', { dice: [{ sides: 100 }] }, {}, { total: { expr: '@число - @бросок.natural' } });
+    const system = world('bonus', { dice: [{ sides: 100 }] }, {}, { total: { expr: '@number - @roll.natural' } });
     expect(roll(system, hero(40), [13]).log).toContain('= 27');
   });
 
   it('«Итог» формулой: первая часть минус вторая', () => {
-    const system = world('bonus', { dice: [{ sides: 6, name: 'плюс' }, { sides: 6, name: 'минус' }] }, {}, { total: { expr: '@бросок.parts.плюс - @бросок.parts.минус + @число' } });
+    const system = world('bonus', { dice: [{ sides: 6, name: 'плюс' }, { sides: 6, name: 'минус' }] }, {}, { total: { expr: '@roll.parts.плюс - @roll.parts.минус + @number' } });
     expect(roll(system, hero(3), [5, 2]).log).toContain('= 6');
   });
 
   it('степени: к100 против 50 — 9 экстремальный, 24 трудный, 40 обычный, 70 провал без степени', () => {
     const degrees = [
-      { label: 'экстремальный успех', if: { expr: '@выпало <= floor(@число / 5)' } },
-      { label: 'трудный успех', if: { expr: '@выпало <= floor(@число / 2)' } },
-      { label: 'обычный успех', if: { expr: '@выпало <= @число' } },
+      { label: 'экстремальный успех', if: { expr: '@rolled <= floor(@number / 5)' } },
+      { label: 'трудный успех', if: { expr: '@rolled <= floor(@number / 2)' } },
+      { label: 'обычный успех', if: { expr: '@rolled <= @number' } },
     ];
     const system = world('under', { dice: [{ count: 1, sides: 100 }] }, {}, { degrees });
     expect(roll(system, hero(50), [9]).log).toContain('· экстремальный успех');
@@ -98,7 +98,7 @@ describe('число поля в броске: грани, не больше, н
   it('«оставить» без «сколько костей» и сломанная формула степени — ошибки «Проблем»', () => {
     const keep = world('bonus', { dice: [{ count: 1, sides: 20 }] }, {}, { keep: { expr: '1' } });
     expect(errorsOf(lintSystem(keep)).some(p => p.text.includes('оставить лучшие можно'))).toBe(true);
-    const bad = world('under', { dice: [{ count: 1, sides: 100 }] }, {}, { degrees: [{ label: 'x', if: { expr: '@выпало <=' } }] });
+    const bad = world('under', { dice: [{ count: 1, sides: 100 }] }, {}, { degrees: [{ label: 'x', if: { expr: '@rolled <=' } }] });
     expect(errorsOf(lintSystem(bad)).some(p => p.text.includes('степень «x»'))).toBe(true);
   });
 });

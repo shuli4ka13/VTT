@@ -807,7 +807,7 @@ export class Run {
     }
     const names = namesOf(callee.params, args);
     const passed = rollsOf(callee.params, args);
-    const values = { ...valuesOf(callee.params, args), ...totalsOf(passed), метки: payload.tags };
+    const values = { ...valuesOf(callee.params, args), ...totalsOf(passed), [NAMES.tags]: payload.tags };
     const home = Object.values(names).find((id): id is string => typeof id === 'string') ?? frame.home;
     const at = path.call(event);
     const keys = keysOf(this.system, event, false);
@@ -816,7 +816,7 @@ export class Run {
     if (frame.inSub) {
       const { entries, delivered } = this.group([{
         effectId: event, label: callee.label || event, steps: callee.steps ?? [], path: at, hop: frame.hop + 1, top: false,
-        home: frame.home, subject: home, bound: names, keys, args: values, paramDefs: callee.params ?? [], seed: { метки: payload.tags }, rolls: passed,
+        home: frame.home, subject: home, bound: names, keys, args: values, paramDefs: callee.params ?? [], seed: { [NAMES.tags]: payload.tags }, rolls: passed,
         ...(frame.cost ? { cost: true } : {}),
       }], at);
       sink.after.push(...entries);
@@ -833,9 +833,9 @@ export class Run {
         ...(frame.cost ? { cost: true } : {}),
       };
       const before = keys.map(key => `before:${key}`);
-      const peek = this.listens(before) ? this.probe(() => this.exec(inner, callee.steps ?? [], newSink(), { метки: payload.tags }, event, passed)) : null;
+      const peek = this.listens(before) ? this.probe(() => this.exec(inner, callee.steps ?? [], newSink(), { [NAMES.tags]: payload.tags }, event, passed)) : null;
       this.hear({ keys: before, names, seed: { ...values, ...(peek?.results ?? {}) }, rolls: peek?.rolls ?? {}, path: at.phase('before'), hop: frame.hop, owner: sub => `«${labelOf(sub)}» — до «${callee.label || event}»` }, sink);
-      const ran = this.exec(inner, callee.steps ?? [], sink, { метки: payload.tags }, event, passed);
+      const ran = this.exec(inner, callee.steps ?? [], sink, { [NAMES.tags]: payload.tags }, event, passed);
       const returns = this.returnsOf(callee, inner, ran);
       if (returns) emitted.values = { ...values, ...returns };
       this.hear({ keys: keys.map(key => `after:${key}`), names, seed: { ...values, ...ran.results, ...(returns ?? {}) }, rolls: ran.rolls, path: at.phase('after'), hop: frame.hop, owner: sub => `«${labelOf(sub)}» — после «${callee.label || event}»` }, sink);
@@ -932,7 +932,7 @@ export class Run {
       out[param.key] = value;
       if (param.kind === 'choice' && param.from) tags.push(...(Array.isArray(value) ? value.map(String) : [String(value)]));
     }
-    out.метки = tags;
+    out[NAMES.tags] = tags;
     return out;
   }
 
@@ -1039,7 +1039,7 @@ export class Run {
   }
 
   private boundFor(sub: Sub, names: Record<string, Bound>): Record<string, Bound> {
-    return { ...this.hanging(sub).bound, ...names, носитель: sub.sheetId };
+    return { ...this.hanging(sub).bound, ...names, [NAMES.holder]: sub.sheetId };
   }
 
   private holds(sub: Sub, names: Record<string, Bound>, seed: Record<string, unknown>, rolls: Record<string, RollResult> = {}): boolean {
@@ -1288,10 +1288,10 @@ export class Run {
           this.momentReact(hook, at.phase('hook'), {}, {}, `«${name}» ${HOOK_WORDS[change.turn]}`, `${name} · ${HOOK_WORDS[change.turn]}`, true);
         }
         const turn = change.turn === 'attach' ? 'gained' : 'lost';
-        const seed = { about: { ...(change.entry.args ?? {}) }, эффект: change.entry.effectId };
+        const seed = { about: { ...(change.entry.args ?? {}) }, [NAMES.effect]: change.entry.effectId };
         for (const heard of [change.entry.effectId, ...(effect.tags ?? []).filter(tag => tag !== change.entry.effectId)]) {
           const where = heard === change.entry.effectId ? at : at.phase('tag').phase(heard);
-          this.hooked(`${turn}:${heard}`, { лист: change.sheetId }, where, seed, `«${name}» ${HEARD_WORDS[change.turn]}`,
+          this.hooked(`${turn}:${heard}`, { [NAMES.sheet]: change.sheetId }, where, seed, `«${name}» ${HEARD_WORDS[change.turn]}`,
             sub => `«${name}» ${HEARD_WORDS[change.turn]} у «${labelOf(sub)}»`);
         }
       }
@@ -1330,7 +1330,7 @@ export class Run {
       any = true;
       for (const { sheetId, tag, value } of found) {
         const label = findField(this.system, tag)?.label ?? tag;
-        this.hooked(`field:${tag}`, { лист: sheetId }, path.nth(wave).phase(tag).at(sheetId), { field: { tag, value } }, `поле «${label}» стало верным`,
+        this.hooked(`field:${tag}`, { [NAMES.sheet]: sheetId }, path.nth(wave).phase(tag).at(sheetId), { field: { tag, value } }, `поле «${label}» стало верным`,
           sub => `поле «${label}» стало верным у «${labelOf(sub)}»`);
       }
     }
@@ -1390,7 +1390,7 @@ export class Run {
     if (own || given !== null) {
       const holders = this.holderViews();
       const view = (id: string) => holders.find(holder => holder.id === id)!.view;
-      const shift = gather(holders, { call: ROLL_CALL, param: THRESHOLD_PARAM, tags: thrown.thrower?.tags ?? tags, names: { бросающий: sheetId, против: extra.against }, values: { [NUMBER_NAME]: asked }, view })
+      const shift = gather(holders, { call: ROLL_CALL, param: THRESHOLD_PARAM, tags: thrown.thrower?.tags ?? tags, names: { [NAMES.roller]: sheetId, [NAMES.against]: extra.against }, values: { [NUMBER_NAME]: asked }, view })
         .reduce((sum, held) => sum + amountOf(held), 0);
       const versus = thrown.roll.claim.versusShift * (check.under ? -1 : 1);
       base = own ? num(check.threshold, `${owner} · порог`) : given!;
@@ -1437,7 +1437,7 @@ export class Run {
       : this.ext.ask(question);
     const unique = [...new Set(chosen)];
     const stray = unique.find(id => !question.offers.some(offer => offer.id === id));
-    if (stray) throw new EngineError(`реакция «${stray}» сейчас не предлагается; можно: ${question.offers.map(o => o.id).join(', ') || '(ничего)'}`);
+    if (stray) throw new EngineError(`реакция «${stray}» сейчас не предлагается; можно: ${question.offers.map(o => o.label ?? o.id).join(', ') || '(ничего)'}`);
     return { chosen: unique, skipped: byPerson && !unique.length };
   }
 
@@ -1525,7 +1525,7 @@ export class Run {
   seen(rollerId: string, againstId: string | null, roll: Roll, tags: readonly string[], path: Path, hop: number, sink: Sink, shown?: ShownBonus): Roll {
     if (this.seeing) return roll;
     const cell = { value: roll, bonus: shown?.value ?? 0 };
-    const names: Record<string, Bound> = { бросающий: rollerId, против: againstId };
+    const names: Record<string, Bound> = { [NAMES.roller]: rollerId, [NAMES.against]: againstId };
     const seed = (): Record<string, unknown> => {
       const now = result(cell.value);
       return {

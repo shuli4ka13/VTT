@@ -9,7 +9,7 @@ import type { EditFn } from '../words.ts';
 import { badFormula } from '../../roll-expr.ts';
 import { DegreesEditor } from '../../degrees-editor.tsx';
 import { whoOf } from '../../readback.ts';
-import { tagWords, splitsTargets } from '@vtt/engine';
+import { tagWords, splitsTargets, NAMES, NAME_LABELS, DESK_ID } from '@vtt/engine';
 
 const loose = (draft: unknown): Record<string, any> => draft as Record<string, any>;
 
@@ -50,8 +50,8 @@ export function CheckBody({ step, context, edit, system, asIf = false }: {
       onCommit={text => edit(at, draft => { const d = loose(draft); if (text.trim()) d[key] = { expr: text.trim() }; else delete d[key]; })}
     />
   );
-  const degreeNames = useMemo(() => new Map([...names, ['успех', 'успех'], ['степени', 'степени']]), [names]);
-  const degreeMeanings = useMemo(() => new Map([['успех', 'да или нет — исход этой проверки'], ['степени', 'число — запас над порогом этой проверки']]), []);
+  const degreeNames = useMemo(() => new Map([...names, [NAMES.success, NAME_LABELS.success], [NAMES.margin, NAME_LABELS.margin]]), [names]);
+  const degreeMeanings = useMemo(() => new Map([[NAMES.success, 'да или нет — исход этой проверки'], [NAMES.margin, 'число — запас над порогом этой проверки']]), []);
   const rolled = readsRoll(step, context);
   const summary = moreSummary(step, rolled, text => formulaWords(system, text, names));
   const side = (key: 'value' | 'versus', label: string, placeholder: string) => (
@@ -172,7 +172,7 @@ function againstWords(step: any, context: SlotContext): string | null {
   const roller = throwerOf(mine);
   const found = new Set<string>();
   for (const [name] of context.sheets ?? []) {
-    if (name !== 'стол' && name !== roller && new RegExp(`@${name}\\.`, 'u').test(other)) found.add(name);
+    if (name !== DESK_ID && name !== roller && new RegExp(`@${name}\\.`, 'u').test(other)) found.add(name);
   }
   const theirs = whole({ expr: other });
   const their = theirs ? throwerOf(theirs) : null;

@@ -100,7 +100,7 @@ describe('бросок внутри готового блока остаётся
   it('«увидев кости» срабатывает на броске внутри вызова', () => {
     const system = world({
       удар: strike(),
-      удача: { label: 'Удача', activation: 'passive', on: [{ on: 'seen', if: { expr: '@бросающий == @носитель' }, steps: [{ type: 'roll-plus', value: { expr: '10' } }] }] },
+      удача: { label: 'Удача', activation: 'passive', on: [{ on: 'seen', if: { expr: '@roller == @holder' }, steps: [{ type: 'roll-plus', value: { expr: '10' } }] }] },
     });
     expect(hp(play(system, [sheet('а', {}, ['удача']), sheet('б')], [3]), 'б'), '3 + 5 + 10 ≥ 15').toBe(17);
   });
@@ -108,7 +108,7 @@ describe('бросок внутри готового блока остаётся
   it('вопрос «увидев кости» задаётся игроку и для броска внутри вызова', () => {
     const system = world({
       удар: strike(),
-      удача: { label: 'Удача', activation: 'passive', on: [{ on: 'seen', if: { expr: '@бросающий == @носитель' }, confirm: true, steps: [{ type: 'roll-plus', value: { expr: '10' } }] }] },
+      удача: { label: 'Удача', activation: 'passive', on: [{ on: 'seen', if: { expr: '@roller == @holder' }, confirm: true, steps: [{ type: 'roll-plus', value: { expr: '10' } }] }] },
     });
     const first = act({ system, compendium: book, clock: null, sheets: [sheet('а', {}, ['удача']), sheet('б')], die: queue(3), journal: emptyJournal() },
       { actionId: 'приём:0', fromId: 'а', toIds: ['б'] });
@@ -120,7 +120,7 @@ describe('бросок внутри готового блока остаётся
   it('подписка «до удара» видит итог готового блока из пробы тела (Щит)', () => {
     const system = world({
       удар: strike(),
-      щит: { label: 'Щит', activation: 'passive', on: [{ on: 'before:удар', if: { expr: '@цель == @носитель and @атака.попал' }, steps: [{ type: 'apply', target: { expr: '@носитель.щит' }, direction: 'add', value: { expr: '1' } }] }] },
+      щит: { label: 'Щит', activation: 'passive', on: [{ on: 'before:удар', if: { expr: '@цель == @holder and @атака.попал' }, steps: [{ type: 'apply', target: { expr: '@holder.щит' }, direction: 'add', value: { expr: '1' } }] }] },
     });
     const out = play(system, [sheet('а'), sheet('б', {}, ['щит'])], [12, 12]);
     expect(out.sheets.find(s => s.id === 'б')!.values.щит).toBe(1);
@@ -245,7 +245,7 @@ describe('аргументы «сами» — правила по ревью', (
   it('у висящего эффекта «кто действует» — носитель, а не первый лист-вход', async () => {
     const { implicitOf } = await import('../src/model/implicit.ts');
     const hanging = { activation: 'passive', params: [{ key: 'помеченный', label: 'помеченный', kind: 'sheet' }] } as never;
-    expect(implicitOf({ key: 'источник', label: 'Источник', kind: 'sheet', role: 'actor' } as never, hanging)).toEqual({ by: 'actor', from: 'носитель' });
+    expect(implicitOf({ key: 'источник', label: 'Источник', kind: 'sheet', role: 'actor' } as never, hanging)).toEqual({ by: 'actor', from: 'holder' });
   });
   it('одноимённый вход не перебивает умолчание вызываемого', async () => {
     const { implicitOf } = await import('../src/model/implicit.ts');

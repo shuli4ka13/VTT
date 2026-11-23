@@ -13,7 +13,7 @@ const base = {
       label: 'Характеристики', owner: 'sheet',
       columns: [
         { key: 'score', label: 'Значение', kind: 'number', default: 10 },
-        { key: 'mod', label: 'Модификатор', kind: 'number', expr: { expr: 'floor((@строка.score - 10) / 2)' }, title: 'Модификатор: {label}' },
+        { key: 'mod', label: 'Модификатор', kind: 'number', expr: { expr: 'floor((@row.score - 10) / 2)' }, title: 'Модификатор: {label}' },
       ],
       rows: [{ value: 'сила', label: 'Сила' }, { value: 'ловкость', label: 'Ловкость' }],
     },
@@ -21,7 +21,7 @@ const base = {
       label: 'Навыки', owner: 'sheet',
       columns: [
         { key: 'ability', label: 'Характеристика', kind: 'choice', from: 'abilities' },
-        { key: 'total', label: 'Навык', kind: 'number', expr: { expr: '@строка.ability.mod + 1' } },
+        { key: 'total', label: 'Навык', kind: 'number', expr: { expr: '@row.ability.mod + 1' } },
       ],
       rows: [{ value: 'атлетика', label: 'Атлетика', cells: { ability: 'сила' } }],
     },
@@ -74,14 +74,14 @@ group('таблица на листе: пустая клетка — ввод, �
 
   test('своя формула в клетке перебивает формулу колонки', () => {
     const own = copy();
-    own.tables!.abilities!.rows![1]!.cells = { mod: { expr: '@строка.score * 2' } };
+    own.tables!.abilities!.rows![1]!.cells = { mod: { expr: '@row.score * 2' } };
     deepEq(fieldsOf(own).filter(f => f.cell?.column === 'mod').map(f => (f.value as { expr: string }).expr),
       ['floor((@abilities.сила.score - 10) / 2)', '@abilities.ловкость.score * 2']);
   });
 
   test('вид одной клетки лежит у строки и перебивает вид колонки', () => {
     const own = copy();
-    own.tables!.abilities!.rows![0]!.view = { mod: { label: 'Мощь', roll: { die: 'к20', bonus: { expr: '@строка.mod' } } } };
+    own.tables!.abilities!.rows![0]!.view = { mod: { label: 'Мощь', roll: { die: 'к20', bonus: { expr: '@row.mod' } } } };
     const field = fieldOf(own, 'abilities.сила.mod')!;
     eq(field.label, 'Мощь');
     eq(field.roll!.bonus!.expr, '@abilities.сила.mod');

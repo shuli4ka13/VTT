@@ -5,7 +5,7 @@ import type { System } from '../src/model/types.ts';
 
 const word = (key: string, tags: string[]) => ({
   label: 'Чары', activation: 'passive',
-  modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', edit: key, tags, if: { expr: '@бросающий == @носитель' } }],
+  modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', edit: key, tags, if: { expr: '@roller == @holder' } }],
 });
 
 const system = (tags: string[], key = 'step_up') => ({

@@ -14,7 +14,7 @@ const queue = (...values: number[]) => {
 };
 
 const hit = (amount: string, field = '@цель.хп') => ({ type: 'apply', target: { expr: field }, direction: 'subtract', value: { expr: amount } });
-const heal = (amount: string, field = '@носитель.хп') => ({ type: 'apply', target: { expr: field }, direction: 'add', value: { expr: amount } });
+const heal = (amount: string, field = '@holder.хп') => ({ type: 'apply', target: { expr: field }, direction: 'add', value: { expr: amount } });
 
 const ACTOR = { key: 'действующий', kind: 'sheet' };
 const TARGETS = { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } };
@@ -51,7 +51,7 @@ const play = (system: System, sheets: Sheet[], to: string, dice: number[], extra
 const value = (out: { sheets: Sheet[] }, id: string, tag: string) => out.sheets.find(s => s.id === id)!.values[tag];
 
 describe('новое ядро: сознательные изменения', () => {
-  const mine = { on: 'after:удар', if: { expr: '@цель == @носитель' } };
+  const mine = { on: 'after:удар', if: { expr: '@цель == @holder' } };
 
   it('цена автоподписки берётся; нечем платить — подписка не срабатывает', () => {
     const system = world({
@@ -59,9 +59,9 @@ describe('новое ядро: сознательные изменения', () 
       стойка: {
         label: 'Стойка', activation: 'passive',
         on: [{ ...mine, cost: [
-          { id: 'запас', type: 'check', value: { expr: '@носитель.ки' }, versus: { expr: '1' } },
+          { id: 'запас', type: 'check', value: { expr: '@holder.ки' }, versus: { expr: '1' } },
           { type: 'branch', if: { expr: 'not @запас.success' } }, { type: 'stop' }, { type: 'end' },
-          hit('1', '@носитель.ки'),
+          hit('1', '@holder.ки'),
         ], steps: [heal('5')] }],
       },
     });
@@ -75,8 +75,8 @@ describe('новое ядро: сознательные изменения', () 
   it('эффект, снятый подпиской раньше в том же моменте, уже не срабатывает', () => {
     const system = world({
       удар: button([hit('1')]),
-      лёд: { label: 'Лёд', activation: 'passive', on: [{ ...mine, steps: [{ type: 'status', mode: 'remove', effect: 'огонь', to: { expr: '@носитель' } }] }] },
-      огонь: { label: 'Огонь', activation: 'passive', on: [{ ...mine, steps: [hit('5', '@носитель.хп')] }] },
+      лёд: { label: 'Лёд', activation: 'passive', on: [{ ...mine, steps: [{ type: 'status', mode: 'remove', effect: 'огонь', to: { expr: '@holder' } }] }] },
+      огонь: { label: 'Огонь', activation: 'passive', on: [{ ...mine, steps: [hit('5', '@holder.хп')] }] },
     });
     const out = play(system, [sheet('а'), sheet('б', {}, [{ effectId: 'лёд' }, { effectId: 'огонь' }])], 'б', []);
     expect(value(out, 'б', 'хп')).toBe(19);
@@ -101,7 +101,7 @@ describe('новое ядро: сознательные изменения', () 
         { type: 'branch', if: { expr: 'not @спор.success' } }, { type: 'stop' }, { type: 'end' },
         hit('3'),
       ]),
-      неуловим: { label: 'Неуловим', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', if: { expr: '@против == @носитель' }, op: 'add', value: { expr: '-@носитель.уклон' } }] },
+      неуловим: { label: 'Неуловим', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', if: { expr: '@against == @holder' }, op: 'add', value: { expr: '-@holder.уклон' } }] },
     });
     const plain = play(system, [sheet('а', { уклон: 4 }), sheet('б')], 'б', [10, 12]);
     expect(value(plain, 'б', 'хп'), 'без правок цель перебрасывает: 12 против 10').toBe(20);
@@ -120,7 +120,7 @@ describe('новое ядро: сознательные изменения', () 
         { type: 'end' },
         hit('1'),
       ]),
-      удача: { label: 'Удача', activation: 'passive', on: [{ on: 'seen', if: { expr: '@бросающий == @носитель' }, steps: [hit('1', '@носитель.ки'), { type: 'roll-plus', value: { expr: '0' } }] }] },
+      удача: { label: 'Удача', activation: 'passive', on: [{ on: 'seen', if: { expr: '@roller == @holder' }, steps: [hit('1', '@holder.ки'), { type: 'roll-plus', value: { expr: '0' } }] }] },
     });
     const out = play(system, [sheet('а', { ки: 3 }, [{ effectId: 'удача' }]), sheet('б')], 'б', []);
     expect(value(out, 'а', 'ки')).toBe(3);
@@ -130,7 +130,7 @@ describe('новое ядро: сознательные изменения', () 
   it('копия реакции в стопке: выбрана одна — платит и тратит заряд одна', () => {
     const system = world({
       удар: button([hit('1')]),
-      парир: { label: 'Парирование', activation: 'passive', reapply: 'stack', duration: { kind: 'uses', max: 1 }, on: [{ on: 'before:удар', if: { expr: '@цель == @носитель' }, confirm: true, steps: [heal('1')] }] },
+      парир: { label: 'Парирование', activation: 'passive', reapply: 'stack', duration: { kind: 'uses', max: 1 }, on: [{ on: 'before:удар', if: { expr: '@цель == @holder' }, confirm: true, steps: [heal('1')] }] },
     });
     const sheets = [sheet('а'), sheet('б', {}, [{ effectId: 'парир', usesLeft: 1 }, { effectId: 'парир', usesLeft: 1 }])];
     const first = act({ system, compendium: book, clock: null, sheets, die: queue(), journal: emptyJournal() }, { actionId: 'приём:0', fromId: 'а', toIds: ['б'] });
@@ -144,7 +144,7 @@ describe('новое ядро: сознательные изменения', () 
 
   it('кость прибавки к броску бросает свою кость, а не делит ключ с ведущей', () => {
     const system = world({
-      благо: { label: 'Благо', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', die: { expr: '1d4' }, if: { expr: '@бросающий == @носитель' } }] },
+      благо: { label: 'Благо', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', die: { expr: '1d4' }, if: { expr: '@roller == @holder' } }] },
       удар: button([
         { id: 'бр', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
         { id: 'б', type: 'check', value: { expr: '@бр' }, versus: { expr: '100' } },
@@ -168,7 +168,7 @@ describe('новое ядро: сознательные изменения', () 
   it('«при наложении» двух копий одним действием — у каждой своя кость', () => {
     const system = world({
       удар: button([{ type: 'status', effect: 'яд', to: { expr: '@цель' } }, { type: 'status', effect: 'яд', to: { expr: '@цель' } }]),
-      яд: { label: 'Яд', activation: 'passive', reapply: 'stack', attach: [{ id: 'к', type: 'roll', die: { expr: '1d6' } }, hit('@к', '@носитель.хп')] },
+      яд: { label: 'Яд', activation: 'passive', reapply: 'stack', attach: [{ id: 'к', type: 'roll', die: { expr: '1d6' } }, hit('@к', '@holder.хп')] },
     });
     const out = play(system, [sheet('а'), sheet('б')], 'б', [3, 4]);
     expect(value(out, 'б', 'хп')).toBe(13);
@@ -180,7 +180,7 @@ describe('новое ядро: сознательные изменения', () 
       ответ: { label: 'Ответ', params: [{ key: 'раненый', kind: 'sheet' }], steps: [hit('2', '@раненый.хп')] },
       месть: {
         label: 'Месть', activation: 'passive', duration: { kind: 'uses', max: 3 },
-        on: [{ ...mine, cost: [hit('1', '@носитель.ки')], steps: [{ type: 'emit', effect: 'ответ', args: { раненый: { expr: '@действующий' } } }] }],
+        on: [{ ...mine, cost: [hit('1', '@holder.ки')], steps: [{ type: 'emit', effect: 'ответ', args: { раненый: { expr: '@действующий' } } }] }],
       },
     }, { limits: { budget: 0 } } as never);
     const out = play(system, [sheet('а'), sheet('б', { ки: 2 }, [{ effectId: 'месть', usesLeft: 3 }])], 'б', []);
@@ -194,7 +194,7 @@ describe('новое ядро: сознательные изменения', () 
     const system = world({
       удар: button([hit('1')]),
       вдох: { label: 'Второе дыхание', activation: 'passive', on: [{ on: 'moment:turn-start', confirm: true, steps: [heal('3')] }] },
-      шип: { label: 'Шип', activation: 'passive', duration: { kind: 'uses', max: 2 }, on: [{ on: 'moment:turn-start', if: { expr: '@ходит != @носитель' }, cost: [hit('1', '@носитель.ки')], steps: [hit('1', '@носитель.хп')] }] },
+      шип: { label: 'Шип', activation: 'passive', duration: { kind: 'uses', max: 2 }, on: [{ on: 'moment:turn-start', if: { expr: '@mover != @holder' }, cost: [hit('1', '@holder.ки')], steps: [hit('1', '@holder.хп')] }] },
     });
     const sheets = [sheet('а', { ки: 5 }, [{ effectId: 'вдох' }, { effectId: 'шип', usesLeft: 2 }]), sheet('б')];
     const first = perform({ system, compendium: book, clock: null, sheets, die: queue() }, { op: 'turn', turn: 'start', order: ['а', 'б'] });

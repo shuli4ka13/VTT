@@ -46,7 +46,7 @@ describe('таблица прямо на листе', () => {
     useWorld.getState().replaceWorld({
       system: { ...emptySystem(), tables: { характеристики: { label: 'Характеристики', key: 'word', owner: 'sheet', rows: [{ value: 'сила' }], columns: [
         { key: 'value', label: 'Значение', kind: 'number' },
-        { key: 'бонус', label: 'Бонус', expr: { expr: 'floor(@строка.value / 10)' } },
+        { key: 'бонус', label: 'Бонус', expr: { expr: 'floor(@row.value / 10)' } },
       ] } } as never },
       compendium: { records: [] },
       sheets: [],

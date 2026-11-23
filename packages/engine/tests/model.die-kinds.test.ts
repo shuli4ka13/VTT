@@ -100,9 +100,9 @@ describe('виды костей', () => {
     const errors = (sys: System) => lintSystem(sys).filter(one => one.level === 'error').map(one => one.text);
     const zeroed = system({ к20: DICE.one[0] }, { а: { ...rule('к20'), zero: { count: 2 } } });
     expect(errors(zeroed).some(text => text.includes('если костей ноль'))).toBe(true);
-    const early = system({ к20: DICE.one[0] }, { а: { ...rule('к20', 'under'), total: { expr: '@порог - @выпало' } } });
+    const early = system({ к20: DICE.one[0] }, { а: { ...rule('к20', 'under'), total: { expr: '@threshold - @rolled' } } });
     expect(errors(early).some(text => text.includes('«Итог» считается раньше'))).toBe(true);
-    const fine = system({ к20: DICE.one[0] }, { а: { ...rule('к20'), total: { expr: '@число - @выпало' } } });
+    const fine = system({ к20: DICE.one[0] }, { а: { ...rule('к20'), total: { expr: '@number - @rolled' } } });
     expect(errors(fine)).toEqual([]);
   });
 

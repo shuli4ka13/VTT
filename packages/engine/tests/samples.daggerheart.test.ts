@@ -48,7 +48,7 @@ group('Daggerheart: двуручный меч — ещё кость урона, 
   test('мастерство 1: бросаются две к10, остаётся лучшая', () => {
     const bran = { ...sheetOf('bran'), has: [{ of: 'greatsword' }] } as Sheet;
     const out = exchange({
-      system, compendium, die: tape(9, 4, 1, 4), sheets: [bran, sheetOf('bandit'), sheetOf('стол')],
+      system, compendium, die: tape(9, 4, 1, 4), sheets: [bran, sheetOf('bandit'), sheetOf('desk')],
       actionId: 'greatsword:0', fromId: 'bran', toId: 'bandit',
     });
     eq(valueOf(out, 'bandit', 'hp'), 1, 'к10: 1 и 4 — остаётся 4, + 3 = 7 ниже порога 8; сумма дала бы 8 и две клетки');

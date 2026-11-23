@@ -14,7 +14,7 @@ const queue = (...values: number[]) => {
 
 const ACTOR = { key: 'действующий', kind: 'sheet' };
 const TARGETS = { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } };
-const mine = '@бросающий == @носитель';
+const mine = '@roller == @holder';
 
 const world = (attack: Record<string, unknown>, effects: Record<string, unknown> = {}, extra: Record<string, unknown> = {}): System => ({
   id: 'к', name: 'к',

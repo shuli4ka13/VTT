@@ -1519,13 +1519,13 @@
               {
                 "label": "успех с надеждой",
                 "if": {
-                  "expr": "@успех and @бросок_бросок.parts.надежда > @бросок_бросок.parts.страх"
+                  "expr": "@success and @бросок_бросок.parts.надежда > @бросок_бросок.parts.страх"
                 }
               },
               {
                 "label": "успех со страхом",
                 "if": {
-                  "expr": "@успех"
+                  "expr": "@success"
                 }
               },
               {
@@ -1684,13 +1684,13 @@
               {
                 "label": "успех с надеждой",
                 "if": {
-                  "expr": "@успех and @бросок_бросок.parts.надежда > @бросок_бросок.parts.страх"
+                  "expr": "@success and @бросок_бросок.parts.надежда > @бросок_бросок.parts.страх"
                 }
               },
               {
                 "label": "успех со страхом",
                 "if": {
-                  "expr": "@успех"
+                  "expr": "@success"
                 }
               },
               {
@@ -2177,7 +2177,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@стол.fear"
+              "expr": "@desk.fear"
             },
             "direction": "add",
             "value": {
@@ -2225,7 +2225,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@стол.fear"
+              "expr": "@desk.fear"
             },
             "direction": "add",
             "value": {
@@ -2451,13 +2451,13 @@
           {
             "on": "done:action_roll",
             "if": {
-              "expr": "@действующий == @носитель and @бросок.parts.надежда > @бросок.parts.страх"
+              "expr": "@действующий == @holder and @бросок.parts.надежда > @бросок.parts.страх"
             },
             "steps": [
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.hope"
+                  "expr": "@holder.hope"
                 },
                 "direction": "add",
                 "value": {
@@ -2469,13 +2469,13 @@
           {
             "on": "done:action_roll",
             "if": {
-              "expr": "@действующий == @носитель and @бросок.parts.страх > @бросок.parts.надежда"
+              "expr": "@действующий == @holder and @бросок.parts.страх > @бросок.parts.надежда"
             },
             "steps": [
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@стол.fear"
+                  "expr": "@desk.fear"
                 },
                 "direction": "add",
                 "value": {
@@ -2487,13 +2487,13 @@
           {
             "on": "done:action_roll",
             "if": {
-              "expr": "@действующий == @носитель and @бросок.parts.надежда == @бросок.parts.страх"
+              "expr": "@действующий == @holder and @бросок.parts.надежда == @бросок.parts.страх"
             },
             "steps": [
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.hope"
+                  "expr": "@holder.hope"
                 },
                 "direction": "add",
                 "value": {
@@ -2503,13 +2503,13 @@
               {
                 "type": "branch",
                 "if": {
-                  "expr": "@носитель.stress >= 1"
+                  "expr": "@holder.stress >= 1"
                 }
               },
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.stress"
+                  "expr": "@holder.stress"
                 },
                 "value": {
                   "expr": "1"
@@ -2523,13 +2523,13 @@
           {
             "on": "done:hero_attack",
             "if": {
-              "expr": "@действующий == @носитель and @бросок_бросок.parts.надежда > @бросок_бросок.parts.страх"
+              "expr": "@действующий == @holder and @бросок_бросок.parts.надежда > @бросок_бросок.parts.страх"
             },
             "steps": [
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.hope"
+                  "expr": "@holder.hope"
                 },
                 "direction": "add",
                 "value": {
@@ -2541,13 +2541,13 @@
           {
             "on": "done:hero_attack",
             "if": {
-              "expr": "@действующий == @носитель and @бросок_бросок.parts.страх > @бросок_бросок.parts.надежда"
+              "expr": "@действующий == @holder and @бросок_бросок.parts.страх > @бросок_бросок.parts.надежда"
             },
             "steps": [
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@стол.fear"
+                  "expr": "@desk.fear"
                 },
                 "direction": "add",
                 "value": {
@@ -2559,13 +2559,13 @@
           {
             "on": "done:hero_attack",
             "if": {
-              "expr": "@действующий == @носитель and @бросок_бросок.parts.надежда == @бросок_бросок.parts.страх"
+              "expr": "@действующий == @holder and @бросок_бросок.parts.надежда == @бросок_бросок.parts.страх"
             },
             "steps": [
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.hope"
+                  "expr": "@holder.hope"
                 },
                 "direction": "add",
                 "value": {
@@ -2575,13 +2575,13 @@
               {
                 "type": "branch",
                 "if": {
-                  "expr": "@носитель.stress >= 1"
+                  "expr": "@holder.stress >= 1"
                 }
               },
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.stress"
+                  "expr": "@holder.stress"
                 },
                 "value": {
                   "expr": "1"
@@ -2612,7 +2612,7 @@
             "param": "edits",
             "edit": "advantage",
             "if": {
-              "expr": "@против == @носитель"
+              "expr": "@against == @holder"
             }
           },
           {
@@ -2624,7 +2624,7 @@
             "param": "edits",
             "edit": "gm_advantage",
             "if": {
-              "expr": "@против == @носитель"
+              "expr": "@against == @holder"
             }
           }
         ]
@@ -2647,7 +2647,7 @@
             "param": "edits",
             "edit": "disadvantage",
             "if": {
-              "expr": "@против == @носитель"
+              "expr": "@against == @holder"
             }
           },
           {
@@ -2659,7 +2659,7 @@
             "param": "edits",
             "edit": "gm_disadvantage",
             "if": {
-              "expr": "@против == @носитель"
+              "expr": "@against == @holder"
             }
           }
         ]
@@ -2676,14 +2676,14 @@
           {
             "on": "field:stress_full",
             "if": {
-              "expr": "@лист == @носитель"
+              "expr": "@sheet == @holder"
             },
             "steps": [
               {
                 "type": "status",
                 "effect": "vulnerable",
                 "to": {
-                  "expr": "@носитель"
+                  "expr": "@holder"
                 }
               }
             ]
@@ -2702,7 +2702,7 @@
           {
             "on": "field:stress_free",
             "if": {
-              "expr": "@лист == @носитель"
+              "expr": "@sheet == @holder"
             },
             "steps": [
               {
@@ -2710,7 +2710,7 @@
                 "mode": "remove",
                 "effect": "vulnerable",
                 "to": {
-                  "expr": "@носитель"
+                  "expr": "@holder"
                 }
               }
             ]
@@ -2738,14 +2738,14 @@
           {
             "on": "field:down",
             "if": {
-              "expr": "@лист == @носитель"
+              "expr": "@sheet == @holder"
             },
             "steps": [
               {
                 "type": "status",
                 "effect": "death_move",
                 "to": {
-                  "expr": "@носитель"
+                  "expr": "@holder"
                 }
               }
             ]
@@ -2791,7 +2791,7 @@
               "expr": "1"
             },
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             }
           }
         ],
@@ -2804,7 +2804,7 @@
                 "mode": "remove",
                 "effect": "merciless",
                 "to": {
-                  "expr": "@носитель"
+                  "expr": "@holder"
                 }
               }
             ]
@@ -2817,7 +2817,7 @@
                 "mode": "remove",
                 "effect": "merciless",
                 "to": {
-                  "expr": "@носитель"
+                  "expr": "@holder"
                 }
               }
             ]
@@ -2846,7 +2846,7 @@
           {
             "on": "after:damage",
             "if": {
-              "expr": "@лист == @носитель"
+              "expr": "@лист == @holder"
             },
             "steps": [
               {
@@ -2854,7 +2854,7 @@
                 "mode": "remove",
                 "effect": "dodging",
                 "to": {
-                  "expr": "@носитель"
+                  "expr": "@holder"
                 }
               }
             ]
@@ -2867,7 +2867,7 @@
                 "mode": "remove",
                 "effect": "dodging",
                 "to": {
-                  "expr": "@носитель"
+                  "expr": "@holder"
                 }
               }
             ]
@@ -2880,7 +2880,7 @@
                 "mode": "remove",
                 "effect": "dodging",
                 "to": {
-                  "expr": "@носитель"
+                  "expr": "@holder"
                 }
               }
             ]
@@ -3842,7 +3842,7 @@
       "effects": []
     },
     {
-      "id": "стол",
+      "id": "desk",
       "systemId": "daggerheart",
       "name": "Стол",
       "values": {

@@ -488,7 +488,7 @@
             "label": "Всего",
             "kind": "number",
             "expr": {
-              "expr": "@строка.stat + @строка.rank"
+              "expr": "@row.stat + @row.rank"
             },
             "title": "{label} — всего"
           }
@@ -1318,12 +1318,12 @@
               "expr": "@лист.sp_body"
             },
             "successWhen": "over",
-            "id": "сквозь_броню"
+            "id": "through_armor"
           },
           {
             "type": "branch",
             "if": {
-              "expr": "not @сквозь_броню.success"
+              "expr": "not @through_armor.success"
             }
           },
           {
@@ -1341,7 +1341,7 @@
               "expr": "@лист.hp"
             },
             "value": {
-              "expr": "@сквозь_броню.margin"
+              "expr": "@through_armor.margin"
             }
           },
           {
@@ -1500,7 +1500,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@стол.бой"
+              "expr": "@desk.combat"
             }
           },
           {
@@ -1554,7 +1554,7 @@
               "expr": "-2"
             },
             "if": {
-              "expr": "@бросающий == @носитель and @носитель.seriously"
+              "expr": "@roller == @holder and @holder.seriously"
             }
           }
         ],
@@ -1579,7 +1579,7 @@
             "param": "edits",
             "edit": "crit_up",
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             }
           },
           {
@@ -1592,7 +1592,7 @@
             "param": "edits",
             "edit": "crit_down",
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             }
           }
         ],
@@ -1611,7 +1611,7 @@
           {
             "on": "moment:turn-start",
             "if": {
-              "expr": "@ходит == @носитель and @носитель.mortal"
+              "expr": "@mover == @holder and @holder.mortal"
             },
             "steps": [
               {
@@ -1619,13 +1619,13 @@
                 "type": "roll",
                 "die": "lead_die",
                 "bonus": {
-                  "expr": "@носитель.death_penalty"
+                  "expr": "@holder.death_penalty"
                 },
                 "tags": [
                   "спасбросок"
                 ],
                 "by": {
-                  "expr": "@носитель"
+                  "expr": "@holder"
                 }
               },
               {
@@ -1635,14 +1635,14 @@
                   "expr": "@спас_бросок"
                 },
                 "versus": {
-                  "expr": "@носитель.body"
+                  "expr": "@holder.body"
                 },
                 "successWhen": "under"
               },
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.death_penalty"
+                  "expr": "@holder.death_penalty"
                 },
                 "direction": "add",
                 "value": {
@@ -1658,7 +1658,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.dead"
+                  "expr": "@holder.dead"
                 },
                 "direction": "set",
                 "value": {
@@ -1673,13 +1673,13 @@
           {
             "on": "field:mortal",
             "if": {
-              "expr": "@лист == @носитель"
+              "expr": "@sheet == @holder"
             },
             "steps": [
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.death_penalty"
+                  "expr": "@holder.death_penalty"
                 },
                 "direction": "set",
                 "value": {
@@ -1705,7 +1705,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.turn_action"
+                  "expr": "@holder.turn_action"
                 },
                 "direction": "set",
                 "value": {
@@ -1715,7 +1715,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.turn_move"
+                  "expr": "@holder.turn_move"
                 },
                 "direction": "set",
                 "value": {
@@ -1738,13 +1738,13 @@
           {
             "on": "moment:turn-start",
             "if": {
-              "expr": "@ходит == @носитель"
+              "expr": "@mover == @holder"
             },
             "steps": [
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.turn_action"
+                  "expr": "@holder.turn_action"
                 },
                 "direction": "set",
                 "value": {
@@ -1754,7 +1754,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.turn_move"
+                  "expr": "@holder.turn_move"
                 },
                 "direction": "set",
                 "value": {

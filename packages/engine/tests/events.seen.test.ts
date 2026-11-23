@@ -17,7 +17,7 @@ const ACTOR = { key: 'действующий', kind: 'sheet' };
 const TARGETS = { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } };
 const EACH = { type: 'each', of: 'цели' };
 const roll = (extra: Record<string, unknown> = {}) => ({ id: 'бросок', type: 'roll', die: 'к20', tags: ['атака'], by: { expr: '@действующий' }, ...extra });
-const mine = '@бросающий == @носитель';
+const mine = '@roller == @holder';
 
 const world = (effects: Record<string, unknown>): System => ({
   id: 'к', name: 'к',
@@ -64,7 +64,7 @@ group('увидев кости', () => {
         label: 'Вдохновение', activation: 'passive',
         on: [{
           on: 'seen', confirm: true, if: { expr: mine },
-          cost: [{ type: 'apply', target: { expr: '@носитель.удача' }, direction: 'subtract', value: { expr: '1' } }],
+          cost: [{ type: 'apply', target: { expr: '@holder.удача' }, direction: 'subtract', value: { expr: '1' } }],
           steps: [{ type: 'roll-add', count: { expr: '1' }, keep: 'best' }],
         }],
       },
@@ -88,7 +88,7 @@ group('увидев кости', () => {
         label: 'Героическое вдохновение', activation: 'passive',
         on: [{
           on: 'seen', confirm: true, if: { expr: mine },
-          cost: [{ type: 'apply', target: { expr: '@носитель.удача' }, direction: 'subtract', value: { expr: '1' } }],
+          cost: [{ type: 'apply', target: { expr: '@holder.удача' }, direction: 'subtract', value: { expr: '1' } }],
           steps: [{ type: 'roll-reroll', which: 'lowest' }],
         }],
       },
@@ -136,7 +136,7 @@ group('увидев кости', () => {
   });
 
   test('бросок по мне: цель видит кости нападающего и отнимает от итога', () => {
-    const system = world({ насмешка: { label: 'Насмешка', activation: 'passive', on: [{ on: 'seen', if: { expr: '@против == @носитель' }, steps: [{ type: 'roll-plus', value: { expr: '-5' } }] }] } });
+    const system = world({ насмешка: { label: 'Насмешка', activation: 'passive', on: [{ on: 'seen', if: { expr: '@against == @holder' }, steps: [{ type: 'roll-plus', value: { expr: '-5' } }] }] } });
     const out = play(system, [sheet('а'), sheet('б', ['насмешка'])], [12]);
     eq(hp(out, 'б'), 20, '12 − 5 = 7 против 10 — промах');
   });
@@ -167,7 +167,7 @@ group('увидев кости: поздние броски видят, что �
           { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '@урон' } },
         ],
       },
-      жертва: { label: 'Жертва', activation: 'passive', on: [{ on: 'seen', if: { expr: mine }, steps: [{ type: 'apply', target: { expr: '@носитель.удача' }, direction: 'subtract', value: { expr: '1' } }, { type: 'roll-plus', value: { expr: '0' } }] }] },
+      жертва: { label: 'Жертва', activation: 'passive', on: [{ on: 'seen', if: { expr: mine }, steps: [{ type: 'apply', target: { expr: '@holder.удача' }, direction: 'subtract', value: { expr: '1' } }, { type: 'roll-plus', value: { expr: '0' } }] }] },
     });
     const out = play(system, [{ ...sheet('а', ['жертва']), values: { удача: 1 } } as Sheet, sheet('б')], [15]);
     eq(hp(out, 'б'), 15, 'удача уже 0: урон 5, а не 15');
@@ -197,7 +197,7 @@ group('увидев кости на броске по полю листа', () =
 group('наблюдатели: реакции третьих лиц', () => {
   test('бард видит бросок врага по союзнику и режет его — вопрос задают барду', () => {
     const system = world({
-      насмешка: { label: 'Язвительная насмешка', activation: 'passive', on: [{ on: 'seen', confirm: true, if: { expr: '@бросающий != @носитель' }, steps: [{ type: 'roll-plus', value: { expr: '-5' } }] }] },
+      насмешка: { label: 'Язвительная насмешка', activation: 'passive', on: [{ on: 'seen', confirm: true, if: { expr: '@roller != @holder' }, steps: [{ type: 'roll-plus', value: { expr: '-5' } }] }] },
     });
     const sheets = [sheet('а'), sheet('б'), sheet('бард', ['насмешка'])];
     const first = play(system, sheets, [12]);
@@ -211,7 +211,7 @@ group('наблюдатели: реакции третьих лиц', () => {
 
   test('«когда кого-то ранили» слышит третий лист, а не сама цель', () => {
     const system = world({
-      сочувствие: { label: 'Сочувствие', activation: 'passive', on: [{ on: 'after:удар', if: { expr: '@цель != @носитель' }, steps: [{ type: 'apply', target: { expr: '@носитель.удача' }, direction: 'add', value: { expr: '1' } }] }] },
+      сочувствие: { label: 'Сочувствие', activation: 'passive', on: [{ on: 'after:удар', if: { expr: '@цель != @holder' }, steps: [{ type: 'apply', target: { expr: '@holder.удача' }, direction: 'add', value: { expr: '1' } }] }] },
     });
     const out = play(system, [sheet('а'), sheet('б', ['сочувствие']), sheet('в', ['сочувствие'])], [15]);
     eq(out.sheets.find(s => s.id === 'в')!.values.удача ?? 1, 2, 'наблюдатель отозвался');
@@ -222,7 +222,7 @@ group('наблюдатели: реакции третьих лиц', () => {
 group('наблюдатели: по ревью', () => {
   test('два наблюдателя с одним эффектом бросают каждый свою кость', () => {
     const system = world({
-      порча: { label: 'Порча', activation: 'passive', on: [{ on: 'seen', if: { expr: '@бросающий != @носитель' }, steps: [{ type: 'roll-plus', die: { expr: '1d4' }, minus: true }] }] },
+      порча: { label: 'Порча', activation: 'passive', on: [{ on: 'seen', if: { expr: '@roller != @holder' }, steps: [{ type: 'roll-plus', die: { expr: '1d4' }, minus: true }] }] },
     });
     const out = play(system, [sheet('а'), sheet('б'), sheet('в', ['порча']), sheet('г', ['порча'])], [14, 1, 4]);
     eq(hp(out, 'б'), 20, '14 − 1 − 4 = 9 — промах; с одинаковыми костями было бы 14 − 1 − 1 = 12 и попадание');
@@ -274,7 +274,7 @@ group('ядро: по ревью', () => {
           { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '1' } },
         ],
       },
-      плата: { label: 'Плата', activation: 'passive', on: [{ on: 'seen', if: { expr: mine }, steps: [{ type: 'apply', target: { expr: '@носитель.удача' }, direction: 'subtract', value: { expr: '1' } }, { type: 'roll-plus', value: { expr: '0' } }] }] },
+      плата: { label: 'Плата', activation: 'passive', on: [{ on: 'seen', if: { expr: mine }, steps: [{ type: 'apply', target: { expr: '@holder.удача' }, direction: 'subtract', value: { expr: '1' } }, { type: 'roll-plus', value: { expr: '0' } }] }] },
     });
     const out = play(system, [{ ...sheet('а', ['плата']), values: { удача: 1 } } as Sheet, sheet('б')], []);
     eq(out.kind, 'done');
@@ -284,10 +284,10 @@ group('ядро: по ревью', () => {
   test('две выбранные реакции на один ресурс: вторая пропускается с причиной, действие не падает', () => {
     const shield = (label: string) => ({
       label, activation: 'passive',
-      on: [{ on: 'before:удар', confirm: true, if: { expr: '@цель == @носитель' }, cost: [
-        { id: 'есть', type: 'check', value: { expr: '@носитель.удача' }, versus: { expr: '1' } },
+      on: [{ on: 'before:удар', confirm: true, if: { expr: '@цель == @holder' }, cost: [
+        { id: 'есть', type: 'check', value: { expr: '@holder.удача' }, versus: { expr: '1' } },
         { type: 'branch', if: { expr: 'not @есть.success' } }, { type: 'stop', note: { expr: '"нет удачи"' } }, { type: 'end' },
-        { type: 'apply', target: { expr: '@носитель.удача' }, direction: 'subtract', value: { expr: '1' } }], steps: [] }],
+        { type: 'apply', target: { expr: '@holder.удача' }, direction: 'subtract', value: { expr: '1' } }], steps: [] }],
     });
     const system = world({ р1: shield('Р1'), р2: shield('Р2') });
     const sheets = [sheet('а'), { ...sheet('б', ['р1', 'р2']), values: { удача: 1 } } as Sheet];
@@ -321,7 +321,7 @@ group('ядро: по ревью Fable', () => {
   });
 
   test('после «Для каждой цели» «бросок по мне» у цели срезает атаку, у нападающего — нет', () => {
-    const cut = { label: 'Насмешка', activation: 'passive', on: [{ on: 'seen', if: { expr: '@против == @носитель' }, steps: [{ type: 'roll-plus', value: { expr: '-5' } }] }] };
+    const cut = { label: 'Насмешка', activation: 'passive', on: [{ on: 'seen', if: { expr: '@against == @holder' }, steps: [{ type: 'roll-plus', value: { expr: '-5' } }] }] };
     eq(hp(play(split({ насмешка: cut }), [sheet('а'), sheet('б', ['насмешка'])], [16]), 'б'), 20, '16 − 5 = 11 — промах');
     eq(hp(play(split({ насмешка: cut }), [sheet('а', ['насмешка']), sheet('б')], [16]), 'б'), 15, 'своё «по мне» нападающему атаку не режет');
   });

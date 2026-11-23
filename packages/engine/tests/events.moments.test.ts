@@ -13,11 +13,11 @@ const system = {
   effects: {
     отравление: {
       label: 'Отравление', activation: 'passive',
-      on: [{ on: 'moment:turn-start', if: { expr: '@ходит == @носитель' }, steps: [{ type: 'apply', target: { expr: '@носитель.хиты' }, direction: 'subtract', value: { expr: '3' } }] }],
+      on: [{ on: 'moment:turn-start', if: { expr: '@mover == @holder' }, steps: [{ type: 'apply', target: { expr: '@holder.хиты' }, direction: 'subtract', value: { expr: '3' } }] }],
     },
     передышка: {
       label: 'Передышка', activation: 'passive',
-      on: [{ on: 'moment:turn-end', if: { expr: '@ходит == @носитель' }, steps: [{ type: 'apply', target: { expr: '@носитель.хиты' }, direction: 'add', value: { expr: '1' } }] }],
+      on: [{ on: 'moment:turn-end', if: { expr: '@mover == @holder' }, steps: [{ type: 'apply', target: { expr: '@holder.хиты' }, direction: 'add', value: { expr: '1' } }] }],
     },
   },
 } as unknown as System;
@@ -63,7 +63,7 @@ group('шина моментов', () => {
 
   test('условие на срабатывании проверяется', () => {
     const picky = structuredClone(system) as System;
-    (picky.effects.отравление as Effect).on![0]!.if = { expr: '@ходит == @носитель and @носитель.яд' };
+    (picky.effects.отравление as Effect).on![0]!.if = { expr: '@mover == @holder and @holder.яд' };
     const ctx = { ...world, system: picky };
     eq(fireMoments([{ moment: 'turn-start', sheetId: 'а' }], [sheet(['отравление'])], ctx as never)
       .sheets[0]!.values.хиты, 20, 'яда нет — молчит');
@@ -122,7 +122,7 @@ group('поле стало верным', () => {
       без_сознания: { label: 'Без сознания', activation: 'passive', duration: { kind: 'permanent' }, modifiers: [] },
       падение: {
         label: 'Падение', activation: 'passive',
-        on: [{ on: 'field:без_сил', if: { expr: '@лист == @носитель' }, steps: [{ type: 'status', mode: 'apply', effect: 'без_сознания', to: { expr: '@носитель' } }] }],
+        on: [{ on: 'field:без_сил', if: { expr: '@sheet == @holder' }, steps: [{ type: 'status', mode: 'apply', effect: 'без_сознания', to: { expr: '@holder' } }] }],
       },
     },
     grants: ['падение'],

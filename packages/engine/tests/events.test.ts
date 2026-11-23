@@ -53,7 +53,7 @@ group('вызов действия', () => {
       const blessedSys = { ...system, effects: { ...system.effects,
         blessed: {
           label: 'Благословение', activation: 'passive', duration: { kind: 'permanent' },
-          modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', tags: ['атака'], op: 'add', value: { expr: '4' }, if: { expr: '@бросающий == @носитель' } }],
+          modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', tags: ['атака'], op: 'add', value: { expr: '4' }, if: { expr: '@roller == @holder' } }],
         } } };
       const sheet = { ...arven, effects: [{ effectId: 'blessed' }] };
 
@@ -146,7 +146,7 @@ group('вызов действия', () => {
       const shakenSys = { ...system, effects: { ...system.effects,
         shaken: {
           label: 'Потрясён', activation: 'passive', duration: { kind: 'permanent' },
-          modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['спасбросок'], edit: 'disadvantage', if: { expr: '@бросающий == @носитель' } }],
+          modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['спасбросок'], edit: 'disadvantage', if: { expr: '@roller == @holder' } }],
         } } };
       const sheet = { ...arven, effects: [{ effectId: 'shaken' }] };
       const { reportOf } = hit('poison-spray:0', mirra, sheet, queue(19, 5, 3, 4), { ...savingBy(), effects: { ...savingBy().effects, shaken: shakenSys.effects.shaken } });
@@ -213,7 +213,7 @@ group('действие не даёт целиться в бессмыслицу
   const withStrike = args => paramBook('bogus', args);
 
   test('сравнивать бросок с текстовым полем нельзя — внятная ошибка, а не тихое «мимо»', () => {
-    const book = withStrike({ bonus: { expr: '@носитель.attack_bonus' }, versus: { expr: '@носитель.race' }, damage_bonus: { expr: '0' } });
+    const book = withStrike({ bonus: { expr: '@holder.attack_bonus' }, versus: { expr: '@holder.race' }, damage_bonus: { expr: '0' } });
     throws(() => hit('bogus:0', arven, mirra, queue(15, 5, 5), paramSys, book), 'race');
   });
 });
@@ -222,19 +222,19 @@ group('в параметрах эффекта живут выражения, а 
   const withStrike = args => paramBook('custom', args);
 
   test('бонус проверки — выражение, а не один тег', () => {
-    const book = withStrike({ bonus: { expr: '@носитель.attack_bonus + 2' }, damage_bonus: { expr: '@носитель.str_mod' } });
+    const book = withStrike({ bonus: { expr: '@holder.attack_bonus + 2' }, damage_bonus: { expr: '@holder.str_mod' } });
     const { stepOf } = hit('custom:0', arven, mirra, queue(10, 4), paramSys, book);
     eq(stepOf('hit_бросок').total, 18, 'кость 10 плюс бонус атаки 6 плюс двойка из выражения');
   });
 
   test('бонус урона задаётся выражением', () => {
-    const book = withStrike({ bonus: { expr: '@носитель.attack_bonus' }, damage_bonus: { expr: '@носитель.str_mod * 2' } });
+    const book = withStrike({ bonus: { expr: '@holder.attack_bonus' }, damage_bonus: { expr: '@holder.str_mod * 2' } });
     const { reportOf } = hit('custom:0', arven, mirra, queue(10, 4), paramSys, book);
     eq(reportOf(mirra).trace.find(t => t.step === 'dmg').total, 10, 'кость 4 плюс удвоенная Сила 6');
   });
 
   test('битое выражение в параметре — внятная ошибка', () => {
-    const book = withStrike({ bonus: { expr: '@носитель.attack_bonus +' }, damage_bonus: { expr: '0' } });
+    const book = withStrike({ bonus: { expr: '@holder.attack_bonus +' }, damage_bonus: { expr: '0' } });
     throws(() => hit('custom:0', arven, mirra, queue(10, 4), paramSys, book));
   });
 });

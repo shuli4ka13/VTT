@@ -953,7 +953,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@стол.battle"
+              "expr": "@desk.battle"
             }
           },
           {
@@ -1130,7 +1130,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@стол.battle"
+              "expr": "@desk.battle"
             }
           },
           {
@@ -1246,7 +1246,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@стол.battle"
+              "expr": "@desk.battle"
             }
           },
           {
@@ -1398,7 +1398,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@стол.battle"
+              "expr": "@desk.battle"
             }
           },
           {
@@ -1489,7 +1489,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@стол.battle"
+              "expr": "@desk.battle"
             }
           },
           {
@@ -1650,7 +1650,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@стол.battle"
+              "expr": "@desk.battle"
             }
           },
           {
@@ -1808,7 +1808,7 @@
             "param": "edits",
             "edit": "disadvantage",
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             }
           }
         ],
@@ -1837,7 +1837,7 @@
             "call": "damage",
             "param": "amount",
             "if": {
-              "expr": "@лист == @носитель"
+              "expr": "@лист == @holder"
             },
             "stage": "сопротивление"
           }
@@ -1866,7 +1866,7 @@
               "огонь"
             ],
             "if": {
-              "expr": "@лист == @носитель"
+              "expr": "@лист == @holder"
             },
             "stage": "сопротивление"
           }
@@ -1892,7 +1892,7 @@
               "expr": "1d4"
             },
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             }
           }
         ],
@@ -1912,21 +1912,21 @@
           {
             "on": "before:атака",
             "if": {
-              "expr": "@цель == @носитель and @hit.success"
+              "expr": "@цель == @holder and @hit.success"
             },
             "confirm": true,
             "cost": [
               {
                 "type": "branch",
                 "if": {
-                  "expr": "@стол.battle"
+                  "expr": "@desk.battle"
                 }
               },
               {
                 "id": "check",
                 "type": "check",
                 "value": {
-                  "expr": "@носитель.turn_reaction"
+                  "expr": "@holder.turn_reaction"
                 },
                 "versus": {
                   "expr": "1"
@@ -1950,7 +1950,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.turn_reaction"
+                  "expr": "@holder.turn_reaction"
                 },
                 "direction": "subtract",
                 "value": {
@@ -1967,7 +1967,7 @@
                 "mode": "apply",
                 "effect": "shield_up",
                 "to": {
-                  "expr": "@носитель"
+                  "expr": "@holder"
                 }
               }
             ]
@@ -2010,14 +2010,14 @@
           {
             "on": "seen",
             "if": {
-              "expr": "@бросающий == @носитель and @носитель.inspiration > 0"
+              "expr": "@roller == @holder and @holder.inspiration > 0"
             },
             "confirm": true,
             "steps": [
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.inspiration"
+                  "expr": "@holder.inspiration"
                 },
                 "direction": "subtract",
                 "value": {
@@ -2051,7 +2051,7 @@
             "param": "edits",
             "edit": "advantage",
             "if": {
-              "expr": "@против == @носитель"
+              "expr": "@against == @holder"
             }
           },
           {
@@ -2063,7 +2063,7 @@
             "param": "edits",
             "edit": "disadvantage",
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "@roller == @holder"
             }
           }
         ],
@@ -2087,7 +2087,7 @@
             "param": "edits",
             "edit": "disadvantage",
             "if": {
-              "expr": "@бросающий == @носитель and @носитель.armor_heavy"
+              "expr": "@roller == @holder and @holder.armor_heavy"
             }
           }
         ],
@@ -2111,7 +2111,7 @@
             "param": "edits",
             "edit": "advantage",
             "if": {
-              "expr": "@бросающий == @носитель and @носитель.prof_bonus >= 4"
+              "expr": "@roller == @holder and @holder.prof_bonus >= 4"
             }
           }
         ],
@@ -2132,7 +2132,7 @@
           {
             "on": "after:strike",
             "if": {
-              "expr": "@цель == @носитель and @hit.success and not empty(@действующий)"
+              "expr": "@цель == @holder and @hit.success and not empty(@действующий)"
             },
             "steps": [
               {
@@ -2159,7 +2159,7 @@
                     "expr": "@действующий"
                   },
                   "источник": {
-                    "expr": "@носитель"
+                    "expr": "@holder"
                   }
                 }
               }
@@ -2181,7 +2181,7 @@
           {
             "on": "moment:turn-start",
             "if": {
-              "expr": "@ходит == @носитель and @носитель.hp_current <= 0"
+              "expr": "@mover == @holder and @holder.hp_current <= 0"
             },
             "steps": [
               {
@@ -2192,7 +2192,7 @@
                   "спасбросок"
                 ],
                 "by": {
-                  "expr": "@носитель"
+                  "expr": "@holder"
                 }
               },
               {
@@ -2215,7 +2215,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.death_ok"
+                  "expr": "@holder.death_ok"
                 },
                 "direction": "add",
                 "value": {
@@ -2234,7 +2234,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.death_fail"
+                  "expr": "@holder.death_fail"
                 },
                 "direction": "add",
                 "value": {
@@ -2253,7 +2253,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.death_fail"
+                  "expr": "@holder.death_fail"
                 },
                 "direction": "add",
                 "value": {
@@ -2292,7 +2292,7 @@
           {
             "on": "field:down",
             "if": {
-              "expr": "@лист == @носитель"
+              "expr": "@sheet == @holder"
             },
             "steps": [
               {
@@ -2300,7 +2300,7 @@
                 "mode": "apply",
                 "effect": "unconscious",
                 "to": {
-                  "expr": "@носитель"
+                  "expr": "@holder"
                 }
               },
               {
@@ -2308,7 +2308,7 @@
                 "mode": "apply",
                 "effect": "dying",
                 "to": {
-                  "expr": "@носитель"
+                  "expr": "@holder"
                 }
               }
             ]
@@ -2329,7 +2329,7 @@
           {
             "on": "field:up",
             "if": {
-              "expr": "@лист == @носитель"
+              "expr": "@sheet == @holder"
             },
             "steps": [
               {
@@ -2337,7 +2337,7 @@
                 "mode": "remove",
                 "effect": "unconscious",
                 "to": {
-                  "expr": "@носитель"
+                  "expr": "@holder"
                 }
               },
               {
@@ -2345,13 +2345,13 @@
                 "mode": "remove",
                 "effect": "dying",
                 "to": {
-                  "expr": "@носитель"
+                  "expr": "@holder"
                 }
               },
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.death_ok"
+                  "expr": "@holder.death_ok"
                 },
                 "direction": "set",
                 "value": {
@@ -2361,7 +2361,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.death_fail"
+                  "expr": "@holder.death_fail"
                 },
                 "direction": "set",
                 "value": {
@@ -2386,21 +2386,21 @@
           {
             "on": "after:damage",
             "if": {
-              "expr": "@лист == @носитель and not empty(@источник)"
+              "expr": "@лист == @holder and not empty(@источник)"
             },
             "confirm": true,
             "cost": [
               {
                 "type": "branch",
                 "if": {
-                  "expr": "@стол.battle"
+                  "expr": "@desk.battle"
                 }
               },
               {
                 "id": "check",
                 "type": "check",
                 "value": {
-                  "expr": "@носитель.turn_reaction"
+                  "expr": "@holder.turn_reaction"
                 },
                 "versus": {
                   "expr": "1"
@@ -2424,7 +2424,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.turn_reaction"
+                  "expr": "@holder.turn_reaction"
                 },
                 "direction": "subtract",
                 "value": {
@@ -2457,7 +2457,7 @@
                   "expr": "@save_бросок"
                 },
                 "versus": {
-                  "expr": "@носитель.spell_dc"
+                  "expr": "@holder.spell_dc"
                 },
                 "successWhen": "atLeast"
               },
@@ -2492,7 +2492,7 @@
                     "expr": "@источник"
                   },
                   "источник": {
-                    "expr": "@носитель"
+                    "expr": "@holder"
                   }
                 }
               }
@@ -2515,7 +2515,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@стол.battle"
+                  "expr": "@desk.battle"
                 },
                 "direction": "set",
                 "value": {
@@ -2525,7 +2525,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.turn_action"
+                  "expr": "@holder.turn_action"
                 },
                 "direction": "set",
                 "value": {
@@ -2535,7 +2535,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.turn_reaction"
+                  "expr": "@holder.turn_reaction"
                 },
                 "direction": "set",
                 "value": {
@@ -2560,7 +2560,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@стол.battle"
+                  "expr": "@desk.battle"
                 },
                 "direction": "set",
                 "value": {
@@ -2582,13 +2582,13 @@
           {
             "on": "moment:turn-start",
             "if": {
-              "expr": "@ходит == @носитель"
+              "expr": "@mover == @holder"
             },
             "steps": [
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.turn_action"
+                  "expr": "@holder.turn_action"
                 },
                 "direction": "set",
                 "value": {
@@ -2598,7 +2598,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.turn_reaction"
+                  "expr": "@holder.turn_reaction"
                 },
                 "direction": "set",
                 "value": {
@@ -3166,7 +3166,7 @@
         "cells": {
           "damage_dice": "2d6",
           "save_by": {
-            "expr": "@носитель.dex_save"
+            "expr": "@holder.dex_save"
           },
           "status": "poisoned",
           "damage_type": "яд"
@@ -3214,7 +3214,7 @@
         "table": "area-spell",
         "cells": {
           "save_by": {
-            "expr": "@носитель.dex_save"
+            "expr": "@holder.dex_save"
           },
           "damage_dice": "6d6",
           "damage_type": "огонь"

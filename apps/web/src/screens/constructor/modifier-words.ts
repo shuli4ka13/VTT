@@ -1,5 +1,5 @@
 import type { System, Modifier } from '@vtt/schema';
-import { ROLL_CALL, CALL_WORDS, targetStages, paramStages, typeColumn, tiedToHolder, ROW, ruleLabelOf } from '@vtt/engine';
+import { ROLL_CALL, CALL_WORDS, targetStages, paramStages, typeColumn, tiedToHolder, ROW, HOLDER, NAMES, ruleLabelOf } from '@vtt/engine';
 import { labelOfTag } from '../../ui/formula.tsx';
 import { formulaWords } from '../../ui/formula-words.ts';
 import { addendWords } from './readback.ts';
@@ -35,7 +35,7 @@ const stageWords = (stages: readonly { key: string; label?: string }[], stage: u
 function whoseWords(system: System, mod: Loose, sheetLabels: Record<string, string>, anyone: string, names: Names): string {
   const text = exprOf(mod.if);
   if (!text) return anyone;
-  const found = /^@([\p{L}\p{N}_]+)\s*==\s*@носитель$/u.exec(text);
+  const found = new RegExp(`^@([\\p{L}\\p{N}_]+)\\s*==\\s*@${HOLDER}$`, 'u').exec(text);
   if (found && sheetLabels[found[1]!]) return sheetLabels[found[1]!]!;
   const words = `если ${formulaWords(system, text, names)}`;
   return tiedToHolder({ expr: text }) ? words : `${anyone}, ${words}`;
@@ -56,7 +56,7 @@ const columnLabel = (system: System, table: string, key: string): string =>
 function targetLabel(system: System, target: string, table?: string): string {
   const anyRow = /^cell:([^.]+)\.\*\.(.+)$/u.exec(target);
   if (anyRow) return `${system.tables?.[anyRow[1]!]?.label ?? anyRow[1]} → ${columnLabel(system, anyRow[1]!, anyRow[2]!)} — у каждой строки`;
-  const byProp = /^([^.]+)\.\{@строка\.([\p{L}\p{N}_]+)\}\.(.+)$/u.exec(target);
+  const byProp = new RegExp(`^([^.]+)\\.\\{@${ROW}\\.([\\p{L}\\p{N}_]+)\\}\\.(.+)$`, 'u').exec(target);
   if (byProp) return `${system.tables?.[byProp[1]!]?.label ?? byProp[1]} → ${columnLabel(system, byProp[1]!, byProp[3]!)} по «${table ? columnLabel(system, table, byProp[2]!) : byProp[2]}»`;
   const byInput = /^\{@([\p{L}\p{N}_]+)(?:\.([\p{L}\p{N}_]+))?\}$/u.exec(target);
   if (byInput) return `поле из «${byInput[1]}»`;
@@ -93,7 +93,7 @@ export function modifierSentence(system: System, modifier: Modifier, table?: str
     const all = rolled(mod.tags);
     const some = rolled(mod.anyTags);
     const except = rolled(mod.notTags);
-    const who = whoseWords(system, mod, { бросающий: 'бросает носитель', против: 'бросают против носителя' }, 'бросает кто угодно', names);
+    const who = whoseWords(system, mod, { [NAMES.roller]: 'бросает носитель', [NAMES.against]: 'бросают против носителя' }, 'бросает кто угодно', names);
     const lead = `${CALL_WORDS.roll.label}${all ? ` с метками ${all}` : ''}${some ? ` с любой из меток ${some}` : ''}${except ? ` кроме ${except}` : ''}${who ? `, ${who}` : ''}`;
     return `${lead}: ${rollEditWhat(system, modifier, names)}`;
   }

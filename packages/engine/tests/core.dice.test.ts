@@ -135,7 +135,7 @@ describe('бросок — одна функция, стороны явные', 
   const base = flattenSystem(world.system);
   const advantage = Object.entries(base.roll_edits ?? {}).find(([, e]) => (e.ops ?? []).some(op => op.op === 'keepBest'))![0];
   const system = { ...base, effects: { ...base.effects, лежит: { label: 'лежит', activation: 'passive', modifiers: [
-    { kind: 'edit', call: 'roll', param: 'edits', if: { expr: '@против == @носитель' }, edit: advantage },
+    { kind: 'edit', call: 'roll', param: 'edits', if: { expr: '@against == @holder' }, edit: advantage },
   ] } as never } };
   const attacker = world.sheets.find((s: { id: string }) => s.id === 'orc')!;
   const target = { ...world.sheets.find((s: { id: string }) => s.id === 'arven')!, effects: [{ effectId: 'лежит' }] };

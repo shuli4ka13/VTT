@@ -58,7 +58,7 @@ group('Shadowrun 6, глава «Проверки и Преимущество»:
   test('SR-CH-05 (стр. 46): ЗА 10 против ЗЩ 6 — очко Преимущества; второе за раунд — последнее; третьего нет', () => {
     const shooter = { ...runner({ agility: 3, 'skills.стрельба.rank': 3, edge_left: 6, edge_gained: 1, complex_left: 1 }), has: [{ of: 'predator_vi' }] } as Sheet;
     const target = (armor: number) => ({ ...runner({ body: 2, armor_worn: armor }), id: 'цель' }) as Sheet;
-    const desk = { id: 'стол', systemId: 'shadowrun6', name: 'Стол', values: {}, has: [], effects: [] } as unknown as Sheet;
+    const desk = { id: 'desk', systemId: 'shadowrun6', name: 'Стол', values: {}, has: [], effects: [] } as unknown as Sheet;
     const first = exchange({ system, compendium, die: tape(), sheets: [shooter, target(4), desk], clock: fight('бег', 'цель'), actionId: 'predator_vi:0', fromId: 'бег', toId: 'цель', inputs: { дистанция: 'близкая' } });
     const after = first.sheets.find(s => s.id === 'бег')!;
     eq(after.values.edge_left, 7);

@@ -109,7 +109,7 @@ describe('удаление стола и листа', () => {
     await rooms.turn(gm.userId, { roomId, op: 'start', order: ['а', 'б', 'в'] });
 
     expect(await refused(rooms.dropSheet(player.userId, roomId, 'а'))).toBe(403);
-    expect(await refused(rooms.dropSheet(gm.userId, roomId, 'стол'))).toBe(400);
+    expect(await refused(rooms.dropSheet(gm.userId, roomId, 'desk'))).toBe(400);
 
     await rooms.placePiece(gm.userId, roomId, 'а', { x: 2, y: 3 });
     const dropped = await rooms.dropSheet(gm.userId, roomId, 'а');
@@ -128,7 +128,7 @@ describe('удаление стола и листа', () => {
 
     await rooms.dropSheet(player.userId, roomId, 'в');
     state = await rooms.state(roomId);
-    expect(state.sheets.map(sheet => sheet.id).sort()).toEqual(['б', 'стол']);
+    expect(state.sheets.map(sheet => sheet.id).sort()).toEqual(['desk', 'б']);
     expect(state.members.find(member => member.userId === player.userId)?.sheetId).toBeNull();
     expect(state.clock).toMatchObject({ order: ['б'] });
     expect((await rooms.journal(gm.userId, roomId)).filter(entry => entry.op === 'drop').map(entry => entry.input)).toEqual([

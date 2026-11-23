@@ -54,7 +54,7 @@ const base = {
         { type: 'check', value: { expr: '@спас' }, versus: { expr: '10' } },
       ],
     },
-    отравлен: passive('Отравлен', 'disadvantage', '@бросающий == @носитель'),
+    отравлен: passive('Отравлен', 'disadvantage', '@roller == @holder'),
   },
 } as unknown as System;
 
@@ -114,7 +114,7 @@ group('заявка правки за столом', () => {
 });
 
 group('цель видна действующему: состояния цели правят бросок по ней', () => {
-  const prone = withEffects({ лежит: passive('Лежит', 'advantage', '@против == @носитель') });
+  const prone = withEffects({ лежит: passive('Лежит', 'advantage', '@against == @holder') });
   const lying = make('mirra', { effects: [{ effectId: 'лежит' }] } as never);
 
   test('по лежащей цели атакуют с преимуществом — правку даёт лист ЦЕЛИ', () => {
@@ -128,7 +128,7 @@ group('цель видна действующему: состояния цели
   });
 
   test('условие правки цели считается по листу ЦЕЛИ', () => {
-    const sys = withEffects({ лежит: passive('Лежит', 'advantage', '@против == @носитель and @носитель.уровень >= 5') });
+    const sys = withEffects({ лежит: passive('Лежит', 'advantage', '@against == @holder and @holder.уровень >= 5') });
     deepEq(hitTrace(strike(sys, arven, lying, [4, 5])).rolls, [4], 'у Мирры третий уровень — условие ложно');
   });
 
@@ -142,7 +142,7 @@ group('цель видна действующему: состояния цели
   });
 
   test('«против любого броска по мне» ловит и атаку', () => {
-    const sys = withEffects({ дрожит: passive('Дрожит', 'advantage', '@против == @носитель', null) });
+    const sys = withEffects({ дрожит: passive('Дрожит', 'advantage', '@against == @holder', null) });
     deepEq(hitTrace(strike(sys, arven, make('mirra', { effects: [{ effectId: 'дрожит' }] } as never), [4, 18, 5])).rolls, [4, 18]);
   });
 
@@ -160,9 +160,9 @@ group('правка после того, как бросок увиден: вы�
     вдохновение: {
       label: 'Вдохновение: перебросить', activation: 'passive',
       on: [{
-        on: 'seen', confirm: true, if: { expr: '@бросающий == @носитель and @носитель.вдохновение > 0' },
+        on: 'seen', confirm: true, if: { expr: '@roller == @holder and @holder.вдохновение > 0' },
         steps: [
-          { type: 'apply', target: { expr: '@носитель.вдохновение' }, direction: 'subtract', value: { expr: '1' } },
+          { type: 'apply', target: { expr: '@holder.вдохновение' }, direction: 'subtract', value: { expr: '1' } },
           { type: 'roll-add', count: { expr: '1' }, keep: 'best' },
         ],
       }],

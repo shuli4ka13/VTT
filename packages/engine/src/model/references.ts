@@ -18,7 +18,7 @@ import { VALUE_COLUMN } from './tables.ts';
 export { MOMENT_PREFIX, FIELD_PREFIX } from '../events/bus.ts';
 import { MOMENT_PREFIX, FIELD_PREFIX, GAINED_PREFIX, LOST_PREFIX, ANY_ACTION, callHappening, SEEN, ROLLED } from '../events/bus.ts';
 import type { Phase } from '../events/bus.ts';
-import { fieldsOf, fieldLinkOf } from './sheet-columns.ts';
+import { fieldsOf, fieldLinkOf, hasTargetSlot, hasInputSlot, TARGET_SLOT } from './sheet-columns.ts';
 
 export const CALL_TAGS = NAMES.tags;
 
@@ -396,7 +396,7 @@ export function chainRefs(
   return out;
 }
 
-const ROW_PATH = /@строка((?:\.[\p{L}\p{N}_]+)*)/gu;
+const ROW_PATH = new RegExp(`@${NAMES.row}((?:\\.[\\p{L}\\p{N}_]+)*)`, 'gu');
 
 function rowFree(text: string, from: Where, own: Set<string> | undefined, out: Reference[]): string {
   if (!own) return text;
@@ -473,9 +473,9 @@ function modifierRefs(system: System, list: Modifier[] | undefined, from: Where,
       if (mod.value?.expr.trim()) exprRefs(rowFree(mod.value.expr, from, own, out), from, scope, out);
       dieRefs(mod, from, out, ref => exprRefs(rowFree(ref, from, own, out), from, scope, out));
     } else {
-      if (target.includes('{@строка.')) {
-        for (const slot of target.matchAll(/\{@строка\.([\p{L}\p{N}_]+)\}/gu)) if (own && !own.has(slot[1]!)) out.push({ kind: 'prop', key: slot[1]!, from, scope: 'foreign' });
-      } else if (/\{@(?!строка\.)/u.test(target)) {
+      if (hasTargetSlot(target)) {
+        for (const slot of target.matchAll(TARGET_SLOT)) if (own && !own.has(slot[1]!)) out.push({ kind: 'prop', key: slot[1]!, from, scope: 'foreign' });
+      } else if (hasInputSlot(target)) {
         for (const slot of target.matchAll(/\{@([\p{L}\p{N}_]+)/gu)) if (!inputs.some(p => p.key === slot[1])) out.push({ kind: 'param', key: slot[1]!, from, scope: 'missing' });
       } else if (target && !target.includes(':') && target !== '*') out.push({ kind: 'field', key: target, from });
       const condition = (mod as { if?: { expr: string } }).if;

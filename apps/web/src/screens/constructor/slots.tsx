@@ -1,7 +1,7 @@
 import { rolesOf } from './effects/roles.ts';
 import type { SheetNames } from '../../ui/formula-chips.tsx';
 import type { System, Effect, SlotRef, Param } from '@vtt/schema';
-import { givesOf, stepModule, loopsAt, calledOf, amountParamOf, hasField } from '@vtt/engine';
+import { givesOf, stepModule, loopsAt, calledOf, amountParamOf, hasField, NAMES } from '@vtt/engine';
 import type { Graded, RecordKind, NameAt } from '@vtt/engine';
 import { columnPaths } from '../../ui/formula.tsx';
 import { STEP } from '../../words.ts';
@@ -105,7 +105,7 @@ export interface SlotContext {
   scope?: readonly NameAt[];
 }
 
-export const EVENT_NAMES: [string, string][] = [['метки', 'метки вызова: значения выборов']];
+export const EVENT_NAMES: [string, string][] = [[NAMES.tags, 'метки вызова: значения выборов']];
 
 export const isCalled = (ctx: SlotContext): boolean =>
   Boolean(amountParamOf(ctx.effect))

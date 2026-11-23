@@ -15,7 +15,7 @@ const sheet = { id: 'испытуемый', values: {}, effects: [] };
 const run = (successWhen, rolled, versus, extra = {}) => {
   const rule = {
     steps: [
-      { id: 'try_бросок', type: 'roll', die: 'lead_die', bonus: { expr: '0' }, by: { expr: '@носитель' } },
+      { id: 'try_бросок', type: 'roll', die: 'lead_die', bonus: { expr: '0' }, by: { expr: '@holder' } },
       {
         id: 'try', type: 'check', value: { expr: '@try_бросок' },
         ...(successWhen ? { successWhen } : {}),

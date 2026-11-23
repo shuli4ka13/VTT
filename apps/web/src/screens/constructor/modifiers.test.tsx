@@ -34,21 +34,21 @@ describe('редактор модификаторов', () => {
     const mods = structuredClone(rollMod) as Modifier[];
     const onEdit = vi.fn((change: (d: Modifier[]) => void) => change(mods));
     const { unmount } = renderOpen(<ModifiersEditor system={system} modifiers={mods} onEdit={onEdit} />);
-    pickCombo(screen.getByDisplayValue('всех — без условия'), '@против == @носитель');
-    expect((mods[0] as { if?: unknown }).if).toEqual({ expr: '@против == @носитель' });
+    pickCombo(screen.getByDisplayValue('всех — без условия'), '@against == @holder');
+    expect((mods[0] as { if?: unknown }).if).toEqual({ expr: '@against == @holder' });
     unmount();
 
     renderOpen(<ModifiersEditor system={system} modifiers={mods} onEdit={vi.fn()} />);
-    expect(screen.getByDisplayValue('бросают против носителя').dataset.value).toBe('@против == @носитель');
+    expect(screen.getByDisplayValue('бросают против носителя').dataset.value).toBe('@against == @holder');
   });
 
   it('условие поверх «Кого касается» хранится как все(…) и очищается вместе с выбором', () => {
-    const mods = [{ ...rollMod[0], if: { expr: '@бросающий == @носитель and @носитель.ac > 1' } }] as unknown as Modifier[];
+    const mods = [{ ...rollMod[0], if: { expr: '@roller == @holder and @holder.ac > 1' } }] as unknown as Modifier[];
     const onEdit = vi.fn((change: (d: Modifier[]) => void) => change(mods));
     renderOpen(<ModifiersEditor system={system} modifiers={mods} onEdit={onEdit} />);
     const whose = screen.getByDisplayValue('бросает носитель');
     pickCombo(whose, '');
-    expect((mods[0] as { if?: { expr: string } }).if).toEqual({ expr: '@носитель.ac > 1' });
+    expect((mods[0] as { if?: { expr: string } }).if).toEqual({ expr: '@holder.ac > 1' });
   });
 
   it('«Кроме» у правки броска: записанное видно сразу, выбор пишет notTags', () => {
@@ -62,16 +62,16 @@ describe('редактор модификаторов', () => {
   });
 
   it('строка правки броска называет кубики и порог числом и говорит «кроме меток»', () => {
-    const count = { kind: 'edit', call: 'roll', param: 'count', op: 'add', value: { expr: '-2' }, notTags: ['атака'], if: { expr: '@бросающий == @носитель' } } as Modifier;
+    const count = { kind: 'edit', call: 'roll', param: 'count', op: 'add', value: { expr: '-2' }, notTags: ['атака'], if: { expr: '@roller == @holder' } } as Modifier;
     expect(modifierSentence(system, count)).toBe('Бросок кроме «атака», бросает носитель: кубики − 2');
     expect(modifierSentence(system, { kind: 'edit', call: 'roll', param: 'threshold', op: 'add', value: { expr: '1' } } as Modifier)).toContain('порог + 1');
   });
 
   it('строка правки броска: «с любой из меток» без лишнего «или», правило — названием', () => {
     const ruled = { ...system, rolls: { проверка: { label: 'Проверка', die: 'd', fields: [] } } } as unknown as System;
-    expect(modifierSentence(ruled, { kind: 'edit', call: 'roll', param: 'count', op: 'add', value: { expr: '-1' }, anyTags: ['атака'], if: { expr: '@бросающий == @носитель' } } as Modifier))
+    expect(modifierSentence(ruled, { kind: 'edit', call: 'roll', param: 'count', op: 'add', value: { expr: '-1' }, anyTags: ['атака'], if: { expr: '@roller == @holder' } } as Modifier))
       .toBe('Бросок с любой из меток «атака», бросает носитель: кубики − 1');
-    expect(modifierSentence(ruled, { kind: 'edit', call: 'roll', param: 'count', op: 'add', value: { expr: '-1' }, tags: ['проверка'], if: { expr: '@бросающий == @носитель' } } as Modifier))
+    expect(modifierSentence(ruled, { kind: 'edit', call: 'roll', param: 'count', op: 'add', value: { expr: '-1' }, tags: ['проверка'], if: { expr: '@roller == @holder' } } as Modifier))
       .toBe('Бросок с метками «Проверка», бросает носитель: кубики − 1');
   });
 
@@ -207,26 +207,26 @@ describe('правка по умолчанию касается носителя
     const onEdit = vi.fn((change: (d: Modifier[]) => void) => change(mods));
     renderOpen(<ModifiersEditor system={system} modifiers={mods} onEdit={onEdit} />);
     fireEvent.click(screen.getByText('+ правка вызова'));
-    expect((mods[0] as { if?: unknown }).if).toEqual({ expr: '@бросающий == @носитель' });
+    expect((mods[0] as { if?: unknown }).if).toEqual({ expr: '@roller == @holder' });
   });
 
   it('смена вызова ставит условие про носителя этого вызова — вход-цель, а не первый лист', () => {
-    const mods = [{ kind: 'edit', call: 'roll', param: 'edits', edit: 'фора', if: { expr: '@бросающий == @носитель' } }] as unknown as Modifier[];
+    const mods = [{ kind: 'edit', call: 'roll', param: 'edits', edit: 'фора', if: { expr: '@roller == @holder' } }] as unknown as Modifier[];
     const onEdit = vi.fn((change: (d: Modifier[]) => void) => change(mods));
     renderOpen(<ModifiersEditor system={withDamage} modifiers={mods} onEdit={onEdit} />);
     pickCombo(screen.getByDisplayValue('Бросок'), 'урон');
-    expect(mods[0]).toMatchObject({ call: 'урон', param: 'сколько', if: { expr: '@лист == @носитель' } });
+    expect(mods[0]).toMatchObject({ call: 'урон', param: 'сколько', if: { expr: '@лист == @holder' } });
   });
 
   it('строка без условия — «бросает кто угодно» и «на всех листах»; условие не про носителя — тоже', () => {
     expect(modifierSentence(system, rollMod[0]!)).toBe('Бросок с метками «атака», бросает кто угодно: Фора');
-    expect(modifierSentence(system, { ...rollMod[0]!, if: { expr: '@бросающий == @носитель' } } as Modifier)).toBe('Бросок с метками «атака», бросает носитель: Фора');
-    expect(modifierSentence(system, { ...rollMod[0]!, if: { expr: '@носитель.ac > 1' } } as Modifier)).toContain('бросает кто угодно, если');
-    expect(modifierSentence(system, { ...rollMod[0]!, if: { expr: '@бросающий == @носитель and @носитель.ac > 1' } } as Modifier)).not.toContain('кто угодно');
+    expect(modifierSentence(system, { ...rollMod[0]!, if: { expr: '@roller == @holder' } } as Modifier)).toBe('Бросок с метками «атака», бросает носитель: Фора');
+    expect(modifierSentence(system, { ...rollMod[0]!, if: { expr: '@holder.ac > 1' } } as Modifier)).toContain('бросает кто угодно, если');
+    expect(modifierSentence(system, { ...rollMod[0]!, if: { expr: '@roller == @holder and @holder.ac > 1' } } as Modifier)).not.toContain('кто угодно');
     expect(modifierSentence(system, { ...rollMod[0]!, if: { expr: '1 > 0' } } as Modifier)).toContain('бросает кто угодно, если');
     const damage = { kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '0.5' } } as unknown as Modifier;
     expect(modifierSentence(withDamage, damage)).toContain('«Урон» · Сколько, на всех листах:');
-    expect(modifierSentence(withDamage, { ...damage, if: { expr: '@лист == @носитель' } } as Modifier)).toContain('«Урон» · Сколько, «Лист» — носитель:');
+    expect(modifierSentence(withDamage, { ...damage, if: { expr: '@лист == @holder' } } as Modifier)).toContain('«Урон» · Сколько, «Лист» — носитель:');
   });
 });
 
@@ -246,18 +246,18 @@ describe('правка типа говорит подписями колонок
   const set = (expr: string) => ({ kind: 'value', target: 'ac_base', op: 'set', value: { expr } }) as Modifier;
 
   it('колонка с тем же ключом, что у поля листа, зовётся своей подписью, а не «Класс брони (строка)»', () => {
-    expect(modifierSentence(gear, set('@строка.ac'), 'armor')).toBe('«База доспеха» = «База класса брони»');
-    expect(modifierSentence(gear, set('@строка.ac'))).not.toContain('(строка)');
+    expect(modifierSentence(gear, set('@row.ac'), 'armor')).toBe('«База доспеха» = «База класса брони»');
+    expect(modifierSentence(gear, set('@row.ac'))).not.toContain('(строка)');
   });
 
   it('колонка основы называется по подписи основы', () => {
-    expect(modifierSentence(gear, set('@строка.heaviness'), 'armor')).toBe('«База доспеха» = «Тяжесть»');
+    expect(modifierSentence(gear, set('@row.heaviness'), 'armor')).toBe('«База доспеха» = «Тяжесть»');
   });
 
   it('условие правки поля и условие правки вызова читаются так же', () => {
-    const guarded = { ...set('1'), if: { expr: '@строка.stealth == true' } } as Modifier;
+    const guarded = { ...set('1'), if: { expr: '@row.stealth == true' } } as Modifier;
     expect(modifierSentence(gear, guarded, 'armor')).toBe('«База доспеха» = 1 — если «Помеха на Скрытность» = да');
-    const roll = { kind: 'edit', call: 'roll', param: 'edits', tags: ['скрытность'], edit: 'фора', if: { expr: '@бросающий == @носитель and @строка.stealth == true' } } as unknown as Modifier;
+    const roll = { kind: 'edit', call: 'roll', param: 'edits', tags: ['скрытность'], edit: 'фора', if: { expr: '@roller == @holder and @row.stealth == true' } } as unknown as Modifier;
     expect(modifierSentence(gear, roll, 'armor')).toContain('если «бросающий» = «носитель» и «Помеха на Скрытность» = да');
   });
 
@@ -288,7 +288,7 @@ describe('правка типа говорит подписями колонок
   });
 
   it('раскрытая правка типа показывает те же подписи', () => {
-    renderOpen(<ModifiersEditor system={gear} table="armor" modifiers={[set('@строка.ac')]} onEdit={vi.fn()} />);
+    renderOpen(<ModifiersEditor system={gear} table="armor" modifiers={[set('@row.ac')]} onEdit={vi.fn()} />);
     expect(document.body.textContent).toContain('База класса брони');
     expect(document.body.textContent).not.toContain('строка.ac');
   });

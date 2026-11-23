@@ -139,10 +139,10 @@ describe('Imperium Maledictum: удар в ближнем бою (с. 190, 211)'
 
   it('полная ничья (степени и навык равны, по 45): решает ведущий — «Защитник»: ран нет; «Бьющий»: удар прошёл', () => {
     const tie = { 'характеристики.ближний_бой.значение': 45 };
-    const lost = strike([38, 38], tie, 'ближний_бой', 'нет');
-    expect(lost.questions.map(one => `${one.sheetId}: ${one.label}`)).toEqual(['стол: Ничья. Кто победил?']);
+    const lost = strike([38, 38], tie, 'ближний_бой', 'no');
+    expect(lost.questions.map(one => `${one.sheetId}: ${one.label}`)).toEqual(['desk: Ничья. Кто победил?']);
     expect(wounds(lost.sheets, 'культист')).toBe(0);
-    const won = strike([38, 38], tie, 'ближний_бой', 'да');
+    const won = strike([38, 38], tie, 'ближний_бой', 'yes');
     expect(wounds(won.sheets, 'культист')).toBe(5);
     expect(won.log.join('\n')).toContain('«Ничья. Кто победил?»: Бьющий');
   });

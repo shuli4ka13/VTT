@@ -1,6 +1,6 @@
 import type { System } from '@vtt/schema';
 import { sheetPathLabel } from './paths.ts';
-import { fieldOf, fieldLinkOf, ROW, typeColumn } from '@vtt/engine';
+import { fieldOf, fieldLinkOf, ROW, typeColumn, nameLabel, saidName } from '@vtt/engine';
 import { shownFormula } from './formula-lang.ts';
 
 const known = (system: System, tag: string, names?: ReadonlyMap<string, string>): boolean =>
@@ -14,14 +14,14 @@ const onSheet = (system: System, tag: string, names?: ReadonlyMap<string, string
 };
 
 export const plainLabel = (system: System, tag: string, names?: ReadonlyMap<string, string>): string =>
-  fieldOf(system, tag)?.label ?? names?.get(tag) ?? sheetPathLabel(system, tag) ?? system.effects?.[tag]?.label ?? tag;
+  fieldOf(system, tag)?.label ?? names?.get(tag) ?? sheetPathLabel(system, tag) ?? system.effects?.[tag]?.label ?? saidName(tag);
 
 export const pickTail = (system: System, tag: string, rest: string): string =>
   typeColumn(system, fieldLinkOf(system, fieldOf(system, tag)), rest)?.label || rest;
 
 export function labelOfTag(system: System, tag: string, names?: ReadonlyMap<string, string>): string {
   const owned = onSheet(system, tag, names);
-  if (owned) return `${labelOfTag(system, owned.rest, names)} (${names?.get(owned.head) ?? owned.head})`;
+  if (owned) return `${labelOfTag(system, owned.rest, names)} (${names?.get(owned.head) ?? nameLabel(owned.head) ?? owned.head})`;
   return plainLabel(system, tag, names);
 }
 

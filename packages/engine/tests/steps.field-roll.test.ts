@@ -15,9 +15,9 @@ const build = (steps: unknown[], rule: Record<string, unknown> = {}) => ({
   rolls: {
     проверка: {
       label: 'Проверка', die: 'к100', number: 'under',
-      success: { expr: '@выпало <= 5 or (@выпало <= 95 and @выпало <= @порог)' },
-      margin: { expr: 'floor(@порог / 10) - floor(@выпало / 10)' },
-      degrees: [{ label: 'твёрдый успех', if: { expr: '@успех and @степени >= 2' } }],
+      success: { expr: '@rolled <= 5 or (@rolled <= 95 and @rolled <= @threshold)' },
+      margin: { expr: 'floor(@threshold / 10) - floor(@rolled / 10)' },
+      degrees: [{ label: 'твёрдый успех', if: { expr: '@success and @margin >= 2' } }],
       fields: [{ table: 'лист', column: 'навык' }],
       ...rule,
     },

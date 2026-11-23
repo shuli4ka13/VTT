@@ -246,19 +246,19 @@
         "number": "sides",
         "pair": true,
         "success": {
-          "expr": "(@бросок.parts.первая == @бросок.parts.вторая and @бросок.parts.первая >= 6) or (not(@бросок.parts.первая == 1 and @бросок.parts.вторая == 1) and @выпало >= @порог)"
+          "expr": "(@roll.parts.первая == @roll.parts.вторая and @roll.parts.первая >= 6) or (not(@roll.parts.первая == 1 and @roll.parts.вторая == 1) and @rolled >= @threshold)"
         },
         "degrees": [
           {
             "label": "критический успех",
             "if": {
-              "expr": "@бросок.parts.первая == @бросок.parts.вторая and @бросок.parts.первая >= 6"
+              "expr": "@roll.parts.первая == @roll.parts.вторая and @roll.parts.первая >= 6"
             }
           },
           {
             "label": "критический провал",
             "if": {
-              "expr": "@бросок.parts.первая == 1 and @бросок.parts.вторая == 1"
+              "expr": "@roll.parts.первая == 1 and @roll.parts.вторая == 1"
             }
           }
         ],

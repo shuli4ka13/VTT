@@ -22,9 +22,9 @@ describe('namesAt: что видно в каждом месте эффекта',
 
   it('шаги подписки: носитель и слышимые входы вызова с подписями', () => {
     const list = namesAt(dnd, 'hellish_rebuke', { part: 'handler', handler: 0, index: 2 });
-    expect(names(list)).toEqual(expect.arrayContaining(['носитель', 'лист', 'источник', 'amount', 'спас']));
+    expect(names(list)).toEqual(expect.arrayContaining(['holder', 'лист', 'источник', 'amount', 'спас']));
     expect(list.find(one => one.name === 'источник')?.group).toBe('heard');
-    expect(names(sheetNamesAt(dnd, 'concentration', { part: 'handler', handler: 0, index: 0 }))).toEqual(expect.arrayContaining(['носитель', 'лист']));
+    expect(names(sheetNamesAt(dnd, 'concentration', { part: 'handler', handler: 0, index: 0 }))).toEqual(expect.arrayContaining(['holder', 'лист']));
   });
 
   it('заклинание видит свои входы круга и ячейки', () => {
@@ -34,12 +34,12 @@ describe('namesAt: что видно в каждом месте эффекта',
 
   it('наложение видит носителя', () => {
     const system = { ...dnd, effects: { ...dnd.effects, x: { label: 'x', activation: 'passive', params: [{ key: 'наложил', kind: 'sheet' }], attach: [] } } } as System;
-    expect(names(namesAt(system, 'x', { part: 'attach', index: 0 }))).toEqual(expect.arrayContaining(['носитель', 'наложил']));
+    expect(names(namesAt(system, 'x', { part: 'attach', index: 0 }))).toEqual(expect.arrayContaining(['holder', 'наложил']));
   });
 
   it('«завершено» видит таблицу итогов с колонками шагов внутри цикла', () => {
     const system = { ...dnd, effects: { ...dnd.effects, x: { label: 'x', activation: 'passive', on: [{ on: 'done:strike', steps: [] }] } } } as System;
-    const rows = namesAt(system, 'x', { part: 'handler', handler: 0, index: 0 }).find(one => one.name === 'итоги');
+    const rows = namesAt(system, 'x', { part: 'handler', handler: 0, index: 0 }).find(one => one.name === 'results');
     expect(rows?.children?.map(c => c.path)).toContain('.бросок.исход.hit');
   });
 

@@ -70,10 +70,10 @@ group('«Наложить» кладёт наложенному только я�
   });
 
   test('у висящего эффекта наложение из подписки передаёт носителя явно', () => {
-    const args = { кто: { expr: '@носитель' }, на_ком: { expr: '@носитель' } };
+    const args = { кто: { expr: '@holder' }, на_ком: { expr: '@holder' } };
     const watch: Partial<Effect> = {
       label: 'Заслон', activation: 'passive',
-      on: [{ on: 'after:метить', steps: [apply('@носитель', { args })] }] as never,
+      on: [{ on: 'after:метить', steps: [apply('@holder', { args })] }] as never,
     };
     const played = press(
       world({ params: [WHO, ON] as Param[] }, { steps: [] }, { заслон: watch }),
@@ -173,7 +173,7 @@ group('роли у наложения: «target» — лист из «На ко�
   test('actor и одноимённый вход у наложения те же, что у вызова', () => {
     const who = { key: 'кто', kind: 'sheet', role: 'actor' } as Param;
     deepSame(appliedOf(who, caller), implicitOf(who, caller));
-    deepSame(appliedOf(who, { activation: 'passive' }), { by: 'actor', from: 'носитель' });
+    deepSame(appliedOf(who, { activation: 'passive' }), { by: 'actor', from: 'holder' });
     const named = { key: 'сила', kind: 'number' } as Param;
     deepSame(appliedOf(named, { params: [named] }), { by: 'name', from: 'сила' });
   });

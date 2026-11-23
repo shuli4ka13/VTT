@@ -77,7 +77,7 @@ const system = {
     удар: {
       label: 'Удар', activation: 'manual',
       params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }],
-      steps: [{ type: 'apply', target: { expr: '@действующий.итог' }, direction: 'add', value: { expr: '@вещь.режим.bonus + if(@вещь.режим.flag, 10, 0)' } }],
+      steps: [{ type: 'apply', target: { expr: '@действующий.итог' }, direction: 'add', value: { expr: '@item.режим.bonus + if(@item.режим.flag, 10, 0)' } }],
     },
   },
 } as unknown as System;
@@ -118,8 +118,8 @@ group('имена эффекта в клетке сильнее одноимён
   });
 });
 
-group('вещь: путь через её колонку-выбор', () => {
-  test('«@вещь.режим.колонка» читает строку справочника', () => {
+group('item: путь через её колонку-выбор', () => {
+  test('«@item.режим.колонка» читает строку справочника', () => {
     eq(total(play([sheet('я', {}, [{ of: 'меч' }])], 'меч:0'), 'я'), 12);
   });
 

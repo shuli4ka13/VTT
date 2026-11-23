@@ -25,7 +25,7 @@ const system = {
     ] },
     навыки: { owner: 'sheet', key: 'word', columns: [
       { key: 'ранг', label: 'Ранг', kind: 'number', default: { expr: '@уровень + 1' } },
-      { key: 'итог', label: 'Итог', expr: { expr: '@строка.ранг * 2' } },
+      { key: 'итог', label: 'Итог', expr: { expr: '@row.ранг * 2' } },
     ], rows: [
       { value: 'атлетика', label: 'Атлетика' },
       { value: 'обман', label: 'Обман', view: { ранг: { default: 7 } } },
@@ -99,8 +99,8 @@ describe('значения «в новом листе»', () => {
     expect(Object.hasOwn(sheet.values, 'страх')).toBe(false);
     const desk = blankDesk(system);
     expect(desk.values).toEqual({ страх: 1 });
-    expect(newPass(system, sheet, { shared: [desk] }).resolve('стол.запас')).toBe(5);
-    expect(newPass(system, sheet, { shared: [{ ...desk, values: { страх: 6 } } as Sheet] }).resolve('стол.запас')).toBe(10);
+    expect(newPass(system, sheet, { shared: [desk] }).resolve('desk.запас')).toBe(5);
+    expect(newPass(system, sheet, { shared: [{ ...desk, values: { страх: 6 } } as Sheet] }).resolve('desk.запас')).toBe(10);
   });
 
   it('значения образца в новый лист не попадают', () => {

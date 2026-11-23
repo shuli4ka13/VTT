@@ -28,7 +28,7 @@ const system = {
   sheets: {
     пешка: {
       label: 'Пешка',
-      modifiers: [{ kind: 'value', target: 'cell:навыки.*.ранг', op: 'set', value: { expr: '@заготовка.[@строка]' }, if: { expr: 'not empty(@заготовка)' } }],
+      modifiers: [{ kind: 'value', target: 'cell:навыки.*.ранг', op: 'set', value: { expr: '@заготовка.[@row]' }, if: { expr: 'not empty(@заготовка)' } }],
     },
   },
   effects: {},

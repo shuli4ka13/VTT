@@ -170,8 +170,8 @@ describe('вопрос шага «Спросить»: один выбор кно
       { userId: 'p1', name: 'Первый', role: 'player', sheetId: 'а' },
     ],
     pending: {
-      id: 'q', sheetId: 'стол', stage: 'step', one: true, question: 'Ведущий: Ничья. Кто победил?',
-      options: [{ id: 'да', label: 'Бьющий' }, { id: 'нет', label: 'Защитник' }], preview: [],
+      id: 'q', sheetId: 'desk', stage: 'step', one: true, question: 'Ведущий: Ничья. Кто победил?',
+      options: [{ id: 'yes', label: 'Бьющий' }, { id: 'no', label: 'Защитник' }], preview: [],
     },
   }) as unknown as RoomState;
   afterEach(() => { cleanup(); vi.restoreAllMocks(); });
@@ -186,7 +186,7 @@ describe('вопрос шага «Спросить»: один выбор кно
     expect(screen.queryByText('Применить')).toBeNull();
     fireEvent.click(screen.getByText('Защитник'));
     expect(sent).toHaveBeenCalledTimes(1);
-    expect(sent).toHaveBeenCalledWith({ roomId: 'к', pendingId: 'q', chosen: ['нет'] });
+    expect(sent).toHaveBeenCalledWith({ roomId: 'к', pendingId: 'q', chosen: ['no'] });
   });
 
   it('игроку вопрос к ведущему недоступен', () => {
@@ -209,7 +209,7 @@ describe('панель «Стол»', () => {
     },
     sheets: [
       { id: 'а', systemId: 'x', name: 'Арвен', values: {}, has: [], effects: [] },
-      { id: 'стол', systemId: 'x', name: 'Стол', values: { страх: 3 }, has: [], effects: [] },
+      { id: 'desk', systemId: 'x', name: 'Стол', values: { страх: 3 }, has: [], effects: [] },
     ],
   } as unknown as RoomState);
 

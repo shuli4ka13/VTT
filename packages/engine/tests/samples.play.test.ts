@@ -107,7 +107,7 @@ const ALL = [...SAMPLE_WORLDS.map(sample => ({ sample, mark: '' })), ...LITE_WOR
 for (const { sample, mark } of ALL) {
   const system = flattenSystem(sample.system);
   const world: World = { system, compendium: sample.compendium, sheets: sample.sheets };
-  const players = world.sheets.filter(sheet => sheet.id !== 'стол');
+  const players = world.sheets.filter(sheet => sheet.id !== 'desk');
 
   describe(`образец играется: ${system.name}${mark}`, () => {
     it('каждое действие каждого листа отрабатывает или отказывает по правилам, метки его бросков знает проверка «Проблем»', () => {

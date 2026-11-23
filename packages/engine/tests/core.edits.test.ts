@@ -21,7 +21,7 @@ const added = (out: ReturnType<typeof rollEdits>): number => out.addends.reduce(
 describe('правки на листе-держателе', () => {
   const base = flattenSystem(world.system);
   const system = withEffect(base, 'уклон', [
-    { kind: 'edit', call: 'roll', param: 'bonus', if: { expr: '@против == @носитель' }, op: 'add', value: { expr: '-@носитель.ac' } },
+    { kind: 'edit', call: 'roll', param: 'bonus', if: { expr: '@against == @holder' }, op: 'add', value: { expr: '-@holder.ac' } },
   ]);
   const attacker = world.sheets.find((s: Sheet) => s.id === 'ogre')!;
   const target = wearing(world.sheets.find((s: Sheet) => s.id === 'arven')!, 'уклон');
@@ -68,7 +68,7 @@ describe('условие правки: одна политика', () => {
   };
 
   it('опечатка в условии правки: на столе правка не подходит, а проверка системы называет её ошибкой', () => {
-    const typo = withEffect(base, 'x', [{ kind: 'edit', call: damage, param: 'amount', op: 'mul', value: { expr: '0.5' }, if: { expr: '@носитель.нет_такого_поля > 0' } }]);
+    const typo = withEffect(base, 'x', [{ kind: 'edit', call: damage, param: 'amount', op: 'mul', value: { expr: '0.5' }, if: { expr: '@holder.нет_такого_поля > 0' } }]);
     const { sheets, list } = holders(typo);
     expect(gather(list, spec(sheets, typo))).toEqual([]);
     expect(errorsOf(lintSystem(typo)).some(problem => problem.text.includes('«нет_такого_поля»'))).toBe(true);
@@ -90,7 +90,7 @@ describe('держатель поля', () => {
     expect(holderOf(system, sheets, 'arven', 'ac')).toBe('arven');
     if (deskField) {
       const column = ((deskField[1] as { columns?: { key: string }[] }).columns ?? [])[0]?.key;
-      if (column) expect(holderOf(system, sheets, 'arven', column)).toBe('стол');
+      if (column) expect(holderOf(system, sheets, 'arven', column)).toBe('desk');
     }
   });
 });

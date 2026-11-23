@@ -121,7 +121,7 @@ describe('почему действие сейчас не оплатить', () 
 });
 
 describe('образец D&D: действие потрачено', () => {
-  const desk = (battle: boolean): Sheet => ({ id: 'стол', systemId: dnd.id ?? '', name: 'Стол', values: { battle }, has: [], effects: [] } as unknown as Sheet);
+  const desk = (battle: boolean): Sheet => ({ id: 'desk', systemId: dnd.id ?? '', name: 'Стол', values: { battle }, has: [], effects: [] } as unknown as Sheet);
   const spent = { ...arven, values: { ...arven!.values, turn_action: 0 } } as Sheet;
   const ready = { ...arven, values: { ...arven!.values, turn_action: 1 } } as Sheet;
   const ask = (actor: Sheet, battle: boolean) => costRefusal(

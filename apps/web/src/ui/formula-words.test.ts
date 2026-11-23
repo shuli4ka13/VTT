@@ -89,17 +89,17 @@ describe('слова формул: клетка своей строки', () => 
     },
     effects: {},
   } as unknown as System;
-  const names = new Map([['строка', 'эта строка'], ['строка.ac', 'База класса брони'], ['строка.total', 'Итого']]);
+  const names = new Map([['row', 'эта строка'], ['row.ac', 'База класса брони'], ['row.total', 'Итого']]);
 
   it('«строка» — не лист: колонка зовётся подписью из карты, а не «Класс брони (строка)»', () => {
-    expect(formulaWords(withRow, '@строка.ac', names)).toBe('«База класса брони»');
-    expect(formulaWords(withRow, '@строка.ac')).toBe('«строка.ac»');
-    expect(formulaWords(withRow, '@носитель.ac')).toBe('«Класс брони (носитель)»');
+    expect(formulaWords(withRow, '@row.ac', names)).toBe('«База класса брони»');
+    expect(formulaWords(withRow, '@row.ac')).toBe('«строка.ac»');
+    expect(formulaWords(withRow, '@holder.ac')).toBe('«Класс брони (носитель)»');
   });
 
   it('колонка с именем поля броска остаётся колонкой', () => {
-    expect(formulaWords(withRow, '@строка.total', names)).toBe('«Итого»');
-    expect(formulaWords(withRow, '@строка.total + 1', names)).toBe('«Итого» + 1');
+    expect(formulaWords(withRow, '@row.total', names)).toBe('«Итого»');
+    expect(formulaWords(withRow, '@row.total + 1', names)).toBe('«Итого» + 1');
   });
 });
 

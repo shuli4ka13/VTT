@@ -58,15 +58,15 @@ describe('шаг «Спросить» на сервере', () => {
     expect(paused.pending?.stage).toBe('step');
     expect(paused.pending?.one).toBe(true);
     expect(paused.pending?.question).toBe('Ведущий: Ничья. Кто победил?');
-    expect(paused.pending?.options).toEqual([{ id: 'да', label: 'Бьющий' }, { id: 'нет', label: 'Защитник' }]);
+    expect(paused.pending?.options).toEqual([{ id: 'yes', label: 'Бьющий' }, { id: 'no', label: 'Защитник' }]);
     const pendingId = paused.pending!.id;
 
-    await expect(room.rooms.answer(room.player.userId, { roomId: room.roomId, pendingId, chosen: ['да'] })).rejects.toThrow();
+    await expect(room.rooms.answer(room.player.userId, { roomId: room.roomId, pendingId, chosen: ['yes'] })).rejects.toThrow();
     await expect(room.rooms.answer(room.gm.userId, { roomId: room.roomId, pendingId, chosen: [] })).rejects.toThrow('один ответ');
-    await expect(room.rooms.answer(room.gm.userId, { roomId: room.roomId, pendingId, chosen: ['да', 'нет'] })).rejects.toThrow('один ответ');
+    await expect(room.rooms.answer(room.gm.userId, { roomId: room.roomId, pendingId, chosen: ['yes', 'no'] })).rejects.toThrow('один ответ');
     expect((await room.state()).pending?.id).toBe(pendingId);
 
-    const done = await room.rooms.answer(room.gm.userId, { roomId: room.roomId, pendingId, chosen: ['да'] });
+    const done = await room.rooms.answer(room.gm.userId, { roomId: room.roomId, pendingId, chosen: ['yes'] });
     expect(done.pending).toBeNull();
     expect(done.log.map(line => line.text).join('\n')).toContain('«Ничья. Кто победил?»: Бьющий');
     expect((await room.state()).pending ?? null).toBeNull();
@@ -76,7 +76,7 @@ describe('шаг «Спросить» на сервере', () => {
   it('переигровка по журналу совпадает', async () => {
     const first = await stand(tape(38, 38));
     const paused = await first.rooms.act(first.gm.userId, strike(first.roomId));
-    await first.rooms.answer(first.gm.userId, { roomId: first.roomId, pendingId: paused.pending!.id, chosen: ['да'] });
+    await first.rooms.answer(first.gm.userId, { roomId: first.roomId, pendingId: paused.pending!.id, chosen: ['yes'] });
     const written = await first.journal();
     const dice = written.flatMap((entry: { dice: number[] }) => entry.dice);
     expect(dice.length).toBeGreaterThan(0);
@@ -88,7 +88,7 @@ describe('шаг «Спросить» на сервере', () => {
     });
     const swap = (value: unknown) => JSON.parse(JSON.stringify(value).split(first.roomId).join(second.roomId));
     const again = await second.rooms.act(second.gm.userId, swap(written[0].input));
-    await second.rooms.answer(second.gm.userId, { roomId: second.roomId, pendingId: again.pending!.id, chosen: ['да'] });
+    await second.rooms.answer(second.gm.userId, { roomId: second.roomId, pendingId: again.pending!.id, chosen: ['yes'] });
     expect(at).toBe(dice.length);
     const norm = (value: unknown) => JSON.stringify(value).split(second.roomId).join(first.roomId);
     expect(norm(await second.journal())).toBe(norm(written));

@@ -27,8 +27,8 @@ group('правило броска видит сам бросок: @бросок
   const hope = system(
     { dice: [{ sides: 12, name: 'надежда' }, { sides: 12, name: 'страх' }] },
     { bonus: { expr: '@навык' }, degrees: [
-      { label: 'крит', if: { expr: '@бросок.parts.надежда == @бросок.parts.страх' } },
-      { label: 'со страхом', if: { expr: '@бросок.parts.страх > @бросок.parts.надежда' } },
+      { label: 'крит', if: { expr: '@roll.parts.надежда == @roll.parts.страх' } },
+      { label: 'со страхом', if: { expr: '@roll.parts.страх > @roll.parts.надежда' } },
       { label: 'с надеждой', if: { expr: 'true' } },
     ] },
   );
@@ -42,27 +42,27 @@ group('правило броска видит сам бросок: @бросок
   });
 
   test('натуральная кость без прибавки: 20 — крит, хотя итог с навыком больше', () => {
-    const lead = system({ dice: [{ sides: 20 }] }, { bonus: { expr: '@навык' }, degrees: [{ label: 'крит', if: { expr: '@бросок.natural == 20' } }] });
+    const lead = system({ dice: [{ sides: 20 }] }, { bonus: { expr: '@навык' }, degrees: [{ label: 'крит', if: { expr: '@roll.natural == 20' } }] });
     eq(click(lead, [20]).endsWith('= 22 · крит'), true);
     eq(click(lead, [19]).endsWith('= 21'), true);
   });
 
   test('грани набора: две шестёрки — крит, по лучшей кости — успех', () => {
     const pool = system({ dice: [{ sides: 6 }], read: 'best' }, { number: 'count', fields: [{ table: 'лист', column: 'навык', threshold: { expr: '4' } }], degrees: [
-      { label: 'крит', if: { expr: 'count(@бросок.dice.rolls, 6) >= 2' } },
-      { label: 'успех', if: { expr: '@успех' } },
+      { label: 'крит', if: { expr: 'count(@roll.dice.rolls, 6) >= 2' } },
+      { label: 'успех', if: { expr: '@success' } },
     ] }, []);
     eq(click(pool, [6, 6]).endsWith('· крит'), true);
     eq(click(pool, [6, 2]).endsWith('· успех'), true);
   });
 
   test('@бросок без точки — итог броска, как @выпало', () => {
-    const lead = system({ dice: [{ sides: 20 }] }, { bonus: { expr: '@навык' }, degrees: [{ label: 'много', if: { expr: '@бросок == @выпало and @бросок >= 10' } }] });
+    const lead = system({ dice: [{ sides: 20 }] }, { bonus: { expr: '@навык' }, degrees: [{ label: 'много', if: { expr: '@roll == @rolled and @roll >= 10' } }] });
     eq(click(lead, [9]).endsWith('= 11 · много'), true);
   });
 
   test('поле листа «бросок» при ступенях правила — ошибка «Проблем»', () => {
-    const named = system({ dice: [{ sides: 20 }] }, { degrees: [{ label: 'крит', if: { expr: '@бросок.natural == 20' } }] }, [{ key: 'бросок', label: 'Бросок', kind: 'number' }]);
+    const named = system({ dice: [{ sides: 20 }] }, { degrees: [{ label: 'крит', if: { expr: '@roll.natural == 20' } }] }, [{ key: 'roll', label: 'Бросок', kind: 'number' }]);
     deepEq(errorsOf(lintSystem(named)).map(one => one.text).filter(text => text.includes('«бросок»')).length, 1);
   });
 });
@@ -82,9 +82,9 @@ group('ступени «Проверки» списком: видят её ус�
       { type: 'each', of: 'цели' },
       { id: 'итог', type: 'check', value: { expr: '@бросок' }, versus: { expr: '15' }, degrees: [
         { label: 'крит', if: { expr: '@бросок.parts.надежда == @бросок.parts.страх' } },
-        { label: 'успех со страхом', if: { expr: '@успех and @бросок.parts.страх > @бросок.parts.надежда' } },
-        { label: 'успех с надеждой', if: { expr: '@успех' } },
-        { label: 'провал со страхом', if: { expr: '@степени < 0 and @бросок.parts.страх > @бросок.parts.надежда' } },
+        { label: 'успех со страхом', if: { expr: '@success and @бросок.parts.страх > @бросок.parts.надежда' } },
+        { label: 'успех с надеждой', if: { expr: '@success' } },
+        { label: 'провал со страхом', if: { expr: '@margin < 0 and @бросок.parts.страх > @бросок.parts.надежда' } },
         { label: 'провал с надеждой', if: { expr: 'true' } },
       ] },
     ] } },
@@ -127,18 +127,18 @@ group('ступени «Проверки» списком: проверка «П
   const problems = (sys: System) => lintSystem(sys, deck).map(one => one.text);
 
   test('опечатка в имени в условии ступени — ошибка «Проблем», а не отказ за столом', () => {
-    const texts = errorsOf(lintSystem(make([{ label: 'со страхом', if: { expr: '@успех and @брсок.parts.страх > 1' } }]), deck)).map(one => one.text);
+    const texts = errorsOf(lintSystem(make([{ label: 'со страхом', if: { expr: '@success and @брсок.parts.страх > 1' } }]), deck)).map(one => one.text);
     eq(texts.some(text => text.includes('брсок')), true);
   });
 
   test('битая формула в условии ступени — ошибка «Проблем»', () => {
-    eq(errorsOf(lintSystem(make([{ label: 'крит', if: { expr: '@успех and (' } }]), deck)).length > 0, true);
+    eq(errorsOf(lintSystem(make([{ label: 'крит', if: { expr: '@success and (' } }]), deck)).length > 0, true);
   });
 
   test('шаг эффекта по имени «успех» рядом со ступенями списком — предупреждение', () => {
-    const sys = make([{ label: 'ок', if: { expr: '@успех' } }]);
+    const sys = make([{ label: 'ок', if: { expr: '@success' } }]);
     const steps = (sys.effects as Record<string, { steps: unknown[] }>).удар!.steps;
-    steps.splice(1, 0, { id: 'успех', type: 'roll', fixed: { expr: '1' } });
+    steps.splice(1, 0, { id: 'success', type: 'roll', fixed: { expr: '1' } });
     eq(problems(sys).some(text => text.includes('«успех» в условиях ступеней проверки')), true);
   });
 
@@ -154,13 +154,13 @@ group('ступени «Проверки» списком: проверка «П
 
 group('правило броска: @бросок в «Успех, если» и «Степенях»', () => {
   test('успех по натуральной кости и степени по частям', () => {
-    const sys = system({ dice: [{ sides: 20 }] }, { bonus: { expr: '@навык' }, success: { expr: '@бросок.natural >= 15' }, margin: { expr: '@бросок.natural - 15' } });
+    const sys = system({ dice: [{ sides: 20 }] }, { bonus: { expr: '@навык' }, success: { expr: '@roll.natural >= 15' }, margin: { expr: '@roll.natural - 15' } });
     eq(click(sys, [16]).endsWith('успех · степеней: 1'), true);
     eq(click(sys, [3]).includes('провал'), true);
   });
 
   test('поле листа «бросок» при «Успех, если» без ступеней — тоже ошибка', () => {
-    const named = system({ dice: [{ sides: 20 }] }, { success: { expr: '@бросок.natural >= 15' } }, [{ key: 'бросок', label: 'Бросок', kind: 'number' }]);
+    const named = system({ dice: [{ sides: 20 }] }, { success: { expr: '@roll.natural >= 15' } }, [{ key: 'roll', label: 'Бросок', kind: 'number' }]);
     eq(errorsOf(lintSystem(named)).some(one => one.text.includes('«бросок»')), true);
   });
 });

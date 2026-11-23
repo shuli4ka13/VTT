@@ -56,9 +56,9 @@ function inputsOf(mod: SourcedModifier): { sheets: Record<string, Bound>; values
 function refOf(mod: SourcedModifier, holder: Holder, spec: Gather, owner: string): RefContext {
   const own = inputsOf(mod);
   return {
-    pass: holder.view, owner, results: { ...own.values, ...spec.values, метки: [...spec.tags] },
+    pass: holder.view, owner, results: { ...own.values, ...spec.values, [NAMES.tags]: [...spec.tags] },
     ...(spec.rolls ? { rolls: spec.rolls } : {}),
-    sheets: { bound: { ...own.sheets, ...spec.names, носитель: holder.id }, view: spec.view },
+    sheets: { bound: { ...own.sheets, ...spec.names, [NAMES.holder]: holder.id }, view: spec.view },
   };
 }
 
@@ -229,7 +229,7 @@ export function rollMarks(holders: readonly Holder[], rollerId: string, againstI
     if (!found) throw new EngineError(`бросок: листа «${id}» нет среди носителей`);
     return found.view;
   };
-  const names: Record<string, Bound> = { бросающий: rollerId, против: againstId };
+  const names: Record<string, Bound> = { [NAMES.roller]: rollerId, [NAMES.against]: againstId };
   const marks = gather(holders, { call: ROLL_CALL, param: 'tags', tags, names, values, view }).flatMap(held => {
     const raw = (held as { value?: { expr: string } }).value;
     if (!raw?.expr?.trim()) return [];
@@ -247,7 +247,7 @@ export function rollHeld(holders: readonly Holder[], rollerId: string, againstId
     if (!found) throw new EngineError(`бросок: листа «${id}» нет среди носителей`);
     return found.view;
   };
-  const names: Record<string, Bound> = { бросающий: rollerId, против: againstId };
+  const names: Record<string, Bound> = { [NAMES.roller]: rollerId, [NAMES.against]: againstId };
   const spec = (param: string): Gather => ({ call: ROLL_CALL, param, tags, names, values, view });
   return [...gather(holders, spec('edits')), ...gather(holders, spec('bonus')), ...gather(holders, spec(COUNT_PARAM))];
 }

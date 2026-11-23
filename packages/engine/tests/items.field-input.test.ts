@@ -11,7 +11,7 @@ const system = flattenSystem({
     оружие: { shape: 'book', use: 'item', label: 'Оружие', columns: [
       { key: 'ammo_max', label: 'Боезапас', kind: 'number' },
       { key: 'ammo', label: 'Патроны', kind: 'number', expr: { expr: '@ammo_max' } },
-    ], bindings: [{ label: 'Выстрел', effect: 'выстрел', args: { патроны: { expr: '@вещь.ammo' } } }] },
+    ], bindings: [{ label: 'Выстрел', effect: 'выстрел', args: { патроны: { expr: '@item.ammo' } } }] },
   },
   effects: {
     выстрел: { label: 'Выстрел', activation: 'manual', params: [
@@ -45,7 +45,7 @@ describe('вход-ссылка: кнопка вещи передаёт клет
   it('ссылку можно передать дальше в вызов: «Потратить» спишет из той же клетки', () => {
     const relayed = flattenSystem({
       ...system,
-      tables: { ...system.tables, оружие: { ...system.tables!.оружие!, bindings: [{ label: 'Выстрел', effect: 'через', args: { патроны: { expr: '@вещь.ammo' } } }] } },
+      tables: { ...system.tables, оружие: { ...system.tables!.оружие!, bindings: [{ label: 'Выстрел', effect: 'через', args: { патроны: { expr: '@item.ammo' } } }] } },
       effects: {
         ...system.effects,
         через: { label: 'Через', activation: 'manual', params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }, { key: 'патроны', label: 'Патроны', kind: 'field' }], steps: [

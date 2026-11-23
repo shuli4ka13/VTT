@@ -1,4 +1,5 @@
 import type { System, Effect, Handler } from '@vtt/schema';
+import { NAMES } from '@vtt/engine';
 import type { Lesson, View, Move } from '../types.ts';
 import { effectBy, stepsOf, errorsOf, is, numberOf, exprOf } from '../find.ts';
 import { problemsClean } from './first-system.ts';
@@ -39,10 +40,11 @@ const removesBurning = (view: View): boolean => {
 
 const aboutCarrier = (handler: Handler | undefined): boolean => {
   const text = exprOf(handler?.if).replace(/\s+/g, '');
-  return /^@[\p{L}\p{N}_]+==@носитель$/u.test(text) || /^@носитель==@[\p{L}\p{N}_]+$/u.test(text);
+  const holder = `@${NAMES.holder}`;
+  return new RegExp(`^@[\\p{L}\\p{N}_]+==${holder}$|^${holder}==@[\\p{L}\\p{N}_]+$`, 'u').test(text);
 };
 
-const carrier = (value: unknown): boolean => is(value, '@лист') || is(value, '@носитель');
+const carrier = (value: unknown): boolean => is(value, `@${NAMES.sheet}`) || is(value, `@${NAMES.holder}`);
 
 const luck = (view: View): Handler | undefined => handlers(view, 'Удача').find(handler => handler.on === 'seen');
 

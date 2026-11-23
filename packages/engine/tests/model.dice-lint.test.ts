@@ -35,12 +35,12 @@ group('«Проблемы» про кости в формулах', () => {
   test('кость прибавки у правки: имя, которого нет в «Костях», и опечатка во входе', () => {
     const named = errors(system({ modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', die: 'нет_такой' }] }));
     eq(named.some(text => text.includes('«нет_такой»')), true);
-    const typo = errors(system({ modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', die: { expr: '@носитель.нет_поля' } }] }));
+    const typo = errors(system({ modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', die: { expr: '@holder.нет_поля' } }] }));
     eq(typo.some(text => text.includes('нет_поля')), true);
     eq(errors(system({ modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', die: { expr: '1d4' } }] })).some(text => text.includes('1d4')), false);
   });
 
   test('в правиле броска «@бросок.margin» — опечатка: степени правила зовутся @степени', () => {
-    eq(errors(system({ rule: { success: { expr: '@бросок.margin > 0' } } })).some(text => text.includes('нет итога «margin»')), true);
+    eq(errors(system({ rule: { success: { expr: '@roll.margin > 0' } } })).some(text => text.includes('нет итога «margin»')), true);
   });
 });

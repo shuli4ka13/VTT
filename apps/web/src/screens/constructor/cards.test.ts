@@ -131,8 +131,8 @@ describe('BRICKS', () => {
   });
 
   it('в месте шага бросающий — первый одиночный лист этого места: в подписке и наложении это носитель', () => {
-    const sheets = new Map([['носитель', 'носитель — тот, на ком висит'], ['лист', 'лист, с которым это случилось'], ['цели', 'Цели']]);
-    expect(brick('roll', { params: [] }, sheets)[0]).toMatchObject({ by: { expr: '@носитель' } });
+    const sheets = new Map([['holder', 'носитель — тот, на ком висит'], ['sheet', 'лист, с которым это случилось'], ['цели', 'Цели']]);
+    expect(brick('roll', { params: [] }, sheets)[0]).toMatchObject({ by: { expr: '@holder' } });
     expect(brick('roll', inputs(['цели', true]), new Map([['цели', 'Цели'], ['цель', 'Цель']]))[0]).toMatchObject({ by: { expr: '@цель' } });
     expect(brick('roll', { params: [] }, new Map())[0]).not.toHaveProperty('by');
   });

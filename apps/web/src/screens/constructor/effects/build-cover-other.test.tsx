@@ -83,8 +83,8 @@ describe('эффекты пресетов собираются руками: Sha
     within(card()).select('Или хотя бы одно из', 'атака');
     within(card()).select('Или хотя бы одно из', 'проверка');
     within(card()).formula('Сколько', '-2');
-    within(card()).select('Кого касается', '@бросающий == @носитель');
-    within(card()).when('=@носитель.seriously');
+    within(card()).select('Кого касается', '@roller == @holder');
+    within(card()).when('=@holder.seriously');
     dump({ got: built('serious_wound_rule'), goal });
     expect(built('serious_wound_rule')).toEqual(goal);
   });
@@ -95,7 +95,7 @@ describe('эффекты пресетов собираются руками: Sha
     head(ui, '+ висит', 'Сбой', 'glitch', goal!);
     ui.click('+ когда');
     ui.select('Что случилось', 'rolled');
-    ui.select('Кого касается', '@бросающий == @носитель');
+    ui.select('Кого касается', '@roller == @holder');
     ui.when('=@roll.atMin * 2 > @roll.rolled и @roll.natural >= 1');
     ui.click('+ или / кроме');
     ui.select('Кроме', 'инициатива');
@@ -109,7 +109,7 @@ describe('эффекты пресетов собираются руками: Sha
     within(stepCard(/^1 · /)).click('вызов');
     const card = () => stepCard(/^1 · /);
     within(card()).select('Какой эффект', 'spend_edge');
-    for (const [name, text] of [['Кто тратит', '@носитель'], ['Сколько очков', '4']] as const) {
+    for (const [name, text] of [['Кто тратит', '@holder'], ['Сколько очков', '4']] as const) {
       within(card()).formula(within(card()).arg(name), text);
     }
     within(card()).click('↑');
@@ -117,7 +117,7 @@ describe('эффекты пресетов собираются руками: Sha
 
   const seenHead = (ui: ReturnType<typeof within>) => {
     ui.select('Что случилось', 'seen');
-    ui.select('Кого касается', '@бросающий == @носитель');
+    ui.select('Кого касается', '@roller == @holder');
     ui.select('Решение', 'ask');
   };
 
@@ -151,7 +151,7 @@ describe('эффекты пресетов собираются руками: Sha
     spendFromHolder();
     ui.click('+ докинуть');
     const card = () => stepCard(/^2 · /);
-    within(card()).formula('Сколько костей', '@носитель.edge');
+    within(card()).formula('Сколько костей', '@holder.edge');
     within(card()).select('Максимум', 'true');
     dump({ got: built('push_edge'), goal });
     expect(built('push_edge')).toEqual(goal);
@@ -182,36 +182,36 @@ describe('эффекты пресетов собираются руками: Sha
     let h = () => stepCard(/^Когда №1/);
     ui.select('Что случилось', 'moment');
     within(h()).select('Когда', 'turn-start');
-    within(h()).select('Кого касается', '@ходит == @носитель');
-    within(h()).when('=@носитель.mortal');
+    within(h()).select('Кого касается', '@mover == @holder');
+    within(h()).when('=@holder.mortal');
 
     const at = (n: number, k: number) => () => stepCard(new RegExp(`^${k} · `), handlerAt(n));
     within(handlerAt(1)).click('+ бросок');
-    within(at(1, 1)()).select('Кто бросает', '@носитель');
+    within(at(1, 1)()).select('Кто бросает', '@holder');
     within(at(1, 1)()).select('Что бросает', 'die:lead_die');
     within(at(1, 1)()).click('+ прибавка');
-    within(at(1, 1)()).formula('Прибавка', '@носитель.death_penalty');
+    within(at(1, 1)()).formula('Прибавка', '@holder.death_penalty');
     within(at(1, 1)()).select('Метки', 'спасбросок');
     nameStep(at(1, 1), 'спас_бросок');
 
     within(handlerAt(1)).click('+ проверка');
     within(at(1, 2)()).formula('Что проверяем', '@спас_бросок');
     within(at(1, 2)()).select('Знак', 'under');
-    within(at(1, 2)()).formula('С чем', '@носитель.body');
+    within(at(1, 2)()).formula('С чем', '@holder.body');
     nameStep(at(1, 2), 'спас');
 
     within(handlerAt(1)).click('+ изменение');
-    change(at(1, 3), 'носитель', 'death_penalty', 'add', '1');
+    change(at(1, 3), 'holder', 'death_penalty', 'add', '1');
     within(handlerAt(1)).click('+ изменение');
-    change(at(1, 4), 'носитель', 'dead', 'set', 'да', 'Проверка — не пройдена');
+    change(at(1, 4), 'holder', 'dead', 'set', 'да', 'Проверка — не пройдена');
 
     ui.click('+ когда');
     h = () => stepCard(/^Когда №2/);
     within(h()).select('Что случилось', 'field');
     within(h()).select('Какое', 'mortal');
-    within(h()).select('Кого касается', '@лист == @носитель');
+    within(h()).select('Кого касается', '@sheet == @holder');
     within(handlerAt(2)).click('+ изменение');
-    change(at(2, 1), 'носитель', 'death_penalty', 'set', '0');
+    change(at(2, 1), 'holder', 'death_penalty', 'set', '0');
 
     dump({ got: built('death_save'), goal });
     expect(built('death_save')).toEqual(goal);
@@ -298,8 +298,8 @@ describe('эффекты пресетов собираются руками: Sha
     };
 
     guarded(0, body);
-    check(0, 1, ['@amount', '@лист.sp_body'], 'сквозь_броню');
-    apply(0, 3, 'hp', '@сквозь_броню.margin');
+    check(0, 1, ['@amount', '@лист.sp_body'], 'through_armor');
+    apply(0, 3, 'hp', '@through_armor.margin');
     apply(0, 4, 'sp_body', '1');
     guarded(2, headshot);
     check(2, 5, ['@amount', '@лист.sp_head'], 'сквозь_шлем');

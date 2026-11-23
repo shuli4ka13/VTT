@@ -7,7 +7,7 @@ export const scenarios: Scenario[] = [
     world: 'daggerheart',
     dice: [7, 4, 5],
     steps: [{ act: 'longsword:0', from: 'bran', to: 'bandit' }],
-    expect: { values: { bran: { hope: 3 }, 'стол': { fear: 0 }, bandit: { hp: 2 } } },
+    expect: { values: { bran: { hope: 3 }, 'desk': { fear: 0 }, bandit: { hp: 2 } } },
   },
   {
     name: 'атака героя: Страх выше при попадании — Страх ведущему, урон ниже серьёзного — 1 хит',
@@ -15,7 +15,7 @@ export const scenarios: Scenario[] = [
     world: 'daggerheart',
     dice: [3, 9, 1],
     steps: [{ act: 'longsword:0', from: 'bran', to: 'bandit' }],
-    expect: { values: { bran: { hope: 2 }, 'стол': { fear: 1 }, bandit: { hp: 1 } } },
+    expect: { values: { bran: { hope: 2 }, 'desk': { fear: 1 }, bandit: { hp: 1 } } },
   },
   {
     name: 'атака героя: провал с Надеждой — Надежда всё равно выдаётся, урона нет',
@@ -23,7 +23,7 @@ export const scenarios: Scenario[] = [
     world: 'daggerheart',
     dice: [6, 1],
     steps: [{ act: 'longsword:0', from: 'bran', to: 'bandit' }],
-    expect: { values: { bran: { hope: 3 }, 'стол': { fear: 0 }, bandit: { hp: 0 } } },
+    expect: { values: { bran: { hope: 3 }, 'desk': { fear: 0 }, bandit: { hp: 0 } } },
   },
   {
     name: 'критическая атака: дубль на двух к12 — попадание при любом итоге, Надежда, −1 Стресс, максимум костей урона сверху, тяжёлый порог',
@@ -32,7 +32,7 @@ export const scenarios: Scenario[] = [
     sheets: { bran: { values: { stress: 2 } }, bandit: { values: { difficulty: 30 } } },
     dice: [5, 5, 3],
     steps: [{ act: 'longsword:0', from: 'bran', to: 'bandit' }],
-    expect: { values: { bran: { hope: 3, stress: 1 }, 'стол': { fear: 0 }, bandit: { hp: 3 } } },
+    expect: { values: { bran: { hope: 3, stress: 1 }, 'desk': { fear: 0 }, bandit: { hp: 3 } } },
   },
   {
     name: 'атака по нескольким целям: одна Надежда за бросок, а не по одной на цель',
@@ -40,7 +40,7 @@ export const scenarios: Scenario[] = [
     world: 'daggerheart',
     dice: [8, 3, 6],
     steps: [{ act: 'longsword:0', from: 'bran', to: ['bandit', 'sniper'] }],
-    expect: { values: { bran: { hope: 3 }, 'стол': { fear: 0 }, bandit: { hp: 2 }, sniper: { hp: 3 } } },
+    expect: { values: { bran: { hope: 3 }, 'desk': { fear: 0 }, bandit: { hp: 2 }, sniper: { hp: 3 } } },
   },
   {
     name: 'атака по нескольким целям: один Страх ведущему, исход считается по каждой цели отдельно',
@@ -48,7 +48,7 @@ export const scenarios: Scenario[] = [
     world: 'daggerheart',
     dice: [3, 8, 4],
     steps: [{ act: 'longsword:0', from: 'bran', to: ['bandit', 'bear'] }],
-    expect: { values: { bran: { hope: 2 }, 'стол': { fear: 1 }, bandit: { hp: 1 }, bear: { hp: 0 } } },
+    expect: { values: { bran: { hope: 2 }, 'desk': { fear: 1 }, bandit: { hp: 1 }, bear: { hp: 0 } } },
   },
   {
     name: 'опыт: трата Надежды на +2 до броска, Надежда с самого броска возвращается',
@@ -56,7 +56,7 @@ export const scenarios: Scenario[] = [
     world: 'daggerheart',
     dice: [9, 2],
     steps: [{ act: 'act:0', from: 'bran', to: 'bran', inputs: { trait: 'проворство', 'опыт': 2, 'сложность': 14 } }],
-    expect: { values: { bran: { hope: 2 }, 'стол': { fear: 0 } }, log: ['15 против'] },
+    expect: { values: { bran: { hope: 2 }, 'desk': { fear: 0 } }, log: ['15 против'] },
   },
   {
     name: 'опыт: Надежды нет — платить нечем, бросок не совершается и кости не бросаются',
@@ -65,7 +65,7 @@ export const scenarios: Scenario[] = [
     sheets: { bran: { values: { hope: 0 } } },
     dice: [],
     steps: [{ act: 'act:0', from: 'bran', to: 'bran', inputs: { trait: 'проворство', 'опыт': 2, 'сложность': 14 }, refused: 'на опыт нужна Надежда' }],
-    expect: { values: { bran: { hope: 0 }, 'стол': { fear: 0 } } },
+    expect: { values: { bran: { hope: 0 }, 'desk': { fear: 0 } } },
   },
   {
     name: 'критический бросок действия при полной Надежде: Надежда не выше 6, Стресс −1, Страх не растёт',
@@ -74,7 +74,7 @@ export const scenarios: Scenario[] = [
     sheets: { bran: { values: { hope: 6, stress: 3 } } },
     dice: [6, 6],
     steps: [{ act: 'act:0', from: 'bran', to: 'bran', inputs: { trait: 'сила', 'опыт': 0, 'сложность': 30 } }],
-    expect: { values: { bran: { hope: 6, stress: 2 }, 'стол': { fear: 0 } } },
+    expect: { values: { bran: { hope: 6, stress: 2 }, 'desk': { fear: 0 } } },
   },
   {
     name: 'преимущество и помеха: +к6 / −к6 к итогу, взаимно отменяются',
@@ -179,12 +179,12 @@ export const scenarios: Scenario[] = [
     name: 'Страх ведущего: короткий отдых — 1к4 Страха, долгий — 1к4 + число героев',
     rule: 'SRD, Fear: на коротком отдыхе ведущий получает 1к4 Страха, на долгом — 1к4 + число героев в партии. Короткий: к4=3 → 3. Долгий на троих: к4=2 + 3 → 5, итого 8.',
     world: 'daggerheart',
-    sheets: { 'стол': { has: [{ of: 'gm_short' }, { of: 'gm_long' }] } },
+    sheets: { 'desk': { has: [{ of: 'gm_short' }, { of: 'gm_long' }] } },
     dice: [3, 2],
     steps: [
-      { act: 'gm_short:0', from: 'стол', to: 'стол' },
-      { act: 'gm_long:0', from: 'стол', to: 'стол', inputs: { 'героев': 3 } },
+      { act: 'gm_short:0', from: 'desk', to: 'desk' },
+      { act: 'gm_long:0', from: 'desk', to: 'desk', inputs: { 'героев': 3 } },
     ],
-    expect: { values: { 'стол': { fear: 8 } } },
+    expect: { values: { 'desk': { fear: 8 } } },
   },
 ];
