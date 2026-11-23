@@ -24,5 +24,6 @@
   "calc": {
     "noSheet": "no character chosen"
   },
-  "formula": "formula"
+  "formula": "formula",
+  "documentTitle": "VTT — system builder and table"
 }

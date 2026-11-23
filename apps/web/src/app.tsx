@@ -1,4 +1,4 @@
-import { Fragment, Suspense, lazy } from 'react';
+import { Fragment, Suspense, lazy, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { NavLink, Route, Routes, Navigate, useLocation } from 'react-router';
 import { GateScreen } from './screens/gate/gate.tsx';
@@ -14,6 +14,11 @@ export function App() {
   const { pathname } = useLocation();
   const lang = useLocale(state => state.lang);
   const t = useT('app');
+
+  useEffect(() => {
+    document.title = t('documentTitle');
+    document.documentElement.lang = lang;
+  }, [lang, t]);
 
   return (
     <div className="shell">
