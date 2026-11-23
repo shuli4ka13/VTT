@@ -1,4 +1,4 @@
-export type InstanceKind = 'таблица' | 'колонка' | 'клетка' | 'строка' | 'блок' | 'страница' | 'тип';
+export type InstanceKind = 'table' | 'column' | 'cell' | 'row' | 'block' | 'page' | 'kind';
 
 const held = new Map<string, number>();
 let last = 0;

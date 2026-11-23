@@ -52,17 +52,17 @@ export function SheetTab() {
         head: 'Лист',
         ...(docked ? { pinned: true } : {}),
         body: active
-          ? <Docked kind={active.cell ? 'клетка' : 'колонка'} id={active.tag}><ViewPanel field={active} system={system} /></Docked>
+          ? <Docked kind={active.cell ? 'cell' : 'column'} id={active.tag}><ViewPanel field={active} system={system} /></Docked>
           : rowOpen
-            ? <Docked kind="строка" id={`${activeRow!.table}|${activeRow!.row}`}><RowPanel table={activeRow!.table} row={activeRow!.row} system={system} /></Docked>
+            ? <Docked kind="row" id={`${activeRow!.table}|${activeRow!.row}`}><RowPanel table={activeRow!.table} row={activeRow!.row} system={system} /></Docked>
             : columnOpen
-              ? <Docked kind="колонка" id={columnAddress(activeColumn!.table, activeColumn!.column, isSingle(system.tables?.[activeColumn!.table]))}><ColumnPanel table={activeColumn!.table} column={activeColumn!.column} system={system} /></Docked>
+              ? <Docked kind="column" id={columnAddress(activeColumn!.table, activeColumn!.column, isSingle(system.tables?.[activeColumn!.table]))}><ColumnPanel table={activeColumn!.table} column={activeColumn!.column} system={system} /></Docked>
               : blockOpen
-                ? <Docked kind="блок" id={activeBlock!}><BlockPanel name={activeBlock!} system={system} /></Docked>
+                ? <Docked kind="block" id={activeBlock!}><BlockPanel name={activeBlock!} system={system} /></Docked>
                 : thingOpen
-                ? <Docked kind="тип" id={activeThing!}><ThingPanel table={activeThing!} system={system} /></Docked>
+                ? <Docked kind="kind" id={activeThing!}><ThingPanel table={activeThing!} system={system} /></Docked>
                 : pageOpen
-                  ? <Docked kind="страница" id={activePage!}><PagePanel name={activePage!} system={system} /></Docked>
+                  ? <Docked kind="page" id={activePage!}><PagePanel name={activePage!} system={system} /></Docked>
                   : (system.blocks ?? []).length
                     ? <Empty title="Щёлкните поле на листе" hint="Его колонка, вид и формула откроются здесь." />
                     : <Empty title="Лист пока пуст" hint="Возьмите готовые куски из «Готового из образцов» или заведите блок: в нём «+ поле» — одно значение, «+ таблица» — строки и колонки." />,
@@ -75,7 +75,7 @@ export function SheetTab() {
               options={[{ key: 'sample', label: 'образец листа' }, { key: 'kinds', label: 'блоки и типы листов' }]}
               onChange={next => setView(next as 'sample' | 'kinds')}
             />
-            {tableOpen ? <Docked kind="таблица" id={activeSheetTable!}><TablePanel id={activeSheetTable!} system={system} /></Docked> : null}
+            {tableOpen ? <Docked kind="table" id={activeSheetTable!}><TablePanel id={activeSheetTable!} system={system} /></Docked> : null}
             {view === 'sample' ? <PageBar system={system} /> : null}
             {view === 'sample'
               ? <SheetSample system={system} picked={activeTag}

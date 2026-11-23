@@ -1,0 +1,37 @@
+{
+  "system": {
+    "new": "New system"
+  },
+  "effect": {
+    "new": "New effect",
+    "actor": "Who acts",
+    "targets": "Targets",
+    "target": "Target"
+  },
+  "field": {
+    "new": "New field"
+  },
+  "kind": {
+    "new": "New type"
+  },
+  "prop": {
+    "new": "New property"
+  },
+  "block": {
+    "new": "New block"
+  },
+  "die": {
+    "first": "First",
+    "second": "Second"
+  },
+  "cost": {
+    "new": "Cost: new"
+  },
+  "step": {
+    "roll": "roll",
+    "check": "check",
+    "table": "table",
+    "ask": "decision",
+    "number": "number"
+  }
+}

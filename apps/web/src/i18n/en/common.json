@@ -15,5 +15,36 @@
     "zh": "Chinese",
     "ja": "Japanese",
     "ko": "Korean"
+  },
+  "delete": "Delete",
+  "remove": "Remove",
+  "removeLower": "remove",
+  "more": "more",
+  "collapse": "collapse",
+  "cancel": "cancel",
+  "close": "close",
+  "yes": "yes",
+  "no": "no",
+  "choose": "— choose —",
+  "name": {
+    "effect": "effect name",
+    "row": "row name",
+    "table": "table name",
+    "block": "block name",
+    "field": "field name",
+    "column": "column name",
+    "prop": "property name",
+    "kind": "type name",
+    "page": "page name",
+    "sheetKind": "sheet type name",
+    "part": "name of this part",
+    "degree": "tier name",
+    "tag": "tag name",
+    "record": "record name"
+  },
+  "expand": "expand",
+  "fold": {
+    "expand": "expand “{{name}}”",
+    "collapse": "collapse “{{name}}”"
   }
 }

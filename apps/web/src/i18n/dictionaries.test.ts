@@ -27,6 +27,18 @@ const load = (lang: string, area: string): Record<string, string> =>
 
 const places = (text: string): string[] => [...new Set((text.match(/\{\{\s*[\w.]+\s*\}\}/g) ?? []).map(item => item.replace(/\s/g, '')))].sort();
 
+const FORM = /_(zero|one|two|few|many|other)$/;
+
+const base = (key: string): string => key.replace(FORM, '');
+
+const bases = (dictionary: Record<string, string>): string[] => [...new Set(Object.keys(dictionary).map(base))].sort();
+
+const placesOf = (dictionary: Record<string, string>, key: string): string =>
+  [...new Set(Object.keys(dictionary).filter(one => base(one) === key).flatMap(one => places(dictionary[one]!)))].filter(place => place !== '{{count}}').sort().join();
+
+const known = (dictionary: Record<string, string> | undefined, key: string): boolean =>
+  Boolean(dictionary) && Object.keys(dictionary!).some(one => one === key || base(one) === key);
+
 const dictionary = new Map<string, Record<string, string>>();
 for (const area of areasOf('ru')) dictionary.set(area, load('ru', area));
 
@@ -43,7 +55,7 @@ function namedKeys(path: string, text: string): Named[] {
       const first = text0(node.arguments[0]);
       if (first !== null) {
         if (node.expression.text === 'useT') areas.push(first);
-        else if (node.expression.text === 't') calls.push({ key: first, pos: node.getStart(source) });
+        else if (node.expression.text === 't' || node.expression.text === 'td') calls.push({ key: first, pos: node.getStart(source) });
       }
     }
     if (ts.isJsxAttribute(node) && node.name.getText(source) === 'i18nKey' && node.initializer && ts.isStringLiteral(node.initializer)) {
@@ -68,12 +80,12 @@ describe('словари интерфейса', () => {
       const ru = load('ru', area);
       const en = load('en', area);
 
-      it('ключи ru и en совпадают', () => {
-        expect(Object.keys(en).sort()).toEqual(Object.keys(ru).sort());
+      it('ключи ru и en совпадают (формы числа — по основе ключа)', () => {
+        expect(bases(en)).toEqual(bases(ru));
       });
 
       it('подстановки {{…}} одни и те же в обоих языках', () => {
-        const diff = Object.keys(ru).filter(key => en[key] !== undefined && places(ru[key]!).join() !== places(en[key]!).join());
+        const diff = bases(ru).filter(key => known(en, key) && placesOf(ru, key) !== placesOf(en, key));
         expect(diff, diff.join('\n')).toEqual([]);
       });
 
@@ -93,7 +105,7 @@ describe('словари интерфейса', () => {
       for (const named of namedKeys(path, readFileSync(path, 'utf8'))) {
         const colon = named.key.indexOf(':');
         const candidates = colon > 0 ? [[named.key.slice(0, colon), named.key.slice(colon + 1)] as const] : named.areas.map(area => [area, named.key] as const);
-        if (!candidates.some(([area, key]) => dictionary.get(area)?.[key] !== undefined)) {
+        if (!candidates.some(([area, key]) => known(dictionary.get(area), key))) {
           missing.push(`${named.file}:${named.line}: ${named.key}`);
         }
       }
@@ -107,5 +119,14 @@ describe('словари интерфейса', () => {
     expect(found).toHaveLength(1);
     expect(found[0]!.areas).toEqual(['gate']);
     expect(dictionary.get('gate')?.['nope.never']).toBeUndefined();
+  });
+
+  it('формы числа: ключ с числом находится по основе, подстановки сверяются без {{count}}', () => {
+    const forms = { 'steps_one': '{{count}} шаг', 'steps_few': '{{count}} шага', 'steps_many': '{{count}} шагов', 'title': 'Шаги «{{name}}»' };
+    expect(bases(forms)).toEqual(['steps', 'title']);
+    expect(known(forms, 'steps')).toBe(true);
+    expect(known(forms, 'step')).toBe(false);
+    expect(placesOf(forms, 'steps')).toBe('');
+    expect(placesOf(forms, 'title')).toBe('{{name}}');
   });
 });

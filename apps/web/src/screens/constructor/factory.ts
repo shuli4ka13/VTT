@@ -1,64 +1,91 @@
-import { STEP_WORDS, COST_BLOCK, COST_BLOCK_LABEL, GEAR_BLOCK, fieldsOf, rowTables, stepSaid } from '@vtt/engine';
+import { STEP_WORDS, COST_BLOCK, GEAR_BLOCK, fieldsOf, rowTables, stepSaid } from '@vtt/engine';
 import type { LaunchKind, RecordKind } from '@vtt/engine';
-import { freeId, slugOf } from '../../store/world.ts';
+import { freeId } from '../../store/world.ts';
 import { dice } from '../../words.ts';
 import type { System, Effect, Handler, Binding, Step, SystemConstant, RollEdit, Table, Column } from '@vtt/schema';
 import type { SheetNames } from '../../ui/formula-chips.tsx';
 import { filledStep } from './effects/call-args.ts';
 import { isThrow } from './cards-kind.ts';
+import { dataT, t } from '../../i18n/index.ts';
 
 export interface Made<T> { key: string; value: T }
 
-export const saidId = (taken: string[], word: string): { id: string; label?: string } => {
-  const id = freeId(taken, word);
+export const saidId = (taken: string[], word: string, key: string = word): { id: string; label?: string } => {
+  const id = freeId(taken, key);
   return stepSaid({ id }) === word ? { id } : { id, label: word };
 };
+
+export const KEYS = {
+  actor: 'deystvuyuschiy', targets: 'celi', target: 'cel', each: 'kazhdyy',
+  die: 'kost', rollEdit: 'pravka', table: 'tablica', cost: 'stoimost', roll: 'brosok', tag: 'metka', result: 'itog', column: 'kolonka',
+} as const;
+
+const STEP_KEYS = { roll: 'brosok', check: 'proverka', table: 'tablica', ask: 'reshenie', number: 'chislo' } as const;
+
+export type NamedStep = keyof typeof STEP_KEYS;
+
+const stepWord = (system: System | null | undefined, kind: NamedStep): string => {
+  const td = dataT(system);
+  switch (kind) {
+    case 'roll': return td('data:step.roll');
+    case 'check': return td('data:step.check');
+    case 'table': return td('data:step.table');
+    case 'ask': return td('data:step.ask');
+    case 'number': return td('data:step.number');
+  }
+};
+
+export const namedStep = (system: System | null | undefined, taken: string[], kind: NamedStep): { id: string; label?: string } =>
+  saidId(taken, stepWord(system, kind), STEP_KEYS[kind]);
 
 
 export const newHandler = (): Handler => ({ on: 'before:*', steps: [] });
 
-export const newEffect = (system: System, kind: LaunchKind): Made<Effect> => ({
-  key: freeId(Object.keys(system.effects), 'effect'),
-  value: kind === 'manual'
-    ? {
-      label: 'Новый эффект',
-      params: [{ key: slugOf('действующий'), label: 'Кто действует', kind: 'sheet' }],
-      steps: [],
-    }
-    : {
-      label: 'Новый эффект', activation: 'passive', duration: { kind: 'permanent' },
-      ...(kind === 'auto' ? { on: [newHandler()] } : {}),
-    },
-});
+export const newEffect = (system: System, kind: LaunchKind): Made<Effect> => {
+  const td = dataT(system);
+  return {
+    key: freeId(Object.keys(system.effects), 'effect'),
+    value: kind === 'manual'
+      ? {
+        label: td('data:effect.new'),
+        params: [{ key: KEYS.actor, label: td('data:effect.actor'), kind: 'sheet' }],
+        steps: [],
+      }
+      : {
+        label: td('data:effect.new'), activation: 'passive', duration: { kind: 'permanent' },
+        ...(kind === 'auto' ? { on: [newHandler()] } : {}),
+      },
+  };
+};
 
 export const newColumn = (system: System, _block?: string): Made<Column> => {
   const key = freeId([...fieldsOf(system).map(f => f.tag), ...Object.keys(system.tables ?? {})], 'field');
-  return { key, value: { key, label: 'Новое поле', kind: 'number' } };
+  return { key, value: { key, label: dataT(system)('data:field.new'), kind: 'number' } };
 };
 
 export const newRecordKind = (system: System): Made<RecordKind> => ({
   key: freeId([...Object.keys(system.tables ?? {}), ...Object.keys(system.sheets ?? {})], 'kind'),
-  value: { shape: 'book', use: 'item', label: 'Новый тип', block: GEAR_BLOCK },
+  value: { shape: 'book', use: 'item', label: dataT(system)('data:kind.new'), block: GEAR_BLOCK },
 });
 
 export const newBinding = (): Binding => ({ effect: '' });
 
-export const newProp = (kind: RecordKind): Column => ({
+export const newProp = (kind: RecordKind, system: System | null | undefined): Column => ({
   key: freeId((kind.columns ?? []).map(p => p.key), 'prop'),
-  label: 'Новое свойство',
+  label: dataT(system)('data:prop.new'),
   kind: 'number',
 });
 
-export const DIE_KINDS = [
-  ['one', 'одна кость — к20'],
-  ['sum', 'несколько костей, сумма — 2к6'],
-  ['hits', 'набор костей (пул): считаем успехи — к6, от 5'],
-  ['best', 'набор костей (пул): берём лучшую — к6'],
-  ['percent', 'процентная — к100'],
-  ['parts', 'две кости с именами — к12 и к12'],
-] as const;
+export type DieKind = 'one' | 'sum' | 'hits' | 'best' | 'percent' | 'parts';
 
-export type DieKind = typeof DIE_KINDS[number][0];
+export const dieKinds = (): readonly (readonly [DieKind, string])[] => [
+  ['one', t('constructor:die.one')],
+  ['sum', t('constructor:die.sum')],
+  ['hits', t('constructor:die.hits')],
+  ['best', t('constructor:die.best')],
+  ['percent', t('constructor:die.percent')],
+  ['parts', t('constructor:die.parts')],
+];
 
 const DIE_SHAPES: Record<DieKind, Omit<SystemConstant, 'label' | 'kind'>> = {
   one: { dice: [{ sides: 20 }] },
@@ -66,27 +93,34 @@ const DIE_SHAPES: Record<DieKind, Omit<SystemConstant, 'label' | 'kind'>> = {
   hits: { dice: [{ sides: 6 }], read: { kind: 'count', atLeast: 5 } },
   best: { dice: [{ sides: 6 }], read: 'best' },
   percent: { dice: [{ sides: 100 }] },
-  parts: { dice: [{ sides: 12, name: 'first', label: 'Первая' }, { sides: 12, name: 'second', label: 'Вторая' }] },
+  parts: { dice: [{ sides: 12, name: 'first' }, { sides: 12, name: 'second' }] },
+};
+
+const namedParts = (system: System, shape: Omit<SystemConstant, 'label' | 'kind'>): Omit<SystemConstant, 'label' | 'kind'> => {
+  const td = dataT(system);
+  const said: Record<string, string> = { first: td('data:die.first'), second: td('data:die.second') };
+  const dice = (shape as { dice?: { name?: string }[] }).dice ?? [];
+  return { ...shape, dice: dice.map(part => (part.name && said[part.name] ? { ...part, label: said[part.name] } : part)) } as never;
 };
 
 export const newDie = (system: System, kind: DieKind = 'one'): Made<SystemConstant> => ({
-  key: freeId(Object.keys(system.constants ?? {}), 'кость'),
-  value: { label: '', kind: 'die', ...structuredClone(DIE_SHAPES[kind]) },
+  key: freeId(Object.keys(system.constants ?? {}), KEYS.die),
+  value: { label: '', kind: 'die', ...namedParts(system, structuredClone(DIE_SHAPES[kind])) },
 });
 
 export const newRollEdit = (system: System): Made<RollEdit> => ({
-  key: freeId(Object.keys(system.roll_edits ?? {}), 'правка'),
+  key: freeId(Object.keys(system.roll_edits ?? {}), KEYS.rollEdit),
   value: { label: '', ops: [] },
 });
 
 export const newTable = (system: System): Made<Table> => ({
-  key: freeId(Object.keys(system.tables ?? {}), 'таблица'),
+  key: freeId(Object.keys(system.tables ?? {}), KEYS.table),
   value: { label: '', key: 'word', rows: [{ value: '' }] },
 });
 
 export const newCost = (system: System): Made<Effect> => ({
-  key: freeId(Object.keys(system.effects ?? {}), 'стоимость'),
-  value: { label: `${COST_BLOCK_LABEL}: новая`, group: COST_BLOCK, steps: [] },
+  key: freeId(Object.keys(system.effects ?? {}), KEYS.cost),
+  value: { label: dataT(system)('data:cost.new'), group: COST_BLOCK, steps: [] },
 });
 
 export const costsOf = (system: System): [string, Effect][] => {
@@ -117,7 +151,7 @@ const rollerOf = (effect: Effect | undefined, sheets: SheetNames | undefined): s
 const blankRoll = (system: System, taken: string[], effect?: Effect, sheets?: SheetNames): Step[] => {
   const die = firstDie(system);
   const by = rollerOf(effect, sheets);
-  return [{ ...saidId(taken, 'бросок'), type: 'roll', ...(die ? { die } : {}), ...(by ? { by: { expr: `@${by}` } } : {}) } as unknown as Step];
+  return [{ ...namedStep(system, taken, 'roll'), type: 'roll', ...(die ? { die } : {}), ...(by ? { by: { expr: `@${by}` } } : {}) } as unknown as Step];
 };
 
 const wholeRef = (value: unknown): string | null =>
@@ -129,69 +163,81 @@ const freeRoll = (effect: Effect | undefined): string | undefined => {
   return [...steps].reverse().find(step => isThrow(step) && step.id && !compared.has(step.id))?.id;
 };
 
-const blankCheck = (taken: string[], effect?: Effect): Step[] => {
+const blankCheck = (system: System, taken: string[], effect?: Effect): Step[] => {
   const roll = freeRoll(effect);
-  return [{ ...saidId(taken, 'проверка'), type: 'check', ...(roll ? { value: { expr: `@${roll}` } } : {}), versus: { expr: '10' } } as unknown as Step];
+  return [{ ...namedStep(system, taken, 'check'), type: 'check', ...(roll ? { value: { expr: `@${roll}` } } : {}), versus: { expr: '10' } } as unknown as Step];
 };
 
 export const SEEN_BRICKS: StepTemplate[] = (['roll-add', 'roll-reroll', 'roll-plus', 'roll-bump'] as const).map(type => ({
-  key: type, label: `+ ${STEP_WORDS[type].label.toLowerCase()}`, hint: STEP_WORDS[type].hint,
+  key: type,
+  get label() { return `+ ${STEP_WORDS[type].label.toLowerCase()}`; },
+  get hint() { return STEP_WORDS[type].hint; },
   make: () => [{ type, ...(type === 'roll-add' ? { count: { expr: '1' } } : type === 'roll-reroll' ? { upTo: { expr: '1' } } : { value: { expr: '1' } }) } as unknown as Step],
 }));
 
 export const BRICKS: StepTemplate[] = [
   {
-    key: 'roll', label: '+ бросок',
-    hint: 'Кто-то бросает кости: кость системы или число с листа по правилу из «Бросков». Итог читают шаги ниже.',
+    key: 'roll',
+    get label() { return t('constructor:brick.roll.label'); },
+    get hint() { return t('constructor:brick.roll.hint'); },
     make: (system, taken, effect, sheets) => blankRoll(system, taken, effect, sheets),
   },
   {
-    key: 'check', label: '+ проверка',
-    hint: 'Сравнить бросок или число с порогом. Итог — да или нет: его читают «Если» ниже.',
-    make: (_system, taken, effect) => blankCheck(taken, effect),
+    key: 'check',
+    get label() { return t('constructor:brick.check.label'); },
+    get hint() { return t('constructor:brick.check.hint'); },
+    make: (system, taken, effect) => blankCheck(system, taken, effect),
   },
   {
-    key: 'change', label: '+ изменение',
-    hint: 'Изменить поле листа или повесить состояние. Единственное, что меняет мир.',
+    key: 'change',
+    get label() { return t('constructor:brick.change.label'); },
+    get hint() { return t('constructor:brick.change.hint'); },
     make: () => [{ type: 'apply' } as unknown as Step],
   },
   {
-    key: 'table', label: '+ таблица',
-    hint: 'Прочитать строку таблицы по броску или числу: травма, исход, сложность по дистанции.',
+    key: 'table',
+    get label() { return t('constructor:brick.table.label'); },
+    get hint() { return t('constructor:brick.table.hint'); },
     make: (system, taken) => [{
-      ...saidId(taken, 'таблица'), type: 'table',
+      ...namedStep(system, taken, 'table'), type: 'table',
       table: rowTables(system)[0]?.[0] ?? '',
       dice: { expr: JSON.stringify(dice(1, 6)) },
     } as unknown as Step],
   },
   {
-    key: 'each', label: '+ для каждого из списка',
-    hint: 'Разделитель: шаги выше — один раз, ниже — по очереди для каждой цели из входа-списка (только у действия кнопкой) или для каждой строки таблицы.',
-    make: (_system, _taken, effect) => {
+    key: 'each',
+    get label() { return t('constructor:brick.each.label'); },
+    get hint() { return t('constructor:brick.each.hint'); },
+    make: (system, _taken, effect) => {
       const found = (effect?.params ?? []).find(p => p.kind === 'sheet' && p.many)?.key;
       if (found || !effect || (effect.activation ?? 'manual') !== 'manual') return [{ type: 'each', of: found ?? '' } as unknown as Step];
-      (effect.params ??= []).push({ key: 'celi', label: 'Цели', kind: 'sheet', many: true, item: { key: 'cel', label: 'Цель' } } as never);
-      return [{ type: 'each', of: 'celi' } as unknown as Step];
+      const td = dataT(system);
+      (effect.params ??= []).push({ key: KEYS.targets, label: td('data:effect.targets'), kind: 'sheet', many: true, item: { key: KEYS.target, label: td('data:effect.target') } } as never);
+      return [{ type: 'each', of: KEYS.targets } as unknown as Step];
     },
   },
   {
-    key: 'branch', label: '+ если',
-    hint: 'Ветвление: шаги внутри — только если условие верно; можно добавить «иначе, если» и «иначе».',
+    key: 'branch',
+    get label() { return t('constructor:brick.branch.label'); },
+    get hint() { return t('constructor:brick.branch.hint'); },
     make: () => [{ type: 'branch' } as unknown as Step, { type: 'end' } as unknown as Step],
   },
   {
-    key: 'ask', label: `+ ${STEP_WORDS.ask.label.toLowerCase()}`,
-    hint: STEP_WORDS.ask.hint,
-    make: (_system, taken) => [{ ...saidId(taken, 'решение'), type: 'ask' } as unknown as Step],
+    key: 'ask',
+    get label() { return `+ ${STEP_WORDS.ask.label.toLowerCase()}`; },
+    get hint() { return STEP_WORDS.ask.hint; },
+    make: (system, taken) => [{ ...namedStep(system, taken, 'ask'), type: 'ask' } as unknown as Step],
   },
   {
-    key: 'stop', label: '+ стоп',
-    hint: 'Дальше не идём. До «Для каждого из» и в цене — действие не состоялось; в теле — стоп для этой цели.',
+    key: 'stop',
+    get label() { return t('constructor:brick.stop.label'); },
+    get hint() { return t('constructor:brick.stop.hint'); },
     make: () => [{ type: 'stop' } as unknown as Step],
   },
   {
-    key: 'number', label: '+ число',
-    hint: 'Число формулой: урон, лечение, одно число на несколько изменений.',
-    make: (_system, taken) => [{ ...saidId(taken, 'число'), type: 'roll', fixed: { expr: '0' } } as unknown as Step],
+    key: 'number',
+    get label() { return t('constructor:brick.number.label'); },
+    get hint() { return t('constructor:brick.number.hint'); },
+    make: (system, taken) => [{ ...namedStep(system, taken, 'number'), type: 'roll', fixed: { expr: '0' } } as unknown as Step],
   },
 ];

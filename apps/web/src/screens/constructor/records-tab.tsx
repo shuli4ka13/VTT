@@ -293,7 +293,7 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
           sub="Что заполняют у каждой записи этого типа в книге."
           actions={
             <Button size="sm" onClick={() => {
-              const made = newProp(kind);
+              const made = newProp(kind, system);
               edit(draft => { (draft.columns ??= []).push(made); });
               setPicked(made.key);
             }}>+ свойство</Button>

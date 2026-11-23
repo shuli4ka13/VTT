@@ -1,4 +1,4 @@
-import { tidyLayout, withLibrary, forgetFields, keyFrom, latinOf } from '@vtt/engine';
+import { tidyLayout, withLibrary, forgetFields, keyFrom, latinOf, MAIN_LANG } from '@vtt/engine';
 import { useMemo } from 'react';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
@@ -7,6 +7,8 @@ import type { System, Compendium, Sheet, Effect, Column } from '@vtt/schema';
 import { lazyStorage } from './lazy-storage.ts';
 import { useFormulaBar } from './formula-bar.ts';
 import { useLookup } from './lookup.ts';
+import { useLocale } from './locale.ts';
+import { dataT, t } from '../i18n/index.ts';
 
 const fresh = (system: System): System => { forgetFields(system); return system; };
 
@@ -69,14 +71,19 @@ export interface WorldState {
   setOrigin: (patch: Partial<Origin>) => void;
 }
 
-export const emptySystem = (): System => ({
-  id: 'new-system',
-  name: 'Новая система',
-  effects: {},
-  grants: [],
-  constants: {},
-  tables: {},
-});
+export const emptySystem = (): System => {
+  const lang = useLocale.getState().lang;
+  const langs = lang === MAIN_LANG ? {} : { langs: [lang] };
+  return {
+    id: 'new-system',
+    name: dataT(langs)('data:system.new'),
+    ...langs,
+    effects: {},
+    grants: [],
+    constants: {},
+    tables: {},
+  };
+};
 
 const BROKEN_KEY = 'vtt.world.broken';
 
@@ -144,7 +151,7 @@ export const useWorld = create<WorldState>()(persist(set => ({
     const draft = { ...structuredClone(rest), effects } as System;
     edit(draft);
     if (draft.effects !== effects) {
-      throw new Error('editRules правит словари и таблицы; эффекты правит editEffect');
+      throw new Error('editRules edits dictionaries and tables; effects are edited by editEffect');
     }
     return { system: fresh(draft) };
   }),
@@ -202,8 +209,8 @@ export const useWorld = create<WorldState>()(persist(set => ({
     const first = parsed.error.issues[0];
     restoreProblem = first
       ? `${first.path.join('.')}: ${first.message}`
-      : 'формат не распознан';
-    try { localStorage.setItem(BROKEN_KEY, JSON.stringify(saved)); } catch { restoreProblem += ' · копию сохранить не удалось'; }
+      : t('constructor:restore.unknown');
+    try { localStorage.setItem(BROKEN_KEY, JSON.stringify(saved)); } catch { restoreProblem += t('constructor:restore.noCopy'); }
     return current;
   },
 }));

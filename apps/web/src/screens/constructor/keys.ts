@@ -1,4 +1,5 @@
 import { slugOf, freeId } from '../../store/world.ts';
+import { t } from '../../i18n/index.ts';
 import { usageIndex, inUse } from './usage.ts';
 import type { System, Compendium } from '@vtt/schema';
 import { splitsTargets, NAMES, NAME_LABELS, nameLabel, stepSaid } from '@vtt/engine';
@@ -98,11 +99,11 @@ const wordsOf = (typed: string): string => typed.replace(/_/g, ' ').replace(/\s+
 export function stepNameTrouble(typed: string, step: Named, others: readonly Named[]): string | null {
   const text = wordsOf(typed);
   const next = keyOf(text);
-  if (!next) return 'имя не может быть пустым';
+  if (!next) return t('constructor:name.empty');
   const had = typeof step.id === 'string' && step.id !== '';
   if (had && text === stepSaid(step)) return null;
-  if (RESERVED_NAMES.includes(next) || RESERVED_NAMES.includes(text)) return `имя «${nameLabel(next) ?? text}» занято системой`;
-  if (others.some(other => plain(stepSaid(other)) === plain(text))) return `имя «${text}» уже занято`;
+  if (RESERVED_NAMES.includes(next) || RESERVED_NAMES.includes(text)) return t('constructor:name.reserved', { name: nameLabel(next) ?? text });
+  if (others.some(other => plain(stepSaid(other)) === plain(text))) return t('constructor:name.taken', { name: text });
   return null;
 }
 

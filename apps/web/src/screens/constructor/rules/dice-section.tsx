@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { boundOf, boundText } from '../bound-field.tsx';
 import type { Bound } from '../bound-field.tsx';
 import { diceCount } from '../dice-expr.ts';
-import { newDie, DIE_KINDS } from '../factory.ts';
+import { newDie, dieKinds } from '../factory.ts';
 import type { DieKind } from '../factory.ts';
 import { inUse as isUsed, usersOf } from '../usage.ts';
 import type { UsageIndex } from '../usage.ts';
@@ -44,7 +44,7 @@ export function DiceSection({ system, editSystem, usage }: Props) {
         actions={(
           <span className="head-pick">
             <Select<string> value="" label="добавить кость" title="Какая кость: заготовка встанет в список, дальше её можно править"
-              options={[['', '+ кость'], ...DIE_KINDS]}
+              options={[['', '+ кость'], ...dieKinds()]}
               onChange={kind => { if (kind) addDie(editSystem, kind as DieKind); }} />
           </span>
         )}

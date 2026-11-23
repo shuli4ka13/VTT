@@ -162,7 +162,7 @@ export function CharacterSection({ system, editSystem, docked }: {
     const on = shown(block.key);
     const count = fieldCount(block);
     return (
-      <details key={instanceOf('блок', block.key)} className={`block-fold${depth ? ' block-fold--nested' : ''}${on ? '' : ' faint'}${drag.mark(block.key)}`} open={block.key === activeBlock || undefined}>
+      <details key={instanceOf('block', block.key)} className={`block-fold${depth ? ' block-fold--nested' : ''}${on ? '' : ' faint'}${drag.mark(block.key)}`} open={block.key === activeBlock || undefined}>
         <summary className="block-fold__head" {...drag.props(block.key)} title="перетащите выше или ниже — так блок встанет на листе">
           <span className="drag-grip" aria-hidden>⋮⋮</span>
           {kind ? (
@@ -232,7 +232,7 @@ export function CharacterSection({ system, editSystem, docked }: {
         </Card>
       )}
       {!docked && open && openTable && openColumn ? (
-        <TableColumnCard key={instanceOf('колонка', columnAddress(open.table, open.column, isSingle(openTable)))} id={open.table} table={openTable} column={openColumn} system={system}
+        <TableColumnCard key={instanceOf('column', columnAddress(open.table, open.column, isSingle(openTable)))} id={open.table} table={openTable} column={openColumn} system={system}
           onOpenTable={() => showTable(open.table)}
           edit={change => editSystem(draft => { const target = draft.tables?.[open.table]; if (target) change(target); })}
           onClose={() => { setCell(null); pick({ activeFieldTag: null }); }} />

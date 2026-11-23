@@ -19,5 +19,56 @@
     "refused": "система не готова к публикации",
     "notSaved": "not published: changes were not saved",
     "problems": "not published — errors in \"Problems\""
+  },
+  "die": {
+    "one": "one die — d20",
+    "sum": "several dice, summed — 2d6",
+    "hits": "dice pool: count successes — d6, 5 and up",
+    "best": "dice pool: take the best — d6",
+    "percent": "percentile — d100",
+    "parts": "two named dice — d12 and d12"
+  },
+  "brick": {
+    "roll": {
+      "label": "+ roll",
+      "hint": "Someone rolls dice: a system die, or a number from the sheet by a rule from “Rolls”. Steps below read the result."
+    },
+    "check": {
+      "label": "+ check",
+      "hint": "Compare a roll or a number with a threshold. The result is yes or no: “If” blocks below read it."
+    },
+    "change": {
+      "label": "+ change",
+      "hint": "Change a sheet field or hang a state. The only thing that changes the world."
+    },
+    "table": {
+      "label": "+ table",
+      "hint": "Read a table row by a roll or a number: an injury, an outcome, difficulty by range."
+    },
+    "each": {
+      "label": "+ for each in the list",
+      "hint": "A divider: steps above run once, steps below run in turn for each target from the list input (button actions only) or for each table row."
+    },
+    "branch": {
+      "label": "+ if",
+      "hint": "Branching: steps inside run only if the condition holds; you can add “else if” and “else”."
+    },
+    "stop": {
+      "label": "+ stop",
+      "hint": "We go no further. Before “For each in” and in the cost — the action did not happen; in the body — a stop for this target."
+    },
+    "number": {
+      "label": "+ number",
+      "hint": "A number by formula: damage, healing, one number for several changes."
+    }
+  },
+  "name": {
+    "empty": "the name cannot be empty",
+    "reserved": "the name “{{name}}” is taken by the system",
+    "taken": "the name “{{name}}” is already taken"
+  },
+  "restore": {
+    "unknown": "format not recognized",
+    "noCopy": " · could not save a copy"
   }
 }

@@ -14,7 +14,7 @@ import { outcomeRefs, fieldedOf } from '../slots.tsx';
 import { groupSteps, moveGroup, moveSpan, blockSpan, removeSteps, armEnd, addArm, unwrapBlock, BRICKS, SEEN_BRICKS } from '../cards.ts';
 import type { Removal } from '../cards.ts';
 import { FlowHead, FlowActions, ArmLabel, OutcomePick, HeadFrame } from './cards/flow-parts.tsx';
-import { newCost, saidId } from '../factory.ts';
+import { newCost, saidId, namedStep } from '../factory.ts';
 import { GroupCard } from './cards/group-card.tsx';
 import { sheetsAt, placeNamesAt, placeTablesAt } from './names.ts';
 import { filledStep } from './call-args.ts';
@@ -235,11 +235,12 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
 
     const calledKey = group.step.type === 'emit' ? (group.step as { effect?: unknown }).effect : undefined;
     const own = steps.indexOf(group.step);
-    const after = (base: string, make: (id: string) => Step[]) => () => edit(draft => {
+    const after = (base: string | null, make: (id: string) => Step[]) => () => edit(draft => {
       const list = draft.steps ?? [];
       const step = list[own] as Step & { id?: string };
       if (!step.id) {
-        const named = saidId([...stepIdsOf(draft), ...(draft.params ?? []).map(p => p.key)], (system.effects?.[base]?.label ?? base).toLowerCase());
+        const taken = [...stepIdsOf(draft), ...(draft.params ?? []).map(p => p.key)];
+        const named = base === null ? namedStep(system, taken, 'check') : saidId(taken, (system.effects?.[base]?.label ?? base).toLowerCase());
         step.id = named.id;
         if (named.label) (step as { label?: string }).label = named.label;
       }
@@ -252,8 +253,8 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
     const degrees = asIf ? [] : degreesOf(group);
     const words = group.kind === 'check' && !asIf ? checkWords(group) : null;
     const ifBy: { label: string; run: () => void }[] = fused ? [] : [
-      ...(words ? [{ label: `${words.success} / ${words.fail}`, run: after('проверка', id => [branch(`@${id}.success`)]) }] : []),
-      ...(degrees.length ? [{ label: `ступени: ${degrees.join(' · ')}`, run: after('проверка', id => arms(`${id}.degree`, degrees)) }] : []),
+      ...(words ? [{ label: `${words.success} / ${words.fail}`, run: after(null, id => [branch(`@${id}.success`)]) }] : []),
+      ...(degrees.length ? [{ label: `ступени: ${degrees.join(' · ')}`, run: after(null, id => arms(`${id}.degree`, degrees)) }] : []),
     ];
     const byOutput: Record<string, () => void> = fused ? {} : Object.fromEntries(returns.flatMap((one): [string, () => void][] => {
       if (one.kind === 'boolean') return [[one.key, after(String(calledKey), id => [branch(`@${id}.${one.key}`)])]];
@@ -313,7 +314,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
           if (amountAt < 0) {
             const taken = steps.map(step => step.id).filter(Boolean) as string[];
             steps.splice(applyAt, 0, {
-              ...saidId(taken, 'число'), type: 'roll',
+              ...namedStep(system, taken, 'number'), type: 'roll',
             } as never);
             amountAt = applyAt;
           }

@@ -1,6 +1,7 @@
 import type { System } from '@vtt/schema';
 import { fieldsOf, NO_BLOCK, blockNames, blockLabel } from '@vtt/engine';
 import { freeId } from '../../store/world.ts';
+import { dataT } from '../../i18n/index.ts';
 import type { Field } from '@vtt/engine';
 
 export interface GroupNode {
@@ -57,7 +58,7 @@ export function subtreeNames(system: System, name: string): string[] {
   return [...all].filter(candidate => groupChain(system, candidate).includes(name));
 }
 
-export function newGroup(system: System, base = 'Новый блок'): { key: string; title: string } {
+export function newGroup(system: System, base: string = dataT(system)('data:block.new')): { key: string; title: string } {
   const shown = new Set(blockNames(system).map(other => blockLabel(system, other)));
   let title = base;
   for (let n = 2; shown.has(title); n++) title = `${base} ${n}`;

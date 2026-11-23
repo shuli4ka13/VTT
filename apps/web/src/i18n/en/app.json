@@ -1,0 +1,13 @@
+{
+  "loading": "loading…",
+  "title": {
+    "system": "system",
+    "book": "compendium",
+    "play": "party"
+  },
+  "switchRole": "switch role",
+  "nav": {
+    "sheet": "Character",
+    "table": "Table"
+  }
+}
