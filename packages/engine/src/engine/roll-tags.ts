@@ -57,6 +57,11 @@ export const rowSaid = (system: System | undefined, table: string, value: unknow
   return row?.label || String(value);
 };
 
+export function cellSaid(system: System | undefined, table: string, column: string, value: unknown): string {
+  const spec = (system?.tables?.[table]?.columns ?? []).find(one => one.key === column);
+  return spec?.kind === 'choice' && typeof spec.from === 'string' ? rowSaid(system, spec.from, value) : String(value);
+}
+
 export function partSaid(system: System | undefined, name: string): string {
   for (const constant of Object.values(system?.constants ?? {}) as { dice?: { name?: string; label?: string }[] }[]) {
     const part = (constant?.dice ?? []).find(one => one.name === name);

@@ -17,7 +17,7 @@ export const icon = '▦';
 export function traceLine(t: any, h: any) {
   const rolls = t.rolls?.length ? `[${t.rolls.join(', ')}] = ` : '';
   const name = typeof h?.tableLabel === 'function' ? h.tableLabel(t.table) : t.table;
-  const result = typeof t.result === 'string' && typeof h?.rowSaid === 'function' ? h.rowSaid(t.table, t.result) : t.result;
+  const result = typeof t.result === 'string' && typeof h?.cellSaid === 'function' ? h.cellSaid(t.table, t.column, t.result) : t.result;
   return `таблица «${name}»: ${rolls}${t.value} → ${result}`;
 }
 
@@ -42,7 +42,7 @@ const runner: Pick<StepModule, 'finish'> = {
     }
     const column = typeof step.column === 'string' && step.column ? step.column : VALUE_COLUMN;
     const found = readCell(ctx.system, ctx.here, name, value, column, ctx.owner);
-    return { value: found, trace: { table: name, value, ...(rolls.length ? { rolls } : {}), result: found }, break: null };
+    return { value: found, trace: { table: name, column, value, ...(rolls.length ? { rolls } : {}), result: found }, break: null };
   },
 };
 
