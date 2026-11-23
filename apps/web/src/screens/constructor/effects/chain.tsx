@@ -1,4 +1,4 @@
-import { compile, printFormula, operandText, NOT, degreeWords as tableWords, listOf, choiceTableOf, fieldOf, activationOf, loopOf, loopParam, loopsAt, splitsTargets, armsOf, sees, endOf, outcomeWords, namesAt, blockLabel, stepSaid, labelBlock, COST_BLOCK } from '@vtt/engine';
+import { compile, printFormula, operandText, NOT, degreeWords as tableWords, listOf, choiceTableOf, fieldOf, activationOf, loopOf, loopParam, loopsAt, splitsTargets, armsOf, sees, endOf, outcomeWords, namesAt, blockLabel, stepSaid, labelBlock, COST_BLOCK, COST_BLOCK_LABEL } from '@vtt/engine';
 import type { NamePlace as Place } from '@vtt/engine';
 import { withRole } from './roles.ts';
 import type { ReactNode } from 'react';
@@ -657,7 +657,7 @@ export function CostPick({ system, except, onPick }: { system: System; except?: 
           if (!pick) return;
           if (pick !== NEW_COST) { onPick(pick); return; }
           const made = newCost(system);
-          editSystem(draft => { draft.effects[made.key] = made.value; labelBlock(draft, made.value.group!, COST_BLOCK); });
+          editSystem(draft => { draft.effects[made.key] = made.value; if (blockLabel(draft, COST_BLOCK) === COST_BLOCK) labelBlock(draft, COST_BLOCK, COST_BLOCK_LABEL); });
           onPick(made.key);
         }}
       />

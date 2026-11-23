@@ -81,7 +81,7 @@ describe('эффекты пресетов собираются руками: Sha
     within(card()).select('Чей вызов', 'roll');
     within(card()).select('Что правим', 'bonus');
     within(card()).click('+ или / кроме');
-    within(card()).select('Или хотя бы одно из', 'attack');
+    within(card()).select('Или хотя бы одно из', 'ataka');
     within(card()).select('Или хотя бы одно из', 'proverka');
     within(card()).formula('Сколько', '-2');
     within(card()).select('Кого касается', '@roller == @holder');
@@ -131,7 +131,7 @@ describe('эффекты пресетов собираются руками: Sha
     ui.when('=не @roll.atMin * 2 > @roll.rolled');
     ui.click('+ или / кроме');
     ui.select('Кроме', 'iniciativa');
-    ui.select('Кроме', 'bez_Preimuschestva');
+    ui.select('Кроме', 'bez_preimuschestva');
     spendFromHolder();
     ui.click('+ перебросить');
     const card = stepCard(/^2 · /);
@@ -148,7 +148,7 @@ describe('эффекты пресетов собираются руками: Sha
     seenHead(ui);
     ui.click('+ или / кроме');
     ui.select('Кроме', 'iniciativa');
-    ui.select('Кроме', 'bez_Preimuschestva');
+    ui.select('Кроме', 'bez_preimuschestva');
     spendFromHolder();
     ui.click('+ докинуть');
     const card = () => stepCard(/^2 · /);
@@ -192,7 +192,7 @@ describe('эффекты пресетов собираются руками: Sha
     within(at(1, 1)()).select('Что бросает', 'die:lead_die');
     within(at(1, 1)()).click('+ прибавка');
     within(at(1, 1)()).formula('Прибавка', '@holder.death_penalty');
-    within(at(1, 1)()).select('Метки', 'saving_throw');
+    within(at(1, 1)()).select('Метки', 'spasbrosok');
     nameStep(at(1, 1), 'спас_бросок');
 
     within(handlerAt(1)).click('+ проверка');
@@ -238,7 +238,7 @@ describe('эффекты пресетов собираются руками: Sha
     const [goal] = start('daggerheart', ['spend']);
     const ui = within();
     calledHead(ui, 'spend', goal!);
-    param(ui, 'spend', 0, 'Лист', 'sheet', 'who', { role: 'actor' });
+    param(ui, 'spend', 0, 'Лист', 'sheet', 'list', { role: 'actor' });
     param(ui, 'spend', 1, 'Источник', 'sheet', 'источник', { ask: 'empty', role: 'actor' });
     param(ui, 'spend', 2, 'Что тратим', 'field', 'what');
     param(ui, 'spend', 3, 'Сколько', 'number', 'amount');
@@ -263,7 +263,7 @@ describe('эффекты пресетов собираются руками: Sha
     const [goal] = start('cp-slice', ['damage']);
     const ui = within();
     calledHead(ui, 'damage', goal!);
-    param(ui, 'damage', 0, 'Лист', 'sheet', 'who', { role: 'target' });
+    param(ui, 'damage', 0, 'Лист', 'sheet', 'list', { role: 'target' });
     param(ui, 'damage', 1, 'Источник', 'sheet', 'источник', { ask: 'empty', role: 'actor' });
     param(ui, 'damage', 2, 'Сколько урона', 'number', 'amount', { main: true });
     param(ui, 'damage', 3, 'Тип урона', 'choice', 'damage_type', { from: 'damage_types' });
@@ -295,7 +295,7 @@ describe('эффекты пресетов собираются руками: Sha
     };
     const apply = (flow: number, k: number, field: string, value: string) => {
       addToArm(block(flow), 0, 'change');
-      change(at(k), 'who', field, 'subtract', value);
+      change(at(k), 'list', field, 'subtract', value);
     };
 
     guarded(0, body);

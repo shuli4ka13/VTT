@@ -30,7 +30,7 @@ describe('новый тип с нуля: «+ кнопка» → «Атака» �
     });
 
     const built = useWorld.getState().system;
-    const compendium = { ...dnd.compendium, records: [...dnd.compendium.records, { id: 'жезл', table: 'mag', label: 'Огненный жезл', cells: { attack_with: 5, damage_dice: '1d8', damage_type: 'fire' } }] } as Compendium;
+    const compendium = { ...dnd.compendium, records: [...dnd.compendium.records, { id: 'жезл', table: 'mag', label: 'Огненный жезл', cells: { attack_with: 5, damage_dice: '1d8', damage_type: 'ogon' } }] } as Compendium;
     const sheets = structuredClone(dnd.sheets).map(sheet => (sheet.id === 'arven' ? { ...sheet, has: [...(sheet.has ?? []), { of: 'жезл' }] } : sheet));
     const before = Number(sheets.find(sheet => sheet.id === 'goblin')!.values?.hp_current ?? NaN);
 

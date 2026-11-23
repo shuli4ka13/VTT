@@ -28,11 +28,11 @@ describe('D&D: однотипное лежит таблицами, а не ро�
 
   it('стойкость к урону — одна колонка у типов урона, спасбросок — колонка характеристик', () => {
     expect(fieldsOf(system).filter(field => field.cell?.column === 'taken').length).toBe(13);
-    expect(fieldOf(system, 'damage_types.fire.taken')!.value).toMatchObject({ type: 'choice', from: 'taken', default: 'kak_est' });
-    expect(fieldOf(system, 'abilities.strength.save')!.label).toBe('Спасбросок: Сила');
+    expect(fieldOf(system, 'damage_types.ogon.taken')!.value).toMatchObject({ type: 'choice', from: 'taken', default: 'kak_est' });
+    expect(fieldOf(system, 'abilities.sila.save')!.label).toBe('Спасбросок: Сила');
     expect(system.tables!.saves).toBeUndefined();
     expect(fieldsOf(system).some(field => /^taken_\d+$|^turn_/.test(field.tag))).toBe(false);
     const pass = newPass(system, hero, { compendium: world.compendium });
-    expect(calc(system, hero, 'abilities.strength.save', pass)).toBe(calc(system, hero, 'abilities.strength.mod', pass) as number + (calc(system, hero, 'prof_bonus', pass) as number));
+    expect(calc(system, hero, 'abilities.sila.save', pass)).toBe(calc(system, hero, 'abilities.sila.mod', pass) as number + (calc(system, hero, 'prof_bonus', pass) as number));
   });
 });

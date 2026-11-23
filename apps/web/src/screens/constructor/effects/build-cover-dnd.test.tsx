@@ -111,7 +111,7 @@ describe('эффекты D&D собираются в конструкторе р
 
   it('D&D «Доспех мага» (mage_armored): до конца сцены, правит поле «задать» с наибольшим', { timeout: 60000 }, () => {
     const [goal] = start('dnd5e', ['mage_armored']);
-    fresh('+ висит', goal!.label!, 'mage_armored', 'Sostoyaniya', goal!.description!);
+    fresh('+ висит', goal!.label!, 'mage_armored', 'sostoyaniya', goal!.description!);
     lifetime('scene', 'refresh');
     valueModifier('ac_base', 'set', '13');
     dump({ got: built('mage_armored'), goal });
@@ -120,7 +120,7 @@ describe('эффекты D&D собираются в конструкторе р
 
   it('D&D «В рывке» (dashing): на 1 ход, спадает в конце хода, умножить; умолч: duration.ends = "turn-end"', { timeout: 60000 }, () => {
     const [goal] = start('dnd5e', ['dashing']);
-    const ui = fresh('+ висит', goal!.label!, 'dashing', 'Sostoyaniya', goal!.description!);
+    const ui = fresh('+ висит', goal!.label!, 'dashing', 'sostoyaniya', goal!.description!);
     lifetime('turns', 'refresh');
     ui.type('Сколько', '1');
     ui.select('Спадает', 'turn-end');
@@ -131,7 +131,7 @@ describe('эффекты D&D собираются в конструкторе р
 
   it('D&D «Каменная кожа» (stoneskin): правка вызова урона — кроме меток, «где у метки»', { timeout: 60000 }, () => {
     const [goal] = start('dnd5e', ['stoneskin']);
-    fresh('+ висит', goal!.label!, 'stoneskin', 'Sostoyaniya', goal!.description!);
+    fresh('+ висит', goal!.label!, 'stoneskin', 'sostoyaniya', goal!.description!);
     lifetime('permanent', 'refresh');
     within().click('+ правка вызова');
     const card = lastModifier;
@@ -141,14 +141,14 @@ describe('эффекты D&D собираются в конструкторе р
     within(card()).select('Кроме меток', 'magicheskiy');
     within(card()).select('Где у метки', 'damage_types\u0000nature');
     within(within(card()).field('Где у метки')).select(within(card()).field('Где у метки').querySelectorAll('[role="combobox"]')[1] as HTMLElement, 'fizicheskiy');
-    within(card()).select('Кого касается', '@list_2 == @holder');
+    within(card()).select('Кого касается', '@list == @holder');
     dump({ got: built('stoneskin'), goal });
     expect(built('stoneskin')).toEqual(folded(goal));
   });
 
   it('D&D «Что доходит до меня» (taken_rule): две правки вызова урона — строка типа урона по значению, сопротивление и уязвимость по этапам', { timeout: 120000 }, () => {
     const [goal] = start('dnd5e', ['taken_rule']);
-    fresh('+ висит', goal!.label!, 'taken_rule', 'Obschie_pravila', goal!.description!);
+    fresh('+ висит', goal!.label!, 'taken_rule', 'obschie_pravila', goal!.description!);
     for (const m of goal!.modifiers ?? []) {
       const one = m as { value: { expr: string }; stage: string };
       within().click('+ правка вызова');
@@ -156,7 +156,7 @@ describe('эффекты D&D собираются в конструкторе р
       within(card()).select('Чей вызов', 'damage');
       within(card()).formula('На сколько', one.value.expr);
       within(card()).select('Этап', one.stage);
-      within(card()).select('Кого касается', '@list_2 == @holder');
+      within(card()).select('Кого касается', '@list == @holder');
       within(card()).when('=не пусто(@holder.damage_types.[@damage_type].taken)');
     }
     dump({ got: built('taken_rule'), goal });
@@ -165,7 +165,7 @@ describe('эффекты D&D собираются в конструкторе р
 
   it('D&D «Недееспособен» (incapacitated): при наложении снимает концентрацию; обход: пустые modifiers снимаются только добавлением и удалением правки', { timeout: 60000 }, () => {
     const [goal] = start('dnd5e', ['incapacitated']);
-    const ui = fresh('+ висит', goal!.label!, 'incapacitated', 'Sostoyaniya', goal!.description!);
+    const ui = fresh('+ висит', goal!.label!, 'incapacitated', 'sostoyaniya', goal!.description!);
     lifetime('permanent', 'refresh');
     ui.click('+ правит поле');
     within(lastModifier()).click('Удалить');
@@ -184,7 +184,7 @@ describe('эффекты D&D собираются в конструкторе р
 
   it('D&D «Парализован» (paralyzed): выдаёт «Беспомощен», вход-память, подписка на конец хода зовёт «Повторный спасбросок»', { timeout: 90000 }, () => {
     const [goal] = start('dnd5e', ['paralyzed']);
-    const ui = fresh('+ висит', goal!.label!, 'paralyzed', 'Sostoyaniya', goal!.description!);
+    const ui = fresh('+ висит', goal!.label!, 'paralyzed', 'sostoyaniya', goal!.description!);
     lifetime('permanent', 'refresh');
     ui.click('+ правит поле');
     within(lastModifier()).click('Удалить');
@@ -209,7 +209,7 @@ describe('эффекты D&D собираются в конструкторе р
     within(made()).click('вызов');
     within(made()).select('Какой эффект', 'repeat_save');
     within(made()).formula(within(made()).arg('Кто спасается'), '@holder');
-    within(made()).formula(within(made()).arg('Чем спасается'), '"wisdom"');
+    within(made()).formula(within(made()).arg('Чем спасается'), '"mudrost"');
     within(made()).formula(within(made()).arg('Сложность'), '@zapomneno');
     within(made()).select(within(made()).arg('Что снимается').querySelector<HTMLElement>('[role="combobox"]')!, 'paralyzed');
 
@@ -219,7 +219,7 @@ describe('эффекты D&D собираются в конструкторе р
 
   it('D&D «Кость вдохновения наготове» (bardic_ready): вход-кость с умолчанием, на 1 срабатывание, «увидев кости» — прибавить кость из входа', { timeout: 60000 }, () => {
     const [goal] = start('dnd5e', ['bardic_ready']);
-    const ui = fresh('+ висит', goal!.label!, 'bardic_ready', 'Reakcii', goal!.description!, goal!.note);
+    const ui = fresh('+ висит', goal!.label!, 'bardic_ready', 'reakcii', goal!.description!, goal!.note);
     within().click('+ когда');
     ui.click('+ вход');
     ui.type(ui.cell('Название', 0), 'Кость вдохновения');
@@ -242,7 +242,7 @@ describe('эффекты D&D собираются в конструкторе р
 
   it('D&D «Героическое вдохновение» (inspire): «увидев кости», цена подписки — трата поля, перебросить одну меньшую кость; смена режима снимает порог', { timeout: 60000 }, () => {
     const [goal] = start('dnd5e', ['inspire']);
-    fresh('+ висит', goal!.label!, 'inspire', 'Reakcii', goal!.description!);
+    fresh('+ висит', goal!.label!, 'inspire', 'reakcii', goal!.description!);
     within().click('+ когда');
     within(handlerHead(1)).select('Что случилось', 'seen');
     within(handlerHead(1)).select('Кого касается', '@roller == @holder');
@@ -254,7 +254,7 @@ describe('эффекты D&D собираются в конструкторе р
     card = stepCard(/^1 · /, handlerAt(1));
     within(card).select('Какой эффект', 'spend');
     const args = (goal!.on![0]!.cost![0] as { args: Record<string, { expr: string }> }).args;
-    const label: Record<string, string> = { what: 'Что тратим', amount: 'Сколько', note: 'Если не хватает', list_2: 'Лист', istochnik: 'Источник' };
+    const label: Record<string, string> = { what: 'Что тратим', amount: 'Сколько', note: 'Если не хватает', list: 'Лист', istochnik: 'Источник' };
     for (const [key, value] of Object.entries(args)) {
       card = stepCard(/^1 · /, handlerAt(1));
       within(card).formula(within(card).arg(label[key]!), value.expr);
@@ -273,7 +273,7 @@ describe('эффекты D&D собираются в конструкторе р
 
   it('«Перебросить»: назад к порогу — порог снова 1, режим в данных не пишется', { timeout: 60000 }, () => {
     const [goal] = start('dnd5e', ['inspire']);
-    fresh('+ висит', 'Проба режима', 'reroll_probe', 'Reakcii', goal!.description!);
+    fresh('+ висит', 'Проба режима', 'reroll_probe', 'reakcii', goal!.description!);
     within().click('+ когда');
     within(handlerHead(1)).select('Что случилось', 'seen');
     within(handlerAt(1)).click('+ перебросить');
@@ -289,11 +289,11 @@ describe('эффекты D&D собираются в конструкторе р
 
   it('D&D «Щит» (shield): «до» всего с меткой «атака», цена реакцией и ячейкой, вешает состояние на себя', { timeout: 60000 }, () => {
     const [goal] = start('dnd5e', ['shield']);
-    const ui = fresh('+ висит', goal!.label!, 'shield', 'Reakcii', goal!.description!);
+    const ui = fresh('+ висит', goal!.label!, 'shield', 'reakcii', goal!.description!);
     within().click('+ когда');
     within(handlerHead(1)).select('Что именно', 'ataka');
     within(handlerHead(1)).select('Когда именно', 'before');
-    within(handlerHead(1)).select('Кого касается', '@aim == @holder');
+    within(handlerHead(1)).select('Кого касается', '@cel == @holder');
     within(handlerHead(1)).when('=@brosok.ishod.hit');
     within(handlerHead(1)).select('Решение', 'ask');
 
@@ -323,16 +323,16 @@ describe('эффекты D&D собираются в конструкторе р
 
   it('D&D «Не замечает» (hidden): срок 1 ход, спадает в начале хода листа из входа, две правки броска по двум листам', { timeout: 60000 }, () => {
     const [goal] = start('dnd5e', ['hidden']);
-    const ui = fresh('+ висит', goal!.label!, 'hidden', 'Sostoyaniya', goal!.description!);
+    const ui = fresh('+ висит', goal!.label!, 'hidden', 'sostoyaniya', goal!.description!);
     ui.click('+ вход');
     ui.type(ui.cell('Название', 0), 'Кого не замечает');
     ui.select(ui.cell('Вид', 0), 'sheet');
     if (ui.has('ещё')) ui.click('ещё');
-    ui.type(ui.cell('Имя в формулах', 0), 'whom');
+    ui.type(ui.cell('Имя в формулах', 0), 'kogo');
     lifetime('turns', 'refresh');
     ui.type('Сколько', '1');
     ui.select('Спадает', 'turn-start');
-    ui.select('Чьи ходы считать', 'whom');
+    ui.select('Чьи ходы считать', 'kogo');
 
     const rollEdit = (edit: string, when: string) => {
       within().click('+ правка вызова');
@@ -341,8 +341,8 @@ describe('эффекты D&D собираются в конструкторе р
       within(card()).select('Какое слово', edit);
       within(card()).when(`=${when}`);
     };
-    rollEdit('advantage', '@against == @holder and @roller == @whom');
-    rollEdit('disadvantage', '@roller == @holder and @against == @whom');
+    rollEdit('advantage', '@against == @holder and @roller == @kogo');
+    rollEdit('disadvantage', '@roller == @holder and @against == @kogo');
     dump({ got: built('hidden'), goal });
     expect(built('hidden')).toEqual(folded(goal));
   });
@@ -401,7 +401,7 @@ describe('общие эффекты D&D собираются руками: ци�
   it('D&D «Ячейка заклинания» (spell_slot): «Потратить» клетку строки по значению — @лист.slots.[@circle]', { timeout: 90000 }, () => {
     const [goal] = start('dnd5e', ['spell_slot']);
     const ui = calledHead(goal!, 'spell_slot');
-    param(ui, 'spell_slot', 0, 'Лист', 'sheet', 'list_2', { role: 'actor' });
+    param(ui, 'spell_slot', 0, 'Лист', 'sheet', 'list', { role: 'actor' });
     param(ui, 'spell_slot', 1, 'Источник', 'sheet', 'istochnik', { ask: 'empty', role: 'actor' });
     param(ui, 'spell_slot', 2, 'Круг ячейки', 'number', 'circle', { main: true });
     ui.click('+ изменение');

@@ -49,4 +49,12 @@ describe('одно поле меток', () => {
     expect(got).toEqual(['атака', 'выдумана', 'novaya']);
     expect(useWorld.getState().system.tags?.novaya).toEqual({ label: 'новая' });
   });
+
+  it('автор книги для чужой системы новых меток не заводит — только выбирает из словаря системы', () => {
+    const was = useWorld.getState().origin;
+    useWorld.setState({ origin: { ...was, mode: 'compendium' } });
+    render(<TagsField system={system} value={[]} onChange={() => {}} />);
+    expect(comboOptions(add()).map(o => o.label)).not.toContain('новая метка…');
+    useWorld.setState({ origin: was });
+  });
 });

@@ -1,4 +1,4 @@
-import { tidyLayout, withLibrary, forgetFields } from '@vtt/engine';
+import { tidyLayout, withLibrary, forgetFields, keyFrom, latinOf } from '@vtt/engine';
 import { useMemo } from 'react';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
@@ -218,19 +218,9 @@ export const takeRestoreProblem = (): string | null => {
   return problem;
 };
 
-const TRANSLIT: Record<string, string> = {
-  а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm',
-  н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'h', ц: 'c', ч: 'ch', ш: 'sh', щ: 'sch',
-  ъ: '', ы: 'y', ь: '', э: 'e', ю: 'yu', я: 'ya',
-};
+export { latinOf };
 
-export const latinOf = (text: string): string => [...text.toLowerCase()].map(ch => TRANSLIT[ch] ?? ch).join('');
-
-export const slugOf = (label: string): string => {
-  const latin = latinOf(label);
-  const slug = latin.replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
-  return slug && !/^[a-z]/.test(slug) ? `k_${slug}` : slug;
-};
+export const slugOf = keyFrom;
 
 export function freeId(taken: Iterable<string>, base: string): string {
   const used = new Set(taken);

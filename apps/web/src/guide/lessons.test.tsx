@@ -674,7 +674,7 @@ const BAD: Record<string, Record<string, Wrong[]>> = {
     ],
   },
   ready: {
-    take: [d => { const table = Object.values(d.tables!).find(one => one.label === 'Характеристики')!; table.rows = table.rows!.filter(row => row.value !== 'charisma'); }],
+    take: [d => { const table = Object.values(d.tables!).find(one => one.label === 'Характеристики')!; table.rows = table.rows!.filter(row => row.value !== 'harizma'); }],
     drop: [d => { Object.values(d.tables!).find(one => one.shape === 'single')!.columns!.push({ key: 'vdohnovenie', label: 'Вдохновение', kind: 'number' } as never); }],
     problems: [closed],
     seen: [away],

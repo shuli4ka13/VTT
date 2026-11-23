@@ -1,5 +1,5 @@
 import type { System, Effect, Compendium } from '@vtt/schema';
-import { launchOf, calledOf, chainsOfEffect, emittedChoices, recordKinds, withLibrary, COST_BLOCK, blockLabel } from '@vtt/engine';
+import { launchOf, calledOf, chainsOfEffect, emittedChoices, recordKinds, withLibrary, COST_BLOCK } from '@vtt/engine';
 
 export type Role = 'button' | 'auto' | 'passive' | 'pay' | 'step' | 'unbound';
 
@@ -144,7 +144,7 @@ export function rolesOf(system: System, compendium: Compendium | null): Map<stri
   const roles = new Map<string, Role>();
   for (const [id, effect] of Object.entries(system.effects ?? {})) {
     const kind = launchOf(effect).kind;
-    roles.set(id, kind === 'passive' ? 'passive' : kind === 'auto' ? 'auto' : pay.has(id) || (!called.has(id) && Boolean(effect.group) && blockLabel(system, effect.group!) === COST_BLOCK) ? 'pay' : called.has(id) ? 'step' : !buttons || buttons.has(id) ? 'button' : 'unbound');
+    roles.set(id, kind === 'passive' ? 'passive' : kind === 'auto' ? 'auto' : pay.has(id) || (!called.has(id) && effect.group === COST_BLOCK) ? 'pay' : called.has(id) ? 'step' : !buttons || buttons.has(id) ? 'button' : 'unbound');
   }
   CACHE.set(system, { compendium, roles });
   return roles;

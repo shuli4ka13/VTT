@@ -186,12 +186,12 @@ describe('эффекты пресетов собираются в констру
     if (!ui.has('имя в формулах…') && ui.has('свойства')) ui.click('свойства');
     ui.click('имя в формулах…');
     ui.type(document.querySelector<HTMLElement>('.step-name input')!, 'hellish_rebuke');
-    ui.select('Папка', 'Reakcii');
+    ui.select('Папка', 'reakcii');
     ui.type('Описание', goal!.description!);
 
     ui.select('Что именно', 'damage');
     ui.select('Когда именно', 'after');
-    ui.select('Кого касается', '@list_2 == @holder');
+    ui.select('Кого касается', '@list == @holder');
     ui.when('=не пусто(@источник) и @источник != @holder');
     ui.select('Решение', 'ask');
 
@@ -209,7 +209,7 @@ describe('эффекты пресетов собираются в констру
     }
     within(card).click('↑');
 
-    savingThrow(3, [['Кто спасается', '@источник'], ['Чем спасается', '"dexterity"'], ['Сложность', '@holder.spell_dc']]);
+    savingThrow(3, [['Кто спасается', '@источник'], ['Чем спасается', '"lovkost"'], ['Сложность', '@holder.spell_dc']]);
 
     ui.click('+ бросок');
     card = stepCard(/^4 · /);
@@ -230,7 +230,7 @@ describe('эффекты пресетов собираются в констру
     within(card).click('вызов');
     card = stepCard(/^6 · /);
     within(card).select('Какой эффект', 'damage');
-    for (const [name, text] of [['Сколько урона', '@урон'], ['Тип урона', '"fire"'], ['Источник урона', '"magicheskiy"'], ['Лист', '@источник'], ['Источник', '@holder']] as const) {
+    for (const [name, text] of [['Сколько урона', '@урон'], ['Тип урона', '"ogon"'], ['Источник урона', '"magicheskiy"'], ['Лист', '@источник'], ['Источник', '@holder']] as const) {
       within(card).formula(within(card).arg(name), text);
     }
     dump({ got: built('hellish_rebuke') ?? useWorld.getState().system.effects, goal });
@@ -249,7 +249,7 @@ describe('эффекты пресетов собираются в констру
     within(ui.cell('Блок')).click('+ новый');
     ui.type(ui.cell('Блок'), 'Атака');
     within(ui.cell('Блок')).click('завести');
-    ui.select('Метки', 'attack');
+    ui.select('Метки', 'ataka');
     ui.type('Значок', '🔫');
     ui.type('Описание', goal!.description!);
 
@@ -294,7 +294,7 @@ describe('эффекты пресетов собираются в констру
     within(card).select('Что бросает', 'field:skills.pistolety.total');
     within(stepCard(/^4 · /)).click('+ поправка к числу поля');
     within(stepCard(/^4 · /)).formula('Поправка к числу поля', '@spend_luck - if(@aim == "po_golove", 8, 0)');
-    fieldMarks(stepCard(/^4 · /), 'attack');
+    fieldMarks(stepCard(/^4 · /), 'ataka');
     nameStep(stepCard(/^4 · /), 'попадание_бросок');
     within(stepCard(/^4 · /)).click('↑');
 
@@ -349,13 +349,13 @@ describe('эффекты пресетов собираются в констру
     if (!ui.has('имя в формулах…') && ui.has('свойства')) ui.click('свойства');
     ui.click('имя в формулах…');
     ui.type(document.querySelector<HTMLElement>('.step-name input')!, 'concentration');
-    ui.select('Папка', 'Zaklinaniya');
+    ui.select('Папка', 'zaklinaniya');
     ui.type('Описание', goal!.description!);
     ui.select('Что именно', 'damage');
     ui.select('Когда именно', 'after');
-    ui.select('Кого касается', '@list_2 == @holder');
+    ui.select('Кого касается', '@list == @holder');
 
-    savingThrow(1, [['Кто спасается', '@holder'], ['Чем спасается', '"constitution"'], ['Сложность', '(max(10, floor(@amount / 2)))']]);
+    savingThrow(1, [['Кто спасается', '@holder'], ['Чем спасается', '"teloslozhenie"'], ['Сложность', '(max(10, floor(@amount / 2)))']]);
     let card: HTMLElement;
 
     const kept = callIf(1, 'Спасбросок', 'не спасся');
@@ -380,7 +380,7 @@ describe('эффекты пресетов собираются в констру
     if (!ui.has('имя в формулах…') && ui.has('свойства')) ui.click('свойства');
     ui.click('имя в формулах…');
     ui.type(document.querySelector<HTMLElement>('.step-name input')!, 'spell_buff');
-    ui.select('Папка', 'Zaklinaniya');
+    ui.select('Папка', 'zaklinaniya');
     ui.type('Описание', goal!.description!);
 
     const param = (row: number, label: string, kind: string, key: string, more: { ask?: string; hint?: string; min?: string; max?: string } = {}) => {
@@ -432,7 +432,7 @@ describe('эффекты пресетов собираются в констру
     if (!ui.has('имя в формулах…') && ui.has('свойства')) ui.click('свойства');
     ui.click('имя в формулах…');
     ui.type(document.querySelector<HTMLElement>('.step-name input')!, 'duality');
-    ui.select('Папка', 'Pravila');
+    ui.select('Папка', 'pravila');
     ui.type('Описание', goal!.description!);
 
     const handlerAt = (n: number): HTMLElement => stepCard(new RegExp(`^Когда №${n}`)).parentElement!;
@@ -481,7 +481,7 @@ describe('эффекты пресетов собираются в констру
     if (!ui.has('имя в формулах…') && ui.has('свойства')) ui.click('свойства');
     ui.click('имя в формулах…');
     ui.type(document.querySelector<HTMLElement>('.step-name input')!, 'hero_attack');
-    ui.select('Папка', 'Ataka');
+    ui.select('Папка', 'ataka');
     ui.type('Описание', goal!.description!);
     if (ui.has('ещё')) ui.click('ещё');
     const param = (row: number, label: string, kind: string, key: string, from?: string) => {
@@ -574,12 +574,12 @@ describe('эффекты пресетов собираются в констру
       nameStep(at(n)(), name);
     };
 
-    call(first, 'defend', 'отпор', steps[from]!.args!, { who: 'Кто защищается', uspehov: 'Успехов атаки', atk: 'Значение атаки', navyk: 'Навык атаки', blizko: 'Вплотную или близко' });
+    call(first, 'defend', 'отпор', steps[from]!.args!, { kto: 'Кто защищается', uspehov: 'Успехов атаки', atk: 'Значение атаки', navyk: 'Навык атаки', blizko: 'Вплотную или близко' });
     ui.click('+ если');
     addToArm(block(shown), 0, 'stop');
     within(headOf(block(shown))).when('=не @отпор.popal');
     stopNote(first + 1, 'промах: успехов атаки меньше, чем у защиты');
-    call(first + 2, 'strike_damage', 'вред', steps[from + 4]!.args!, { cel: 'Кого бьют', source: 'Кто бьёт', su: 'Сила урона', fizicheskiy: 'Урон физический', elektrichestvo: 'Электрический урон', vyrubit: 'Вырубить ударом', bez_urona: 'Без урона' });
+    call(first + 2, 'strike_damage', 'вред', steps[from + 4]!.args!, { cel: 'Кого бьют', istochnik: 'Кто бьёт', su: 'Сила урона', fizicheskiy: 'Урон физический', elektrichestvo: 'Электрический урон', vyrubit: 'Вырубить ударом', bez_urona: 'Без урона' });
 
     const got = built('shoot')!;
     dump({ got: got.steps, goal: goal.steps });
@@ -682,18 +682,16 @@ describe('эффекты пресетов собираются в констру
   });
 
   it('Fabula «Атака» (атака): бросок двух полей с прибавкой, проверка против Защиты, урон по попаданию', { timeout: 90000 }, () => {
-    const [goal] = start('fabula-ultima', ['attack']);
+    const [goal] = start('fabula-ultima', ['ataka']);
     const ui = within();
     ui.click('+ кнопкой');
     ui.click('+ для каждого из списка');
     ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, 'Атака');
-    if (!ui.has('имя в формулах…') && ui.has('свойства')) ui.click('свойства');
-    ui.click('имя в формулах…');
-    ui.type(document.querySelector<HTMLElement>('.step-name input')!, 'attack');
+    if (!ui.has('Описание') && ui.has('свойства')) ui.click('свойства');
     ui.type('Описание', goal!.description!);
     if (ui.has('ещё')) ui.click('ещё');
     const param = (row: number, label: string, kind: string, key: string, from?: string) => {
-      if (row >= (built('attack')!.params ?? []).length) ui.click('+ ещё одно');
+      if (row >= (built('ataka')!.params ?? []).length) ui.click('+ ещё одно');
       ui.type(ui.cell('Название', row), label);
       ui.select(ui.cell('Вид', row), kind);
       if (from) ui.select(ui.cell('Таблица', row), from);
@@ -702,7 +700,7 @@ describe('эффекты пресетов собираются в констру
     param(2, 'Первая характеристика', 'choice', 'pervaya', 'harakteristiki');
     param(3, 'Вторая характеристика', 'choice', 'vtoraya', 'harakteristiki');
     param(4, 'Прибавка к меткости', 'number', 'точность');
-    param(5, 'Урон сверх старшей кости', 'number', 'damage');
+    param(5, 'Урон сверх старшей кости', 'number', 'uron');
 
     ui.click('+ бросок');
     const at = (n: number) => stepCard(new RegExp(`^${n} · `));
@@ -734,8 +732,8 @@ describe('эффекты пресетов собираются в констру
     within(at(4)).select('У кого', 'cel');
     within(at(4)).select('Какое поле', 'oz');
     within(at(4)).select('Как', 'subtract');
-    within(at(4)).formula('Сколько', 'max(@бросок.parts.pervaya, @бросок.parts.vtoraya) + @damage');
-    dump({ got: built('attack'), goal });
-    expect(built('attack')).toEqual(folded(goal));
+    within(at(4)).formula('Сколько', 'max(@бросок.parts.pervaya, @бросок.parts.vtoraya) + @uron');
+    dump({ got: built('ataka'), goal });
+    expect(built('ataka')).toEqual(folded(goal));
   });
 });

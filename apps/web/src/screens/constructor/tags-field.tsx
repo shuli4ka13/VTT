@@ -34,6 +34,7 @@ export function TagsField({ system, value, onChange, known = [], templates = [],
   names?: ReadonlyMap<string, string>;
 }) {
   const editSystem = useWorld(state => state.editSystem);
+  const ownSystem = useWorld(state => state.origin.mode) !== 'compendium';
   const [typing, setTyping] = useState<'own' | 'formula' | null>(null);
   const [draft, setDraft] = useState('');
   const picked = [...(value ?? [])];
@@ -99,7 +100,7 @@ export function TagsField({ system, value, onChange, known = [], templates = [],
           prompt={picked.length ? '+ ещё…' : empty}
           options={[
             ...free.flatMap(([title, list]) => list.map(([word, label]) => ({ value: word, label, group: title }))),
-            { value: OWN, label: 'новая метка…', group: 'другое' },
+            ...(ownSystem ? [{ value: OWN, label: 'новая метка…', group: 'другое' }] : []),
             ...(computed ? [{ value: COMPUTED, label: 'вычисляемая формулой…', group: 'другое' }] : []),
           ]}
           onPick={next => {

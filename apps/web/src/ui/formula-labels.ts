@@ -74,9 +74,34 @@ function segmentSaid(system: System, names: ReadonlyMap<string, string> | undefi
   return (named !== segment ? named : undefined) ?? nameLabel(segment) ?? ROLL_PATHS[segment] ?? saidIndex(system).get(segment);
 }
 
+function byAddress(system: System, segments: readonly string[]): (string | undefined)[] {
+  const out: (string | undefined)[] = [];
+  let table: NonNullable<System['tables']>[string] | undefined;
+  let stage: 'row' | 'column' = 'row';
+  for (const segment of segments) {
+    const next = system.tables?.[segment];
+    if (!table && next) { out.push(next.label || undefined); table = next; stage = next.rows?.length ? 'row' : 'column'; continue; }
+    if (!table) { out.push(undefined); continue; }
+    const row = stage === 'row' ? (table.rows ?? []).find(one => slugOfRow(one.value) === segment) : undefined;
+    if (row) { out.push(row.label || undefined); stage = 'column'; continue; }
+    const column = (table.columns ?? []).find(one => one.key === segment);
+    if (!column) { out.push(undefined); stage = 'column'; continue; }
+    out.push(column.label || undefined);
+    const linked = column.kind === 'choice' && typeof column.from === 'string' ? system.tables?.[column.from] : undefined;
+    if (linked) { table = linked; stage = 'column'; }
+  }
+  return out;
+}
+
+const slugOfRow = (value: unknown): string => String(value ?? '').replace(/[^\p{L}\p{N}_]+/gu, '_');
+
 export function pathSaid(system: System, tag: string, names?: ReadonlyMap<string, string>, strict = false): string | null {
   const segments = tag.replace(/^cell:/u, '').split('.');
-  const said = segments.map(segment => segmentSaid(system, names, segment));
+  const placed = byAddress(system, segments);
+  const said = segments.map((segment, at) => {
+    const named = names?.get(segment);
+    return (named !== segment ? named : undefined) ?? placed[at] ?? segmentSaid(system, names, segment);
+  });
   if (strict ? said.some(one => one === undefined) : said.every(one => one === undefined)) return null;
   return said.map((one, at) => one ?? segments[at]!).join(' → ');
 }

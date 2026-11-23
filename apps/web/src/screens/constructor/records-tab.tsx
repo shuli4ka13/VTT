@@ -1,14 +1,14 @@
 import { ButtonEditor } from './button-editor.tsx';
 import { useWorld, freeId } from '../../store/world.ts';
 import { ModifiersEditor } from './modifiers.tsx';
-import { newRecordKind, newBinding, newProp, GEAR_BLOCK } from './factory.ts';
+import { newRecordKind, newBinding, newProp } from './factory.ts';
 import { Columns, List, ListItem } from '../../ui/layout.tsx';
 import { useLookupPane } from './lookup-panel.tsx';
 import {
   Card, CardHead, Field, Input, Select, Button, Empty, Verdict, Chip, DangerButton, LabelInput, Fold,
 } from '../../ui/primitives.tsx';
 import type { System, SheetKind, Table } from '@vtt/schema';
-import { argsWithProps, propKeysOf, recordKinds, sheetKinds, recordsOf, DESK_ID, kindWord, blockOf, labelBlock } from '@vtt/engine';
+import { argsWithProps, propKeysOf, recordKinds, sheetKinds, recordsOf, DESK_ID, kindWord, blockOf, labelBlock, GEAR_BLOCK, GEAR_BLOCK_LABEL, blockLabel } from '@vtt/engine';
 import type { RecordKind, AnyKind } from '@vtt/engine';
 import { TableColumnCard } from './rules/tables-section.tsx';
 import { useState } from 'react';
@@ -111,7 +111,7 @@ export function RecordsTab() {
   const add = () => {
     focusNew('как зовётся тип');
     const made = newRecordKind(system);
-    editSystem(draft => { (draft.tables ??= {})[made.key] = made.value; labelBlock(draft, made.value.block!, GEAR_BLOCK); });
+    editSystem(draft => { (draft.tables ??= {})[made.key] = made.value; if (blockLabel(draft, GEAR_BLOCK) === GEAR_BLOCK) labelBlock(draft, GEAR_BLOCK, GEAR_BLOCK_LABEL); });
     pick({ activeRecordKind: made.key });
   };
 

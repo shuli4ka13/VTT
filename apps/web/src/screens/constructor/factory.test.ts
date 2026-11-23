@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { world as W } from '@vtt/schema';
-import { withColumn } from '@vtt/engine';
+import { withColumn, lintSystem } from '@vtt/engine';
 import type { LaunchKind } from '@vtt/engine';
 import { SAMPLE_SYSTEMS } from '@vtt/engine/samples';
 import { emptySystem } from '../../store/world.ts';
@@ -92,3 +92,20 @@ for (const [name, base] of BASES) {
     });
   });
 }
+
+describe('новый эффект подходит под договор метки образца', () => {
+  it('D&D «Атака»: эффект, собранный заготовками конструктора, не получает замечаний договора', () => {
+    const dnd = structuredClone(SAMPLE_SYSTEMS.find(one => one.name === 'D&D 5e')!) as System;
+    const made = newEffect(dnd, 'manual');
+    const effect = made.value;
+    const brick = (key: string) => BRICKS.find(one => one.key === key)!;
+    const taken = (): string[] => (effect.steps ?? []).map(step => step.id).filter((id): id is string => Boolean(id));
+    effect.steps = [...brick('each').make(dnd, taken(), effect, [])];
+    effect.steps.push(...brick('roll').make(dnd, taken(), effect, []));
+    effect.tags = ['ataka'];
+    dnd.effects[made.key] = effect;
+    const told = lintSystem(dnd).filter(problem => problem.where.tab === 'effects' && problem.where.effect === made.key).map(problem => problem.text);
+    expect(told.filter(text => text.startsWith('метка «Атака» требует'))).toEqual([]);
+  });
+});
+

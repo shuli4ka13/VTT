@@ -5,13 +5,14 @@ import { Chain } from './chain.tsx';
 import { EffectEditor } from './effect-editor.tsx';
 import { useWorld, emptySystem } from '../../../store/world.ts';
 import type { Effect, System, Step } from '@vtt/schema';
+import { blockLabel } from '@vtt/engine';
 import { within, stepCard, block, headOf, armOf, armWord, armLabel, addToArm, addArm, stopNote, stopStrip, isFused, pickCombo, comboOptions } from '../../../testing/cards.ts';
 import { openAll } from '../../../testing/render-open.tsx';
 
 const withCost = (): System => ({
   ...emptySystem(),
   effects: {
-    cost_action: { label: 'Стоимость: действие', group: 'Плата', activation: 'manual', params: [], steps: [] },
+    cost_action: { label: 'Стоимость: действие', group: 'plata', activation: 'manual', params: [], steps: [] },
     удар: { label: 'Удар', activation: 'manual', params: [], steps: [] },
   },
 } as unknown as System);
@@ -46,7 +47,8 @@ describe('стоимость эффекта — одним выбором', () =
     const effect = lane();
     pickCombo(screen.getByPlaceholderText('+ плата'), ':новая');
     const made = Object.entries(useWorld.getState().system.effects).find(([id]) => id.startsWith('stoimost'))!;
-    expect(made[1]).toMatchObject({ group: 'Плата' });
+    expect(made[1]).toMatchObject({ group: 'plata' });
+    expect(blockLabel(useWorld.getState().system, 'plata')).toBe('Плата');
     expect(effect.steps![0]).toMatchObject({ type: 'emit', effect: made[0] });
   });
 
@@ -229,7 +231,7 @@ describe('блок «Если»: условие строкой, руки, «Ст
   });
 
   it('слово исхода берётся из метки броска: «атака» — «попадание: / промах:»', () => {
-    const tables = { метки: { label: 'Метки', columns: [{ key: 'успех', label: 'успех' }, { key: 'провал', label: 'провал' }], rows: [{ value: 'атака', cells: { успех: 'попадание', провал: 'промах' } }] } };
+    const tables = { метки: { label: 'Метки', columns: [{ key: 'uspeh', label: 'успех' }, { key: 'proval', label: 'провал' }], rows: [{ value: 'атака', cells: { uspeh: 'попадание', proval: 'промах' } }] } };
     start([{ ...checked[0], tags: ['атака'] }, checked[1], { type: 'branch', if: { expr: 'not @hit.success' } }, { type: 'end' }], { tables });
     expect(isFused(block(0))).toBe(true);
     expect(armLabel(block(0))).toBe('промах:');

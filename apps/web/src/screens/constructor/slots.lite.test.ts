@@ -18,7 +18,7 @@ const refsOf = (systemId: string, effectId: string): string[] => {
 
 describe('итоги броска поля по правилам системы', () => {
   it('Fabula «атака»: адрес вычисленный, правила не дают успех и степени — плашек нет', () => {
-    const refs = refsOf('fabula-ultima', 'attack');
+    const refs = refsOf('fabula-ultima', 'ataka');
     expect(refs).toContain('brosok.total');
     expect(refs).not.toContain('brosok.success');
     expect(refs).not.toContain('brosok.margin');

@@ -89,25 +89,25 @@ describe('вызываемые блоки D&D собираются руками'
     const [goal] = start('dnd5e', ['attack_roll']);
     const ui = within();
     calledHead(ui, 'attack_roll', goal!);
-    param(ui, 'attack_roll', 0, 'Кто бросает', 'sheet', 'who', { role: 'actor' });
+    param(ui, 'attack_roll', 0, 'Кто бросает', 'sheet', 'kto', { role: 'actor' });
     param(ui, 'attack_roll', 1, 'Против кого', 'sheet', 'protiv', { role: 'target' });
-    param(ui, 'attack_roll', 2, 'Бонус атаки', 'number', 'bonus_2', { value: '0' });
+    param(ui, 'attack_roll', 2, 'Бонус атаки', 'number', 'bonus', { value: '0' });
     const at = (k: number) => () => stepCard(new RegExp(`^${k} · `));
     ui.click('+ бросок');
-    within(at(1)()).select('Кто бросает', '@who');
+    within(at(1)()).select('Кто бросает', '@kto');
     within(at(1)()).select('Что бросает', 'die:lead_die');
     within(at(1)()).click('+ прибавка');
-    within(at(1)()).formula('Прибавка', '@bonus_2');
+    within(at(1)()).formula('Прибавка', '@bonus');
     within(at(1)()).select('Метки', 'ataka');
     nameStep(at(1)(), 'бросок');
     ui.click('+ проверка');
     within(at(2)()).formula('Что проверяем', '@бросок');
     within(at(2)()).formula('С чем', '@protiv.ac');
-    within(at(2)()).formula('Успех, если на кости не меньше', '@who.crit_from');
+    within(at(2)()).formula('Успех, если на кости не меньше', '@kto.crit_from');
     within(at(2)()).formula('Провал, если на кости не больше', '1');
     nameStep(at(2)(), 'проверка');
     returns([
-      ['исход', 'choice', 'ishod', '=если(не @проверка.success, "promah", если(@проверка.natural >= @who.crit_from, "krit", "popadanie"))', undefined, 'attack_outcomes'],
+      ['исход', 'choice', 'ishod', '=если(не @проверка.success, "promah", если(@проверка.natural >= @kto.crit_from, "krit", "popadanie"))', undefined, 'attack_outcomes'],
       ['на костях', 'number', 'na_kostyah', 'Проверка — что выпало на костях, без прибавок'],
     ]);
     dump({ got: built('attack_roll'), goal });
@@ -118,7 +118,7 @@ describe('вызываемые блоки D&D собираются руками'
     const [goal] = start('dnd5e', ['saving_throw']);
     const ui = within();
     calledHead(ui, 'saving_throw', goal!);
-    param(ui, 'saving_throw', 0, 'Кто спасается', 'sheet', 'who', { role: 'target' });
+    param(ui, 'saving_throw', 0, 'Кто спасается', 'sheet', 'kto', { role: 'target' });
     param(ui, 'saving_throw', 1, 'Чем спасается', 'choice', 'harakteristika', { from: 'abilities' });
     param(ui, 'saving_throw', 2, 'Сложность', 'number', 'slozhnost');
     const at = (k: number) => () => stepCard(new RegExp(`^${k} · `));

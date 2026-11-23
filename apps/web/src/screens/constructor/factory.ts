@@ -1,4 +1,4 @@
-import { STEP_WORDS, COST_BLOCK, fieldsOf, rowTables, blockNames, blockLabel, stepSaid } from '@vtt/engine';
+import { STEP_WORDS, COST_BLOCK, COST_BLOCK_LABEL, GEAR_BLOCK, fieldsOf, rowTables, stepSaid } from '@vtt/engine';
 import type { LaunchKind, RecordKind } from '@vtt/engine';
 import { freeId, slugOf } from '../../store/world.ts';
 import { dice } from '../../words.ts';
@@ -8,14 +8,6 @@ import { filledStep } from './effects/call-args.ts';
 import { isThrow } from './cards-kind.ts';
 
 export interface Made<T> { key: string; value: T }
-
-export const GEAR_BLOCK = 'Снаряжение';
-
-export const costBlockKey = (system: System): string =>
-  blockNames(system).find(key => blockLabel(system, key) === COST_BLOCK) ?? slugOf(COST_BLOCK);
-
-export const gearBlockKey = (system: System): string =>
-  blockNames(system).find(key => blockLabel(system, key) === GEAR_BLOCK) ?? slugOf(GEAR_BLOCK);
 
 export const saidId = (taken: string[], word: string): { id: string; label?: string } => {
   const id = freeId(taken, word);
@@ -46,7 +38,7 @@ export const newColumn = (system: System, _block?: string): Made<Column> => {
 
 export const newRecordKind = (system: System): Made<RecordKind> => ({
   key: freeId([...Object.keys(system.tables ?? {}), ...Object.keys(system.sheets ?? {})], 'kind'),
-  value: { shape: 'book', use: 'item', label: 'Новый тип', block: gearBlockKey(system) },
+  value: { shape: 'book', use: 'item', label: 'Новый тип', block: GEAR_BLOCK },
 });
 
 export const newBinding = (): Binding => ({ effect: '' });
@@ -94,7 +86,7 @@ export const newTable = (system: System): Made<Table> => ({
 
 export const newCost = (system: System): Made<Effect> => ({
   key: freeId(Object.keys(system.effects ?? {}), 'стоимость'),
-  value: { label: `${COST_BLOCK}: новая`, group: costBlockKey(system), steps: [] },
+  value: { label: `${COST_BLOCK_LABEL}: новая`, group: COST_BLOCK, steps: [] },
 });
 
 export const costsOf = (system: System): [string, Effect][] => {
