@@ -20,11 +20,17 @@ export const diceExample = dice(1, 20);
 
 export const DICE_TEXT = /^(\d+)?\s*[dдк]\s*(\d+)$/iu;
 
-const DICE_BARE = /(\d*)[dдк](\d+)/iuy;
+const DICE_BARE = new Map<string, RegExp>();
 
-export function bareDiceAt(src: string, at: number): { end: number; count: number; sides: number } | null {
-  DICE_BARE.lastIndex = at;
-  const m = DICE_BARE.exec(src);
+const bareOf = (letters: string): RegExp => {
+  if (!DICE_BARE.has(letters)) DICE_BARE.set(letters, new RegExp(`(\\d*)[${letters}](\\d+)`, 'iuy'));
+  return DICE_BARE.get(letters)!;
+};
+
+export function bareDiceAt(src: string, at: number, letters = 'dдк'): { end: number; count: number; sides: number } | null {
+  const bare = bareOf(letters);
+  bare.lastIndex = at;
+  const m = bare.exec(src);
   if (!m) return null;
   const end = at + m[0].length;
   if (end < src.length && /[\p{L}\p{N}_.]/u.test(src[end]!)) return null;

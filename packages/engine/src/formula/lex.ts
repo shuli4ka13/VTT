@@ -24,8 +24,10 @@ const PUNCT: Record<string, TokenType> = {
 
 export const PHRASES = ['округлить вниз', 'округлить вверх', 'большее из', 'меньшее из', 'максимум костей'];
 
-function phraseAt(src: string, at: number): string | null {
-  for (const phrase of PHRASES) {
+export interface LexWords { functions: Record<string, string>; dieLetters: string }
+
+function phraseAt(src: string, at: number, phrases: readonly string[]): string | null {
+  for (const phrase of phrases) {
     if (!src.startsWith(phrase, at)) continue;
     let next = at + phrase.length;
     while (next < src.length && /\s/.test(src[next]!)) next++;
@@ -36,13 +38,15 @@ function phraseAt(src: string, at: number): string | null {
 
 const isDigit = (ch: string) => ch >= '0' && ch <= '9';
 
-const isDieLetter = (ch: string) => /[dдк]/iu.test(ch);
 
 const isNameStart = (ch: string) => /[\p{L}_]/u.test(ch);
 const isNamePart = (ch: string) => /[\p{L}\p{N}_.]/u.test(ch);
 
-export function lex(source: unknown): Token[] {
+export function lex(source: unknown, words?: LexWords): Token[] {
   const src = String(source ?? '');
+  const phrases = words ? Object.values(words.functions).filter(name => name.includes(' ')) : PHRASES;
+  const letters = words?.dieLetters ?? 'dдк';
+  const isDieLetter = (ch: string) => letters.includes(ch.toLowerCase());
   const tokens: Token[] = [];
   let i = 0;
 
@@ -63,7 +67,7 @@ export function lex(source: unknown): Token[] {
       continue;
     }
 
-    const die = isDigit(ch) || isDieLetter(ch) ? bareDiceAt(src, i) : null;
+    const die = isDigit(ch) || isDieLetter(ch) ? bareDiceAt(src, i, letters) : null;
     if (die) {
       tokens.push({ type: 'text', value: dice(die.count, die.sides), text: src.slice(i, die.end), pos: i, dice: true });
       i = die.end;
@@ -112,7 +116,7 @@ export function lex(source: unknown): Token[] {
       continue;
     }
 
-    const phrase = phraseAt(src, i);
+    const phrase = phraseAt(src, i, phrases);
     if (phrase) {
       tokens.push({ type: 'ident', value: phrase, text: phrase, pos: i });
       i += phrase.length;
