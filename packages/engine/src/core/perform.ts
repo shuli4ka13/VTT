@@ -1,6 +1,6 @@
 import { compile } from '../formula/index.ts';
 import { calc, baseOf } from '../engine/calc.ts';
-import { EngineError } from '../engine/errors.ts';
+import { EngineError, NO_SHEET } from '../engine/errors.ts';
 import { availableActions, actionOf } from '../events/actions.ts';
 import { asksOf, checkInputs, normalizeInputs } from '../model/asks.ts';
 import { findRecord, sheetKindOf, keyOf } from '../model/owned.ts';
@@ -91,7 +91,7 @@ type Handler<K extends Op['op']> = (run: Run, op: Extract<Op, { op: K }>, root: 
 
 const sheetOf = (run: Run, id: string): Sheet => {
   const sheet = run.sheet(id);
-  if (!sheet) throw new EngineError(tr`в комнате нет листа «${id}»`);
+  if (!sheet) throw new EngineError(tr`в комнате нет листа «${id}»`, NO_SHEET);
   return sheet;
 };
 
@@ -333,7 +333,7 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
     const sheets = run.state.sheets;
     if (group !== null) {
       const holder = sheets.find(entry => entry.id === group);
-      if (!holder) throw new EngineError(tr`в комнате нет листа «${group}»`);
+      if (!holder) throw new EngineError(tr`в комнате нет листа «${group}»`, NO_SHEET);
       if (group === sheetId) throw new EngineError(tr`лист не может быть группой самому себе`);
       if (isDesk(holder)) throw new EngineError(tr`стол и так общий для всех — группой его не назначают`);
       if (sheets.some(entry => entry.group === sheetId)) throw new EngineError(tr`«${sheet.name}» — группа для других листов, в группу её не поставить`);
@@ -360,7 +360,7 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
       let scores: Record<string, number> = {};
       if (line.length) {
         const unknown = line.find(id => !run.sheet(id));
-        if (unknown) throw new EngineError(tr`в комнате нет листа «${unknown}»`);
+        if (unknown) throw new EngineError(tr`в комнате нет листа «${unknown}»`, NO_SHEET);
       } else {
         const rolled = initiative(run, root, who?.length ? who : undefined);
         line = rolled.order;

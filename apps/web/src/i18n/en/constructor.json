@@ -16,7 +16,6 @@
     "behindTitle": "the table sees the previous version — press \"Publish\""
   },
   "publish": {
-    "refused": "система не готова к публикации",
     "notSaved": "not published: changes were not saved",
     "problems": "not published — errors in \"Problems\""
   },

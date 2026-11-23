@@ -15,11 +15,13 @@ import { useFormulaBar } from '../../store/formula-bar.ts';
 import { TABS } from '../../words.ts';
 import { Trans, langName, useT } from '../../i18n/author.ts';
 
+const NOT_READY = 'not-ready';
+
 export const TAB_LIST = [
-  { key: 'sheet' as const, label: TABS.sheet },
-  { key: 'dictionaries' as const, label: TABS.rules },
-  { key: 'effects' as const, label: TABS.effects },
-  { key: 'records' as const, label: TABS.records },
+  { key: 'sheet' as const, get label() { return TABS.sheet; } },
+  { key: 'dictionaries' as const, get label() { return TABS.rules; } },
+  { key: 'effects' as const, get label() { return TABS.effects; } },
+  { key: 'records' as const, get label() { return TABS.records; } },
 ];
 
 export function SystemBar() {
@@ -55,7 +57,7 @@ export function SystemBar() {
       setOrigin({ publication: 'live' });
       setNote(null);
     } catch (err) {
-      if (err instanceof ApiError && err.message.startsWith(t('publish.refused'))) {
+      if (err instanceof ApiError && err.code === NOT_READY) {
         setNote({ text: t('publish.problems'), bad: true });
         useProblemsPanel.getState().set(true);
       } else fail(err);

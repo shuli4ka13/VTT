@@ -7,6 +7,7 @@ import { world as W } from '@vtt/schema';
 import type { Compendium, Sheet, World, WorldSummary } from '@vtt/schema';
 import { CatalogService } from '../catalog/catalog.service.ts';
 import { withLibrary } from '@vtt/engine';
+import { say } from '../common/words.ts';
 
 @Injectable()
 export class WorldsService {
@@ -22,7 +23,7 @@ export class WorldsService {
     await this.catalog.playableSystem(systemId);
     await this.mergeCompendiums(systemId, compendiumIds);
     const parsedSheets = W.sheet.array().safeParse(sheets);
-    if (!parsedSheets.success) throw new BadRequestException('листы мира не проходят схему');
+    if (!parsedSheets.success) throw new BadRequestException(say`листы мира не проходят схему`);
 
     const id = this.newId();
     await this.db.insert(worlds).values({
@@ -37,12 +38,12 @@ export class WorldsService {
   async update(ownerId: string, id: string, title: string, systemId: string,
     compendiumIds: string[], sheets: Sheet[]): Promise<{ id: string }> {
     const row = (await this.db.select().from(worlds).where(eq(worlds.id, id)))[0];
-    if (!row) throw new NotFoundException(`мира «${id}» на сервере нет`);
-    if (row.ownerId !== ownerId) throw new ForbiddenException('мир принадлежит другому автору');
+    if (!row) throw new NotFoundException(say`мира «${id}» на сервере нет`);
+    if (row.ownerId !== ownerId) throw new ForbiddenException(say`мир принадлежит другому автору`);
     await this.catalog.playableSystem(systemId);
     await this.mergeCompendiums(systemId, compendiumIds);
     const parsedSheets = W.sheet.array().safeParse(sheets);
-    if (!parsedSheets.success) throw new BadRequestException('листы мира не проходят схему');
+    if (!parsedSheets.success) throw new BadRequestException(say`листы мира не проходят схему`);
     await this.db.update(worlds).set({
       title, systemId,
       compendiumIds: JSON.stringify(compendiumIds),
@@ -54,8 +55,8 @@ export class WorldsService {
 
   async remove(ownerId: string, id: string): Promise<void> {
     const row = (await this.db.select().from(worlds).where(eq(worlds.id, id)))[0];
-    if (!row) throw new NotFoundException(`мира «${id}» на сервере нет`);
-    if (row.ownerId !== ownerId) throw new ForbiddenException('мир принадлежит другому автору');
+    if (!row) throw new NotFoundException(say`мира «${id}» на сервере нет`);
+    if (row.ownerId !== ownerId) throw new ForbiddenException(say`мир принадлежит другому автору`);
     await this.db.delete(worlds).where(eq(worlds.id, id));
   }
 
@@ -69,9 +70,9 @@ export class WorldsService {
       out.push({
         id: row.id,
         title: row.title,
-        systemName: system.system.name ?? system.system.id ?? 'без имени',
+        systemName: system.system.name ?? system.system.id ?? say`без имени`,
         compendiumCount: (JSON.parse(row.compendiumIds) as string[]).length,
-        authorName: owner[0]?.name ?? 'неизвестен',
+        authorName: owner[0]?.name ?? say`неизвестен`,
         sheetCount: (JSON.parse(row.sheets) as Sheet[]).length,
         updatedAt: row.updatedAt,
         mine: row.ownerId === viewerId,
@@ -83,7 +84,7 @@ export class WorldsService {
   async get(id: string): Promise<World> {
     const rows = await this.db.select().from(worlds).where(eq(worlds.id, id));
     const row = rows[0];
-    if (!row) throw new NotFoundException(`мира «${id}» на сервере нет`);
+    if (!row) throw new NotFoundException(say`мира «${id}» на сервере нет`);
     const system = await this.catalog.playableSystem(row.systemId);
     const compendium = withLibrary(system.system, await this.mergeCompendiums(
       row.systemId, JSON.parse(row.compendiumIds) as string[]));
@@ -97,11 +98,11 @@ export class WorldsService {
     for (const id of ids) {
       const published = await this.catalog.playableCompendium(id);
       if (published.systemId !== systemId) {
-        throw new BadRequestException(`компендиум «${published.title}» относится к другой системе`);
+        throw new BadRequestException(say`компендиум «${published.title}» относится к другой системе`);
       }
       for (const record of published.compendium.records ?? []) {
         if (seen.has(record.id)) throw new BadRequestException(
-          `в выбранных компендиумах повторяется id записи «${record.id}»`);
+          say`в выбранных компендиумах повторяется id записи «${record.id}»`);
         seen.add(record.id);
         merged.records!.push(record);
       }

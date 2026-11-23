@@ -82,7 +82,7 @@ describe('шапка системы: опубликована ли послед�
   });
 
   it('отказ по линту даёт короткую запись и открывает «Проблемы»', async () => {
-    publishSystem.mockRejectedValue(new ApiError('система не готова к публикации: 6 ошибок — смотрите «Проблемы»', 400, []));
+    publishSystem.mockRejectedValue(new ApiError('система не готова к публикации: 6 ошибок — смотрите «Проблемы»', 400, [], 'not-ready'));
     bar();
     fireEvent.click(screen.getByRole('button', { name: 'Опубликовать' }));
     await waitFor(() => expect(screen.getByText('не опубликовано — ошибки в «Проблемах»')).toBeTruthy());

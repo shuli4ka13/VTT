@@ -206,7 +206,7 @@ export const serverMessage = z.discriminatedUnion('type', [
 ]);
 
 export const clientMessage = z.discriminatedUnion('type', [
-  z.object({ type: z.literal('room:join'), roomId: z.string(), token: z.string() }),
+  z.object({ type: z.literal('room:join'), roomId: z.string(), token: z.string(), lang: z.string().optional() }),
   z.object({ type: z.literal('room:act'), intent: actIntent }),
   z.object({ type: z.literal('room:turn'), intent: turnIntent }),
   z.object({ type: z.literal('room:answer'), intent: answerIntent }),

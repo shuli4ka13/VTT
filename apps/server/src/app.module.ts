@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import type { DynamicModule } from '@nestjs/common';
+import type { DynamicModule, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { DB, RAW, CLOCK, IDS, DIE } from './common/tokens.ts';
 import { openDatabase } from './db/db.ts';
@@ -12,6 +12,12 @@ import { RoomsController } from './rooms/rooms.controller.ts';
 import { TableGateway } from './gateway/table.gateway.ts';
 import { CatalogController } from './catalog/catalog.controller.ts';
 import { CatalogService } from './catalog/catalog.service.ts';
+import { inLang } from './common/words.ts';
+
+const askedLang = (req: { headers: Record<string, string | string[] | undefined> }, _res: unknown, next: () => void): void => {
+  const header = req.headers['accept-language'];
+  inLang(Array.isArray(header) ? header[0] : header, next);
+};
 
 export interface AppOptions {
   database?: Database;
@@ -21,7 +27,11 @@ export interface AppOptions {
 }
 
 @Module({})
-export class AppModule {
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(askedLang).forRoutes('*');
+  }
+
   static create(options: AppOptions = {}): DynamicModule {
     const database = options.database ?? openDatabase(process.env.VTT_DB ?? 'vtt.db');
 

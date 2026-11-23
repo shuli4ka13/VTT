@@ -9,7 +9,7 @@ import { refusalWords } from '../events/refusal.ts';
 import { propsOf, keyOf } from '../model/owned.ts';
 import { entryByKey } from '../model/item-ref.ts';
 import type { Inputs } from '../model/asks.ts';
-import { EngineError, ActRefused } from '../engine/errors.ts';
+import { EngineError, ActRefused, NO_SHEET } from '../engine/errors.ts';
 import { render, renderLines } from './render.ts';
 import { External, Pause, emptyJournal } from './external.ts';
 import { Path } from './path.ts';
@@ -118,8 +118,8 @@ export function runAct(run: Run, intent: ActIntent, root: Path, upTo?: 'cost'): 
   }
   const actor = intent.fromId;
   const actorSheet = run.sheet(actor);
-  if (!actorSheet) throw new EngineError(tr`в комнате нет листа «${actor}»`);
-  for (const id of targets) if (!run.sheet(id)) throw new EngineError(tr`в комнате нет листа «${id}»`);
+  if (!actorSheet) throw new EngineError(tr`в комнате нет листа «${actor}»`, NO_SHEET);
+  for (const id of targets) if (!run.sheet(id)) throw new EngineError(tr`в комнате нет листа «${id}»`, NO_SHEET);
   const given = intent.inputs && Object.keys(intent.inputs).length ? intent.inputs : undefined;
   const flat = given ? Object.fromEntries(Object.entries(given).filter(([, value]) => value === null || typeof value !== 'object')) as Record<string, number | string> : {};
   const inputs = Object.keys(flat).length ? flat : undefined;

@@ -10,7 +10,7 @@ export type { Limits } from '../core/limits.ts';
 export { perform } from '../core/perform.ts';
 export type { Op, Performed } from '../core/perform.ts';
 export { idleClock } from '../engine/clock.ts';
-export { EngineError } from '../engine/errors.ts';
+export { EngineError, NO_SHEET } from '../engine/errors.ts';
 export { DESK_ID, isDesk } from '../engine/owners.ts';
 export { availableActions, bindingHolds, bindingsOf } from '../events/actions.ts';
 export { ANY_ACTION, callHappening, FIELD_PREFIX, GAINED_PREFIX, happeningOf, LOST_PREFIX, MOMENT_PREFIX, PHASES, ROLLED, rolledLabel, SEEN, seenLabel } from '../events/bus.ts';

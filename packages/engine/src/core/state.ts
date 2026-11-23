@@ -1,4 +1,4 @@
-import { EngineError } from '../engine/errors.ts';
+import { EngineError, NO_SHEET } from '../engine/errors.ts';
 import type { Sheet } from '../model/types.ts';
 import type { Entry } from './log.ts';
 import { tr } from '../words/tongue.ts';
@@ -30,7 +30,7 @@ export class State {
 
   get(id: string): Sheet {
     const sheet = this.find(id);
-    if (!sheet) throw new EngineError(tr`в комнате нет листа «${id}»`);
+    if (!sheet) throw new EngineError(tr`в комнате нет листа «${id}»`, NO_SHEET);
     return sheet;
   }
 

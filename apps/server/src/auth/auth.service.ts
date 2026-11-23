@@ -4,6 +4,7 @@ import { DB, CLOCK, IDS } from '../common/tokens.ts';
 import type { Db } from '../db/db.ts';
 import { users, sessions } from '../db/schema.ts';
 import type { Session } from '@vtt/schema';
+import { say } from '../common/words.ts';
 
 @Injectable()
 export class AuthService {
@@ -23,15 +24,15 @@ export class AuthService {
   }
 
   async whoIs(token: string | undefined): Promise<{ userId: string; name: string }> {
-    if (!token) throw new UnauthorizedException('нужен токен сеанса');
+    if (!token) throw new UnauthorizedException(say`нужен токен сеанса`);
 
     const found = await this.db.select().from(sessions).where(eq(sessions.token, token));
     const session = found[0];
-    if (!session) throw new UnauthorizedException('сеанс не найден — войдите заново');
+    if (!session) throw new UnauthorizedException(say`сеанс не найден — войдите заново`);
 
     const owner = await this.db.select().from(users).where(eq(users.id, session.userId));
     const user = owner[0];
-    if (!user) throw new UnauthorizedException('владелец сеанса удалён');
+    if (!user) throw new UnauthorizedException(say`владелец сеанса удалён`);
 
     return { userId: user.id, name: user.name };
   }

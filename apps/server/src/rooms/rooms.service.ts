@@ -12,8 +12,9 @@ import type {
   RoomState, RoomSummary, RoomDelta, JournalEntry, ActIntent, TurnIntent, AnswerIntent, CancelIntent, ClockState, PendingState,
   Sheet, System, Compendium, StoredValue, LogEntry, Place, Places,
 } from '@vtt/schema';
-import { flattenSystem, perform, authorize, emptyJournal, deskOf, hasDesk, blankDesk, DESK_ID, idleClock, EngineError, askOneWords, askDeskTitle, knows, findField } from '@vtt/engine';
+import { flattenSystem, perform, authorize, emptyJournal, deskOf, hasDesk, blankDesk, DESK_ID, idleClock, EngineError, askOneWords, askDeskTitle, knows, findField, NO_SHEET, mainLang, inSystemTongue, inTongue } from '@vtt/engine';
 import type { Op, Performed, Want, Journal, Question } from '@vtt/engine';
+import { say, sayIn, langNow } from '../common/words.ts';
 
 export type Role = 'gm' | 'player';
 
@@ -35,8 +36,6 @@ type Started = Omit<PendingRecord, 'id' | 'question'>;
 type RoomRow = { id: string; system: string; compendium: string };
 
 const targetsOf = (intent: ActIntent): string[] => [...new Set(intent.toIds)];
-
-const missing = (message: string): boolean => /^в комнате нет листа/.test(message);
 
 @Injectable()
 export class RoomsService {
@@ -113,7 +112,7 @@ export class RoomsService {
     for (const sheet of withDesk) await this.db.insert(roomSheets).values({ roomId: id, sheetId: sheet.id, data: JSON.stringify(sheet) });
     await this.db.insert(members).values({ roomId: id, userId, role: 'gm', sheetId: null });
     const [me] = await this.db.select().from(users).where(eq(users.id, userId));
-    return { id, title, worldId, memberCount: 1, createdAt, gmName: me?.name ?? 'неизвестен', gm: true };
+    return { id, title, worldId, memberCount: 1, createdAt, gmName: me?.name ?? say`неизвестен`, gm: true };
   }
 
   join(userId: string, roomId: string): Promise<void> {
@@ -129,21 +128,21 @@ export class RoomsService {
     const people: { userId: string; name: string; role: Role; sheetId: string | null; editsItems?: boolean }[] = [];
     for (const m of this.store.members(roomId)) {
       const found = await this.db.select().from(users).where(eq(users.id, m.userId));
-      people.push({ userId: m.userId, name: found[0]?.name ?? 'неизвестен', role: m.role, sheetId: m.sheetId, ...(m.editsItems ? { editsItems: true } : {}) });
+      people.push({ userId: m.userId, name: found[0]?.name ?? say`неизвестен`, role: m.role, sheetId: m.sheetId, ...(m.editsItems ? { editsItems: true } : {}) });
     }
     const pending = this.store.pending<PendingRecord>(roomId);
     const sheets = this.store.sheets(roomId);
     return {
       id: room.id, title: room.title, ...this.worldOf(room), sheets, members: people,
       log: this.store.log(roomId), clock: this.store.clock(roomId) ?? idleClock(), places: this.store.places(roomId),
-      pending: pending ? this.pendingView(pending, sheets) : null,
+      pending: pending ? this.pendingView(pending, sheets, this.worldOf(room).system) : null,
     };
   }
 
   async journal(userId: string, roomId: string): Promise<JournalEntry[]> {
     this.requireRoom(roomId);
     const me = this.store.members(roomId).find(member => member.userId === userId);
-    if (!me) throw new ForbiddenException('журнал стола видят его участники');
+    if (!me) throw new ForbiddenException(say`журнал стола видят его участники`);
     const rows = await this.db.select().from(roomJournal).where(eq(roomJournal.roomId, roomId)).orderBy(asc(roomJournal.seq));
     const sight = this.sight(roomId, userId);
     const { gm } = sight;
@@ -229,12 +228,12 @@ export class RoomsService {
     return this.inTurn(intent.roomId, () => {
       const room = this.requireRoom(intent.roomId);
       const record = this.store.pending<PendingRecord>(intent.roomId);
-      if (!record || record.id !== intent.pendingId) throw new BadRequestException('стол никого не ждёт — этот вопрос уже закрыт');
+      if (!record || record.id !== intent.pendingId) throw new BadRequestException(say`стол никого не ждёт — этот вопрос уже закрыт`);
       this.allow(room, userId, { kind: 'answer', sheetId: record.question.sheetId });
       const offered = new Set(record.question.offers.map(o => o.id));
       const stray = intent.chosen.find(id => !offered.has(id));
-      if (stray) throw new BadRequestException(`реакция «${stray}» сейчас не предлагается; можно: ${[...offered].join(', ') || '(ничего)'}`);
-      if (record.question.one && intent.chosen.length !== 1) throw new BadRequestException(`${askOneWords()}: ${record.question.offers.map(o => o.label).join(' / ')}`);
+      if (stray) throw new BadRequestException(say`реакция «${stray}» сейчас не предлагается; можно: ${[...offered].join(', ') || say`(ничего)`}`);
+      if (record.question.one && intent.chosen.length !== 1) throw new BadRequestException(`${inTongue(langNow(), askOneWords)}: ${record.question.offers.map(o => o.label).join(' / ')}`);
       const { question, id: _id, ...rest } = record;
       const journal: Journal = { ...record.journal, answers: { ...record.journal.answers, [question.key]: intent.chosen } };
       return this.play(room, { ...rest, journal }, userId, 'answer', intent, true);
@@ -246,9 +245,10 @@ export class RoomsService {
       const room = this.requireRoom(intent.roomId);
       this.allow(room, userId, { kind: 'cancel' });
       const record = this.store.pending<PendingRecord>(intent.roomId);
-      if (!record || record.id !== intent.pendingId) throw new BadRequestException('стол никого не ждёт — этот вопрос уже закрыт');
+      if (!record || record.id !== intent.pendingId) throw new BadRequestException(say`стол никого не ждёт — этот вопрос уже закрыт`);
       const sheets = this.changed(this.store.sheets(intent.roomId), record.snapshot);
-      const log = this.lines(['Ведущий отменил действие: всё вернулось как было до него'], false);
+      const told = sayIn(mainLang(this.worldOf(room).system));
+      const log = this.lines([told`Ведущий отменил действие: всё вернулось как было до него`], false);
       const delta: RoomDelta = { roomId: intent.roomId, sheets, log, clock: record.clock, pending: null };
       this.store.commit({ roomId: intent.roomId, sheets, clock: record.clock, pending: null, log: this.rows(log), journal: this.journalRow(userId, 'cancel', intent, [], delta) });
       this.emit(delta);
@@ -259,7 +259,7 @@ export class RoomsService {
   claimSheet(userId: string, roomId: string, sheetId: string | null): Promise<RoomDelta> {
     return this.inTurn(roomId, () => {
       const room = this.requireRoom(roomId);
-      if (sheetId && !this.store.sheets(roomId).some(sheet => sheet.id === sheetId)) throw new NotFoundException(`в комнате нет листа «${sheetId}»`);
+      if (sheetId && !this.store.sheets(roomId).some(sheet => sheet.id === sheetId)) throw new NotFoundException(say`в комнате нет листа «${sheetId}»`);
       this.allow(room, userId, { kind: 'claim', sheetId }, true);
       const delta: RoomDelta = { roomId, sheets: [], log: [] };
       this.store.commit({ roomId, member: { userId, sheetId }, journal: this.journalRow(userId, 'claim', { sheetId }, [], delta) });
@@ -284,7 +284,7 @@ export class RoomsService {
       const places = { ...this.store.places(roomId) };
       if (at) {
         const taken = Object.entries(places).find(([id, one]) => id !== sheetId && one.x === at.x && one.y === at.y);
-        if (taken) throw new BadRequestException('клетка занята');
+        if (taken) throw new BadRequestException(say`клетка занята`);
         places[sheetId] = { x: at.x, y: at.y };
       } else delete places[sheetId];
       this.store.savePlaces(roomId, places);
@@ -307,7 +307,7 @@ export class RoomsService {
         const gm = at.find(m => m.role === 'gm');
         return {
           id: room.id, title: room.title, worldId: room.worldId, memberCount: at.length, createdAt: room.createdAt,
-          gmName: gm ? names.get(gm.userId) ?? 'неизвестен' : '—', gm: openTable() ? mine.has(room.id) : gm?.userId === userId,
+          gmName: gm ? names.get(gm.userId) ?? say`неизвестен` : '—', gm: openTable() ? mine.has(room.id) : gm?.userId === userId,
         };
       })
       .sort((a, b) => Number(mine.has(b.id)) - Number(mine.has(a.id)));
@@ -321,7 +321,7 @@ export class RoomsService {
       const waiting = this.store.pending<PendingRecord>(roomId);
       if (waiting) {
         const who = snapshot.find(s => s.id === waiting.question.sheetId)?.name ?? waiting.question.sheetId;
-        throw new BadRequestException(`стол ждёт ответа: ${who} решает, применить ли реакцию`);
+        throw new BadRequestException(say`стол ждёт ответа: ${who} решает, применить ли реакцию`);
       }
       const started: Started = {
         roomId, op, userId, hidden, clock: this.store.clock(roomId) ?? idleClock(), snapshot, journal: emptyJournal(), logged: 0,
@@ -331,11 +331,11 @@ export class RoomsService {
   }
 
   private allow(room: RoomRow, userId: string, want: Want, refusalIsBad = false): void {
-    const why = authorize({
+    const why = inTongue(langNow(), () => authorize({
       system: this.worldOf(room).system, sheets: this.store.sheets(room.id), members: this.store.members(room.id), clock: this.store.clock(room.id),
-    }, userId, want);
+    }, userId, want));
     if (!why) return;
-    if (refusalIsBad && why !== 'вы не в этой комнате') throw new BadRequestException(why);
+    if (refusalIsBad && this.store.members(room.id).some(member => member.userId === userId)) throw new BadRequestException(why);
     throw new ForbiddenException(why);
   }
 
@@ -351,7 +351,7 @@ export class RoomsService {
     } catch (err) {
       if (err instanceof HttpException) throw err;
       const message = (err as Error).message;
-      if (err instanceof EngineError && missing(message)) throw new NotFoundException(message);
+      if (err instanceof EngineError && err.code === NO_SHEET) throw new NotFoundException(message);
       throw new BadRequestException(message);
     }
     const was = this.store.sheets(room.id);
@@ -375,11 +375,12 @@ export class RoomsService {
     }
     const id = this.newId();
     const pending: PendingRecord = { ...record, id, journal: out.journal as Journal, question: out.question, logged: out.log.length };
-    const view = this.pendingView(pending, out.sheets);
+    const view = this.pendingView(pending, out.sheets, system);
+    const told = sayIn(mainLang(system));
     const asked = out.sheets.find(s => s.id === out.question.sheetId);
     const waiting = this.lines([view.one
       ? `${view.question} — ${view.options.map(o => o.label).join(' / ')}`
-      : `${asked?.name ?? out.question.sheetId}: стол ждёт решения — ${view.options.map(o => o.label).join(', ')}`], record.hidden);
+      : told`${asked?.name ?? out.question.sheetId}: стол ждёт решения — ${view.options.map(o => o.label).join(', ')}`], record.hidden);
     const delta: RoomDelta = { roomId: room.id, sheets, log: [...log, ...waiting], clock: record.clock, pending: view };
     this.store.commit({
       roomId: room.id, sheets, pending: { id, data: JSON.stringify(pending) }, log: this.rows([...log, ...waiting]),
@@ -412,23 +413,24 @@ export class RoomsService {
     for (const listener of this.listeners) listener(delta);
   }
 
-  private pendingView(record: PendingRecord, sheets: readonly Sheet[]): PendingState {
+  private pendingView(record: PendingRecord, sheets: readonly Sheet[], system: System): PendingState {
     const { question } = record;
+    const told = sayIn(mainLang(system));
     const name = sheets.find(s => s.id === question.sheetId)?.name ?? question.sheetId;
-    const by = question.label ? ` ответкой «${question.label}»` : '';
+    const by = question.label ? told` ответкой «${question.label}»` : '';
     return {
       id: String(record.id),
       sheetId: question.sheetId,
       stage: question.window,
       question: question.window === 'step'
-        ? `${question.sheetId === DESK_ID ? askDeskTitle() : name}: ${question.label}`
+        ? `${question.sheetId === DESK_ID ? inSystemTongue(system, askDeskTitle) : name}: ${question.label}`
         : question.window === 'moment'
-        ? `${name}: ${question.label} — воспользоваться?`
+        ? told`${name}: ${question.label} — воспользоваться?`
         : question.window === 'seen'
-        ? `${name}: кости выпали — воспользоваться?`
+        ? told`${name}: кости выпали — воспользоваться?`
         : question.window === 'after'
-          ? `${name}: на вас подействовали${by} — ответить реакцией?`
-          : `${name}: на вас действуют${by} — ответить реакцией?`,
+          ? told`${name}: на вас подействовали${by} — ответить реакцией?`
+          : told`${name}: на вас действуют${by} — ответить реакцией?`,
       options: question.offers.map(o => ({ id: o.id, label: o.label })),
       preview: question.preview,
       ...(question.one ? { one: true } : {}),
@@ -438,7 +440,7 @@ export class RoomsService {
 
   private requireRoom(roomId: string) {
     const room = this.store.room(roomId);
-    if (!room) throw new NotFoundException(`комнаты «${roomId}» нет`);
+    if (!room) throw new NotFoundException(say`комнаты «${roomId}» нет`);
     return room;
   }
 

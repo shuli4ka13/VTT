@@ -81,3 +81,38 @@ describe('переводы подписей доходят до игрока', (
     expect(localized(room.system, 'ru')).toBe(room.system);
   });
 });
+
+describe('ответы сервера — на языке запроса', () => {
+  const SPOKEN = /[Ѐ-ӿ]/u;
+
+  it('отказ без языка — по-русски, с «Accept-Language: en» — по-английски', async () => {
+    const author = await login('Автор отказа');
+    const plain = await as(author)(http().get('/systems/nope')).expect(404);
+    expect(plain.body.message).toBe('системы «nope» нет');
+    const english = await as(author)(http().get('/systems/nope')).set('Accept-Language', 'en-US,en;q=0.9').expect(404);
+    expect(english.body.message).toBe('there is no system “nope”');
+  });
+
+  it('проверка входа тоже говорит на языке запроса', async () => {
+    const english = await http().post('/systems').set('Accept-Language', 'en').send({ title: 'x', system: dnd }).expect(401);
+    expect(english.body.message).toBe('a session token is required');
+    const plain = await http().post('/systems').send({ title: 'x', system: dnd }).expect(401);
+    expect(SPOKEN.test(plain.body.message)).toBe(true);
+  });
+
+  it('отказ публикации несёт код и «Проблемы» на языке запроса', async () => {
+    const author = await login('Автор с ошибкой');
+    const system = structuredClone(dnd);
+    const [effectId] = Object.keys(system.effects);
+    system.effects[effectId].steps = [{ type: 'apply', target: { expr: '@nobody.nothing' }, value: { expr: '1' } }];
+    const systemId = (await as(author)(http().post('/systems')).send({ title: 'С ошибкой', system }).expect(201)).body.id;
+    const plain = await as(author)(http().post(`/systems/${systemId}/publish`)).send({}).expect(400);
+    expect(plain.body.code).toBe('not-ready');
+    expect(plain.body.message).toMatch(/^система не готова к публикации: /);
+    expect(plain.body.issues.length).toBeGreaterThan(0);
+    const english = await as(author)(http().post(`/systems/${systemId}/publish`)).set('Accept-Language', 'en').send({}).expect(400);
+    expect(english.body.code).toBe('not-ready');
+    expect(english.body.message).toMatch(/^the system is not ready to publish: \d+ errors? — see “Problems”$/);
+    expect(english.body.issues.length).toBe(plain.body.issues.length);
+  });
+});

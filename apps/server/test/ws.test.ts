@@ -134,6 +134,30 @@ describe('канал стола', () => {
     socket.close();
   });
 
+  it('канал отвечает на языке, названном при входе в комнату', async () => {
+    const gm = await post('/auth/login', { name: 'Ведущий языка' });
+    const published = await publish('Мир языка', gm.token, sheets.filter((s: { systemId: string }) => s.systemId === dnd.id));
+    const room = await post('/rooms', { worldId: published.id, title: 'Стол' }, gm.token);
+
+    const english = await open();
+    const entered = waitFor(english, 'room:state');
+    say(english, 'room:join', { roomId: room.id, token: gm.token, lang: 'en' });
+    await entered;
+    const refused = waitFor(english, 'error');
+    say(english, 'room:act', { intent: { nonsense: true } });
+    expect((await refused).message).toBe('the intent does not pass the schema');
+    english.close();
+
+    const russian = await open();
+    const joined = waitFor(russian, 'room:state');
+    say(russian, 'room:join', { roomId: room.id, token: gm.token });
+    await joined;
+    const failure = waitFor(russian, 'error');
+    say(russian, 'room:act', { intent: { nonsense: true } });
+    expect((await failure).message).toBe('намерение не проходит схему');
+    russian.close();
+  });
+
   it('ход без входа в комнату отклоняется', async () => {
     const socket = await open();
     const failure = waitFor(socket, 'error');

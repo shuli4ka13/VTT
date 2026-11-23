@@ -1,5 +1,6 @@
 import { api } from '@vtt/schema';
 import type { ServerMessage, ActIntent, TurnIntent, AnswerIntent, CancelIntent, StoredValue } from '@vtt/schema';
+import { useLocale } from '../store/locale.ts';
 
 type Listener = (message: ServerMessage) => void;
 
@@ -7,7 +8,7 @@ export class TableSocket {
   private socket: WebSocket | null = null;
   private readonly listeners = new Set<Listener>();
   private queue: string[] = [];
-  private joined: { roomId: string; token: string } | null = null;
+  private joined: { roomId: string; token: string; lang: string } | null = null;
 
   connect(): void {
     if (this.socket && this.socket.readyState <= WebSocket.OPEN) return;
@@ -41,7 +42,7 @@ export class TableSocket {
   }
 
   join(roomId: string, token: string): void {
-    this.joined = { roomId, token };
+    this.joined = { roomId, token, lang: useLocale.getState().lang };
     if (this.socket?.readyState === WebSocket.OPEN) this.socket.send(JSON.stringify({ event: 'room:join', data: this.joined }));
     else this.connect();
   }

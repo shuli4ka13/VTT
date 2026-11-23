@@ -3,6 +3,7 @@ import type { Session, SystemSummary, PublishedSystem, CompendiumSummary, Publis
 import { z } from 'zod';
 import type { ZodType } from 'zod';
 import { t } from '../i18n/index.ts';
+import { useLocale } from '../store/locale.ts';
 
 const BASE = '/api';
 
@@ -30,7 +31,7 @@ export function setToken(next: string | null): void {
 }
 
 export class ApiError extends Error {
-  constructor(message: string, readonly status: number, readonly issues: string[] = []) {
+  constructor(message: string, readonly status: number, readonly issues: string[] = [], readonly code: string | null = null) {
     super(message);
     this.name = 'ApiError';
   }
@@ -41,6 +42,7 @@ async function call<S extends ZodType>(path: string, schema: S, init?: RequestIn
     ...init,
     headers: {
       'content-type': 'application/json',
+      'accept-language': useLocale.getState().lang,
       ...(token ? { authorization: `Bearer ${token}` } : {}),
       ...init?.headers,
     },
@@ -52,7 +54,7 @@ async function call<S extends ZodType>(path: string, schema: S, init?: RequestIn
 
     if (response.status === 401) { setToken(null); lost?.(); }
     const message = typeof body?.message === 'string' ? body.message : t('app:net.failed', { status: response.status });
-    throw new ApiError(message, response.status, body?.issues ?? []);
+    throw new ApiError(message, response.status, body?.issues ?? [], typeof body?.code === 'string' ? body.code : null);
   }
 
   const parsed = schema.safeParse(body);

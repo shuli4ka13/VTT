@@ -1,6 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import type { PipeTransform } from '@nestjs/common';
 import type { ZodType } from 'zod';
+import { say } from './words.ts';
 
 export class ZodValidationPipe<T> implements PipeTransform<unknown, T> {
   constructor(private readonly schema: ZodType<T>) {}
@@ -11,7 +12,7 @@ export class ZodValidationPipe<T> implements PipeTransform<unknown, T> {
 
     const issues = result.error.issues
       .slice(0, 5)
-      .map(i => `${i.path.join('.') || '(корень)'}: ${i.message}`);
-    throw new BadRequestException({ message: 'запрос не проходит схему', issues });
+      .map(i => `${i.path.join('.') || say`(корень)`}: ${i.message}`);
+    throw new BadRequestException({ message: say`запрос не проходит схему`, issues });
   }
 }

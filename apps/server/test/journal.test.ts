@@ -10,6 +10,7 @@ import { RoomsService } from '../src/rooms/rooms.service.ts';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { sliceWorld } from './slice.ts';
+import { inLang } from '../src/common/words.ts';
 
 const fabula = () => JSON.parse(readFileSync(fileURLToPath(new URL('../../../samples/fabula.lite.world.json', import.meta.url)), 'utf8'));
 
@@ -107,6 +108,41 @@ describe('журнал стола: намерение + кости = тот же
     expect(norm(b.clock)).toBe(norm(a.clock));
     expect(b.log.map((line: { text: string }) => line.text)).toEqual(a.log.map((line: { text: string }) => line.text));
 
+    await first.close();
+    await second.close();
+  });
+
+  it('язык журнала идёт от системы: запись и повтор при разных языках запроса совпадают до байта', async () => {
+    const english = (): ReturnType<typeof sliceWorld> => { const world = sliceWorld(); world.system.langs = ['en']; return world; };
+    const first = await stand(lcg(20261124), english());
+    const [arven, mirra] = first.sheets;
+    const me = first.userId;
+    const script = [
+      { op: 'act', userId: me, input: { roomId: first.roomId, actionId: 'longsword-item:0', fromId: arven.id, toIds: [mirra.id] } },
+      { op: 'turn', userId: me, input: { roomId: first.roomId, op: 'start', who: [arven.id, mirra.id] } },
+      { op: 'turn', userId: me, input: { roomId: first.roomId, op: 'next' } },
+      { op: 'turn', userId: me, input: { roomId: first.roomId, op: 'stop' } },
+    ];
+    await inLang('ru', async () => {
+      for (const step of script) {
+        let delta = await play(first.rooms, first.roomId, step);
+        while (delta.pending) delta = await first.rooms.answer(me, { roomId: first.roomId, pendingId: delta.pending.id, chosen: [] });
+      }
+    });
+    const written = await first.journal();
+    const tape = written.flatMap(entry => entry.dice);
+    let at = 0;
+    const second = await stand(() => tape[at++]!, english());
+    await inLang('en', async () => {
+      for (const entry of written) await play(second.rooms, second.roomId, { ...entry, input: JSON.parse(JSON.stringify(entry.input).split(first.roomId).join(second.roomId)) });
+    });
+    const norm = (value: unknown) => JSON.stringify(value).split(second.roomId).join(first.roomId);
+    expect(norm(await second.journal())).toBe(norm(written));
+    const [a, b] = [await first.state(), await second.state()];
+    const lines = a.log.map((line: { text: string }) => line.text);
+    expect(b.log.map((line: { text: string }) => line.text)).toEqual(lines);
+    expect(lines.some((text: string) => /Round \d+\. Turn: /.test(text)), lines.join(' | ')).toBe(true);
+    expect(lines.some((text: string) => /Раунд \d+/.test(text))).toBe(false);
     await first.close();
     await second.close();
   });

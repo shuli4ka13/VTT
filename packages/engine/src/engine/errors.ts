@@ -1,10 +1,15 @@
 import { FormulaError } from '../formula/errors.ts';
 import { tr } from '../words/tongue.ts';
 
+export const NO_SHEET = 'no-sheet';
+
 export class EngineError extends Error {
-  constructor(message: string) {
+  readonly code?: string;
+
+  constructor(message: string, code?: string) {
     super(message);
     this.name = new.target.name;
+    if (code) this.code = code;
   }
 }
 
