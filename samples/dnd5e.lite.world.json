@@ -272,6 +272,7 @@
           {
             "key": "hit_die",
             "label": "Кость хитов",
+            "kind": "dice",
             "expr": {
               "expr": "@class_name.hit_die or @race.size.hit_die or \"1d8\""
             }
