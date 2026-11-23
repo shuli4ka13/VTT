@@ -9,6 +9,8 @@ import { SEEN_LABEL, ROLLED, ROLLED_LABEL, ANY_ACTION, PHASES } from '../events/
 import { HEARD_WORDS } from '../events/lifecycle.ts';
 import type { System, Compendium, Effect, Step, Stage, Guard, Param, Table, Modifier, Sheet } from './types.ts';
 import { registry, loopsAt, splitsTargets } from '../engine/steps/index.ts';
+import { stepSaid } from './names-at.ts';
+import { tagSaid } from '../engine/roll-tags.ts';
 import { numbersOf, kindOfRule, placesOf, fitsPlace, fitKinds, countUnread, rollsCounting, placesMatching, wordFits, hasRollFilter } from './die-kinds.ts';
 import { ROLL_KIND_WORDS, NUMBER_MISFIT, EDIT_MISFIT, EDIT_SIDES_MISFIT, COUNT_UNREAD, rollNumberWord, WORD_MISFITS_ROLLS, WORD_OUTSIDE_ROLLS, TWO_RULES, TAG_UNREACHED } from '../words/dice-kinds.ts';
 import { rollTagReach, unreachedTags } from './roll-reach.ts';
@@ -99,6 +101,33 @@ function chainsOf(id: string, effect: Effect): Chain[] {
   return out;
 }
 
+function saidIn(system: System | undefined, effectId: string | undefined, key: string): string {
+  const effect = effectId ? system?.effects?.[effectId] : undefined;
+  if (!effect || !effectId) return key;
+  const param = (effect.params ?? []).find(one => one.key === key);
+  if (param) return param.label || key;
+  for (const chain of chainsOf(effectId, effect)) {
+    for (const step of chain.steps as (Step & { as?: unknown; asLabel?: unknown })[]) {
+      if (step.id === key) return stepSaid(step);
+      if (step.as === key) return typeof step.asLabel === 'string' && step.asLabel ? step.asLabel : key;
+    }
+  }
+  const column = (effect.returns ?? []).find(one => one.key === key);
+  return column?.label || key;
+}
+
+interface Namer { (key: string, effectId?: string): string; effect?: (id: string) => string; address?: (key: string) => string }
+
+function addressSaid(system: System | undefined, key: string): string {
+  const parts = key.split('.');
+  const table = system?.tables?.[parts[0]!];
+  if (!table || parts.length < 2) return key;
+  const row = (table.rows ?? []).find(one => rowKeyOf(one) === parts[1]);
+  const column = (name: string): string => (table.columns ?? []).find(one => one.key === name)?.label || name;
+  const second = row ? row.label || String(row.value) : parts.length === 2 ? column(parts[1]!) : parts[1]!;
+  return [table.label || parts[0]!, second, ...parts.slice(2).map((part, index) => (index === 0 ? column(part) : part))].join(' → ');
+}
+
 const stepsAt = (system: System, where: Where): Step[] | undefined => {
   if (where.tab !== 'effects' || !where.effect) return undefined;
   const effect = system.effects[where.effect];
@@ -125,7 +154,7 @@ const HOLDER_ONLY = `«${NAME_LABELS.holder}» есть только у того
 
 const said = (formula: string): string => translateFormula(formula, NEUTRAL_WORDS, RU_WORDS);
 
-function danglingText(ref: Reference, declared: Declared): string | null {
+function danglingText(ref: Reference, declared: Declared, name: Namer = key => key): string | null {
   if (ref.scope === LISTEN) return null;
   if (ref.key === HOLDER && (ref.kind === 'step' || (ref.kind === 'field' && ref.scope === 'bare'))) return HOLDER_ONLY;
   if (ref.kind === 'syntax' && ref.path === 'roll') return DICE_ANYWHERE;
@@ -140,11 +169,12 @@ function danglingText(ref: Reference, declared: Declared): string | null {
   }
   if (ref.kind === 'step') {
     if (ref.scope?.startsWith('listened:')) {
-      return `в эффекте «${ref.scope.slice('listened:'.length)}» нет ${STEP.gen} «${ref.key}» — условию срабатывания не на что смотреть`;
+      const heard = ref.scope.slice('listened:'.length);
+      return `в эффекте «${name.effect?.(heard) ?? heard}» нет ${STEP.gen} «${name(ref.key, heard)}» — условию срабатывания не на что смотреть`;
     }
-    if (ref.scope === 'result') return `у ${STEP.gen} «${ref.key}» нет итога «${ref.path}» — после «${ref.key}» выберите итог из списка`;
+    if (ref.scope === 'result') return `у ${STEP.gen} «${name(ref.key)}» нет итога «${ref.path}» — после «${name(ref.key)}» выберите итог из списка`;
     if (ref.scope === 'dotted' && (declared.field.has(ref.key) || declared.prop.has(ref.key))) return null;
-    return `${STEP.gen} «${ref.key}» выше по цепочке нет — на его результат не сослаться`;
+    return `${STEP.gen} «${name(ref.key)}» выше по цепочке нет — на его результат не сослаться`;
   }
   if (ref.kind === 'prop' && ref.scope === 'item') {
     return declared.prop.has(ref.key) ? null : `у вещей нет свойства «${ref.key}» — прочитать его неоткуда`;
@@ -169,7 +199,7 @@ function danglingText(ref: Reference, declared: Declared): string | null {
     return !declared.table.has(ref.key) || declared.column.has(`${ref.key}.${ref.path}`) ? null
       : `в таблице «${declared.tableLabel.get(ref.key) ?? ref.key}» нет колонки «${ref.path}» — «из таблицы» вернёт пусто`;
   }
-  return declared[ref.kind].has(ref.key) ? null : NAMES[ref.kind](ref.key);
+  return declared[ref.kind].has(ref.key) ? null : NAMES[ref.kind](ref.kind === 'field' ? name.address?.(ref.key) ?? ref.key : ref.key);
 }
 
 const isExpr = (value: unknown): boolean =>
@@ -270,17 +300,21 @@ function pathText(ref: Reference, declared: Declared, system: System): string | 
   return walked && !walked.ok ? walked.text : null;
 }
 
-function rowsText(ref: Reference, declared: Declared): string | null {
+function rowsText(ref: Reference, declared: Declared, name: Namer = key => key): string | null {
   if (ref.kind !== 'field' || !ref.near?.length || declared.field.has(ref.key) || declared.table.has(ref.key) || declared.effect.has(ref.key)) return null;
-  return `у листа нет поля «${ref.key}»; здесь есть ${ref.near.map(name => `«${name}»`).join(', ')} — строка таблицы, её колонки пишутся через точку`;
+  return `у листа нет поля «${name.address?.(ref.key) ?? ref.key}»; здесь есть ${ref.near.map(one => `«${name(one)}»`).join(', ')} — строка таблицы, её колонки пишутся через точку`;
 }
 
 function refProblems(refs: Reference[], declared: Declared, earlierByWhere: (ref: Reference) => boolean, system?: System): Problem[] {
   const out: Problem[] = [];
   for (const ref of refs) {
     if (ref.kind === 'step' && ref.scope !== 'result' && earlierByWhere(ref)) continue;
-    const walked = rowsText(ref, declared) ?? (system ? pathText(ref, declared, system) : null);
-    const text = walked ?? danglingText(ref, declared) ?? (system ? ownerText(ref, system) : null);
+    const name: Namer = Object.assign(
+      (key: string, effectId?: string) => saidIn(system, effectId ?? (ref.from.tab === 'effects' ? ref.from.effect : undefined), key),
+      { effect: (id: string) => system?.effects?.[id]?.label ?? id, address: (key: string) => addressSaid(system, key) },
+    );
+    const walked = rowsText(ref, declared, name) ?? (system ? pathText(ref, declared, system) : null);
+    const text = walked ?? danglingText(ref, declared, name) ?? (system ? ownerText(ref, system) : null);
     if (!text) continue;
     if (out.some(p => sameWhere(p.where, ref.from) && p.text === text)) continue;
     out.push({
@@ -941,13 +975,13 @@ function rollTotalProblems(system: System, told: ReadonlySet<string>): Problem[]
       .filter(step => typeof step.id === 'string' && registry.get(step.type)?.dice?.(step as never))
       .map(step => step.id as string));
     if (!thrown.size) continue;
-    const unpicked = (name: string): string => `у броска «${name}» не выбран итог — берётся «сколько вышло всего»; выберите итог после точки`;
+    const unpicked = (name: string): string => `у броска «${saidIn(system, id, name)}» не выбран итог — берётся «сколько вышло всего»; выберите итог после точки`;
     for (const chain of chains) {
       (chain.steps as (Step & Record<string, unknown>)[]).forEach((step, at) => {
         const sides = registry.get(step.type)?.compares?.(step as never);
         for (const ref of sides ? [sides.value, sides.versus] : []) {
           const name = wholeTotal(ref);
-          if (name && thrown.has(name) && !(chain === chains[0] && told.has(`${id}:${at}:${name}`))) out.push({ where: chain.where(at), level: 'warn', text: `«${name}» сравнивается одним итогом — кости и правки порога так не видны; поставьте бросок целиком, без итога после точки` });
+          if (name && thrown.has(name) && !(chain === chains[0] && told.has(`${id}:${at}:${name}`))) out.push({ where: chain.where(at), level: 'warn', text: `«${saidIn(system, id, name)}» сравнивается одним итогом — кости и правки порога так не видны; поставьте бросок целиком, без итога после точки` });
         }
         const callee = typeof step.effect === 'string' ? system.effects?.[step.effect] : undefined;
         const whole = new Set((callee?.params ?? []).filter(param => param.kind === 'roll').map(param => param.key));
@@ -1003,7 +1037,7 @@ function sharedRollProblems(system: System, told: Set<string> = new Set()): Prob
           out.push({
             where: { tab: 'effects', effect: id, step: split + 1 + at },
             level: 'warn',
-            text: `«${roll}» сравнивается внутри формулы — правки цели (преимущество против неё и подобные) так не учтутся; поставьте имя «${roll}» одним на сторону сравнения, прибавку — в сам бросок`,
+            text: `«${saidIn(system, id, roll)}» сравнивается внутри формулы — правки цели (преимущество против неё и подобные) так не учтутся; поставьте имя «${saidIn(system, id, roll)}» одним на сторону сравнения, прибавку — в сам бросок`,
           });
         }
       }
@@ -1089,19 +1123,19 @@ function tagReachProblems(system: System, compendium?: Compendium): Problem[] {
     for (const mod of modifiers) {
       if (mod.kind !== 'edit' || mod.call !== ROLL_CALL) continue;
       const missing = unreachedTags(reach, { tags: mod.tags, anyTags: mod.anyTags });
-      if (missing.length) out.push({ where: { ...where, part: 'modifiers' }, level: 'warn', text: TAG_UNREACHED(missing, 'правка', book) });
+      if (missing.length) out.push({ where: { ...where, part: 'modifiers' }, level: 'warn', text: TAG_UNREACHED(missing.map(tag => tagSaid(system, tag)), 'правка', book) });
     }
   }
   for (const [id, effect] of Object.entries(system.effects ?? {})) {
     (effect.on ?? []).forEach((handler, index) => {
       if (handler.on !== 'seen' && handler.on !== ROLLED) return;
       const missing = unreachedTags(reach, { tags: handler.tags, anyTags: handler.anyTags });
-      if (missing.length) out.push({ where: { tab: 'effects', effect: id, part: 'on', handler: index }, level: 'warn', text: TAG_UNREACHED(missing, 'подписка', book) });
+      if (missing.length) out.push({ where: { tab: 'effects', effect: id, part: 'on', handler: index }, level: 'warn', text: TAG_UNREACHED(missing.map(tag => tagSaid(system, tag)), 'подписка', book) });
     });
   }
   for (const [key, word] of Object.entries(system.roll_edits ?? {})) {
     const missing = unreachedTags(reach, { tags: word.tags, anyTags: word.anyTags });
-    if (missing.length) out.push({ where: { tab: 'rules', section: 'roll_edits', key }, level: 'warn', text: TAG_UNREACHED(missing, 'слово', book) });
+    if (missing.length) out.push({ where: { tab: 'rules', section: 'roll_edits', key }, level: 'warn', text: TAG_UNREACHED(missing.map(tag => tagSaid(system, tag)), 'слово', book) });
   }
   return out;
 }
@@ -1680,7 +1714,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
         if (step.id && declared.field.has(String(step.id))) {
           out.push({
             where: chain.where(index), level: 'warn',
-            text: `${STEP.one} «${step.id}» назван как поле листа — в формулах «${step.id}» прочтёт поле, а не результат ${STEP.gen}`,
+            text: `${STEP.one} «${stepSaid(step)}» назван как поле листа — в формулах «${stepSaid(step)}» прочтёт поле, а не результат ${STEP.gen}`,
           });
         }
         const input = step.id ? (effect.params ?? []).find(param => param.key === step.id) : undefined;
@@ -1688,8 +1722,8 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
           out.push({
             where: chain.where(index), level: 'warn',
             text: input.kind === 'sheet'
-              ? `${STEP.one} «${step.id}» назван как вход «${input.label || input.key}» — «${step.id}» всегда читает ${SHEET.one}, результат ${STEP.gen} так не прочесть; лучше переименовать ${STEP.one}`
-              : `${STEP.one} «${step.id}» назван как вход «${input.label || input.key}» — до ${STEP.gen} «${step.id}» читает вход, после — результат ${STEP.gen}; лучше переименовать ${STEP.one}`,
+              ? `${STEP.one} «${stepSaid(step)}» назван как вход «${input.label || input.key}» — «${stepSaid(step)}» всегда читает ${SHEET.one}, результат ${STEP.gen} так не прочесть; лучше переименовать ${STEP.one}`
+              : `${STEP.one} «${stepSaid(step)}» назван как вход «${input.label || input.key}» — до ${STEP.gen} «${stepSaid(step)}» читает вход, после — результат ${STEP.gen}; лучше переименовать ${STEP.one}`,
           });
         }
         const graded = chain.steps.some(other => other.type === 'check' && Array.isArray((other as { degrees?: unknown }).degrees));
@@ -1917,7 +1951,7 @@ function shapeProblems(system: System, compendium?: Compendium): Problem[] {
       for (const column of effect.returns ?? []) {
         const expr = String((column.expr as { expr?: unknown } | undefined)?.expr ?? '');
         const seen = inside.find(one => new RegExp(`[@#]${one.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}\\p{N}_])`, 'u').test(expr));
-        if (seen) out.push({ where: { ...where, part: 'returns', key: column.key }, level: 'error', text: `итог «${column.label ?? column.key}» смотрит на ${STEP.one} «${seen}» внутри цикла — после цикла его нет` });
+        if (seen) out.push({ where: { ...where, part: 'returns', key: column.key }, level: 'error', text: `итог «${column.label ?? column.key}» смотрит на ${STEP.one} «${saidIn(system, id, seen)}» внутри цикла — после цикла его нет` });
       }
     }
     if (effect.bond) {
@@ -1969,17 +2003,17 @@ function shapeProblems(system: System, compendium?: Compendium): Problem[] {
         for (const input of contract.inputs ?? []) {
           const param = (effect.params ?? []).find(p => p.key === input.key);
           if (!param || param.kind !== input.kind || Boolean(param.many) !== Boolean(input.many)) {
-            out.push({ where, level: 'error', text: `метка «${tag}» требует вход «${input.key}» (${input.kind}${input.many ? ', список' : ''}) — у эффекта его нет или он другого вида` });
+            out.push({ where, level: 'error', text: `метка «${tagSaid(system, tag)}» требует вход «${contract.said?.[input.key] ?? input.key}» (${input.kind}${input.many ? ', список' : ''}) — у эффекта его нет или он другого вида` });
           }
         }
         const steps = effect.steps ?? [];
         const split = steps.findIndex(step => splitsTargets(step));
         if (contract.each && (split < 0 || loopOf(effect.params, steps[split] as { of?: unknown })?.key !== contract.each)) {
-          out.push({ where, level: 'error', text: `метка «${tag}» требует «для каждого» с именем «${contract.each}»` });
+          out.push({ where, level: 'error', text: `метка «${tagSaid(system, tag)}» требует «для каждого» с именем «${contract.said?.[contract.each] ?? contract.each}»` });
         }
         for (const output of contract.outputs ?? []) {
           const at = steps.findIndex(step => step.id === output);
-          if (at < 0 || (contract.each && at < split)) out.push({ where, level: 'error', text: `метка «${tag}» требует шаг «${output}» внутри «для каждого»` });
+          if (at < 0 || (contract.each && at < split)) out.push({ where, level: 'error', text: `метка «${tagSaid(system, tag)}» требует шаг «${contract.said?.[output] ?? output}» внутри «для каждого»` });
         }
       }
     }

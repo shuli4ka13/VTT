@@ -104,7 +104,7 @@ function token(system: System, table: Table, row: TableRow, name: string): strin
   const link = linkOf(column);
   const other = link ? system.tables?.[link] : undefined;
   const target = rowByKey(other, cell);
-  if (!target || !other) throw new EngineError(`таблица «${table.label ?? ''}»: «{${name}}» — «${String(cell)}» нет в таблице «${column.from}»`);
+  if (!target || !other) throw new EngineError(`таблица «${table.label ?? ''}»: «{${name}}» — «${String(cell)}» нет в таблице «${other?.label || column.from}»`);
   return token(system, other, target, tail);
 }
 
@@ -186,7 +186,7 @@ function rowPath(system: System, tableId: string, row: TableRow, path: string[])
   if (column.many && rest.length) throw new EngineError(`${where}: ${manyText(system, column, rest[0]!)}`);
   if (link && rest.length) {
     const target = rowByKey(system.tables?.[link], cell);
-    if (!target) throw new EngineError(`${where}: «${String(cell)}» нет в таблице «${link}»`);
+    if (!target) throw new EngineError(`${where}: «${String(cell)}» нет в таблице «${system.tables?.[link]?.label || link}»`);
     return rowPath(system, link, target, rest);
   }
   if (column.kind === 'field') return `@${String(cell)}${rest.length ? `.${rest.join('.')}` : ''}`;

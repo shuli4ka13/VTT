@@ -193,7 +193,7 @@ export function rowUsers(system: System, table: string, key: unknown, compendium
         if (holds((row.cells ?? {})[column.key], key)) {
           out.push({
             where: { tab: 'rules', section: 'tables', key: id },
-            text: `таблица «${other.label || id}», строка «${String(row.value ?? `${row.from}–${row.to}`)}»`,
+            text: `таблица «${other.label || id}», строка «${String(row.label ?? row.value ?? `${row.from}–${row.to}`)}»`,
           });
         }
       }

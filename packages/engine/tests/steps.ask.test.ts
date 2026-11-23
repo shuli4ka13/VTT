@@ -8,7 +8,7 @@ import type { System, Sheet, Compendium } from '../src/model/types.ts';
 const ACTOR = { key: 'действующий', label: 'Кто действует', kind: 'sheet' };
 const TARGETS = { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель' } };
 const EACH = { type: 'each', of: 'цели' };
-const ASK = { id: 'решение', type: 'ask', label: 'Кто победил?', yes: 'Бьющий', no: 'Защитник' };
+const ASK = { id: 'решение', type: 'ask', question: 'Кто победил?', yes: 'Бьющий', no: 'Защитник' };
 const hit = (amount: number) => ({ type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: String(amount) } });
 const byAnswer = [{ type: 'branch', if: { expr: '@решение' } }, hit(5), { type: 'orElse' }, hit(1), { type: 'end' }];
 
@@ -96,7 +96,7 @@ group('шаг «Спросить»', () => {
 
   test('в плате: «нет» — действие не состоялось', () => {
     const system = world({
-      cost: [{ ...ASK, label: 'Разрешить?', yes: 'да', no: 'нет' }, { type: 'branch', if: { expr: 'not(@решение)' } }, { type: 'stop' }, { type: 'end' }],
+      cost: [{ ...ASK, question: 'Разрешить?', yes: 'да', no: 'нет' }, { type: 'branch', if: { expr: 'not(@решение)' } }, { type: 'stop' }, { type: 'end' }],
       steps: [EACH, hit(5)],
     });
     eq(play(system).kind, 'paused');
@@ -145,7 +145,7 @@ group('шаг «Спросить»', () => {
   test('«Проблемы»: вопрос из пробелов, шаг в плате подписки и в подписке «бросок окончен» — ошибки; в плате кнопки — чисто', () => {
     const errors = (system: System) => lintSystem(system).filter(one => one.level === 'error').map(one => one.text);
     const warns = (system: System) => lintSystem(system).filter(one => one.level === 'warn').map(one => one.text);
-    ok(errors(world({ steps: [EACH, { ...ASK, label: '  ' }, ...byAnswer] })).some(text => text.includes('не вписан вопрос')));
+    ok(errors(world({ steps: [EACH, { ...ASK, question: '  ' }, ...byAnswer] })).some(text => text.includes('не вписан вопрос')));
     const paid = world({ cost: [ASK, { type: 'branch', if: { expr: 'not(@решение)' } }, { type: 'stop' }, { type: 'end' }], steps: [EACH, hit(5)] });
     eq(errors(paid).length, 0);
     ok(!warns(paid).some(text => text.includes('не плата')));
@@ -158,6 +158,6 @@ group('шаг «Спросить»', () => {
     const errors = (steps: unknown[]) => lintSystem(world({ steps })).filter(one => one.level === 'error').map(one => one.text);
     ok(errors([EACH, { ...ASK, options: ['а', 'б'] }, ...byAnswer]).some(text => text.includes('нет поля «options»')));
     ok(errors([EACH, { ...ASK, to: 'цель' }, ...byAnswer]).some(text => text.includes('не того вида')));
-    ok(errors([EACH, { ...ASK, label: 5 }, ...byAnswer]).some(text => text.includes('не того вида')));
+    ok(errors([EACH, { ...ASK, question: 5 }, ...byAnswer]).some(text => text.includes('не того вида')));
   });
 });

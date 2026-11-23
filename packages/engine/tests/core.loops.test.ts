@@ -220,7 +220,7 @@ describe('«Для каждой строки таблицы»', () => {
         steps: [{ type: 'each', rows: 'запасы', as: 'запас' }, { id: 'шаг_в_цикле', type: 'roll', fixed: { expr: '1' } }],
       },
     }, []);
-    expect(errorsOf(lintSystem(system, book)).map(p => p.text).join('\n')).toMatch(/смотрит на шаг «шаг_в_цикле» внутри цикла/);
+    expect(errorsOf(lintSystem(system, book)).map(p => p.text).join('\n')).toMatch(/смотрит на шаг «шаг в цикле» внутри цикла/);
   });
 
   it('«Стоп» в проходе обрывает только его, слова уходят в журнал', () => {

@@ -2416,38 +2416,6 @@
           }
         ]
       }
-    },
-    "tags": {
-      "ataka": {
-        "label": "атака"
-      },
-      "geroy": {
-        "label": "герой"
-      },
-      "deystvie": {
-        "label": "действие"
-      },
-      "znanie": {
-        "label": "знание"
-      },
-      "iskusnost": {
-        "label": "искусность"
-      },
-      "prisutstvie": {
-        "label": "присутствие"
-      },
-      "provorstvo": {
-        "label": "проворство"
-      },
-      "protivnik": {
-        "label": "противник"
-      },
-      "sila": {
-        "label": "сила"
-      },
-      "chute": {
-        "label": "чутьё"
-      }
     }
   },
   "compendium": {

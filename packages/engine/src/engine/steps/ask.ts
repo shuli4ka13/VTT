@@ -20,11 +20,11 @@ export function traceLine(t: any, h: any) {
   return `${who} — «${t.question}»: ${t.answer ?? '…'}`;
 }
 
-export const problems = (step: { label?: unknown }): string | null => (text(step.label, '') ? null : `шагу «${words.label}» не вписан вопрос`);
+export const problems = (step: { question?: unknown }): string | null => (text(step.question, '') ? null : `шагу «${words.label}» не вписан вопрос`);
 
 const runner: Pick<StepModule, 'finish'> = {
   finish(step, ctx) {
-    const question = text(step.label, '');
+    const question = text(step.question, '');
     if (!question) throw new EngineError(`${ctx.owner || 'правило'}: шагу «${words.label}» не вписан вопрос`);
     const to = isBlank(step.to) ? null : ctx.sheet(step.to, 'кого спросить');
     const yes = text(step.yes, ASK_YES);

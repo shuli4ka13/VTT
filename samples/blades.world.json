@@ -808,17 +808,6 @@
           }
         ]
       }
-    },
-    "tags": {
-      "deystvie": {
-        "label": "действие"
-      },
-      "nulevoy": {
-        "label": "нулевой"
-      },
-      "soprotivlenie": {
-        "label": "сопротивление"
-      }
     }
   },
   "compendium": {

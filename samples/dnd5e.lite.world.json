@@ -4370,36 +4370,6 @@
           "aim": "цель",
           "brosok": "бросок"
         }
-      },
-      "blizhniy": {
-        "label": "ближний"
-      },
-      "zaklinanie": {
-        "label": "заклинание"
-      },
-      "iniciativa": {
-        "label": "инициатива"
-      },
-      "healing": {
-        "label": "лечение"
-      },
-      "dexterity": {
-        "label": "ловкость"
-      },
-      "oruzhie": {
-        "label": "оружие"
-      },
-      "proverka": {
-        "label": "проверка"
-      },
-      "skrytnost": {
-        "label": "скрытность"
-      },
-      "spasbrosok": {
-        "label": "спасбросок"
-      },
-      "uron": {
-        "label": "урон"
       }
     },
     "blocks": [

@@ -1,4 +1,4 @@
-import { NAMES } from '../words/names.ts';
+import { NAMES, nameLabel } from '../words/names.ts';
 import { armsOf, sees } from './flow.ts';
 import { loopOf, loopParam } from '../engine/steps/each.ts';
 import { loopsAt, splitsTargets } from '../engine/steps/index.ts';
@@ -105,7 +105,7 @@ const returnsOf = (system: System | undefined, step: Step): NameChild[] => {
 };
 
 export const stepSaid = (step: { id?: unknown; label?: unknown }): string =>
-  (typeof step.label === 'string' && step.label ? step.label : String(step.id ?? '').replace(/_/g, ' '));
+  (typeof step.label === 'string' && step.label ? step.label : nameLabel(String(step.id ?? '')) ?? String(step.id ?? '').replace(/_/g, ' '));
 
 function contractSaid(system: System | undefined, name: string): string {
   for (const contract of Object.values(system?.tags ?? {}) as { said?: Record<string, string> }[]) {

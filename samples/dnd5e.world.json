@@ -9309,48 +9309,6 @@
           "aim": "цель",
           "brosok": "бросок"
         }
-      },
-      "blizhniy": {
-        "label": "ближний"
-      },
-      "dvuruchnoe": {
-        "label": "двуручное"
-      },
-      "zaklinanie": {
-        "label": "заклинание"
-      },
-      "iniciativa": {
-        "label": "инициатива"
-      },
-      "healing": {
-        "label": "лечение"
-      },
-      "dexterity": {
-        "label": "ловкость"
-      },
-      "magicheskiy": {
-        "label": "магический"
-      },
-      "fire": {
-        "label": "огонь"
-      },
-      "oruzhie": {
-        "label": "оружие"
-      },
-      "proverka": {
-        "label": "проверка"
-      },
-      "strength": {
-        "label": "сила"
-      },
-      "skrytnost": {
-        "label": "скрытность"
-      },
-      "spasbrosok": {
-        "label": "спасбросок"
-      },
-      "uron": {
-        "label": "урон"
       }
     },
     "blocks": [

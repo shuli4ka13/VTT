@@ -57,7 +57,7 @@ group('проверка ловит опечатки в путях', () => {
 
   test('опечатка в имени строки цикла называет настоящее имя', () => {
     const found = fresh(s => { (s.effects.resources_rest!.on![0]!.steps![1] as { if: unknown }).if = { expr: '@holder.ресурсы.short' }; });
-    ok(found.some(text => text.startsWith('у листа нет поля «ресурсы»; здесь есть «resurs»')), found.join('\n'));
+    ok(found.some(text => text.startsWith('у листа нет поля «ресурсы»; здесь есть «ресурс»')), found.join('\n'));
   });
 });
 

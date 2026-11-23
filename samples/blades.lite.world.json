@@ -641,14 +641,6 @@
           }
         ]
       }
-    },
-    "tags": {
-      "deystvie": {
-        "label": "действие"
-      },
-      "nulevoy": {
-        "label": "нулевой"
-      }
     }
   },
   "compendium": {

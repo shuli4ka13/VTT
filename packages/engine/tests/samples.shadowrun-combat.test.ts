@@ -257,7 +257,7 @@ group('Shadowrun 6: чувство заявляют и к броскам дей�
 
   test('«зрение» не трогает сопротивления: у мага колдовство −3, истощение прежнее; у цели защита −3, сопротивление урону прежнее', () => {
     const pool = (out: ReturnType<typeof exchange>, part: string) =>
-      ([...out.log.join(' · ').matchAll(/Бросок \(([^)]*)\): \[([^\]]*)\]/g)].find(m => m[1]!.includes(part))?.[2] ?? '').split(',').filter(Boolean).length;
+      ([...out.log.join(' · ').matchAll(/Бросок \(([^)]*)\): \[([^\]]*)\]/g)].find(m => m[1]!.toLowerCase().includes(part))?.[2] ?? '').split(',').filter(Boolean).length;
     const mage = { ...fighter('маг', { magic: 5, willpower: 4, logic: 4, 'skills.koldovstvo.rank': 4 }, [{ of: 'spell_mana_bolt' }]), effects: [{ effectId: 'blinded' }] } as Sheet;
     const victim = fighter('цель', { body: 4, willpower: 3 });
     const cast = (claims?: { source: string[] }) => exchange({ system, compendium, die: tape(), sheets: [mage, victim], actionId: 'spell_mana_bolt:0', fromId: mage.id, toIds: [victim.id], ...(claims ? { claims } : {}) });
@@ -274,7 +274,7 @@ group('Shadowrun 6: чувство заявляют и к броскам дей�
 
   test('«Дикий кубик», заявленный к действию, — к одной проверке: у цели на защиту, не на сопротивление урону; у мага на колдовство, не на истощение', () => {
     const wild = (out: ReturnType<typeof exchange>, part: string) =>
-      [...out.log.join(' · ').matchAll(/Бросок \(([^)]*)\)[^·|]*/g)].find(m => m[1]!.includes(part))?.[0].includes('Дикий кубик');
+      [...out.log.join(' · ').matchAll(/Бросок \(([^)]*)\)[^·|]*/g)].find(m => m[1]!.toLowerCase().includes(part))?.[0].includes('Дикий кубик');
     const shooter = fighter('стрелок', { agility: 5, 'skills.strelba.rank': 4 }, [{ of: 'predator_vi' }]);
     const target = fighter('цель', { body: 4, reaction: 3, intuition: 3 });
     const shot = exchange({ system, compendium, die: tape(), sheets: [shooter, target], actionId: 'predator_vi:0', fromId: shooter.id, toIds: [target.id], inputs: { distanciya_2: 'blizkaya' }, claims: { target: ['wild_die'] } });

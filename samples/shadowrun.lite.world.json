@@ -13154,42 +13154,6 @@
           "cel": "цель"
         }
       },
-      "astral": {
-        "label": "астрал"
-      },
-      "atletika": {
-        "label": "атлетика"
-      },
-      "bez_Preimuschestva": {
-        "label": "без Преимущества"
-      },
-      "voploschenie": {
-        "label": "воплощение"
-      },
-      "zacharovanie": {
-        "label": "зачарование"
-      },
-      "zaschita": {
-        "label": "защита"
-      },
-      "iniciativa": {
-        "label": "инициатива"
-      },
-      "koldovstvo": {
-        "label": "колдовство"
-      },
-      "magiya": {
-        "label": "магия"
-      },
-      "pryzhok": {
-        "label": "прыжок"
-      },
-      "soprotivlenie": {
-        "label": "сопротивление"
-      },
-      "soprotivlenie_istoscheniyu": {
-        "label": "сопротивление истощению"
-      },
       "gasit_gorenie": {
         "label": "гасит горение"
       },

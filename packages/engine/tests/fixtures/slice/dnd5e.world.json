@@ -2763,18 +2763,6 @@
           "aims": "цели",
           "aim": "цель"
         }
-      },
-      "magicheskiy": {
-        "label": "магический"
-      },
-      "fire": {
-        "label": "огонь"
-      },
-      "proverka": {
-        "label": "проверка"
-      },
-      "spasbrosok": {
-        "label": "спасбросок"
       }
     },
     "blocks": [
