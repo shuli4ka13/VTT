@@ -1,3 +1,4 @@
+import { NAMES } from '../words/names.ts';
 import { isFormulaCell, itemExpr } from '../model/sheet-columns.ts';
 import { ITEM_NAME, asItem } from '../model/item-ref.ts';
 import type { ItemRef } from '../model/item-ref.ts';
@@ -75,7 +76,7 @@ export function sheetHead(name: string, sheets: Sheets | undefined): { head: str
   return hasOwn(sheets.bound, head) ? { head, rest: dot > 0 ? name.slice(dot + 1) : null } : null;
 }
 
-const DESK_NAME = 'стол';
+const DESK_NAME = NAMES.desk;
 
 const FORMS = ['expr'];
 

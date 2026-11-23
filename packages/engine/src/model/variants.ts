@@ -1,3 +1,4 @@
+import { NAMES } from '../words/names.ts';
 import { compile } from '../formula/index.ts';
 import type { Node } from '../formula/index.ts';
 import { namesAt } from './names-at.ts';
@@ -34,7 +35,7 @@ export function variantsOfRef(system: System, effectId: string, steps: readonly 
   const tail = rest.join('.');
   const name = names.find(one => one.name === head);
   if (!tail) return name?.kind === 'choice' && !name.many ? tableVariants(system, name.from) : null;
-  if (head === 'вещь') return tableVariants(system, itemColumn(system, effectId, tail));
+  if (head === NAMES.item) return tableVariants(system, itemColumn(system, effectId, tail));
   if (!name) return null;
   if (name.kind === 'sheet' && !name.many) return tableVariants(system, choiceTableOf(fieldOf(system, tail)));
   const child = name.children?.find(one => one.path === `.${tail}`);
@@ -151,7 +152,7 @@ function refsOf(node: Node, out: string[] = []): string[] {
 
 const onSheet = (system: System, name: string): boolean => {
   const head = name.split('.')[0]!;
-  return head === 'строка' || hasField(system, name) || hasField(system, head) || Boolean(system.tables?.[head]) || Boolean(system.constants?.[head]);
+  return head === NAMES.row || hasField(system, name) || hasField(system, head) || Boolean(system.tables?.[head]) || Boolean(system.constants?.[head]);
 };
 
 function tableOfRef(names: readonly NameAt[], tag: string): { table: string; column: string } | null {

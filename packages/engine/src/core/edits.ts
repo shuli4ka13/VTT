@@ -1,3 +1,4 @@
+import { NAMES } from '../words/names.ts';
 import { EngineError, isRuleError } from '../engine/errors.ts';
 import { resolveRef, toolsOf } from '../engine/refs.ts';
 import { compile } from '../formula/index.ts';
@@ -75,10 +76,10 @@ function holds(mod: EditMod, ref: RefContext): boolean {
   return value;
 }
 
-const AGAINST_NAME = /@против(?![\p{L}\p{N}_])/u;
+const AGAINST_NAME = new RegExp(`@${NAMES.against}(?![\\p{L}\\p{N}_])`, 'u');
 
 const unbound = (mod: SourcedModifier, spec: Gather): boolean =>
-  Object.hasOwn(spec.names, 'против') && spec.names.против === null
+  Object.hasOwn(spec.names, NAMES.against) && spec.names[NAMES.against] === null
   && AGAINST_NAME.test(JSON.stringify([(mod as { value?: unknown }).value, (mod as { die?: unknown }).die, (mod as { count?: unknown }).count]));
 
 export function gather(holders: readonly Holder[], spec: Gather): Held[] {

@@ -1,3 +1,4 @@
+import { NAMES } from '../words/names.ts';
 import { actionOf } from '../events/actions.ts';
 import { listOf } from './lists.ts';
 import { compile } from '../formula/index.ts';
@@ -67,7 +68,7 @@ export const ASKABLE = ['number', 'choice', 'text', 'boolean'] as const;
 export const askKindOf = (param: Param): 'number' | 'choice' | 'text' | 'boolean' =>
   (param.kind === 'choice' || param.kind === 'text' || param.kind === 'boolean' ? param.kind : 'number');
 
-export const YES_NO = ['да', 'нет'] as const;
+export const YES_NO = [NAMES.yes, NAMES.no] as const;
 
 export function choicesOf(system: System, param: Param): string[] {
   return (listOf(system, param.from) ?? []).map(option => String(option.value));

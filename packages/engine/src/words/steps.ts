@@ -1,3 +1,4 @@
+import { NAMES } from '../words/names.ts';
 import { diceExample } from './glossary.ts';
 
 export interface StepWords {
@@ -286,8 +287,8 @@ export type StepType = keyof typeof STEP_WORDS;
 
 export const ASK_ONE_WORDS = 'на вопрос нужен один ответ';
 export const ASK_ROLLED = 'выпало';
-export const ASK_YES = 'да';
-export const ASK_NO = 'нет';
+export const ASK_YES = NAMES.yes;
+export const ASK_NO = NAMES.no;
 export const ASK_DESK = 'ведущий';
 export const ASK_DESK_TITLE = 'Ведущий';
 export const ASK_WHOM = 'ведущего';

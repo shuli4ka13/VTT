@@ -1,3 +1,4 @@
+import { NAMES } from '../words/names.ts';
 import { endOf, isFlow } from './flow.ts';
 import { ROLL_CALL } from '../words/calls.ts';
 import { holderConditionOf } from './references.ts';
@@ -36,7 +37,7 @@ export const ARMOR_OPTIONS: ToggleOption<ArmorChoice>[] = [
 
 export const CRIT_EDIT = 'crit_explode';
 export const CRIT_RULE = 'crit_explode_rule';
-export const ARMOR_STEP = 'сквозь_броню';
+export const ARMOR_STEP = NAMES.throughArmor;
 
 const owned = (step: Step): boolean => {
   const { by, field } = step as { by?: unknown; field?: unknown };

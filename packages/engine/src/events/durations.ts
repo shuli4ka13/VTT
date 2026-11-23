@@ -1,10 +1,11 @@
+import { NAMES } from '../words/names.ts';
 import { durationOf, findEffect } from '../engine/effects.ts';
 import type { Clock } from '../engine/clock.ts';
 import type { Effect, Sheet, System, WornEffect } from '../model/types.ts';
 
 export type TurnEdge = 'turn-end' | 'turn-start';
 
-export const LEFT_NAME = 'осталось';
+export const LEFT_NAME = NAMES.left;
 
 export const leftOf = (entry: WornEffect, clock: Pick<Clock, 'round'> | null | undefined): number | null =>
   typeof entry.turnsLeft === 'number' ? entry.turnsLeft

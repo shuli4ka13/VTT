@@ -1,3 +1,4 @@
+import { NAMES } from '../words/names.ts';
 import { loopOf } from '../engine/steps/each.ts';
 import { splitsTargets } from '../engine/steps/index.ts';
 import { rolesOf } from './buttons.ts';
@@ -18,7 +19,7 @@ export function loopItemOf(caller: Pick<Effect, 'params' | 'steps'>): string | n
   return split ? loopOf(caller.params, split)?.key ?? null : null;
 }
 
-export const HOLDER = 'носитель';
+export const HOLDER = NAMES.holder;
 
 export function actorOf(caller: Pick<Effect, 'params' | 'activation'>): string | null {
   const declared = (caller.params ?? []).find(p => p.kind === 'sheet' && !p.many && p.role === 'actor');

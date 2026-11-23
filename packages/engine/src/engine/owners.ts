@@ -1,6 +1,7 @@
-export const DESK_ID = 'стол';
+import { NAMES } from '../words/names.ts';
+export const DESK_ID = NAMES.desk;
 
-export const COMBAT_NAME = 'бой';
+export const COMBAT_NAME = NAMES.combat;
 
 export const isDesk = (sheet: { id: string }): boolean => sheet.id === DESK_ID;
 

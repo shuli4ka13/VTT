@@ -1,3 +1,4 @@
+import { NAMES } from '../words/names.ts';
 import type { System, Compendium, CompendiumRecord, Param, TableColumn } from './types.ts';
 import { compile } from '../formula/index.ts';
 import type { Node } from '../formula/index.ts';
@@ -105,7 +106,7 @@ export function rollTagReach(system: System, compendium?: Compendium): TagReach 
   const refValues = (tag: string, scope: Scope): Values => {
     const [head, ...rest] = tag.split('.');
     if (!head || rest.length > 1) return null;
-    if (head === 'строка') return scope.record && rest.length === 1 ? choiceOnly(scope.record.table ?? '', rest[0]!) : null;
+    if (head === NAMES.row) return scope.record && rest.length === 1 ? choiceOnly(scope.record.table ?? '', rest[0]!) : null;
     const own = scope.params.filter(param => param.key === head);
     const candidates = own.length ? own : allParams.filter(param => param.key === head);
     if (!candidates.length) return null;

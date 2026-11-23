@@ -1,3 +1,4 @@
+import { NAMES as SERVICE } from '../words/names.ts';
 import { hasDegrees } from '../engine/check.ts';
 import { translateFormula, NEUTRAL_WORDS, RU_WORDS } from '../formula/words.ts';
 import { paramStages, targetStages } from '../engine/stages.ts';
@@ -302,7 +303,7 @@ export function lintStep(step: Step, system: System, effect: Effect, earlier: Ea
   const all = paramsOf(system, effect);
   const rows = earlier.filter(e => loopsAt(e) && e.table).map(e => e.id);
   const params = new Set([...all.filter(p => p.kind !== 'sheet').map(p => p.key), ...rows, ...visible.filter(one => one.kind !== 'sheet').map(one => one.name)]);
-  const sheets = [...all.filter(p => p.kind === 'sheet').map(p => p.key), 'носитель', ...earlier.filter(e => loopsAt(e) && !e.table).map(e => e.id), ...visible.filter(one => one.kind === 'sheet').map(one => one.name)];
+  const sheets = [...all.filter(p => p.kind === 'sheet').map(p => p.key), SERVICE.holder, ...earlier.filter(e => loopsAt(e) && !e.table).map(e => e.id), ...visible.filter(one => one.kind === 'sheet').map(one => one.name)];
   const known = new Set([...earlier.map(e => e.id), ...visible.filter(one => one.kind !== 'sheet').map(one => one.name)]);
   const refs = withAddresses(system, chainRefs([step], () => where, params, sheets, [], [], system))
     .filter(ref => !(ref.kind === 'step' && known.has(ref.key)))
@@ -1368,7 +1369,7 @@ function orphanProblems(system: System, compendium?: Compendium): Problem[] {
   return out;
 }
 
-const ENGINE_WORDS = new Map([
+const ENGINE_WORDS = new Map<string, string>([
   [ROW, 'так зовётся своя строка записи'],
   [HOLDER, 'так зовётся лист, на котором висит эффект'],
   [DESK_NAME, 'так зовётся стол'],

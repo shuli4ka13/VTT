@@ -1,3 +1,4 @@
+import { NAMES } from '../words/names.ts';
 import { flattenSystem } from './inherit.ts';
 import { armsOf, sees } from './flow.ts';
 import { paymentsOf } from './payments.ts';
@@ -19,16 +20,16 @@ import { MOMENT_PREFIX, FIELD_PREFIX, GAINED_PREFIX, LOST_PREFIX, ANY_ACTION, ca
 import type { Phase } from '../events/bus.ts';
 import { fieldsOf, fieldLinkOf } from './sheet-columns.ts';
 
-export const CALL_TAGS = 'метки';
+export const CALL_TAGS = NAMES.tags;
 
 const TURN_MOMENTS = new Set(['turn-start', 'turn-end']);
 
-export const HOLDER = 'носитель';
+export const HOLDER = NAMES.holder;
 
 export { ITEM_NAME } from './item-ref.ts';
 import { ITEM_NAME } from './item-ref.ts';
 
-export const DESK_NAME = 'стол';
+export const DESK_NAME = NAMES.desk;
 
 import { LEFT_NAME } from '../events/durations.ts';
 
@@ -409,12 +410,12 @@ function rowFree(text: string, from: Where, own: Set<string> | undefined, out: R
 export interface CallNames { sheets: string[]; values: string[] }
 
 export function callNamesOf(system: System, key: string): CallNames {
-  if (key === ROLL_CALL) return { sheets: ['бросающий', 'против'], values: ['метки', 'число'] };
+  if (key === ROLL_CALL) return { sheets: [NAMES.roller, NAMES.against], values: [NAMES.tags, NAMES.number] };
   const effect = system.effects?.[key];
   const params = effect?.params ?? [];
   return {
     sheets: params.filter(p => p.kind === 'sheet').map(p => p.key),
-    values: [...params.filter(p => p.kind !== 'sheet').map(p => p.key), 'метки'],
+    values: [...params.filter(p => p.kind !== 'sheet').map(p => p.key), NAMES.tags],
   };
 }
 
@@ -487,7 +488,7 @@ function modifierRefs(system: System, list: Modifier[] | undefined, from: Where,
   }
 }
 
-export const TARGETS_SEED = 'итоги';
+export const TARGETS_SEED = NAMES.results;
 
 export type Listener =
   | { kind: 'call'; phase: Phase; key: string }
@@ -515,10 +516,10 @@ export function sourcesOf(system: System, key: string): Effect[] {
 }
 
 export function heardNames(system: System, listener: Listener): HeardNames {
-  if (listener.kind === 'seen' || listener.kind === 'rolled') return { sheets: ['бросающий', 'против'], seeds: ['roll'], listened: null };
-  if (listener.kind === 'moment') return { sheets: TURN_MOMENTS.has(listener.key) ? ['ходит'] : listener.key === 'combat-leave' ? ['лист'] : [], seeds: ['moment'], listened: null };
-  if (listener.kind === 'gained' || listener.kind === 'lost') return { sheets: ['лист'], seeds: ['about', 'эффект'], listened: null };
-  if (listener.kind === 'field') return { sheets: ['лист'], seeds: ['field'], listened: null };
+  if (listener.kind === 'seen' || listener.kind === 'rolled') return { sheets: [NAMES.roller, NAMES.against], seeds: ['roll'], listened: null };
+  if (listener.kind === 'moment') return { sheets: TURN_MOMENTS.has(listener.key) ? [NAMES.mover] : listener.key === 'combat-leave' ? [NAMES.sheet] : [], seeds: ['moment'], listened: null };
+  if (listener.kind === 'gained' || listener.kind === 'lost') return { sheets: [NAMES.sheet], seeds: ['about', NAMES.effect], listened: null };
+  if (listener.kind === 'field') return { sheets: [NAMES.sheet], seeds: ['field'], listened: null };
   if (listener.kind !== 'call') return { sheets: [], seeds: [], listened: null };
   if (listener.key === ANY_ACTION) return { sheets: [], seeds: [], listened: null };
   const contracts = contractsOf(system, listener.key);

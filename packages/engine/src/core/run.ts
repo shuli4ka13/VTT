@@ -1,3 +1,4 @@
+import { NAMES } from '../words/names.ts';
 import { paramStages } from '../engine/stages.ts';
 import { compile, printFormula } from '../formula/index.ts';
 import type { Node } from '../formula/index.ts';
@@ -673,7 +674,7 @@ export class Run {
     const met = opponentIn(other, record.by, this.namesAt(frame, [], rolls));
     const opponent = met.known ? met.id : null;
     if (!opponent || opponent === record.against || !record.holders.some(holder => holder.id === opponent)) return null;
-    const dice = (key: string): Die => this.ext.dice(record.path.phase('против').item(key));
+    const dice = (key: string): Die => this.ext.dice(record.path.phase(NAMES.against).item(key));
     return retarget(record, opponent, this.sheet(opponent)?.name ?? opponent, dice, this.system);
   }
 
@@ -1187,7 +1188,7 @@ export class Run {
     const round = this.clock?.round ?? 0;
     const who = own ? subjects : [null];
     for (const subject of who) {
-      const names: Record<string, Bound> = subject ? { [turn ? 'ходит' : 'лист']: subject } : {};
+      const names: Record<string, Bound> = subject ? { [turn ? NAMES.mover : NAMES.sheet]: subject } : {};
       const at = subject ? path.phase(moment).at(subject) : path.phase(moment);
       this.hooked(`moment:${moment}`, names, at, { moment: { moment, round, ...(subject ? { sheet: subject } : {}) } }, MOMENTS[moment],
         sub => `момент «${MOMENTS[moment]}» у «${labelOf(sub)}»`);

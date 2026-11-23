@@ -1,3 +1,4 @@
+import { NAMES } from '../words/names.ts';
 import { parseItemTag } from '../model/item-ref.ts';
 import { translateFormula, NEUTRAL_WORDS, RU_WORDS } from '../formula/words.ts';
 import { recordKinds } from '../model/owned.ts';
@@ -102,7 +103,7 @@ export function describeParts(
   const sheetHeads = new Set([
     ...params.filter(p => p.kind === 'sheet').map(p => p.key),
     ...(effect?.steps ?? []).filter((step: any) => splitsTargets(step)).map((step: any) => loopOf(params as never, step)?.key).filter(Boolean) as string[],
-    'носитель',
+    NAMES.holder,
   ]);
   const known = new Map<string, Map<string, string>>();
   const labelsFor = (id: string): Map<string, string> => {

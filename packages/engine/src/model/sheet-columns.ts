@@ -1,3 +1,4 @@
+import { NAMES } from '../words/names.ts';
 import { EngineError } from '../engine/errors.ts';
 import { translateFormula, NEUTRAL_WORDS, RU_WORDS } from '../formula/words.ts';
 import type { FormulaWords } from '../formula/words.ts';
@@ -160,7 +161,7 @@ export function manyText(system: System, column: TableColumn, next: string): str
 
 const ZERO: Record<string, unknown> = { number: 0, text: '', note: '', boolean: false, choice: '' };
 
-export const ROW = 'строка';
+export const ROW = NAMES.row;
 
 const ROW_REF = new RegExp(`@${ROW}((?:\\.[\\p{L}\\p{N}_]+)*)`, 'gu');
 
@@ -280,7 +281,7 @@ function rowRefs(system: System, tableId: string, row: TableRow, value: unknown)
 
 const NAME_REF = /[@#]([\p{L}\p{N}_]+)((?:\.[\p{L}\p{N}_]+)*)/gu;
 
-export const ITEM_NAME = 'вещь';
+export const ITEM_NAME = NAMES.item;
 
 function cellExpr(system: System, tableId: string, cells: Record<string, unknown>, head: string, seen: readonly string[], key?: string): string {
   const cell = cells[head];

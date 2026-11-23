@@ -1,15 +1,16 @@
+import { NAMES } from '../words/names.ts';
 import type { Zero } from '../core/dice.ts';
 import { EngineError } from './errors.ts';
 import type { SlotRef, System } from '../model/types.ts';
 import { fieldOf } from '../model/sheet-columns.ts';
 import type { Thrown } from '../core/roll.ts';
 
-export const ROLLED_NAME = 'выпало';
-export const ROLL_NAME = 'бросок';
-export const NUMBER_NAME = 'число';
-export const THRESHOLD_NAME = 'порог';
-export const SUCCESS_NAME = 'успех';
-export const MARGIN_NAME = 'степени';
+export const ROLLED_NAME = NAMES.rolled;
+export const ROLL_NAME = NAMES.roll;
+export const NUMBER_NAME = NAMES.number;
+export const THRESHOLD_NAME = NAMES.threshold;
+export const SUCCESS_NAME = NAMES.success;
+export const MARGIN_NAME = NAMES.margin;
 
 export interface FieldThrow {
   thrown: Thrown;

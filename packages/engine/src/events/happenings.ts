@@ -1,3 +1,4 @@
+import { NAMES } from '../words/names.ts';
 export const PHASES = {
   before: { label: 'до', note: 'может изменить исход', changes: true },
   after: { label: 'после', note: 'исход уже известен', changes: false },
@@ -30,9 +31,9 @@ export function callHappening(on: string | undefined): { phase: Phase; of: strin
 export const happeningOf = (phase: Phase, of: string): string => `${phase}:${of}`;
 
 export const BUILT_IN_NAMES = {
-  seen: ['бросающий', 'против'],
-  rolled: ['бросающий', 'против'],
-  moment: ['ходит'],
-  lifecycle: ['лист'],
-  field: ['лист'],
+  seen: [NAMES.roller, NAMES.against],
+  rolled: [NAMES.roller, NAMES.against],
+  moment: [NAMES.mover],
+  lifecycle: [NAMES.sheet],
+  field: [NAMES.sheet],
 } as const;
