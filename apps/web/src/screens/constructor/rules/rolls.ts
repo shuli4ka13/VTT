@@ -1,6 +1,8 @@
 import type { System, SystemRoll, RollField } from '@vtt/schema';
 import { freeId } from '../../../store/world.ts';
 import { readingWord } from '../readback.ts';
+import { KEYS } from '../factory.ts';
+import { dataT, t } from '../../../i18n/author.ts';
 
 export function rollOfColumn(system: System, table: string, column: string): { key: string; roll: SystemRoll; entry: RollField } | null {
   for (const [key, roll] of Object.entries(system.rolls ?? {})) {
@@ -25,18 +27,19 @@ export function setEntryTags(draft: System, table: string, column: string, tags:
 }
 
 export function addRoll(draft: System, die: string): string {
-  const key = freeId(Object.keys(draft.rolls ?? {}), 'бросок');
-  (draft.rolls ??= {})[key] = { label: 'Новый бросок', die, fields: [] };
+  const td = dataT(draft);
+  const key = freeId(Object.keys(draft.rolls ?? {}), KEYS.roll);
+  (draft.rolls ??= {})[key] = { label: td('rolls:new.roll'), die, fields: [] };
   return key;
 }
 
-export function saidOf(number: SystemRoll['number'], die: string, field = 'число поля'): string {
-  if (number === 'count') return `${field} — сколько бросить: ${die}`;
-  if (number === 'sides') return `${die}, грани — ${field}`;
-  const of = field === 'число поля' ? 'числа поля' : field;
-  if (number === 'under') return `${die}, успех — не больше ${of}`;
-  if (number === 'over') return `${die}, успех — не меньше ${of}`;
-  return `${die} + ${field}`;
+export function saidOf(number: SystemRoll['number'], die: string, field = t('rolls:said.field')): string {
+  if (number === 'count') return t('rolls:said.count', { field, die });
+  if (number === 'sides') return t('rolls:said.sides', { field, die });
+  const of = field === t('rolls:said.field') ? t('rolls:said.fieldOf') : field;
+  if (number === 'under') return t('rolls:said.under', { of, die });
+  if (number === 'over') return t('rolls:said.over', { of, die });
+  return t('rolls:said.bonus', { field, die });
 }
 
 export function rollSaid(system: System, roll: SystemRoll, field?: string): string {

@@ -3,6 +3,7 @@ import type { System, Sheet, Compendium, FieldOption } from '@vtt/schema';
 import { compile, newPass, calc, baseOf, findField, livesOn, hasDesk, blankDesk, resolveRoll, toolsOf, HOLDER } from '@vtt/engine';
 import type { Pass, Scope, RollResolution } from '@vtt/engine';
 import { shownDice } from '../ui/formula-lang.ts';
+import { t } from '../i18n/index.ts';
 
 export type Computed =
   | { ok: true; value: unknown }
@@ -23,10 +24,10 @@ export function useReader(system: System, sheet: Sheet | null, compendium: Compe
   return useMemo(() => {
     if (!sheet) {
       const idle: Reader = {
-        valueOf: () => ({ ok: false, error: 'персонаж не выбран' }),
+        valueOf: () => ({ ok: false, error: t('app:calc.noSheet') }),
         rollOf: () => null,
         storedOf: () => undefined,
-        measure: () => ({ ok: false, error: 'персонаж не выбран' }),
+        measure: () => ({ ok: false, error: t('app:calc.noSheet') }),
       };
       return idle;
     }
@@ -80,7 +81,7 @@ export function show(value: Computed, options?: FieldOption[], dice = false): { 
     const labels = value.value.map(item => options?.find(option => String(option.value) === String(item))?.label ?? String(item));
     return { text: labels.length ? labels.join(', ') : '—', bad: false };
   }
-  if (typeof value.value === 'boolean') return { text: value.value ? 'да' : 'нет', bad: false };
+  if (typeof value.value === 'boolean') return { text: value.value ? t('common:yes') : t('common:no'), bad: false };
   if (value.value === null || value.value === undefined) return { text: '—', bad: false };
   const said = options?.find(option => String(option.value) === String(value.value))?.label;
   if (said !== undefined) return { text: said, bad: false };

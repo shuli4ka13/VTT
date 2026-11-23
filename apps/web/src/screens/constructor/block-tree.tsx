@@ -5,6 +5,7 @@ import { useOpened } from '../../store/opened.ts';
 import { groupChain } from './groups.ts';
 import { NO_BLOCK, blockNames, blockLabel } from '@vtt/engine';
 import type { System } from '@vtt/schema';
+import { useT } from '../../i18n/author.ts';
 
 export interface BlockNode<T> {
   name: string;
@@ -94,6 +95,7 @@ export function BlockBranches<T>({ list, nodes, depth = 0, onPickBlock, activeBl
   isActive?: (item: T) => boolean;
   isFresh?: (item: T) => boolean;
 }) {
+  const t = useT('sheetTab');
   const opened = useOpened(s => s.opened);
   const toggle = useOpened(s => s.toggle);
   return (
@@ -108,14 +110,14 @@ export function BlockBranches<T>({ list, nodes, depth = 0, onPickBlock, activeBl
               <span className="list__group-head">
                 <button
                   type="button" className="list__fold" aria-expanded={open}
-                  aria-label={open ? `свернуть «${node.label}»` : `развернуть «${node.label}»`}
+                  aria-label={open ? t('common:fold.collapse', { name: node.label }) : t('common:fold.expand', { name: node.label })}
                   onClick={() => toggle(key)}
                 >{open ? '▾' : '▸'}</button>
                 {onPickBlock ? (
                   <button
                     type="button"
                     className={`list__group-pick${node.name === activeBlock ? ' list__group-pick--active' : ''}`}
-                    title="настройки блока"
+                    title={t('tree.settings')}
                     onClick={() => onPickBlock(node.name)}
                   >{node.label}</button>
                 ) : <button type="button" className="list__group-pick" onClick={() => toggle(key)}>{node.label}</button>}
@@ -135,7 +137,7 @@ export function BlockBranches<T>({ list, nodes, depth = 0, onPickBlock, activeBl
 
                 {addTo ? (
                   <Button size="sm" variant="ghost" wide onClick={() => addTo(node.name)}>
-                    + в «{node.label}»
+                    {t('tree.addTo', { name: node.label })}
                   </Button>
                 ) : null}
 

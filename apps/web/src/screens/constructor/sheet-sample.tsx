@@ -11,6 +11,7 @@ import { sheetKinds, shownOn, recordKinds, recordKindOf, availableActions, pageO
 import { OPEN_PAGE } from './page-panel.tsx';
 import type { SheetList } from '@vtt/schema';
 import type { Sheet, StoredValue, System, CompendiumRecord, Column } from '@vtt/schema';
+import { useT, t } from '../../i18n/author.ts';
 
 const DICE = [[1, 4], [1, 6], [1, 8], [1, 10], [1, 12], [2, 6]].map(([count, sides]) => dice(count, sides!));
 
@@ -58,13 +59,14 @@ export function setSample(draft: System, tag: string, value: StoredValue, base?:
 }
 
 export function sampleBase(system: System, of: string): Record<string, StoredValue> {
-  return { ...sampleValues(system), ...freshSheet(system, { id: 'образец', name: 'Образец листа', ...(of ? { of } : {}) }).values };
+  return { ...sampleValues(system), ...freshSheet(system, { id: 'sample', name: t('sheetTab:sample.name'), ...(of ? { of } : {}) }).values };
 }
 
 export function SheetSample({ system, picked, onPick, onPickBlock, onPickRow }: {
   system: System; picked?: string | null; onPick?: (tag: string, block?: string) => void;
   onPickBlock?: (name: string) => void; onPickRow?: (table: string, row: string) => void;
 }) {
+  const t = useT('sheetTab');
   const compendium = useBook();
   const editSystem = useWorld(s => s.editSystem);
   const pick = useWorld(s => s.pick);
@@ -77,14 +79,14 @@ export function SheetSample({ system, picked, onPick, onPickBlock, onPickRow }: 
   const bookKinds = recordKinds(system);
   const samples = useMemo<CompendiumRecord[]>(() => bag
     .filter(item => system.tables?.[item.table])
-    .map((item, at) => ({ id: `образец-${at + 1}`, table: item.table, label: item.label || `${system.tables![item.table]!.label || item.table} ${at + 1}`, cells: item.cells })), [bag, system.tables]);
+    .map((item, at) => ({ id: `sample-${at + 1}`, table: item.table, label: item.label || `${system.tables![item.table]!.label || item.table} ${at + 1}`, cells: item.cells })), [bag, system.tables]);
   const change = (at: number, next: (item: (typeof bag)[number]) => (typeof bag)[number]) => setBag(bag.map((item, other) => (other === at ? next(item) : item)));
   const book = useMemo(() => ({ ...compendium, records: [...(compendium.records ?? []), ...samples] }), [compendium, samples]);
   const base = useMemo(() => sampleBase(system, of), [system, of]);
   const sample = useMemo<Sheet>(() => ({
-    id: 'образец', systemId: system.id ?? '', name: kind?.label ?? 'Образец листа',
+    id: 'sample', systemId: system.id ?? '', name: kind?.label ?? t('sample.name'),
     ...(of ? { of } : {}), values: { ...base, ...(system.sample ?? {}) }, has: samples.map(record => ({ of: record.id })), effects: [],
-  }), [system, of, kind?.label, samples, base]);
+  }), [system, of, kind?.label, samples, base, t]);
   const reader = useReader(system, sample, book);
   const everyField = fieldsOf(system);
   const placed = everyField.filter(f => f.placements?.length);
@@ -98,20 +100,20 @@ export function SheetSample({ system, picked, onPick, onPickBlock, onPickRow }: 
     things: (
       <>
         <div className="inline inline--tight">
-          {samples.length === 0 ? <span className="faint">У образца пока ничего нет — добавьте образец вещи или умения.</span> : null}
+          {samples.length === 0 ? <span className="faint">{t('sample.nothing')}</span> : null}
         </div>
         <ThingsList system={system} kinds={(system.blocks ?? []).find(block => block.list === 'things')?.kinds} records={samples} onPickKind={table => pick({ ...OPEN_PAGE, activeThing: table })} row={record => {
           const at = samples.indexOf(record);
           return (
             <ThingLine label={record.label ?? record.id} details={recordDetails(record, system, book).map(line => `${line.label}: ${line.value}`).join(' · ')}
               actions={<>
-                <Button size="sm" variant="ghost" onClick={() => change(at, item => ({ ...item, cells: sampleCells(system, recordKindOf(system, item.table)?.columns ?? []) }))}>другие значения</Button>
-                <Button size="sm" variant="ghost" onClick={() => setBag(bag.filter((_, other) => other !== at))}>убрать</Button>
+                <Button size="sm" variant="ghost" onClick={() => change(at, item => ({ ...item, cells: sampleCells(system, recordKindOf(system, item.table)?.columns ?? []) }))}>{t('sample.otherValues')}</Button>
+                <Button size="sm" variant="ghost" onClick={() => setBag(bag.filter((_, other) => other !== at))}>{t('common:removeLower')}</Button>
               </>} />
           );
         }} />
-        <Select<string> label="добавить образец" value=""
-          options={[['', bookKinds.length ? '+ образец вещи или умения' : 'типов вещей и умений ещё нет'], ...bookKinds
+        <Select<string> label={t('sample.add')} value=""
+          options={[['', bookKinds.length ? t('sample.addOption') : t('sample.noKinds')], ...bookKinds
             .map(([key, table]) => [key, table.label || key] as const)]}
           onChange={key => {
             if (!key) return;
@@ -124,21 +126,21 @@ export function SheetSample({ system, picked, onPick, onPickBlock, onPickRow }: 
     actions: (
       <>
         {actions.length === 0
-          ? <span className="faint">Применить нечего — добавьте вещь или умение в «{SHEET_LISTS.things}».</span>
+          ? <span className="faint">{t('sample.nothingToApply', { name: SHEET_LISTS.things })}</span>
           : <div className="inline inline--tight">{actions.map(action => <Chip key={action.id}>{action.label}</Chip>)}</div>}
       </>
     ),
-    hanging: <span className="faint">На образце ничего не висит.</span>,
+    hanging: <span className="faint">{t('sample.nothingHangs')}</span>,
   };
 
   return (
     <>
       {kinds.length ? (
         <Card>
-          <Field label="Тип листа">
+          <Field label={t('sample.sheetKind')}>
             <Select
               value={of}
-              options={[['', 'все блоки'], ...kinds.map(([key, k]) => [key, k.label ?? key] as const)] as never}
+              options={[['', t('sample.allBlocks')], ...kinds.map(([key, k]) => [key, k.label ?? key] as const)] as never}
               onChange={setOf}
             />
           </Field>
@@ -149,7 +151,7 @@ export function SheetSample({ system, picked, onPick, onPickBlock, onPickRow }: 
         sheet={sample}
         reader={reader}
         only={only}
-        badge="образец"
+        badge={t('sample.badge')}
         marks
         pages={{ at: at ?? null, onAt: name => pick({ ...OPEN_PAGE, activePage: name }), all: true }}
         lists={lists}
@@ -168,9 +170,9 @@ export function SheetSample({ system, picked, onPick, onPickBlock, onPickRow }: 
           editSystem(draft => setSample(draft, tag, value, base[tag]));
         }}
       />
-      <span className="faint">образец: значения подставлены для примера</span>
+      <span className="faint">{t('sample.note')}</span>
       {service.length ? (
-        <Fold title="служебные поля" count={service.length}>
+        <Fold title={t('sample.service')} count={service.length}>
           <div className="inline inline--tight">{service.map(f => <Chip key={f.tag}>{f.label || f.tag}</Chip>)}</div>
         </Fold>
       ) : null}

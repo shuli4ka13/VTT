@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { tableSocket } from '../api/socket.ts';
 import { currentToken, onTokenChange } from '../api/client.ts';
 import type { RoomState, Sheet, LogEntry } from '@vtt/schema';
+import { t } from '../i18n/index.ts';
 
 export interface RoomStore {
   room: RoomState | null;
@@ -120,7 +121,7 @@ export function listenToRoom(): void {
 
     if (message.type === 'room:closed' && state.room?.id === message.roomId) {
       state.leave();
-      useRoom.setState({ error: 'Ведущий убрал этот стол' });
+      useRoom.setState({ error: t('app:closed') });
     }
 
     if (message.type === 'error') {

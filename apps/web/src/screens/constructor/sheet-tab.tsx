@@ -21,8 +21,10 @@ import { fieldOf, rowKeyOf, isSingle } from '@vtt/engine';
 import type { Field as FieldModel } from '@vtt/engine';
 import { instanceOf, columnAddress } from './instance.ts';
 import type { InstanceKind } from './instance.ts';
+import { useT } from '../../i18n/author.ts';
 
 export function SheetTab() {
+  const t = useT('sheetTab');
   const system = useWorld(s => s.system);
   const activeTag = useWorld(s => s.activeFieldTag);
   const activeColumn = useWorld(s => s.activeColumn);
@@ -41,7 +43,7 @@ export function SheetTab() {
   const activeSheetTable = useWorld(s => s.activeSheetTable);
   const tableOpen = Boolean(activeSheetTable && system.tables?.[activeSheetTable]);
   const docked = Boolean(active) || blockOpen || pageOpen || thingOpen || rowOpen || columnOpen;
-  const right = useLookupPane({ head: 'Готовое из образцов', body: <DonorPalette kind="blocks" /> });
+  const right = useLookupPane({ head: t('tab.lookup'), body: <DonorPalette kind="blocks" /> });
   const kindPicked = useWorld(s => s.activeSheetKind);
   const [view, setView] = useState<'sample' | 'kinds'>(kindPicked ? 'kinds' : 'sample');
   const usage = useUsage();
@@ -49,7 +51,7 @@ export function SheetTab() {
   return (
     <Columns
       left={{
-        head: 'Лист',
+        head: t('tab.head'),
         ...(docked ? { pinned: true } : {}),
         body: active
           ? <Docked kind={active.cell ? 'cell' : 'column'} id={active.tag}><ViewPanel field={active} system={system} /></Docked>
@@ -64,15 +66,15 @@ export function SheetTab() {
                 : pageOpen
                   ? <Docked kind="page" id={activePage!}><PagePanel name={activePage!} system={system} /></Docked>
                   : (system.blocks ?? []).length
-                    ? <Empty title="Щёлкните поле на листе" hint="Его колонка, вид и формула откроются здесь." />
-                    : <Empty title="Лист пока пуст" hint="Возьмите готовые куски из «Готового из образцов» или заведите блок: в нём «+ поле» — одно значение, «+ таблица» — строки и колонки." />,
+                    ? <Empty title={t('tab.clickTitle')} hint={t('tab.clickHint')} />
+                    : <Empty title={t('tab.emptyTitle')} hint={t('tab.emptyHint')} />,
       }}
       main={{
         body: (
           <>
             <Segmented
               value={view}
-              options={[{ key: 'sample', label: 'образец листа' }, { key: 'kinds', label: 'блоки и типы листов' }]}
+              options={[{ key: 'sample', label: t('tab.viewSample') }, { key: 'kinds', label: t('tab.viewKinds') }]}
               onChange={next => setView(next as 'sample' | 'kinds')}
             />
             {tableOpen ? <Docked kind="table" id={activeSheetTable!}><TablePanel id={activeSheetTable!} system={system} /></Docked> : null}
@@ -104,6 +106,7 @@ function TablePanel({ id, system }: { id: string; system: System }) {
 }
 
 function ViewPanel({ field, system }: { field: FieldModel; system: System }) {
+  const t = useT('sheetTab');
   const editSystem = useWorld(s => s.editSystem);
   const pick = useWorld(s => s.pick);
   const activeIn = useWorld(s => s.activeIn);
@@ -120,9 +123,9 @@ function ViewPanel({ field, system }: { field: FieldModel; system: System }) {
         <Card>
           <BlockViewField tableId={field.home} column={column} system={system} block={block} {...(field.cell ? { cell: field.cell.row } : {})} />
           {field.cell ? <BlockViewField tableId={field.home} column={column} system={system} block={block} row={field.cell.row} /> : null}
-          {homes.length > 1 ? <span className="faint">Поле стоит и в других блоках: {homes.filter(h => h !== block).join(', ')} — там вид свой.</span> : null}
+          {homes.length > 1 ? <span className="faint">{t('view.alsoIn', { blocks: homes.filter(h => h !== block).join(', ') })}</span> : null}
         </Card>
-      ) : <span className="faint">Поле не стоит ни в одном блоке — вид задаётся в блоке.</span>}
+      ) : <span className="faint">{t('view.nowhere')}</span>}
       <TableColumnCard id={field.home} table={table} column={column} system={system}
         bounds={!(view && takesBounds(view.kind, column))}
         edit={change => editSystem(draft => { const target = draft.tables?.[field.home]; if (target) change(target); })}
@@ -131,16 +134,16 @@ function ViewPanel({ field, system }: { field: FieldModel; system: System }) {
         {field.cell ? (
           <>
             <Button size="sm" onClick={() => pick({ activeSheetTable: field.home, activeFieldTag: null })}>
-              Открыть таблицу «{table.label || field.home}»
+              {t('view.openTable', { name: table.label || field.home })}
             </Button>
             <DangerButton size="sm" onConfirm={() => {
               editSystem(draft => { const target = draft.tables?.[field.home]; if (target) delete target.owner; });
               pick({ activeFieldTag: null });
-            }}>Убрать таблицу с листа</DangerButton>
+            }}>{t('view.removeTable')}</DangerButton>
           </>
         ) : (
           <Button size="sm" onClick={() => pick({ activeTab: 'dictionaries', activeFieldTag: field.tag })}>
-            Правила: колонка «{field.label}» →
+            {t('view.rulesColumn', { name: field.label })}
           </Button>
         )}
       </div>

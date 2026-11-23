@@ -11,10 +11,11 @@ import { DegreesEditor } from '../../degrees-editor.tsx';
 import { whoOf } from '../../readback.ts';
 import { tagWords, stepSaid, splitsTargets, NAMES, NAME_LABELS, DESK_ID } from '@vtt/engine';
 import { tagSaid, tagsSaid } from '../../tag-said.ts';
+import { t as tg, useT } from '../../../../i18n/author.ts';
 
 const loose = (draft: unknown): Record<string, any> => draft as Record<string, any>;
 
-const SUCCESS = [['atLeast', 'не меньше порога'], ['over', 'строго больше'], ['notOver', 'не больше порога'], ['under', 'строго меньше'], ['equals', 'ровно порог']] as const;
+const successSigns = () => [['atLeast', tg('rollCards:success.atLeast')], ['over', tg('rollCards:success.over')], ['notOver', tg('rollCards:success.notOver')], ['under', tg('rollCards:success.under')], ['equals', tg('rollCards:success.equals')]] as const;
 
 export function CheckBody({ step, context, edit, system, asIf = false }: {
   step: any;
@@ -23,6 +24,7 @@ export function CheckBody({ step, context, edit, system, asIf = false }: {
   system: System;
   asIf?: boolean;
 }) {
+  const t = useT('rollCards');
   const at = 0;
 
   const names = useMemo(() => {
@@ -35,9 +37,9 @@ export function CheckBody({ step, context, edit, system, asIf = false }: {
     <FormulaField
       value={String((step[key] as { expr?: unknown } | undefined)?.expr ?? '')}
       system={system}
-      where={`проверка · ${key === 'succeedOn' ? 'успех на кости' : 'провал на кости'}`}
+      where={t(`where.${key}`)}
       {...shared}
-      placeholder={key === 'succeedOn' ? 'например: 20' : 'например: 1'}
+      placeholder={t(`placeholder.${key}`)}
       onCommit={text => edit(at, draft => { const d = loose(draft); if (text.trim()) d[key] = { expr: text.trim() }; else delete d[key]; })}
     />
   );
@@ -45,19 +47,19 @@ export function CheckBody({ step, context, edit, system, asIf = false }: {
     <FormulaField
       value={String((step[key] as { expr?: unknown } | undefined)?.expr ?? '')}
       system={system}
-      where={`проверка · ${key === 'failIf' ? 'всегда провал' : 'всегда успех с запасом'}`}
+      where={t(`where.${key}`)}
       {...shared}
-      placeholder={key === 'failIf' ? 'например: носитель.ки == 0' : 'например: 1'}
+      placeholder={t(`placeholder.${key}`)}
       onCommit={text => edit(at, draft => { const d = loose(draft); if (text.trim()) d[key] = { expr: text.trim() }; else delete d[key]; })}
     />
   );
   const degreeNames = useMemo(() => new Map([...names, [NAMES.success, NAME_LABELS.success], [NAMES.margin, NAME_LABELS.margin]]), [names]);
-  const degreeMeanings = useMemo(() => new Map([[NAMES.success, 'да или нет — исход этой проверки'], [NAMES.margin, 'число — запас над порогом этой проверки']]), []);
+  const degreeMeanings = useMemo(() => new Map([[NAMES.success, t('meaning.success')], [NAMES.margin, t('meaning.margin')]]), [t]);
   const rolled = readsRoll(step, context);
   const summary = moreSummary(step, rolled, text => formulaWords(system, text, names));
-  const side = (key: 'value' | 'versus', label: string, placeholder: string) => (
-    <div data-field={label} className="check-line__side" {...(key === 'versus' ? { 'data-guide': 'check-formula' } : {})}>
-      <SideFormula value={step[key]} where={`проверка · ${label.toLowerCase()}`} placeholder={placeholder} context={context} names={names}
+  const side = (key: 'value' | 'versus') => (
+    <div data-field={t(`side.${key}.label`)} className="check-line__side" {...(key === 'versus' ? { 'data-guide': 'check-formula' } : {})}>
+      <SideFormula value={step[key]} where={t(`side.${key}.where`)} placeholder={t(`side.${key}.placeholder`)} context={context} names={names}
         onSet={text => edit(at, draft => {
           const d = loose(draft);
           if (text) d[key] = { expr: text }; else delete d[key];
@@ -70,41 +72,41 @@ export function CheckBody({ step, context, edit, system, asIf = false }: {
   return (
     <>
       <div className="field">
-        <span className="field__label">{asIf ? 'Условие' : 'Проверка'}</span>
+        <span className="field__label">{asIf ? t('field.if') : t('field.check')}</span>
         <div className="check-line">
-          {side('value', 'Что проверяем', 'бросок или число')}
-          <span data-field="Знак" className="check-line__sign">
-            <Select label="Знак" value={String(step.successWhen ?? 'atLeast')} options={SIGNS}
+          {side('value')}
+          <span data-field={t('sign.label')} className="check-line__sign">
+            <Select label={t('sign.label')} value={String(step.successWhen ?? 'atLeast')} options={signs()}
               onChange={next => edit(at, draft => setSuccessWhen(loose(draft), next))} />
           </span>
-          {side('versus', 'С чем', 'порог: число, поле через лист или бросок соперника')}
+          {side('versus')}
         </div>
       </div>
       {against ? <span className="faint">{against}</span> : null}
-      {inside ? <span className="faint">бросок «{inside}» стоит внутри формулы: «успех на кости», сдвиг порога и пересчёт правок «против» для каждой цели на такое сравнение не действуют</span> : null}
+      {inside ? <span className="faint">{t('inside', { name: inside })}</span> : null}
       <ContestLine step={step} roll={null} context={context} />
-      <Fold title="ещё" summary={summary}>
-        <Field label="Ступени" hint="Вместо «да/нет» исход читается ступенями: первая подходящая сверху. В условиях видны «успех», «степени» и шаги эффекта.">
-          <DegreesEditor value={step.degrees} system={system} where="проверка · ступень" placeholder="степени >= 5"
+      <Fold title={t('common:more')} summary={summary}>
+        <Field label={t('degrees.label')} hint={t('degrees.hint')}>
+          <DegreesEditor value={step.degrees} system={system} where={t('degrees.where')} placeholder={t('degrees.placeholder')}
             shared={{ extraNames: degreeNames, meanings: degreeMeanings, badges: inputBadges(context), ...(context.sheets ? { sheets: context.sheets } : {}) }}
             set={next => edit(at, draft => { const d = loose(draft); if (next === undefined) delete d.degrees; else d.degrees = next; })} />
         </Field>
         {rolled ? (
           <div className="row">
-            <Field label="Успех, если на кости не меньше" hint="Если на кости выпало столько или больше — успех, что бы ни прибавили.">{forced('succeedOn')}</Field>
-            <Field label="Провал, если на кости не больше" hint="Натуральная 1: что бы ни прибавили — провал.">{forced('failOn')}</Field>
+            <Field label={t('succeedOn.label')} hint={t('succeedOn.hint')}>{forced('succeedOn')}</Field>
+            <Field label={t('failOn.label')} hint={t('failOn.hint')}>{forced('failOn')}</Field>
           </div>
         ) : null}
         <div className="row">
-          <Field label="Всегда провал, если" hint="Условие да/нет: если верно — провал, что бы ни выпало.">{always('failIf')}</Field>
-          <Field label="Всегда успех с запасом" hint="Число: проверка проходит с таким запасом над порогом.">{always('passWith')}</Field>
+          <Field label={t('failIf.label')} hint={t('failIf.hint')}>{always('failIf')}</Field>
+          <Field label={t('passWith.label')} hint={t('passWith.hint')}>{always('passWith')}</Field>
         </div>
       </Fold>
     </>
   );
 }
 
-const SIGNS = [['atLeast', 'не меньше  ≥'], ['over', 'больше  >'], ['notOver', 'не больше  ≤'], ['under', 'меньше  <'], ['equals', 'равно  =']] as const;
+const signs = () => [['atLeast', tg('rollCards:sign.atLeast')], ['over', tg('rollCards:sign.over')], ['notOver', tg('rollCards:sign.notOver')], ['under', tg('rollCards:sign.under')], ['equals', tg('rollCards:sign.equals')]] as const;
 
 function SideFormula({ value, where, placeholder, context, names, onSet }: {
   value: unknown;
@@ -179,17 +181,17 @@ function againstWords(step: any, context: SlotContext): string | null {
   const their = theirs ? throwerOf(theirs) : null;
   if (their && their !== roller) found.add(their);
   if (!found.size) return null;
-  if (found.size > 1) return 'правки «против» на этом сравнении не действуют: в пороге назван не один лист';
+  if (found.size > 1) return tg('rollCards:against.many');
   const [only] = [...found];
-  return `правки «против» на этом сравнении — против: ${context.sheets?.get(only!) ?? only}`;
+  return tg('rollCards:against.one', { name: context.sheets?.get(only!) ?? only });
 }
 
 const moreSummary = (step: any, rolled: boolean, said: (text: string) => string): string => [
-  step.degrees?.table || (Array.isArray(step.degrees) && step.degrees.length) ? 'исход ступенями' : '',
-  rolled && step.succeedOn ? `успех от ${said(String(step.succeedOn.expr ?? ''))} на кости` : '',
-  step.failIf ? 'есть условие провала' : '',
-  step.passWith ? 'успех с запасом' : '',
-  rolled && step.failOn ? `провал до ${said(String(step.failOn.expr ?? ''))}` : '',
+  step.degrees?.table || (Array.isArray(step.degrees) && step.degrees.length) ? tg('rollCards:more.degrees') : '',
+  rolled && step.succeedOn ? tg('rollCards:more.succeedOn', { said: said(String(step.succeedOn.expr ?? '')) }) : '',
+  step.failIf ? tg('rollCards:more.failIf') : '',
+  step.passWith ? tg('rollCards:more.passWith') : '',
+  rolled && step.failOn ? tg('rollCards:more.failOn', { said: said(String(step.failOn.expr ?? '')) }) : '',
 ].filter(Boolean).join(' · ');
 
 const readsRoll = (step: any, context: SlotContext): boolean => {
@@ -205,6 +207,7 @@ const loneRef = (ref: unknown): string | null =>
   /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(String((ref as { expr?: unknown } | undefined)?.expr ?? ''))?.[1] ?? null;
 
 function ContestLine({ step, roll, context }: { step: any; roll: any | null; context: SlotContext }) {
+  const t = useT('rollCards');
   const steps = (context.effect.steps ?? []) as any[];
   const split = steps.findIndex(one => splitsTargets(one));
   const find = (name: string | null) => (name ? steps.findIndex(one => one.id === name && one.type === 'roll' && one.by) : -1);
@@ -215,17 +218,17 @@ function ContestLine({ step, roll, context }: { step: any; roll: any | null; con
     const one = steps[at];
     const tags = ((one.tags ?? []) as unknown[]).filter((tag): tag is string => typeof tag === 'string');
     const what = tags.length ? `«${tagsSaid(context.system, tags)}»` : `«${stepSaid(one)}»`;
-    const when = split >= 0 && at < split ? 'один на все цели' : split >= 0 ? 'у каждой цели свой' : '';
-    return <span className="contest__side">{whoOf(context.effect, one.by)} бросает {what}{when ? <span className="faint"> — {when}</span> : null}</span>;
+    const when = split >= 0 && at < split ? t('contest.shared') : split >= 0 ? t('contest.each') : '';
+    return <span className="contest__side">{t('contest.rolls', { who: whoOf(context.effect, one.by), what })}{when ? <span className="faint"> — {when}</span> : null}</span>;
   };
   return (
-    <p className="contest" title="Встречный бросок: итог одного броска сравнивается с итогом другого. Бросок выше «Для каждого из» — один на всех; ниже — свой у каждой цели.">
+    <p className="contest" title={t('contest.title')}>
       <span className="contest__mark" aria-hidden>⇄</span>
       {part(mineAt)}
-      <span className="contest__vs">против</span>
+      <span className="contest__vs">{t('contest.vs')}</span>
       {part(theirsAt)}
     </p>
   );
 }
 
-export { SUCCESS };
+export { successSigns };

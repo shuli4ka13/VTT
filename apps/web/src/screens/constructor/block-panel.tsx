@@ -6,13 +6,14 @@ import { Card, CardHead, Field, Select, Button, DangerButton, LabelInput, Verdic
 import { readyForSheet } from './table-field.tsx';
 import { blockNames, blockLabel, labelBlock, pageLabel, onSheet, rowKeyOf, fieldsOf, isSingle, recordKinds, pagesOf, cellHead, setWidth, setHeight, GRID, SHEET_LIST_KEYS, SHEET_LISTS, widthWords, splitWords, perRowWords, isRange } from '@vtt/engine';
 import type { System, SheetBlock, SheetPart, SheetList } from '@vtt/schema';
+import { useT, t } from '../../i18n/author.ts';
 
 export const SHEET_TABLE = 'list';
 
 export const partTables = (system: System): [string, string][] =>
   Object.entries(system.tables ?? {})
     .filter(([, table]) => !isRange(table) && table.shape !== 'book' && (onSheet(table) || (table.rows ?? []).length > 0))
-    .map(([id, table]) => [id, onSheet(table) ? table.label || id : `${table.label || id} · справочник`]);
+    .map(([id, table]) => [id, onSheet(table) ? table.label || id : t('sheetTab:block.part.reference', { name: table.label || id })]);
 
 export const sheetBlockList = (system: System): SheetBlock[] => system.blocks ?? [];
 
@@ -64,18 +65,21 @@ export function homesOf(system: System, table: string, column: string): string[]
   return (field?.placements ?? []).map(place => place.group);
 }
 
-function groupsOf(system: System, table: string, keys: string[], self: string, chosen: string[]): [string, string[]][] {
+type GroupId = 'here' | 'none' | `in:${string}`;
+
+function groupsOf(system: System, table: string, keys: string[], self: string, chosen: string[]): { id: GroupId; title: string; keys: string[] }[] {
   const shown = new Set(fieldsOf(system).filter(f => f.home === table).map(f => f.cell?.column ?? f.tag));
-  const out = new Map<string, string[]>();
-  const put = (title: string, key: string) => out.set(title, [...out.get(title) ?? [], key]);
-  for (const key of chosen.filter(k => shown.has(k) && keys.includes(k))) put('в этом блоке', key);
+  const out = new Map<GroupId, { title: string; keys: string[] }>();
+  const put = (id: GroupId, title: string, key: string) => out.set(id, { title, keys: [...out.get(id)?.keys ?? [], key] });
+  for (const key of chosen.filter(k => shown.has(k) && keys.includes(k))) put('here', t('sheetTab:block.group.here'), key);
   for (const key of keys.filter(k => shown.has(k))) {
     if (chosen.includes(key)) continue;
     const homes = homesOf(system, table, key).filter(home => home !== self);
-    put(homes.length ? `уже в «${blockLabel(system, homes[0]!)}»` : 'ни в одном блоке', key);
+    if (homes.length) put(`in:${homes[0]!}`, t('sheetTab:block.group.elsewhere', { name: blockLabel(system, homes[0]!) }), key);
+    else put('none', t('sheetTab:block.group.none'), key);
   }
-  const order = (title: string) => (title === 'в этом блоке' ? 0 : title === 'ни в одном блоке' ? 1 : 2);
-  return [...out].sort((a, b) => order(a[0]) - order(b[0]));
+  const order = (id: GroupId) => (id === 'here' ? 0 : id === 'none' ? 1 : 2);
+  return [...out].map(([id, group]) => ({ id, ...group })).sort((a, b) => order(a.id) - order(b.id));
 }
 
 export function newPart(system: System, table: string): SheetPart {
@@ -87,7 +91,8 @@ export function newPart(system: System, table: string): SheetPart {
   return { table, columns: first ? [first] : [] };
 }
 
-function ColumnGroup({ title, keys, chosen, labelOf, onToggle, onMove }: {
+function ColumnGroup({ ordered, title, keys, chosen, labelOf, onToggle, onMove }: {
+  ordered: boolean;
   title: string;
   keys: string[];
   chosen: string[];
@@ -95,11 +100,11 @@ function ColumnGroup({ title, keys, chosen, labelOf, onToggle, onMove }: {
   onToggle: (key: string, on: boolean) => void;
   onMove: (key: string, to: string, after: boolean) => void;
 }) {
-  const ordered = title === 'в этом блоке';
+  const t = useT('sheetTab');
   const drag = useDragList(onMove, 'x');
   return (
     <div className="stack stack--tight block-pick">
-      <span className="block-pick__title">{ordered ? 'показываются' : title}{ordered && keys.length > 1 ? <span className="faint"> · перетащите, чтобы поменять порядок</span> : null}</span>
+      <span className="block-pick__title">{ordered ? t('block.pick.shown') : title}{ordered && keys.length > 1 ? <span className="faint">{t('block.pick.reorder')}</span> : null}</span>
       <div className="inline inline--tight">
         {keys.map(key => {
           const on = chosen.includes(key);
@@ -119,6 +124,7 @@ function ColumnGroup({ title, keys, chosen, labelOf, onToggle, onMove }: {
 }
 
 export function BlockPanel({ name, system }: { name: string; system: System }) {
+  const t = useT('sheetTab');
   const editSystem = useWorld(s => s.editSystem);
   const pick = useWorld(s => s.pick);
   const [asking, setAsking] = useState<{ table: string; index?: number } | null>(null);
@@ -155,37 +161,37 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
   return (
     <Card>
       <CardHead
-        title={<LabelInput value={blockLabel(system, name)} placeholder="как зовётся блок"
+        title={<LabelInput value={blockLabel(system, name)} placeholder={t('common:name.block')}
           onCommit={next => {
             const clean = next.trim();
             if (!clean || clean === blockLabel(system, name) || titleTaken(system, name, clean)) return;
             editSystem(draft => labelBlock(draft, name, clean));
           }} />}
         actions={<Button size="sm" variant="ghost" onClick={() => pick({ activeBlock: null })}>×</Button>} />
-      <Field label="Внутри блока">
-        <Select<string> label="внутри блока" value={block.parent ?? ''}
-          options={[['', 'на верхнем уровне'], ...parents.map(p => [p, blockLabel(system, p)] as const)]}
+      <Field label={t('block.parent.label')}>
+        <Select<string> label={t('block.parent.aria')} value={block.parent ?? ''}
+          options={[['', t('block.parent.top')], ...parents.map(p => [p, blockLabel(system, p)] as const)]}
           onChange={next => edit(target => { if (next) target.parent = next; else delete target.parent; })} />
       </Field>
       {pages.length ? (
-        <Field label="Страница">
-          <Select<string> label="страница блока" value={block.page ?? ''}
-            options={[['', block.parent ? `как у «${blockLabel(system, block.parent)}»` : `${firstTab ? pageLabel(system, firstTab.key) : 'первая'} — первая закладка`], ...pages.map(page => [page.key, page.top ? `${pageLabel(system, page.key)} · над закладками` : pageLabel(system, page.key)] as const)]}
+        <Field label={t('block.page.label')}>
+          <Select<string> label={t('block.page.aria')} value={block.page ?? ''}
+            options={[['', block.parent ? t('block.page.likeParent', { name: blockLabel(system, block.parent) }) : firstTab ? t('block.page.firstTab', { name: pageLabel(system, firstTab.key) }) : t('block.page.firstTabPlain')], ...pages.map(page => [page.key, page.top ? t('block.page.aboveTabs', { name: pageLabel(system, page.key) }) : pageLabel(system, page.key)] as const)]}
             onChange={next => edit(target => { if (next) target.page = next; else delete target.page; })} />
         </Field>
       ) : null}
-      <Field label="Ширина" hint={block.under ? `общая с блоком «${head ? blockLabel(system, head.key) : ''}», над которым он стоит` : 'можно и потянуть за правый край блока на образце'}>
-        <Select<string> label="ширина блока" value={String(head?.width ?? GRID)}
+      <Field label={t('block.width.label')} hint={block.under ? t('block.width.hintUnder', { name: head ? blockLabel(system, head.key) : '' }) : t('block.width.hint')}>
+        <Select<string> label={t('block.width.aria')} value={String(head?.width ?? GRID)}
           options={Array.from({ length: GRID }, (_, at) => [String(at + 1), widthWords(at + 1)] as const).reverse()}
           onChange={next => editSystem(draft => setWidth(draft, name, Number(next)))} />
       </Field>
       <label className="inline inline--tight">
         <input type="checkbox" checked={block.under === true}
           onChange={event => { const on = event.currentTarget.checked; edit(target => { if (on) { target.under = true; delete target.width; } else delete target.under; }); }} />
-        Под предыдущим блоком
+        {t('block.under')}
       </label>
-      <Field label="Высота" hint="в точках экрана; пусто — по содержимому; можно и потянуть за нижний край блока на образце">
-        <LabelInput value={block.height ? String(block.height) : ''} placeholder="по содержимому"
+      <Field label={t('block.height.label')} hint={t('block.height.hint')}>
+        <LabelInput value={block.height ? String(block.height) : ''} placeholder={t('block.height.placeholder')}
           onCommit={text => {
             const clean = text.trim();
             const n = Number(clean);
@@ -193,9 +199,9 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
             editSystem(draft => setHeight(draft, name, clean ? n : undefined));
           }} />
       </Field>
-      <Field label="Список в блоке" hint="Показывается после полей блока; в другом блоке этот список снимается.">
-        <Select<string> label="список в блоке" value={block.list ?? ''}
-          options={[['', 'нет'], ...SHEET_LIST_KEYS.map(list => [list, SHEET_LISTS[list]] as const)]}
+      <Field label={t('block.list.label')} hint={t('block.list.hint')}>
+        <Select<string> label={t('block.list.aria')} value={block.list ?? ''}
+          options={[['', t('common:no')], ...SHEET_LIST_KEYS.map(list => [list, SHEET_LISTS[list]] as const)]}
           onChange={next => editSystem(draft => {
             for (const other of draft.blocks ?? []) {
               if (other.key === name) { if (next) other.list = next as SheetList; else delete other.list; }
@@ -206,7 +212,7 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
       {block.list === 'things' ? (() => {
         const all = recordKinds(system).filter(([, kind]) => kind.use === 'item').map(([key]) => key);
         return (
-          <Field label="Типы в списке">
+          <Field label={t('block.kinds')}>
             <PickOrder keys={all} chosen={block.kinds ?? all} labelOf={key => system.tables?.[key]?.label || key}
               onChange={next => edit(target => {
                 if (next.length === all.length && next.every((key, at) => key === all[at])) delete target.kinds; else target.kinds = next;
@@ -215,15 +221,15 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
         );
       })() : null}
       {block.parts.some(part => isSingle(system.tables?.[part.table])) ? (
-        <Field label="Поля внутри блока">
-          <Select<string> label="поля внутри блока" value={String(block.per ?? '')}
-            options={[['', 'как поместятся'], ...Array.from({ length: GRID }, (_, at) => [String(at + 1), perRowWords(at + 1)] as const)]}
+        <Field label={t('block.per.label')}>
+          <Select<string> label={t('block.per.aria')} value={String(block.per ?? '')}
+            options={[['', t('block.per.auto')], ...Array.from({ length: GRID }, (_, at) => [String(at + 1), perRowWords(at + 1)] as const)]}
             onChange={next => edit(target => { if (next) target.per = Number(next); else delete target.per; })} />
         </Field>
       ) : null}
       {block.parts.some(part => !isSingle(system.tables?.[part.table])) ? (
-        <Field label="Строки таблицы">
-          <Select<string> label="строки таблицы" value={String(block.split ?? 1)}
+        <Field label={t('block.split.label')}>
+          <Select<string> label={t('block.split.aria')} value={String(block.split ?? 1)}
             options={Array.from({ length: GRID }, (_, at) => [String(at + 1), splitWords(at + 1)] as const)}
             onChange={next => edit(target => { if (Number(next) > 1) target.split = Number(next); else delete target.split; })} />
         </Field>
@@ -237,15 +243,15 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
         const chosenRows = part.rows ?? rows.map(rowKeyOf);
         return (
           <div key={index} className="stack stack--tight">
-            <Field label="Поля из таблицы" hint="«Лист» — поля персонажа, «Стол» — общее на столе; справочник при выборе станет своим у каждого листа">
-              <Select<string> label="таблица части" value={part.table}
+            <Field label={t('block.table.label')} hint={t('block.table.hint')}>
+              <Select<string> label={t('block.table.aria')} value={part.table}
                 options={tables.map(([id, label]) => [id, label] as const)}
                 onChange={next => choose(next, index)} />
             </Field>
-            <Field label="Колонки">
+            <Field label={t('block.columns')}>
               <div className="stack stack--tight">
-                {groupsOf(system, part.table, columns.map(c => c.key), name, chosen).map(([title, keys]) => (
-                  <ColumnGroup key={title} title={title} keys={keys} chosen={chosen}
+                {groupsOf(system, part.table, columns.map(c => c.key), name, chosen).map(({ id, title, keys }) => (
+                  <ColumnGroup key={id} ordered={id === 'here'} title={title} keys={keys} chosen={chosen}
                     labelOf={key => { const column = columns.find(c => c.key === key); return column?.label || key; }}
                     onToggle={(key, on) => editPart(index, target => {
                       const all = columns.map(c => c.key);
@@ -257,7 +263,7 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
               </div>
             </Field>
             {single ? null : (
-              <Field label="Строки">
+              <Field label={t('block.rows')}>
                 <PickOrder keys={rows.map(rowKeyOf)} chosen={chosenRows}
                   labelOf={key => { const row = rows.find(one => rowKeyOf(one) === key); return row?.label ?? String(row?.value ?? key); }}
                   onChange={next => editPart(index, target => {
@@ -267,31 +273,31 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
                   })} />
               </Field>
             )}
-            <Field label="Группировать по">
-              <Select<string> label="группировать по" value={part.by ?? ''}
-                options={[['', 'не группировать'], ...columns.map(c => [c.key, c.label || c.key] as const)]}
+            <Field label={t('block.by.label')}>
+              <Select<string> label={t('block.by.aria')} value={part.by ?? ''}
+                options={[['', t('block.by.none')], ...columns.map(c => [c.key, c.label || c.key] as const)]}
                 onChange={next => editPart(index, target => { if (next) target.by = next; else delete target.by; })} />
             </Field>
-            <DangerButton size="sm" onConfirm={() => edit(target => { target.parts.splice(index, 1); })}>Убрать поля этой таблицы</DangerButton>
+            <DangerButton size="sm" onConfirm={() => edit(target => { target.parts.splice(index, 1); })}>{t('block.removePart')}</DangerButton>
           </div>
         );
       })}
       {asking ? (
         <Verdict tone="warn">
           <div className="stack stack--tight">
-            <span>«{askedLabel}» — справочник: значения одни на всех. Чтобы поставить на лист, они станут своими у каждого листа — у каждого персонажа свои.</span>
+            <span>{t('block.ask.text', { name: askedLabel })}</span>
             <div className="inline inline--tight">
-              <Button size="sm" variant="primary" onClick={() => place(asking.table, asking.index)}>Да, своими у каждого листа</Button>
-              <Button size="sm" variant="ghost" onClick={() => setAsking(null)}>Нет</Button>
+              <Button size="sm" variant="primary" onClick={() => place(asking.table, asking.index)}>{t('block.ask.yes')}</Button>
+              <Button size="sm" variant="ghost" onClick={() => setAsking(null)}>{t('block.ask.no')}</Button>
             </div>
           </div>
         </Verdict>
       ) : null}
       <div className="inline inline--tight">
-        <Select<string> label="добавить поля из таблицы" value=""
-          options={[['', '+ поля из таблицы…'], ...tables.map(([id, label]) => [id, label] as const)]}
+        <Select<string> label={t('block.add.aria')} value=""
+          options={[['', t('block.add.option')], ...tables.map(([id, label]) => [id, label] as const)]}
           onChange={id => { if (id) choose(id); }} />
-        <DangerButton size="sm" onConfirm={() => { editSystem(draft => removeBlock(draft, name)); pick({ activeBlock: null }); }}>Удалить блок</DangerButton>
+        <DangerButton size="sm" onConfirm={() => { editSystem(draft => removeBlock(draft, name)); pick({ activeBlock: null }); }}>{t('block.remove')}</DangerButton>
       </div>
     </Card>
   );

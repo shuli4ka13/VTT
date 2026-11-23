@@ -2,8 +2,9 @@ import type { ReactNode } from 'react';
 import type { ControlKind } from '@vtt/schema';
 import { VIEWS, viewsFor } from '../../sheet/views/index.tsx';
 import type { ValueFamily } from '../../sheet/views/index.tsx';
+import { useT } from '../../i18n/author.ts';
 
-export function ViewGallery({ value, family, computed, label = 'Вид', plain, needs, onChange }: {
+export function ViewGallery({ value, family, computed, label, plain, needs, onChange }: {
   value: ControlKind | undefined;
   family: ValueFamily | null;
   computed: boolean;
@@ -12,11 +13,12 @@ export function ViewGallery({ value, family, computed, label = 'Вид', plain, 
   needs?: (kind: ControlKind) => string[];
   onChange: (next: ControlKind | undefined) => void;
 }) {
+  const t = useT('sheetTab');
   const keys = viewsFor(family, computed);
   const known = value === undefined || keys.includes(value);
   const shown = known ? keys : [...keys, value!];
   return (
-    <div className="view-gallery" role="radiogroup" aria-label={label}>
+    <div className="view-gallery" role="radiogroup" aria-label={label ?? t('gallery.view')}>
       <Tile on={value === undefined} title={plain.label} hint={plain.hint} onPick={() => onChange(undefined)}>
         <span className="view-gallery__plain">{computed ? '16' : '12'}</span>
       </Tile>
@@ -26,8 +28,8 @@ export function ViewGallery({ value, family, computed, label = 'Вид', plain, 
         const lacking = off ? [] : needs?.(key) ?? [];
         return (
           <Tile key={key} on={value === key} title={spec.label}
-            hint={off ? 'не подходит к типу значения' : lacking.length ? `${spec.hint}; не хватает: ${lacking.join(', ')}` : spec.hint}
-            note={off ? 'не подходит' : lacking.length ? `нужен ${lacking[0]}` : undefined}
+            hint={off ? t('gallery.unfit') : lacking.length ? t('gallery.lacking', { hint: spec.hint, list: lacking.join(', ') }) : spec.hint}
+            note={off ? t('gallery.unfitNote') : lacking.length ? t('gallery.needs', { name: lacking[0] }) : undefined}
             off={off} onPick={() => onChange(key)}>
             <spec.draw {...spec.sample} label={spec.label} />
           </Tile>

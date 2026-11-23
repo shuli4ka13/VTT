@@ -10,13 +10,14 @@ import { findAnchor, firstOf, foldOf, openedDialog } from './anchor.ts';
 import { Spot } from './spot.tsx';
 import type { Box } from './spot.tsx';
 import type { Lesson, Move, Step, View } from './types.ts';
+import { t as say, useT } from '../i18n/author.ts';
 import './guide.css';
 
 export const TAB_WORDS: Record<ConstructorTab, string> = {
-  sheet: TABS.sheet,
-  dictionaries: TABS.rules,
-  effects: TABS.effects,
-  records: TABS.records,
+  get sheet() { return TABS.sheet; },
+  get dictionaries() { return TABS.rules; },
+  get effects() { return TABS.effects; },
+  get records() { return TABS.records; },
 };
 
 export const PAUSE_MS = 900;
@@ -47,10 +48,10 @@ export function pointOf(step: Step, tab: ConstructorTab, view: View = viewNow(),
   if (step.tab && step.tab !== tab) {
     const word = TAB_WORDS[step.tab];
     const list = root.querySelector('[role="tablist"]') ?? root;
-    return { prompt: `Откройте вкладку «${word}».`, target: findAnchor({ text: word }, list) };
+    return { prompt: say('guide:prompt.openTab', { name: word }), target: findAnchor({ text: word }, list) };
   }
   const fold = step.panel ? foldOf(step.panel, root) : null;
-  if (fold) return { prompt: `Разверните панель «${step.panel}».`, target: fold };
+  if (fold) return { prompt: say('guide:prompt.unfold', { name: step.panel }), target: fold };
   return { prompt: null, target: firstOf(moveOf(step, view)?.at, root) ?? firstOf(step.via, root) };
 }
 
@@ -88,6 +89,7 @@ const safeDone = (step: Step | undefined, view: View): boolean => {
 };
 
 export function GuideLayer() {
+  const t = useT('guide');
   const id = useGuide(s => s.lesson);
   const note = useGuide(s => s.note);
   const dismiss = useGuide(s => s.dismiss);
@@ -99,7 +101,7 @@ export function GuideLayer() {
   if (!note) return null;
   return (
     <div className="guide">
-      <Verdict tone="warn" action={<Button size="sm" variant="ghost" onClick={dismiss}>Понятно</Button>}>{note}</Verdict>
+      <Verdict tone="warn" action={<Button size="sm" variant="ghost" onClick={dismiss}>{t('ok')}</Button>}>{note}</Verdict>
     </div>
   );
 }
@@ -122,27 +124,28 @@ const trapOf = (step: Step, view: View): string | null => {
 };
 
 const resultOf = (step: Step, view: View): string => {
-  try { return step.result?.(view) ?? 'получилось'; } catch { return 'получилось'; }
+  try { return step.result?.(view) ?? say('guide:result.done'); } catch { return say('guide:result.done'); }
 };
 
 export const nextLesson = (id: string): Lesson | undefined => LESSONS[LESSONS.findIndex(one => one.id === id) + 1];
 
 function FinishCard({ id }: { id: string }) {
+  const t = useT('guide');
   const lesson = lessonOf(id)!;
   const note = useGuide(s => s.note);
   const next = nextLesson(id);
   const sum = lesson.chapters.at(-1)?.sum;
   return (
-    <div className="guide" role="region" aria-label="Урок пройден">
+    <div className="guide" role="region" aria-label={t('finish.title')}>
       <Card className="guide__card">
-        <CardHead title="Урок пройден" sub={lesson.title} />
+        <CardHead title={t('finish.title')} sub={lesson.title} />
         {sum ? <p className="guide__say">{sum}</p> : null}
-        {next ? null : <p className="guide__sum">Все уроки пройдены.</p>}
+        {next ? null : <p className="guide__sum">{t('finish.all')}</p>}
         {note ? <Verdict tone="bad">{note}</Verdict> : null}
         <div className="guide__actions">
-          {next ? <Button size="sm" variant="primary" onClick={() => void useGuide.getState().start(next.id)}>Следующий урок: {next.title}</Button> : null}
+          {next ? <Button size="sm" variant="primary" onClick={() => void useGuide.getState().start(next.id)}>{t('finish.next', { title: next.title })}</Button> : null}
           <span className="spacer" />
-          <Button size="sm" variant={next ? 'ghost' : 'primary'} onClick={() => useGuide.getState().closeFinish()}>Закрыть</Button>
+          <Button size="sm" variant={next ? 'ghost' : 'primary'} onClick={() => useGuide.getState().closeFinish()}>{t('finish.close')}</Button>
         </div>
       </Card>
     </div>
@@ -150,6 +153,7 @@ function FinishCard({ id }: { id: string }) {
 }
 
 function LessonCard() {
+  const t = useT('guide');
   const id = useGuide(s => s.lesson);
   const at = useGuide(s => s.step);
   const folded = useGuide(s => s.folded);
@@ -198,7 +202,7 @@ function LessonCard() {
   const free = !step.done || done || got === key;
   const trap = done || success ? null : trapOf(step, view);
   const hint = moveOf(step, view)?.hint ?? step.hint;
-  const where = `глава ${place.chapter} из ${place.chapters} · шаг ${place.step} из ${place.steps}`;
+  const where = t('card.where', { chapter: place.chapter, chapters: place.chapters, step: place.step, steps: place.steps });
   const sum = place.closes && (done || success || !step.done) ? lesson.chapters[place.chapter - 1]?.sum : undefined;
 
   const next = () => { if (last) void finish(); else go(index + 1); };
@@ -217,20 +221,20 @@ function LessonCard() {
   return (
     <>
       {folded || step.alone || (step.done && (done || success)) ? null : <Spot place={`${key}|${move}|${point.prompt ?? ''}`} target={() => pointOf(step, useWorld.getState().activeTab).target} onBox={aside} />}
-      <div ref={host} className={left ? 'guide guide--left' : 'guide'} role="region" aria-label="Урок">
+      <div ref={host} className={left ? 'guide guide--left' : 'guide'} role="region" aria-label={t('card.region')}>
         {folded ? (
           <button type="button" className="guide__strip" onClick={() => fold(false)}>
-            Урок · {place.title} · шаг {place.step} из {place.steps}
+            {t('card.strip', { title: place.title, step: place.step, steps: place.steps })}
           </button>
         ) : (
           <Card className="guide__card">
             <CardHead title={lesson.title} sub={`${where} · ${place.title}`}
-              actions={<Button size="sm" variant="ghost" title="свернуть в полоску" onClick={() => fold(true)}>свернуть</Button>} />
+              actions={<Button size="sm" variant="ghost" title={t('card.foldTitle')} onClick={() => fold(true)}>{t('common:collapse')}</Button>} />
             {step.lead ? <p className="guide__lead">{step.lead}</p> : null}
-            {index === 0 && lesson.start ? <p className="guide__lead">С чего начинаем: {lesson.start}</p> : null}
+            {index === 0 && lesson.start ? <p className="guide__lead">{t('card.start', { text: lesson.start })}</p> : null}
             {point.prompt ? <p className="guide__prompt">{point.prompt}</p> : null}
-            <p className="guide__say">{step.alone ? <b>Сами: </b> : null}{step.say}</p>
-            {step.alone && step.goal ? <p className="guide__goal"><b>Готово, когда: </b>{step.goal}</p> : null}
+            <p className="guide__say">{step.alone ? <b>{t('card.alone')}</b> : null}{step.say}</p>
+            {step.alone && step.goal ? <p className="guide__goal"><b>{t('card.goal')}</b>{step.goal}</p> : null}
             {said.length > 1 ? (
               <ol className="guide__moves">
                 {said.map((text, at) => (
@@ -238,17 +242,17 @@ function LessonCard() {
                 ))}
               </ol>
             ) : null}
-            {success || already ? <Verdict tone="ok">{already ? `уже сделано: ${resultOf(step, view)}` : resultOf(step, view)}</Verdict> : null}
+            {success || already ? <Verdict tone="ok">{already ? t('result.already', { result: resultOf(step, view) }) : resultOf(step, view)}</Verdict> : null}
             {trap ? <Verdict tone="warn">{trap}</Verdict> : null}
-            {sum ? <p className="guide__sum">Глава «{place.title}»: {sum}</p> : null}
-            {hint ? <Fold key={hint} title={step.alone ? 'подсказка' : 'не получается?'}><p className="guide__hint">{hint}</p></Fold> : null}
+            {sum ? <p className="guide__sum">{t('card.sum', { title: place.title, sum })}</p> : null}
+            {hint ? <Fold key={hint} title={step.alone ? t('card.hintAlone') : t('card.hintStuck')}><p className="guide__hint">{hint}</p></Fold> : null}
             {note ? <Verdict tone="bad">{note}</Verdict> : null}
             <div className="guide__actions">
-              <Button size="sm" variant="ghost" disabled={index === 0} onClick={() => go(index - 1)}>Назад</Button>
-              {free ? <Button size="sm" variant="primary" onClick={next}>{last ? 'Завершить урок' : 'Дальше'}</Button> : null}
+              <Button size="sm" variant="ghost" disabled={index === 0} onClick={() => go(index - 1)}>{t('card.back')}</Button>
+              {free ? <Button size="sm" variant="primary" onClick={next}>{last ? t('card.end') : t('card.next')}</Button> : null}
               <span className="spacer" />
-              <Button size="sm" variant="ghost" title="учебная копия станет вашей новой системой" onClick={() => void keep()}>Оставить как новую систему</Button>
-              <Button size="sm" variant="ghost" title="ваша система вернётся, урок продолжится с этого шага" onClick={() => void exit()}>Выйти из урока</Button>
+              <Button size="sm" variant="ghost" title={t('card.keepTitle')} onClick={() => void keep()}>{t('card.keep')}</Button>
+              <Button size="sm" variant="ghost" title={t('card.exitTitle')} onClick={() => void exit()}>{t('card.exit')}</Button>
             </div>
           </Card>
         )}
@@ -258,6 +262,7 @@ function LessonCard() {
 }
 
 export function GuideButton() {
+  const t = useT('guide');
   const id = useGuide(s => s.lesson);
   const folded = useGuide(s => s.folded);
   const passed = useGuide(s => s.passed);
@@ -272,11 +277,11 @@ export function GuideButton() {
 
   return (
     <>
-      <Button size="sm" title={running ? 'урок идёт на учебной копии' : 'уроки по конструктору'}
+      <Button size="sm" title={running ? t('button.runningTitle') : t('button.title')}
         onClick={() => (running ? useGuide.getState().fold(!folded) : setOpen(true))}>
-        {running ? `Урок: ${running.title}` : 'Обучение'}
+        {running ? t('button.running', { title: running.title }) : t('button.label')}
       </Button>
-      <Drawer open={open} title="Обучение" sub="Урок идёт на учебной копии: ваша система не меняется и вернётся после урока."
+      <Drawer open={open} title={t('drawer.title')} sub={t('drawer.sub')}
         onClose={() => setOpen(false)}>
         <div className="stack">
           {note && !running ? <Verdict tone="bad">{note}</Verdict> : null}
@@ -284,14 +289,14 @@ export function GuideButton() {
             const was = passed.includes(lesson.id);
             const from = started[lesson.id];
             const actions = from === undefined
-              ? <Button size="sm" variant={was ? 'ghost' : 'primary'} onClick={() => void begin(lesson.id, false)}>{was ? 'Пройти снова' : 'Начать'}</Button>
+              ? <Button size="sm" variant={was ? 'ghost' : 'primary'} onClick={() => void begin(lesson.id, false)}>{was ? t('drawer.again') : t('drawer.begin')}</Button>
               : <>
-                <Button size="sm" variant="primary" onClick={() => void begin(lesson.id, false)}>Продолжить</Button>
-                <Button size="sm" variant="ghost" onClick={() => void begin(lesson.id, true)}>Начать заново</Button>
+                <Button size="sm" variant="primary" onClick={() => void begin(lesson.id, false)}>{t('drawer.resume')}</Button>
+                <Button size="sm" variant="ghost" onClick={() => void begin(lesson.id, true)}>{t('drawer.restart')}</Button>
               </>;
             const tags = <>
-              {was ? <span className="tag tag--done guide-lesson__tag">пройдено</span> : null}
-              {from !== undefined ? <span className="tag guide-lesson__tag">остановились: шаг {from + 1} из {lesson.steps.length}</span> : null}
+              {was ? <span className="tag tag--done guide-lesson__tag">{t('drawer.passed')}</span> : null}
+              {from !== undefined ? <span className="tag guide-lesson__tag">{t('drawer.stopped', { n: from + 1, total: lesson.steps.length })}</span> : null}
             </>;
             return (
               <Card key={lesson.id} className="guide-lesson">

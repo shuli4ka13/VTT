@@ -2,13 +2,14 @@ import { useMemo } from 'react';
 import { trial, mannequin, DICE_MODES } from '@vtt/engine';
 import type { DiceMode } from '@vtt/engine';
 import type { System, Compendium, Sheet } from '@vtt/schema';
+import { t } from '../i18n/index.ts';
 
 export type { DiceMode };
 export { DICE_MODES };
 
 export const MANNEQUINS: { id: string; name: string }[] = [
-  { id: 'проба_а', name: 'А' },
-  { id: 'проба_б', name: 'Б' },
+  { id: 'proba_a', get name() { return t('app:mannequin.a'); } },
+  { id: 'proba_b', get name() { return t('app:mannequin.b'); } },
 ];
 
 export const mannequinsOf = (system: System): Sheet[] =>

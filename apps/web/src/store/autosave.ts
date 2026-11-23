@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { useWorld } from './world.ts';
 import { saveSystem, createSystem, saveCompendium, ApiError } from '../api/client.ts';
+import { dataT, t } from '../i18n/author.ts';
 
 const PAUSE = 1500;
 
@@ -48,18 +49,19 @@ export async function settle(): Promise<boolean> {
 }
 
 export const saveLabel = (state: SaveState, idle: string): string =>
-  state.kind === 'saving' ? 'сохраняем…'
-    : state.kind === 'dirty' ? 'есть несохранённые правки'
-      : state.kind === 'saved' ? `сохранено в ${state.at}`
-        : state.kind === 'failed' ? `не сохранилось: ${[state.why, ...state.issues.slice(0, 2)].join(' · ')}`
+  state.kind === 'saving' ? t('author:save.saving')
+    : state.kind === 'dirty' ? t('author:save.dirty')
+      : state.kind === 'saved' ? t('author:save.saved', { at: state.at })
+        : state.kind === 'failed' ? t('author:save.failed', { why: [state.why, ...state.issues.slice(0, 2)].join(' · ') })
           : idle;
 
 function snapshotOf(): string {
   const { system, compendium, origin } = useWorld.getState();
   const { mode, compendiumTitle } = origin;
+  const td = dataT(system);
   const title = mode === 'system'
-    ? (system.name ?? 'Без имени')
-    : (compendiumTitle ?? 'Без имени');
+    ? (system.name ?? td('author:save.untitled'))
+    : (compendiumTitle ?? td('author:save.untitled'));
   return JSON.stringify({ mode, title, body: mode === 'system' ? system : compendium });
 }
 
@@ -80,9 +82,10 @@ function schedule(): void {
   const target = mode === 'system' ? systemId : compendiumId;
   if (!target) return;
 
+  const td = dataT(system);
   const title = mode === 'system'
-    ? (system.name ?? 'Без имени')
-    : (compendiumTitle ?? 'Без имени');
+    ? (system.name ?? td('author:save.untitled'))
+    : (compendiumTitle ?? td('author:save.untitled'));
   const snapshot = JSON.stringify({ mode, title, body: mode === 'system' ? system : compendium });
   if (snapshot === sent) return;
 

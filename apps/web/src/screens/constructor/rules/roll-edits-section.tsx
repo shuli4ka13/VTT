@@ -11,6 +11,7 @@ import { inUse as isUsed } from '../usage.ts';
 import type { UsageIndex } from '../usage.ts';
 import type { System, RollEdit, RollEditOp } from '@vtt/schema';
 import type { WorldState } from '../../../store/world.ts';
+import { useT, t } from '../../../i18n/author.ts';
 
 type EditSystem = WorldState['editSystem'];
 interface Props { system: System; editSystem: EditSystem; usage: UsageIndex }
@@ -33,8 +34,6 @@ function opWord(op: { op: string; [k: string]: unknown }): string {
   return editPalette().find(p => p.key === key)?.label ?? op.op;
 }
 
-const OTHER_WORDS = 'остальные';
-
 function addOptions(system: System): (readonly [string, string] | readonly [string, string, string])[] {
   const palette = editPalette();
   const places = placesOf(system).filter(place => place.kind !== null);
@@ -49,7 +48,7 @@ function addOptions(system: System): (readonly [string, string] | readonly [stri
       out.push([`${kind}:${entry.key}`, entry.label, ROLL_KIND_WORDS[kind]] as const);
     }
   }
-  for (const entry of palette) if (!placed.has(entry.key)) out.push([`other:${entry.key}`, entry.label, OTHER_WORDS] as const);
+  for (const entry of palette) if (!placed.has(entry.key)) out.push([`other:${entry.key}`, entry.label, t('rolls:edits.other')] as const);
   return out;
 }
 
@@ -68,6 +67,7 @@ export function AdvantagePalette({ system, editSystem, onAdded }: {
   editSystem: EditSystem;
   onAdded: () => void;
 }) {
+  const t = useT('rolls');
   return (
     <div className="palette">
       {ADVANTAGE_METHODS.map(method => {
@@ -80,13 +80,13 @@ export function AdvantagePalette({ system, editSystem, onAdded }: {
             type="button"
             className="card card--pick"
             disabled={shut}
-            title="Готовая пара правок: приедет в раздел «Правки броска» со всеми словами"
+            title={t('edits.palette.title')}
             onClick={() => { addFromCatalog(editSystem, method.id); onAdded(); }}
           >
             <span className="card__title">{method.label}</span>
             <span className="card__sub">
-              {!method.implemented ? 'пока нет'
-                : already ? 'уже в системе'
+              {!method.implemented ? t('edits.palette.none')
+                : already ? t('edits.palette.already')
                   : first ? `${first.system}: ${first.example}` : ''}
             </span>
           </button>
@@ -114,14 +114,15 @@ function OpChip({ op, system, parts, onNumber, onCount, onPart, onChange, onRemo
   onChange: (change: (it: Record<string, unknown>) => void) => void;
   onRemove: () => void;
 }) {
+  const t = useT('rolls');
   if (op.op === PLUS) {
     return (
       <span className="chip chip--formula">
-        прибавить
+        {t('edits.chip.plus')}
         <span className="chip__formula">
-          <AddendPick source={op} system={system} where="правка броска · прибавить" dieOnly onChange={onChange} />
+          <AddendPick source={op} system={system} where={t('edits.chip.plusWhere')} dieOnly onChange={onChange} />
         </span>
-        <button className="chip__x" type="button" title="убрать" onClick={onRemove}>×</button>
+        <button className="chip__x" type="button" title={t('common:removeLower')} onClick={onRemove}>×</button>
       </span>
     );
   }
@@ -134,31 +135,31 @@ function OpChip({ op, system, parts, onNumber, onCount, onPart, onChange, onRemo
         <ChipNum value={Number(op[numeric] ?? templateOf(op)[numeric] ?? 0)} onCommit={onNumber} />
       ) : null}
       {op.op === 'addDie' ? (
-        <span className="chip__count"><BoundField value={op.count ?? 1} placeholder="сколько" onChange={onCount} /></span>
+        <span className="chip__count"><BoundField value={op.count ?? 1} placeholder={t('edits.chip.howMany')} onChange={onCount} /></span>
       ) : null}
       {op.op === 'explode' ? (
         <select
           className="chip__part"
-          aria-label="сколько раз"
+          aria-label={t('edits.chip.howManyTimes')}
           value={Number(op.limit) === 1 ? 'once' : 'chain'}
           onChange={e => onChange(it => { if (e.target.value === 'once') it.limit = 1; else delete it.limit; })}
         >
-          <option value="chain">пока выпадает</option>
-          <option value="once">один раз</option>
+          <option value="chain">{t('edits.chip.untilFalls')}</option>
+          <option value="once">{t('edits.chip.once')}</option>
         </select>
       ) : null}
       {askPart ? (
         <select
           className="chip__part"
-          aria-label="чему именно"
+          aria-label={t('edits.chip.whichPart')}
           value={String(op.part ?? '')}
           onChange={e => onPart(e.target.value)}
         >
-          <option value="">всему броску</option>
+          <option value="">{t('edits.chip.wholeRoll')}</option>
           {parts.map(p => <option key={p.name} value={p.name}>{p.label}</option>)}
         </select>
       ) : null}
-      <button className="chip__x" type="button" title="убрать" onClick={onRemove}>×</button>
+      <button className="chip__x" type="button" title={t('common:removeLower')} onClick={onRemove}>×</button>
     </span>
   );
 }
@@ -171,9 +172,10 @@ function WordRow({ wordKey, edit, system, editSystem, parts, used }: {
   parts: { name: string; label: string }[];
   used: boolean;
 }) {
+  const t = useT('rolls');
   const ops = (edit.ops ?? []) as Record<string, unknown>[];
   const narrowed = Boolean(edit.tags?.length || edit.anyTags?.length);
-  const said = ops.length ? (narrowed ? null : editNotation({ ops }, system)) ?? joinReadback(editReadback({ ops }, system)) : 'что она делает с броском?';
+  const said = ops.length ? (narrowed ? null : editNotation({ ops }, system)) ?? joinReadback(editReadback({ ops }, system)) : t('edits.word.empty');
   const opAt = (i: number) => (draft: System) => draft.roll_edits?.[wordKey]?.ops?.[i] as Record<string, unknown> | undefined;
   return (
     <div className="dict-block roll-word">
@@ -181,7 +183,7 @@ function WordRow({ wordKey, edit, system, editSystem, parts, used }: {
         <span className="roll-word__name">
           <Input
             value={edit.label ?? ''}
-            placeholder="как это зовётся в вашем мире"
+            placeholder={t('edits.word.namePlaceholder')}
             onChange={label => editSystem(draft => {
               const cur = draft.roll_edits?.[wordKey];
               if (cur) cur.label = label;
@@ -191,13 +193,13 @@ function WordRow({ wordKey, edit, system, editSystem, parts, used }: {
         <span className={ops.length ? 'roll-word__said' : 'roll-word__said roll-word__said--hole'}>{said}</span>
         <Button
           size="sm" variant="danger" disabled={used}
-          title={used ? 'правка используется эффектом' : undefined}
+          title={used ? t('edits.word.usedTitle') : undefined}
           onClick={() => editSystem(draft => {
             delete draft.roll_edits?.[wordKey];
             for (const other of Object.values(draft.roll_edits ?? {})) unlinkFrom(other, wordKey);
           })}
         >
-          Убрать
+          {t('common:remove')}
         </Button>
       </div>
       <Cancels wordKey={wordKey} edit={edit} system={system} editSystem={editSystem} />
@@ -234,7 +236,7 @@ function WordRow({ wordKey, edit, system, editSystem, parts, used }: {
         ))}
         <Select
           value=""
-          options={[['', '+ добавить…'], ...addOptions(system)] as never}
+          options={[['', t('edits.word.add')], ...addOptions(system)] as never}
           onChange={pick => {
             const chosen = editPalette().find(p => p.key === pick.slice(pick.indexOf(':') + 1));
             if (!chosen) return;
@@ -263,11 +265,6 @@ function WordRow({ wordKey, edit, system, editSystem, parts, used }: {
   );
 }
 
-const STACK_WORDS = [['', 'одно на бросок'], ['yes', 'по разу от каждого разного эффекта']] as const;
-const ONCE_WORDS = [['', 'заявка — ко всем броскам действия'], ['yes', 'заявка — к одной проверке']] as const;
-const ONCE_TIP = 'Заявленное за столом к действию: ко всем броскам заявившего, к которым подходит слово, или только к первому из них. Правок эффектов и вещей это не касается.';
-const STACK_TIP = 'Одно на бросок — сколько бы эффектов ни дали слово. По разу от каждого разного эффекта — а копии одного и того же эффекта считаются одним: два «Поддержания» дадут слово один раз. «За каждую копию» — числом в самом эффекте.';
-
 function unlinkFrom(edit: RollEdit, key: string): void {
   if (!edit.cancels) return;
   edit.cancels = edit.cancels.filter(one => one !== key);
@@ -275,6 +272,9 @@ function unlinkFrom(edit: RollEdit, key: string): void {
 }
 
 function Cancels({ wordKey, edit, system, editSystem }: { wordKey: string; edit: RollEdit; system: System; editSystem: EditSystem }) {
+  const t = useT('rolls');
+  const stackWords = [['', t('edits.cancels.stackOne')], ['yes', t('edits.cancels.stackEach')]] as const;
+  const onceWords = [['', t('edits.cancels.onceAll')], ['yes', t('edits.cancels.onceOne')]] as const;
   const dict = system.roll_edits ?? {};
   const name = (key: string): string => dict[key]?.label || key;
   const linked = Object.keys(dict).filter(other => cancels(dict, wordKey, other));
@@ -293,30 +293,30 @@ function Cancels({ wordKey, edit, system, editSystem }: { wordKey: string; edit:
   });
   return (
     <div className="dict-row dict-row--wrap roll-line">
-      <span className="dict-row__label">Гасит</span>
+      <span className="dict-row__label">{t('edits.cancels.label')}</span>
       {linked.map(other => (
         <span key={other} className="chip">
           {name(other)}
-          <button className="chip__x" type="button" title="больше не гасят друг друга" onClick={() => unlink(other)}>×</button>
+          <button className="chip__x" type="button" title={t('edits.cancels.unlink')} onClick={() => unlink(other)}>×</button>
         </span>
       ))}
       {dangling.map(other => (
         <span key={other} className="chip chip--bad">
-          {other} — такого слова нет
-          <button className="chip__x" type="button" title="убрать ссылку" onClick={() => unlink(other)}>×</button>
+          {t('edits.cancels.missing', { name: other })}
+          <button className="chip__x" type="button" title={t('edits.cancels.dropLink')} onClick={() => unlink(other)}>×</button>
         </span>
       ))}
       {free.length ? (
-        <Select value="" options={[['', '+ слово…'], ...free.map(other => [other, name(other)] as const)] as never}
+        <Select value="" options={[['', t('edits.cancels.addWord')], ...free.map(other => [other, name(other)] as const)] as never}
           onChange={(other: string) => { if (other) link(other); }} />
       ) : null}
-      <Select value={edit.stacks ? 'yes' : ''} options={STACK_WORDS as never} title={STACK_TIP}
+      <Select value={edit.stacks ? 'yes' : ''} options={stackWords as never} title={t('edits.cancels.stackTip')}
         onChange={(next: string) => editSystem(draft => {
           const cur = draft.roll_edits?.[wordKey];
           if (!cur) return;
           if (next) cur.stacks = true; else delete cur.stacks;
         })} />
-      <Select value={edit.once ? 'yes' : ''} options={ONCE_WORDS as never} title={ONCE_TIP}
+      <Select value={edit.once ? 'yes' : ''} options={onceWords as never} title={t('edits.cancels.onceTip')}
         onChange={(next: string) => editSystem(draft => {
           const cur = draft.roll_edits?.[wordKey];
           if (!cur) return;
@@ -327,21 +327,19 @@ function Cancels({ wordKey, edit, system, editSystem }: { wordKey: string; edit:
 }
 
 export function RollEditsSection({ system, editSystem, usage }: Props) {
+  const t = useT('rolls');
   const entries = Object.entries(system.roll_edits ?? {});
   const parts = partsOf(system);
 
   return (
     <Card>
       <CardHead
-        title="Правки броска"
-        sub="Слова правил: что значит «с преимуществом», «с помехой». Включает их эффект или заявка за столом. Прибавку одного эффекта («+ к4») пишут в самом эффекте."
-        actions={<Button size="sm" onClick={() => addRollEdit(editSystem)}>+ правка</Button>}
+        title={t('edits.section.title')}
+        sub={t('edits.section.sub')}
+        actions={<Button size="sm" onClick={() => addRollEdit(editSystem)}>{t('edits.section.add')}</Button>}
       />
       {entries.length === 0 ? (
-        <span className="faint">
-          Правок нет — броски идут как есть. Заведите своё слово: «Преимущество»,
-          «Фора», «Ускорение» — как это зовётся в вашем мире. Или возьмите готовую пару справа.
-        </span>
+        <span className="faint">{t('edits.section.empty')}</span>
       ) : (
         <div className="stack">
           {entries.map(([key, edit]) => (
@@ -357,11 +355,12 @@ export function RollEditsSection({ system, editSystem, usage }: Props) {
 }
 
 function ChipNum({ value, onCommit }: { value: number; onCommit: (n: number) => void }) {
+  const t = useT('rolls');
   const [draft, setDraft] = useState<string | null>(null);
   return (
     <input
       className="chip__num"
-      aria-label="сколько"
+      aria-label={t('edits.chip.howMany')}
       value={draft ?? String(value)}
       onChange={e => {
         setDraft(e.target.value);

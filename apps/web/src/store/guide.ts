@@ -10,6 +10,7 @@ import { useSession } from './session.ts';
 import { settle, markClean, rememberVersion } from './autosave.ts';
 import { getSystem, createSystem } from '../api/client.ts';
 import { lessonOf } from '../guide/lessons/index.ts';
+import { dataT, t } from '../i18n/author.ts';
 
 export interface Snapshot {
   system: System;
@@ -98,11 +99,11 @@ async function giveBack(real: Snapshot): Promise<string | null> {
       publication = publicationOf(saved.behind);
       world.replaceWorld({ system: saved.system, compendium: real.compendium, sheets: real.sheets });
     } catch (err) {
-      return `вернуть вашу систему не удалось: ${(err as Error).message} — попробуйте ещё раз`;
+      return t('guide:note.restoreFailed', { why: (err as Error).message });
     }
   } else {
     const parsed = W.world.safeParse({ system: real.system, compendium: real.compendium, sheets: real.sheets });
-    if (!parsed.success) return 'запомненная система не прошла проверку';
+    if (!parsed.success) return t('guide:note.badSaved');
     world.replaceWorld(parsed.data as never);
   }
   useWorld.setState({ origin: publication ? { ...real.origin, publication } : real.origin });
@@ -126,7 +127,7 @@ export const useGuide = create<GuideState>()(persist((set, get) => ({
     const lesson = lessonOf(id);
     if (!lesson) return false;
     if (!await settle()) {
-      set({ note: 'урок не начат: последние правки не сохранились — причина в шапке' });
+      set({ note: t('guide:note.notSaved') });
       return false;
     }
     const world = useWorld.getState();
@@ -140,7 +141,7 @@ export const useGuide = create<GuideState>()(persist((set, get) => ({
     if (again) delete saved.lessons[id];
     const entry = saved.lessons[id];
     if (!writeSaved(saved)) {
-      set({ note: 'урок не начат: вашу систему сохранить не удалось' });
+      set({ note: t('guide:note.cantStash') });
       return false;
     }
     const step = Math.min(entry?.step ?? 0, lesson.steps.length - 1);
@@ -209,14 +210,14 @@ export const useGuide = create<GuideState>()(persist((set, get) => ({
     const id = get().lesson;
     if (!id || !marked(id)) return false;
     const system = useWorld.getState().system;
-    const title = system.name?.trim() || lessonOf(id)?.title || 'Учебная система';
+    const title = system.name?.trim() || lessonOf(id)?.title || dataT(system)('guide:keepUntitled');
     try {
       const made = await createSystem(title, system);
       rememberVersion({ system: made.updatedAt, compendium: undefined });
       useWorld.setState({ origin: { mode: 'system', systemId: made.id, systemTitle: title, systemMine: true } });
       markClean();
     } catch (err) {
-      set({ note: `сохранить как новую систему не удалось: ${(err as Error).message}` });
+      set({ note: t('guide:note.keepFailed', { why: (err as Error).message }) });
       return false;
     }
     const saved = readSaved();
@@ -244,7 +245,7 @@ export function reconcile(): void {
   const { lesson } = useGuide.getState();
   if (origin.lesson && !real) {
     useWorld.setState({ origin: { ...origin, lesson: undefined } });
-    close('учебная копия осталась без вашей системы — откройте её через «сменить»');
+    close(t('guide:note.orphan'));
     return;
   }
   if (real && (!origin.lesson || origin.lesson !== lesson || origin.systemId)) { close(); return; }

@@ -4,6 +4,7 @@ import { useWorld, freeId } from '../../store/world.ts';
 import { blockNames, blockLabel, labelBlock, NO_BLOCK, fieldsOf, kindsOf } from '@vtt/engine';
 import { groupChain } from './groups.ts';
 import type { System } from '@vtt/schema';
+import { useT } from '../../i18n/author.ts';
 
 const depthOf = (system: System, name: string): number => groupChain(system, name).length - 1;
 
@@ -25,6 +26,7 @@ export function BlockPick({ system, value, onChange, of }: {
   onChange: (next: string | undefined) => void;
   of: BlockOf;
 }) {
+  const t = useT('sheetTab');
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState('');
 
@@ -53,12 +55,12 @@ export function BlockPick({ system, value, onChange, of }: {
       <div className="inline inline--tight">
         <Input
           value={draft}
-          placeholder="как назвать блок"
+          placeholder={t('blockPick.placeholder')}
           onChange={setDraft}
           onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); add(); } }}
         />
-        <Button size="sm" variant="ghost" disabled={!draft.trim()} onClick={add}>завести</Button>
-        <Button size="sm" variant="ghost" onClick={() => { setAdding(false); setDraft(''); }}>отмена</Button>
+        <Button size="sm" variant="ghost" disabled={!draft.trim()} onClick={add}>{t('blockPick.create')}</Button>
+        <Button size="sm" variant="ghost" onClick={() => { setAdding(false); setDraft(''); }}>{t('common:cancel')}</Button>
       </div>
     );
   }
@@ -71,7 +73,7 @@ export function BlockPick({ system, value, onChange, of }: {
           ...names.map(name => [name, `${'· '.repeat(depthOf(system, name))}${blockLabel(system, name)}`] as const)] as never}
         onChange={next => onChange(next || undefined)}
       />
-      <Button size="sm" variant="ghost" onClick={() => setAdding(true)}>+ новый</Button>
+      <Button size="sm" variant="ghost" onClick={() => setAdding(true)}>{t('blockPick.new')}</Button>
     </div>
   );
 }

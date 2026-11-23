@@ -2,12 +2,15 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { System } from '@vtt/schema';
 import { listOf } from '@vtt/engine';
 import { formulaWords } from '../../../../ui/formula-words.ts';
+import { t as tg, useT } from '../../../../i18n/author.ts';
 
 export interface ResultOutput { key: string; label?: string; kind?: string; from?: string; many?: boolean; no?: string }
 
-const MARKS: Record<string, string> = { boolean: '◐', choice: '☰', number: '#', text: 'аб' };
+const marks = (): Record<string, string> => ({ boolean: '◐', choice: '☰', number: '#', text: tg('rollCards:result.mark.text') });
 
-const KINDS: Record<string, string> = { boolean: 'да или нет', choice: 'один из вариантов', number: 'число', text: 'текст' };
+const kinds = (): Record<string, string> => ({
+  boolean: tg('rollCards:result.kind.boolean'), choice: tg('rollCards:result.kind.choice'), number: tg('rollCards:result.kind.number'), text: tg('rollCards:result.kind.text'),
+});
 
 function Fork() {
   return (
@@ -20,30 +23,32 @@ function Fork() {
 function cellText(system: System, value: unknown): string {
   if (value === undefined || value === null || value === '') return '—';
   if (typeof value === 'object' && 'expr' in (value as object)) return formulaWords(system, String((value as { expr: unknown }).expr));
-  if (value === true) return 'да';
-  if (value === false) return 'нет';
+  if (value === true) return tg('common:yes');
+  if (value === false) return tg('common:no');
   return String(value);
 }
 
 function Card({ system, one, branch, active, forked, branches, onClose }: { system: System; one: ResultOutput; branch?: (() => void) | undefined; active: string | undefined; forked?: string | undefined; branches: Record<string, () => void>; onClose: () => void }) {
+  const t = useT('rollCards');
   const kind = one.kind ?? 'number';
   const label = one.label ?? one.key;
+  const no = one.no ?? t('result.not', { label });
   const table = kind === 'choice' && one.from ? system.tables?.[one.from] : undefined;
   const columns = (table?.columns ?? []).filter(column => column.key !== 'text');
   const rows = kind === 'choice' && one.from ? listOf(system, one.from) ?? [] : [];
   const raw = new Map((table?.rows ?? []).map(row => [String(row.value), (row.cells ?? {}) as Record<string, unknown>]));
   return (
-    <div className="result-table" role="dialog" aria-label={`итог «${label}»`}>
+    <div className="result-table" role="dialog" aria-label={t('result.dialog', { label })}>
       <div className="result-table__head">
         <span className="result-table__title">{label}</span>
-        <span className="result-table__kind">{KINDS[kind] ?? kind}</span>
-        <button type="button" className="result-table__close" aria-label="закрыть" onClick={onClose}>×</button>
+        <span className="result-table__kind">{kinds()[kind] ?? kind}</span>
+        <button type="button" className="result-table__close" aria-label={t('common:close')} onClick={onClose}>×</button>
       </div>
       {kind === 'boolean' ? (
         <table>
           <tbody>
-            <tr><td className="result-table__variant">да</td><td>{label}</td></tr>
-            <tr><td className="result-table__variant">нет</td><td>{one.no ?? `не ${label}`}</td></tr>
+            <tr><td className="result-table__variant">{t('common:yes')}</td><td>{label}</td></tr>
+            <tr><td className="result-table__variant">{t('common:no')}</td><td>{no}</td></tr>
           </tbody>
         </table>
       ) : null}
@@ -51,7 +56,7 @@ function Card({ system, one, branch, active, forked, branches, onClose }: { syst
         <table>
           <thead>
             <tr>
-              <th>{table?.label ?? 'вариант'}</th>
+              <th>{table?.label ?? t('result.variant')}</th>
               {columns.map(column => <th key={column.key}>{column.label ?? column.key}</th>)}
             </tr>
           </thead>
@@ -68,19 +73,19 @@ function Card({ system, one, branch, active, forked, branches, onClose }: { syst
       {columns.filter(column => column.kind === 'boolean').map(column => {
         const path = `${one.key}.${column.key}`;
         const side = (wanted: boolean) => rows.filter(row => Boolean(raw.get(String(row.value))?.[column.key]) === wanted).map(row => row.label).join(' · ');
-        if (active === path) return <p key={path} className="result-table__note">по «{column.label ?? column.key}» — эта развилка</p>;
+        if (active === path) return <p key={path} className="result-table__note">{t('result.forkBy', { name: column.label ?? column.key })}</p>;
         const run = branches[path];
         return run ? (
           <button key={path} type="button" className="result-table__fork" onClick={() => { run(); onClose(); }}>
-            <Fork /> развилка по «{column.label ?? column.key}»: {side(true)} / {side(false)}
+            <Fork /> {t('result.forkColumn', { name: column.label ?? column.key, yes: side(true), no: side(false) })}
           </button>
         ) : null;
       })}
-      {active === one.key ? <p className="result-table__note">по нему — эта развилка</p> : branch ? (
+      {active === one.key ? <p className="result-table__note">{t('result.forkThis')}</p> : branch ? (
         <button type="button" className="result-table__fork" onClick={() => { branch(); onClose(); }}>
-          <Fork /> развилка: {kind === 'boolean' ? `${label} / ${one.no ?? `не ${label}`}` : rows.map(row => row.label).join(' · ')}
+          <Fork /> {t('result.fork', { variants: kind === 'boolean' ? `${label} / ${no}` : rows.map(row => row.label).join(' · ') })}
         </button>
-      ) : forked && !active?.startsWith(`${one.key}.`) ? <p className="result-table__muted">развилка этого шага уже идёт по «{forked}»</p> : null}
+      ) : forked && !active?.startsWith(`${one.key}.`) ? <p className="result-table__muted">{t('result.forked', { name: forked })}</p> : null}
     </div>
   );
 }
@@ -103,10 +108,10 @@ function ResultChip({ one, system, branch, active, forked, branches }: { one: Re
   return (
     <span ref={box} className={`result-chip result-chip--${kind}${active === one.key || active?.startsWith(`${one.key}.`) ? ' is-active' : ''}${open ? ' is-open' : ''}`}>
       <button
-        type="button" className="result-chip__face" title={KINDS[kind] ?? kind}
+        type="button" className="result-chip__face" title={kinds()[kind] ?? kind}
         {...(opens ? { 'aria-expanded': open, onClick: () => setOpen(!open) } : { tabIndex: -1 })}
       >
-        <span className="result-chip__mark" aria-hidden="true">{MARKS[kind] ?? '·'}</span>
+        <span className="result-chip__mark" aria-hidden="true">{marks()[kind] ?? '·'}</span>
         <span className="result-chip__label">{label}</span>
         {variants.length ? <span className="result-chip__count">{variants.length}</span> : null}
       </button>
@@ -132,13 +137,14 @@ export function ResultChips({ name, outputs, system, branches = {}, active, onNa
   onName?: (() => void) | undefined;
   nameSlot?: ReactNode;
 }) {
+  const t = useT('rollCards');
   return (
     <div className="result-row">
       {nameSlot ?? (onName
-        ? <button type="button" className="result-row__name" title="так результат шага зовётся в формулах — нажмите, чтобы переименовать" onClick={onName}>
-            {name || 'результат…'}
+        ? <button type="button" className="result-row__name" title={t('result.renameTitle')} onClick={onName}>
+            {name || t('result.name')}
           </button>
-        : <span className="result-row__name" title="так результат шага зовётся в формулах; на это имя уже ссылаются шаги ниже, поэтому переименовать его нельзя">{name}</span>)}
+        : <span className="result-row__name" title={t('result.lockedTitle')}>{name}</span>)}
       <span className="result-row__arrow" aria-hidden="true">→</span>
       <span className="result-row__chips">
         {outputs.map(one => <ResultChip key={one.key} one={one} system={system} branch={branches[one.key]} active={active} branches={branches} forked={active ? forkedLabel(system, outputs, active) : undefined} />)}

@@ -4,6 +4,7 @@ import { Button, Select } from '../../../../ui/primitives.tsx';
 import { FormulaField } from '../../../../ui/formula-field.tsx';
 import { namesOf, inputBadges } from '../../slots.tsx';
 import type { SlotContext } from '../../slots.tsx';
+import { useT } from '../../../../i18n/author.ts';
 import { DIE, EXPR, OWN_DIE, setAddendDie, whatOf, whatOptions } from './roll-what.ts';
 
 type Loose = Record<string, unknown>;
@@ -53,9 +54,10 @@ export function AddendPick({ source, system, effect, context, where, dieOnly, on
   dieOnly?: boolean;
   onChange: (change: (it: Loose) => void) => void;
 }) {
+  const t = useT('rollCards');
   const options = useMemo(
     () => whatOptions(system, effect ?? NO_EFFECT).filter(([key]) => key.startsWith(DIE) || key.startsWith(EXPR) || key === OWN_DIE),
-    [system, effect],
+    [system, effect, t],
   );
   const [hand, setHand] = useState(false);
   const [counting, setCounting] = useState(false);
@@ -75,26 +77,26 @@ export function AddendPick({ source, system, effect, context, where, dieOnly, on
     else if (next.startsWith(EXPR)) onChange(it => setAddendDie(it, { expr: next.slice(EXPR.length) }));
   };
 
-  const choices = dieOnly ? options : [[NUMBER, 'число / формула', 'Число'] as const, ...options];
+  const choices = dieOnly ? options : [[NUMBER, t('addend.number.option'), t('addend.number.group')] as const, ...options];
 
   return (
-    <div className="inline inline--tight addend-pick" data-field="Сколько">
-      <Select label="Сколько" value={what} options={choices} onChange={pick} />
+    <div className="inline inline--tight addend-pick" data-field={t('addend.how')}>
+      <Select label={t('addend.how')} value={what} options={choices} onChange={pick} />
       {what === NUMBER ? (
-        <SlotFormula value={source.value} label="Число" where={where} placeholder="число или формула" system={system} context={context}
+        <SlotFormula value={source.value} label={t('addend.number.label')} where={where} placeholder={t('addend.number.placeholder')} system={system} context={context}
           onSet={text => onChange(it => { if (text) it.value = { expr: text }; else delete it.value; })} />
       ) : null}
       {what === OWN_DIE ? (
-        <SlotFormula value={ownValue} label="Своя кость" where={`${where} · кость`} placeholder="2к6 или формула кости" system={system} context={context}
+        <SlotFormula value={ownValue} label={t('addend.die.label')} where={t('addend.die.where', { where })} placeholder={t('addend.die.placeholder')} system={system} context={context}
           onSet={text => { if (text) { setHand(false); onChange(it => setAddendDie(it, { expr: text })); } }} />
       ) : null}
       {dieMode && (counted || counting) ? (
-        <SlotFormula value={source.count} label="Сколько костей" where={`${where} · сколько костей`} placeholder="сколько костей" system={system} context={context}
+        <SlotFormula value={source.count} label={t('addend.count.label')} where={t('addend.count.where', { where })} placeholder={t('addend.count.placeholder')} system={system} context={context}
           onSet={text => onChange(it => { if (text) it.count = { expr: text }; else delete it.count; })} />
       ) : null}
-      {dieMode && !counted && !counting ? <Button size="sm" variant="ghost" onClick={() => setCounting(true)}>+ сколько костей</Button> : null}
+      {dieMode && !counted && !counting ? <Button size="sm" variant="ghost" onClick={() => setCounting(true)}>{t('addend.count.add')}</Button> : null}
       {dieMode ? (
-        <Select label="Прибавить или вычесть" value={source.minus === true ? 'minus' : ''} options={[['', 'прибавить'], ['minus', 'вычесть']] as const}
+        <Select label={t('addend.sign.label')} value={source.minus === true ? 'minus' : ''} options={[['', t('addend.sign.plus')], ['minus', t('addend.sign.minus')]] as const}
           onChange={next => onChange(it => { if (next === 'minus') it.minus = true; else delete it.minus; })} />
       ) : null}
     </div>

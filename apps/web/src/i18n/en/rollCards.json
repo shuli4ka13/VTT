@@ -1,1 +1,247 @@
-{}
+{
+  "what": {
+    "group": {
+      "byInput": "By effect input",
+      "onSheet": "Sheet fields",
+      "dice": "Dice",
+      "other": "Other"
+    },
+    "fromInput": "Die from an input",
+    "ownDie": "own die…",
+    "ownField": "field by its own address…",
+    "label": "What is rolled",
+    "blank": "— what is rolled —"
+  },
+  "nobody": "nobody — dice belong to no one",
+  "nobodyNote": "dice belong to no one: roll edits and “after seeing the dice” questions do not apply to them",
+  "ownDie": {
+    "fromInput": "die from the input “{{name}}”: the faces rolled are added up, it has no success rule",
+    "written": "die “{{name}}”: the faces rolled are added up, it has no success rule"
+  },
+  "who": {
+    "ask": "who rolls?",
+    "stray": "{{name}} — there is no such sheet here",
+    "label": "Who rolls",
+    "title": "Who rolls — their roll is affected by edits (advantage, “Bless”) and “after seeing the dice” questions."
+  },
+  "slot": {
+    "shift": {
+      "label": "Adjustment to the field number",
+      "where": "roll · adjustment",
+      "placeholder": "for example +20 for an easy task"
+    },
+    "bonusTotal": {
+      "label": "Bonus to the result"
+    },
+    "bonus": {
+      "label": "Bonus",
+      "where": "roll · bonus",
+      "placeholder": "none"
+    },
+    "count": {
+      "label": "How many dice",
+      "where": "roll · how many dice",
+      "placeholder": "as the die says"
+    },
+    "times": {
+      "label": "How many times",
+      "where": "roll · how many times",
+      "placeholder": "once"
+    }
+  },
+  "keep": {
+    "extra": "keep",
+    "label": "Keep",
+    "which": "Which to keep",
+    "best": "best",
+    "worst": "worst",
+    "count": {
+      "label": "How many to keep",
+      "where": "roll · how many to keep",
+      "placeholder": "how many dice"
+    }
+  },
+  "roll": {
+    "field": "Roll",
+    "verb": "rolls",
+    "and": "and"
+  },
+  "own": {
+    "die": {
+      "label": "Own die",
+      "where": "roll · die",
+      "placeholder": "2d6 or a die formula"
+    },
+    "field": {
+      "label": "Field address",
+      "where": "field roll · which field",
+      "placeholder": "start typing the field name"
+    }
+  },
+  "second": {
+    "label": "Second field",
+    "same": "same field",
+    "address": {
+      "label": "Second field address",
+      "where": "field roll · second field"
+    }
+  },
+  "fixed": "the step still has the formula “{{expr}}” — it will be removed once you choose what is rolled",
+  "rule": "by the rule “{{rule}}”: {{said}}",
+  "constant": "{{name}}: {{said}}",
+  "tags": {
+    "label": "Tags",
+    "more": "More tags",
+    "empty": "+ tag",
+    "title": "Edits and triggers find a roll by its tags; a tag is a row of any table in the system"
+  },
+  "listeners": {
+    "some": "edit by tags: {{shown}}",
+    "more": "edit by tags: {{shown}} and {{n}} more"
+  },
+  "addend": {
+    "how": "How much",
+    "number": {
+      "option": "number / formula",
+      "group": "Number",
+      "label": "Number",
+      "placeholder": "number or formula"
+    },
+    "die": {
+      "label": "Own die",
+      "where": "{{where}} · die",
+      "placeholder": "2d6 or a die formula"
+    },
+    "count": {
+      "label": "How many dice",
+      "where": "{{where}} · how many dice",
+      "placeholder": "how many dice",
+      "add": "+ how many dice"
+    },
+    "sign": {
+      "label": "Add or subtract",
+      "plus": "add",
+      "minus": "subtract"
+    }
+  },
+  "formula": {
+    "label": "Formula",
+    "where": "number · how much",
+    "placeholder": "start typing a name"
+  },
+  "takeParam": "take “{{name}}” from the record",
+  "count": "How much",
+  "plusWhere": "add · how much",
+  "slotWhere": "{{step}} · {{slot}}",
+  "result": {
+    "mark": {
+      "text": "ab"
+    },
+    "kind": {
+      "boolean": "yes or no",
+      "choice": "one of the options",
+      "number": "number",
+      "text": "text"
+    },
+    "not": "not {{label}}",
+    "dialog": "result “{{label}}”",
+    "variant": "option",
+    "forkBy": "by “{{name}}” — this branch",
+    "forkColumn": "branch by “{{name}}”: {{yes}} / {{no}}",
+    "forkThis": "by it — this branch",
+    "fork": "branch: {{variants}}",
+    "forked": "this step’s branch already goes by “{{name}}”",
+    "renameTitle": "this is what the step result is called in formulas — click to rename",
+    "name": "result…",
+    "lockedTitle": "this is what the step result is called in formulas; steps below already refer to this name, so it cannot be renamed",
+    "nameTitle": "this is what the roll result is called in formulas, and its parts after a dot"
+  },
+  "success": {
+    "atLeast": "at least the threshold",
+    "over": "strictly more",
+    "notOver": "at most the threshold",
+    "under": "strictly less",
+    "equals": "exactly the threshold"
+  },
+  "sign": {
+    "label": "Sign",
+    "atLeast": "at least  ≥",
+    "over": "more  >",
+    "notOver": "at most  ≤",
+    "under": "less  <",
+    "equals": "equals  ="
+  },
+  "where": {
+    "succeedOn": "check · success on the die",
+    "failOn": "check · failure on the die",
+    "failIf": "check · always a failure",
+    "passWith": "check · always a success with margin"
+  },
+  "placeholder": {
+    "succeedOn": "for example: 20",
+    "failOn": "for example: 1",
+    "failIf": "for example: holder.ki == 0",
+    "passWith": "for example: 1"
+  },
+  "meaning": {
+    "success": "yes or no — the outcome of this check",
+    "margin": "number — the margin over this check’s threshold"
+  },
+  "side": {
+    "value": {
+      "label": "What we check",
+      "where": "check · what we check",
+      "placeholder": "a roll or a number"
+    },
+    "versus": {
+      "label": "Against",
+      "where": "check · against",
+      "placeholder": "threshold: a number, a field through a sheet, or an opponent’s roll"
+    }
+  },
+  "field": {
+    "if": "Condition",
+    "check": "Check"
+  },
+  "inside": "the roll “{{name}}” stands inside a formula: “success on the die”, threshold shift and recalculation of “against” edits for each target do not apply to such a comparison",
+  "degrees": {
+    "label": "Margins",
+    "hint": "Instead of “yes/no” the outcome is read by margins: the first one that fits from the top. Conditions can see “success”, “margin” and the effect’s steps.",
+    "where": "check · margin",
+    "placeholder": "margin >= 5"
+  },
+  "succeedOn": {
+    "label": "Success if the die shows at least",
+    "hint": "If the die shows this or more — success, whatever is added."
+  },
+  "failOn": {
+    "label": "Failure if the die shows at most",
+    "hint": "A natural 1: whatever is added — failure."
+  },
+  "failIf": {
+    "label": "Always a failure if",
+    "hint": "A yes/no condition: if true — failure, whatever is rolled."
+  },
+  "passWith": {
+    "label": "Always a success with margin",
+    "hint": "A number: the check passes with this margin over the threshold."
+  },
+  "against": {
+    "many": "“against” edits do not apply to this comparison: the threshold names more than one sheet",
+    "one": "“against” edits on this comparison — against: {{name}}"
+  },
+  "more": {
+    "degrees": "outcome by margins",
+    "succeedOn": "success from {{said}} on the die",
+    "failIf": "has a failure condition",
+    "passWith": "success with margin",
+    "failOn": "failure up to {{said}}"
+  },
+  "contest": {
+    "rolls": "{{who}} rolls {{what}}",
+    "shared": "one for all targets",
+    "each": "each target has its own",
+    "vs": "against",
+    "title": "Opposed roll: the result of one roll is compared with the result of another. A roll above “For each of” is one for all; below it — each target has its own."
+  }
+}

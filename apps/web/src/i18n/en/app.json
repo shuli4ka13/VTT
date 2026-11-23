@@ -9,5 +9,19 @@
   "nav": {
     "sheet": "Character",
     "table": "Table"
+  },
+  "closed": "The game master removed this table",
+  "guest": "Guest",
+  "net": {
+    "offline": "the server is not responding — your changes stay in this window; wait and try again",
+    "failed": "the request failed ({{status}})",
+    "shape": "the server answered in the wrong shape — reload the page; if it repeats, the client and server versions have drifted apart"
+  },
+  "mannequin": {
+    "a": "A",
+    "b": "B"
+  },
+  "calc": {
+    "noSheet": "no character chosen"
   }
 }

@@ -2,6 +2,7 @@ import { api } from '@vtt/schema';
 import type { Session, SystemSummary, PublishedSystem, CompendiumSummary, PublishedCompendium, WorldSummary, RoomSummary, RoomState, ActIntent, RoomDelta, System, Compendium, Sheet, SavedRef } from '@vtt/schema';
 import { z } from 'zod';
 import type { ZodType } from 'zod';
+import { t } from '../i18n/index.ts';
 
 const BASE = '/api';
 
@@ -43,21 +44,21 @@ async function call<S extends ZodType>(path: string, schema: S, init?: RequestIn
       ...(token ? { authorization: `Bearer ${token}` } : {}),
       ...init?.headers,
     },
-  }).catch(() => { throw new ApiError('сервер не отвечает — правки остались в этом окне; подождите и повторите', 0); });
+  }).catch(() => { throw new ApiError(t('app:net.offline'), 0); });
 
   const body = await response.json().catch(() => null);
 
   if (!response.ok) {
 
     if (response.status === 401) { setToken(null); lost?.(); }
-    const message = typeof body?.message === 'string' ? body.message : `запрос не прошёл (${response.status})`;
+    const message = typeof body?.message === 'string' ? body.message : t('app:net.failed', { status: response.status });
     throw new ApiError(message, response.status, body?.issues ?? []);
   }
 
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
     throw new ApiError(
-      'сервер ответил не той формой — обновите страницу; если повторится, версии клиента и сервера разошлись',
+      t('app:net.shape'),
       response.status,
       parsed.error.issues.slice(0, 3).map((i: { path: PropertyKey[]; message: string }) =>
         `${i.path.join('.')}: ${i.message}`),

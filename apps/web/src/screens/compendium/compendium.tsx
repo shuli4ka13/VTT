@@ -18,8 +18,10 @@ import { ModifiersEditor } from '../constructor/modifiers.tsx';
 import { RecordView } from '../../sheet/record-view.tsx';
 import { ValueEditor } from '../../ui/value-editor.tsx';
 import type { CompendiumRecord, System, Compendium } from '@vtt/schema';
+import { dataT, useT } from '../../i18n/author.ts';
 
 export function CompendiumScreen() {
+  const t = useT('book');
   const authored = useWorld(s => s.system);
   const system = useMemo(() => flattenSystem(authored, true), [authored]);
   const origin = useWorld(s => s.origin);
@@ -33,10 +35,11 @@ export function CompendiumScreen() {
   const active = all.find(entry => entry.record.id === activeId) ?? null;
 
   const add = (rk: string, kind: RecordKind) => {
+    const td = dataT(system);
     const taken = all.map(e => e.record.id);
     const id = freeId(taken, `${kind.label ?? rk}_${randomTag()}`);
     editCompendium(draft => {
-      (draft.records ??= []).push({ id, table: rk, label: `Новая запись (${kind.label ?? rk})`, cells: {} });
+      (draft.records ??= []).push({ id, table: rk, label: td('book:new.record', { name: kind.label ?? rk }), cells: {} });
     });
     pick({ activeRecordId: id });
   };
@@ -46,9 +49,9 @@ export function CompendiumScreen() {
   return (
     <Columns
       left={{
-        head: 'Записи',
+        head: t('list.head'),
         body: all.length === 0
-          ? <Empty title="Компендиум пуст" hint="Заведите запись, выбрав тип справа." />
+          ? <Empty title={t('list.emptyTitle')} hint={t('list.emptyHint')} />
           : (
             <List>
               <BlockBranches
@@ -59,7 +62,7 @@ export function CompendiumScreen() {
                   <ListItem
                     key={record.id}
                     name={record.label ?? record.id}
-                    meta={recordKindOf(system, record.table)?.label ?? 'тип неизвестен'}
+                    meta={recordKindOf(system, record.table)?.label ?? t('list.unknownKind')}
                     active={record.id === activeId}
                     onClick={() => pick({ activeRecordId: record.id })}
                   />
@@ -72,27 +75,25 @@ export function CompendiumScreen() {
         body: active
           ? <RecordEditor record={active.record} system={system} compendium={compendium} />
           : <Empty
-              title="Выберите запись слева"
-              hint="Запись — это циферки по форме её типа: что тип спрашивает, то и заполняете."
+              title={t('pick.title')}
+              hint={t('pick.hint')}
             />,
       }}
       right={{
-        head: 'Завести запись',
+        head: t('add.head'),
         body: kinds.length === 0
           ? <Empty
-            title="Книг ещё нет"
+            title={t('noBooks.title')}
             hint={origin.systemMine
-              ? `Книги-таблицы объявляются в конструкторе системы, на вкладке «${TABS.records}».`
-              : `В системе «${origin.systemTitle ?? system.name}» не объявлено ни одного типа записей — `
-                + 'заводить вещи не из чего. Это делает автор системы: попросите его добавить типы '
-                + 'и опубликовать систему заново.'}
+              ? t('noBooks.mine', { tab: TABS.records })
+              : t('noBooks.foreign', { name: origin.systemTitle ?? system.name })}
           />
           : (
             <div className="stack stack--tight">
               {kinds.map(([rk, kind]) => (
                 <button key={rk} type="button" className="card card--pick" onClick={() => add(rk, kind)}>
                   <span className="card__title" style={{ fontSize: 'var(--fs-4)' }}>{kind.label ?? rk}</span>
-                  <span className="card__sub">{kind.hint ?? `спросят: ${kind.columns?.length ?? 0}`}</span>
+                  <span className="card__sub">{kind.hint ?? t('add.asks', { n: kind.columns?.length ?? 0 })}</span>
                 </button>
               ))}
             </div>
@@ -103,6 +104,7 @@ export function CompendiumScreen() {
 }
 
 function RecordEditor({ record, system, compendium }: { record: CompendiumRecord; system: System; compendium: Compendium }) {
+  const t = useT('book');
   const editCompendium = useWorld(s => s.editCompendium);
   const pick = useWorld(s => s.pick);
 
@@ -126,22 +128,24 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
 
   const mustFill = propsNeeded(system, kind, bindings);
 
+  const apply = t('record.apply');
+
   return (
     <>
       <Card>
         <CardHead
-          title={<LabelInput value={record.label ?? ''} placeholder="как зовётся запись" onCommit={label => edit(draft => { draft.label = label; })} />}
-          badge={<span className="chip">{kind?.label ?? 'тип неизвестен'}</span>}
-          actions={<DangerButton size="sm" onConfirm={remove}>Удалить</DangerButton>}
+          title={<LabelInput value={record.label ?? ''} placeholder={t('common:name.record')} onCommit={label => edit(draft => { draft.label = label; })} />}
+          badge={<span className="chip">{kind?.label ?? t('list.unknownKind')}</span>}
+          actions={<DangerButton size="sm" onConfirm={remove}>{t('common:delete')}</DangerButton>}
         />
-        <Field label="Таблица записи" hint="Из какой книги эта запись: от неё берутся колонки и общие кнопки.">
+        <Field label={t('record.table.label')} hint={t('record.table.hint')}>
           <Select<string>
             value={String(record.table ?? '')}
             options={recordKinds(system).map(([key, other]) => [key, other.label || key] as const)}
             onChange={next => edit(draft => { draft.table = next; })}
           />
         </Field>
-        <Field label="Описание">
+        <Field label={t('record.description')}>
           <textarea
             className="textarea"
             value={record.description ?? ''}
@@ -152,20 +156,20 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
 
       {!kind ? (
         <Verdict tone="bad">
-          Таблицы «{String(record.table)}» в системе нет — запись не знает, что о ней спрашивать.
+          {t('record.missing', { name: String(record.table) })}
         </Verdict>
       ) : null}
 
       {}
       {bindings.length ? (
         <span className="faint">
-          владелец получит: {bindings.map(b => b.label ?? 'Применение').join(' · ')}
+          {t('record.owns', { list: bindings.map(b => b.label ?? apply).join(' · ') })}
         </span>
       ) : null}
 
       {kind?.columns?.length ? (
         <Card>
-          <CardHead title="Циферки" />
+          <CardHead title={t('record.props')} />
           <div className="row">
             {kind.columns.map(prop => (
               <Field
@@ -193,7 +197,7 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
           </div>
           {bindings.map((binding, index) => (
             <CallSummary key={index} system={system} effect={binding.effect} args={binding.args as Record<string, unknown> | undefined}
-              props={new Set((kind.columns ?? []).map(prop => prop.key))} names={namesOf(system, record.table)} label={binding.label ?? 'Применение'} />
+              props={new Set((kind.columns ?? []).map(prop => prop.key))} names={namesOf(system, record.table)} label={binding.label ?? apply} />
           ))}
         </Card>
       ) : null}
@@ -201,9 +205,9 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
       {kind ? (
         <Card>
           <CardHead
-            title="Свои кнопки"
-            sub="Кнопки только этой записи — поверх общих кнопок типа."
-            actions={<Button size="sm" onClick={() => edit(draft => { (draft.bindings ??= []).push(newBinding()); })}>+ кнопка</Button>}
+            title={t('record.buttons.title')}
+            sub={t('record.buttons.sub')}
+            actions={<Button size="sm" onClick={() => edit(draft => { (draft.bindings ??= []).push(newBinding()); })}>{t('record.buttons.add')}</Button>}
           />
           {(record.bindings ?? []).length ? (record.bindings ?? []).map((binding, index) => (
             <ButtonEditor
@@ -218,15 +222,15 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
                 if (!draft.bindings.length) delete draft.bindings;
               })}
             />
-          )) : <span className="faint">Своих кнопок нет — у записи только кнопки её типа.</span>}
+          )) : <span className="faint">{t('record.buttons.none')}</span>}
         </Card>
       ) : null}
 
       {kind ? (
         <Card>
           <CardHead
-            title="Что даёт владельцу"
-            sub="Пока запись надета или выучена."
+            title={t('record.grants.title')}
+            sub={t('record.grants.sub')}
           />
           <GrantsEditor system={system} value={record.grants}
             onChange={next => edit(draft => { if (next) draft.grants = next; else delete draft.grants; })} />
@@ -235,7 +239,7 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
 
       {kind ? (
         <Card>
-          <CardHead title="Как увидит игрок" sub="Так запись выглядит на листе персонажа: подпись, описание, циферки «на лист» и кнопки." />
+          <CardHead title={t('record.preview.title')} sub={t('record.preview.sub')} />
           <RecordView record={record} system={system} compendium={compendium} />
         </Card>
       ) : null}
@@ -244,10 +248,10 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
         <ModifiersEditor
           system={system}
           table={record.table}
-          title={kind.use === 'item' ? 'Что правит эта вещь' : 'Что правит эта запись'}
+          title={kind.use === 'item' ? t('record.modifiers.item') : t('record.modifiers.other')}
           empty={{
-            title: 'Своих правок у вещи нет',
-            hint: 'Добавка поверх общей для типа: кольцо даёт +1 к защите, проклятый клинок — помеху. Общее для всех вещей типа живёт на самом типе записи и здесь не повторяется.',
+            title: t('record.modifiers.emptyTitle'),
+            hint: t('record.modifiers.emptyHint'),
           }}
           modifiers={record.modifiers ?? []}
           onEdit={change => edit(draft => { change(draft.modifiers ??= []); if (!draft.modifiers.length) delete draft.modifiers; })}

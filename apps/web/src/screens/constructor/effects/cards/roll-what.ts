@@ -1,10 +1,11 @@
 import { isSingle, columnChoices } from '@vtt/engine';
 import type { Effect, System } from '@vtt/schema';
+import { t } from '../../../../i18n/author.ts';
 
 export interface Rollable { tail: string; label: string; group: string; rule: string; roll: string }
 
-export const BY_INPUT = 'По входу эффекта';
-export const ON_SHEET = 'Поля листа';
+const byInput = (): string => t('rollCards:what.group.byInput');
+const onSheet = (): string => t('rollCards:what.group.onSheet');
 
 export function rollableFields(system: System, effect: Effect): Rollable[] {
   const inputs: Rollable[] = [];
@@ -16,9 +17,9 @@ export function rollableFields(system: System, effect: Effect): Rollable[] {
       const table = system.tables?.[one.table];
       if (!table) continue;
       const name = table.columns?.find(column => column.key === one.column)?.label || one.column;
-      if (isSingle(table)) { singles.push({ tail: one.column, label: name, group: ON_SHEET, rule, roll: key }); continue; }
+      if (isSingle(table)) { singles.push({ tail: one.column, label: name, group: onSheet(), rule, roll: key }); continue; }
       for (const param of effect.params ?? []) {
-        if (param.kind === 'choice' && param.from === one.table) inputs.push({ tail: `${param.key}.${one.column}`, label: `${param.label || param.key} → ${name}`, group: BY_INPUT, rule, roll: key });
+        if (param.kind === 'choice' && param.from === one.table) inputs.push({ tail: `${param.key}.${one.column}`, label: `${param.label || param.key} → ${name}`, group: byInput(), rule, roll: key });
       }
       for (const row of (table.rows ?? []).filter(one => /^[\p{L}\p{N}_]+$/u.test(String(one.value)))) rows.push({ tail: `${one.table}.${row.value}.${one.column}`, label: `${row.label || row.value} → ${name}`, group: table.label || one.table, rule, roll: key });
     }
@@ -34,31 +35,31 @@ export const OWN_FIELD = 'own-field';
 
 export type WhatOption = readonly [string, string, string];
 
-const FROM_INPUT = 'Кость из входа';
+const fromInput = (): string => t('rollCards:what.fromInput');
 
 export function inputDice(system: System, effect: Effect): WhatOption[] {
   return (effect.params ?? []).flatMap((param): WhatOption[] => {
     const label = param.label || param.key;
-    if (param.kind === 'dice') return [[`${EXPR}@${param.key}`, label, FROM_INPUT]];
+    if (param.kind === 'dice') return [[`${EXPR}@${param.key}`, label, fromInput()]];
     if ((param.kind !== 'record' && param.kind !== 'choice') || !param.from || param.many) return [];
     return columnChoices(system, param.from)
       .filter(one => one.kind === 'dice')
-      .map(one => [`${EXPR}@${param.key}${one.path}`, `${label} → ${one.label}`, FROM_INPUT]);
+      .map(one => [`${EXPR}@${param.key}${one.path}`, `${label} → ${one.label}`, fromInput()]);
   });
 }
 
 export function whatOptions(system: System, effect: Effect): WhatOption[] {
   const fields = rollableFields(system, effect);
-  const lead = fields.filter(one => one.group === BY_INPUT || one.group === ON_SHEET);
+  const lead = fields.filter(one => one.group === byInput() || one.group === onSheet());
   const rows = fields.filter(one => !lead.includes(one));
   const dice = Object.entries(system.constants ?? {}).filter(([, constant]) => constant.kind === 'die');
   return [
     ...lead.map(one => [`${FIELD}${one.tail}`, one.label, one.group] as const),
-    ...dice.map(([key, constant]) => [`${DIE}${key}`, constant.label || key, 'Кости'] as const),
+    ...dice.map(([key, constant]) => [`${DIE}${key}`, constant.label || key, t('rollCards:what.group.dice')] as const),
     ...inputDice(system, effect),
     ...rows.map(one => [`${FIELD}${one.tail}`, one.label, one.group] as const),
-    [OWN_DIE, 'своя кость…', 'Другое'] as const,
-    ...(fields.length ? [[OWN_FIELD, 'поле своим адресом…', 'Другое'] as const] : []),
+    [OWN_DIE, t('rollCards:what.ownDie'), t('rollCards:what.group.other')] as const,
+    ...(fields.length ? [[OWN_FIELD, t('rollCards:what.ownField'), t('rollCards:what.group.other')] as const] : []),
   ];
 }
 

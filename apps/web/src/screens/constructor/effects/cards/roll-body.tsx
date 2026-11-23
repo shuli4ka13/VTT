@@ -16,6 +16,7 @@ import { dieSaid } from '../../readback.ts';
 import { resultsOf, stepSaid } from '@vtt/engine';
 import { ResultChips } from './result-chips.tsx';
 import { rollSaid } from '../../rules/rolls.ts';
+import { t as tg, useT } from '../../../../i18n/author.ts';
 import {
   DIE, EXPR, FIELD, OWN_DIE, OWN_FIELD, anyPair, headOf, inputDice, isPair, rollableFields, setDie, setField, setSecond, setWho, tailOf, whatOf, whatOptions,
 } from './roll-what.ts';
@@ -26,12 +27,13 @@ const loose = (draft: unknown): Loose => draft as Loose;
 
 const exprOf = (value: unknown): string => String((value as { expr?: unknown } | undefined)?.expr ?? '');
 
-const NOBODY = 'никто — кости ничьи';
+const nobody = (): string => tg('rollCards:nobody');
 
 function ownDieSaid(context: SlotContext, text: string): string {
   const named = inputDice(context.system, context.effect).find(([key]) => key === `${EXPR}${text.trim()}`);
-  const source = named ? `кость из входа «${named[1]}»` : `кость «${formulaAsLabels(context.system, text.replace(/['"]/g, ''), context.names)}»`;
-  return `${source}: выпавшие грани складываются, правила успеха у неё нет`;
+  return named
+    ? tg('rollCards:ownDie.fromInput', { name: named[1] })
+    : tg('rollCards:ownDie.written', { name: formulaAsLabels(context.system, text.replace(/['"]/g, ''), context.names) });
 }
 
 const asCombo = (options: readonly (readonly [string, string] | readonly [string, string, string])[]): ComboOption[] =>
@@ -43,6 +45,7 @@ export function RollBody({ step, context, edit, takenNames }: {
   edit: EditFn;
   takenNames?: readonly string[];
 }) {
+  const t = useT('rollCards');
   const read = loose(step);
   const current = typeof read.id === 'string' ? read.id : '';
   const name = useStepName({ step: read, context, edit, takenNames });
@@ -55,13 +58,13 @@ export function RollBody({ step, context, edit, takenNames }: {
   const sheets: (readonly [string, string])[] = [...singles].map(([key, label]) => [`@${key}`, label] as const);
   const stray = who !== '' && !sheets.some(([value]) => value === who);
   const people: (readonly [string, string])[] = [
-    ...(who === '' && fielded ? [['', 'кто бросает?'] as const] : []),
-    ...(stray ? [[who, `${formulaAsLabels(context.system, who, context.names)} — такого листа здесь нет`] as const] : []),
+    ...(who === '' && fielded ? [['', t('who.ask')] as const] : []),
+    ...(stray ? [[who, t('who.stray', { name: formulaAsLabels(context.system, who, context.names) })] as const] : []),
     ...sheets,
-    ...(fielded ? [] : [['', NOBODY] as const]),
+    ...(fielded ? [] : [['', nobody()] as const]),
   ];
 
-  const options = useMemo(() => whatOptions(context.system, context.effect), [context.system, context.effect]);
+  const options = useMemo(() => whatOptions(context.system, context.effect), [context.system, context.effect, t]);
   const stored = whatOf(read, options);
   const what = hand ?? stored;
   const set = (change: (it: Loose) => void) => edit(0, target => change(loose(target)));
@@ -102,7 +105,7 @@ export function RollBody({ step, context, edit, takenNames }: {
     node: (
       <div className="field">
         <span className="field__label">{label}</span>
-        <SlotFormula value={read[key]} label={label} system={context.system} where={`бросок · ${where}`} placeholder={placeholder} context={context}
+        <SlotFormula value={read[key]} label={label} system={context.system} where={where} placeholder={placeholder} context={context}
           onSet={text => set(it => { if (text) it[key] = { expr: text }; else delete it[key]; })} />
       </div>
     ),
@@ -115,17 +118,17 @@ export function RollBody({ step, context, edit, takenNames }: {
   const die = constant ? dieSaid(constant, context.system, read.count !== undefined && read.count !== null, context.names) : null;
   const keepExtra: Extra = {
     key: 'keep',
-    label: 'оставить',
+    label: t('keep.extra'),
     on: read.keep !== undefined && read.keep !== null,
     add: () => {},
     drop: () => set(it => { delete it.keep; delete it.keepWorst; }),
     node: (
       <div className="field">
-        <span className="field__label">Оставить</span>
+        <span className="field__label">{t('keep.label')}</span>
         <div className="inline inline--tight">
-          <SlotFormula value={read.keep} label="Сколько оставить" system={context.system} where="бросок · сколько оставить" placeholder="сколько костей" context={context}
+          <SlotFormula value={read.keep} label={t('keep.count.label')} system={context.system} where={t('keep.count.where')} placeholder={t('keep.count.placeholder')} context={context}
             onSet={text => set(it => { if (text) it.keep = { expr: text }; else { delete it.keep; delete it.keepWorst; } })} />
-          <Select label="Какие оставить" value={read.keepWorst === true ? 'worst' : ''} options={[['', 'лучших'], ['worst', 'худших']] as const}
+          <Select label={t('keep.which')} value={read.keepWorst === true ? 'worst' : ''} options={[['', t('keep.best')], ['worst', t('keep.worst')]] as const}
             onChange={next => set(it => { if (next === 'worst') it.keepWorst = true; else delete it.keepWorst; })} />
         </div>
       </div>
@@ -133,13 +136,13 @@ export function RollBody({ step, context, edit, takenNames }: {
   };
   const extras: Extra[] = fielded
     ? [
-      slot('shift', 'Поправка к числу поля', 'поправка', 'например +20 за лёгкую задачу'),
-      slot('bonus', 'Прибавка к итогу', 'прибавка', 'нет'),
+      slot('shift', t('slot.shift.label'), t('slot.shift.where'), t('slot.shift.placeholder')),
+      slot('bonus', t('slot.bonusTotal.label'), t('slot.bonus.where'), t('slot.bonus.placeholder')),
     ]
     : [
-      ...(several && (read.count === undefined || read.count === null) ? [] : [slot('count', 'Сколько костей', 'сколько костей', 'как у кости')]),
-      ...(read.die !== undefined && read.die !== null ? [slot('times', 'Сколько раз', 'сколько раз', 'один раз'), keepExtra] : []),
-      slot('bonus', 'Прибавка', 'прибавка', 'нет'),
+      ...(several && (read.count === undefined || read.count === null) ? [] : [slot('count', t('slot.count.label'), t('slot.count.where'), t('slot.count.placeholder'))]),
+      ...(read.die !== undefined && read.die !== null ? [slot('times', t('slot.times.label'), t('slot.times.where'), t('slot.times.placeholder')), keepExtra] : []),
+      slot('bonus', t('slot.bonus.label'), t('slot.bonus.where'), t('slot.bonus.placeholder')),
     ];
 
   return (
@@ -147,37 +150,37 @@ export function RollBody({ step, context, edit, takenNames }: {
       <div className="inline inline--tight number-line">
         {name.input}
         <span className="number-line__eq">=</span>
-        <div data-field="Бросок" className={`number-line__formula roll-formula${pairing ? ' roll-formula--pair' : ''}`}>
-          <span data-field="Кто бросает" className="roll-who">
+        <div data-field={t('roll.field')} className={`number-line__formula roll-formula${pairing ? ' roll-formula--pair' : ''}`}>
+          <span data-field={t('who.label')} className="roll-who">
             <Combo
               className={`roll-by${who === '' ? ' roll-by--none' : ''}`}
-              label="Кто бросает"
-              title="Кто бросает — на его бросок действуют правки (преимущество, «Благословение») и вопросы «увидев кости»."
+              label={t('who.label')}
+              title={t('who.title')}
               value={who}
-              blank={people.find(([value]) => value === '')?.[1] ?? NOBODY}
+              blank={people.find(([value]) => value === '')?.[1] ?? nobody()}
               options={asCombo(people)}
               onFocus={() => useFormulaBar.getState().commit()}
               onChange={next => { if (next !== who) set(it => setWho(it, next)); }}
             />
           </span>
-          <span className="number-line__eq">бросает</span>
-          <span data-field="Что бросает" className="roll-what"><Combo label="Что бросает" value={what} blank="— что бросает —" options={asCombo(options)} onChange={pickWhat} /></span>
+          <span className="number-line__eq">{t('roll.verb')}</span>
+          <span data-field={t('what.label')} className="roll-what"><Combo label={t('what.label')} value={what} blank={t('what.blank')} options={asCombo(options)} onChange={pickWhat} /></span>
           {what === OWN_DIE ? (
-            <SlotFormula value={read.die && typeof read.die === 'object' ? read.die : undefined} label="Своя кость" system={context.system} where="бросок · кость" placeholder="2к6 или формула кости" context={context}
+            <SlotFormula value={read.die && typeof read.die === 'object' ? read.die : undefined} label={t('own.die.label')} system={context.system} where={t('own.die.where')} placeholder={t('own.die.placeholder')} context={context}
               onSet={text => { if (text) { setHand(null); set(it => setDie(it, { expr: text })); } }} />
           ) : null}
           {what === OWN_FIELD ? (
-            <SlotFormula value={read.field} label="Адрес поля" system={context.system} where="бросок поля · какое поле" placeholder="начните набирать название поля" context={context}
+            <SlotFormula value={read.field} label={t('own.field.label')} system={context.system} where={t('own.field.where')} placeholder={t('own.field.placeholder')} context={context}
               onSet={text => { if (text) { setHand(null); set(it => { it.field = { expr: text }; }); } }} />
           ) : null}
           {pairing ? (
             <div className="roll-second">
-              <span className="number-line__eq">и</span>
-              <span data-field="Второе поле" className="roll-what">
-                <Combo label="Второе поле" value={secondShown} blank="то же поле" options={asCombo([['', 'то же поле'], ...fieldOptions, [OWN_FIELD, 'поле своим адресом…', 'Другое']])} onChange={pickSecond} />
+              <span className="number-line__eq">{t('roll.and')}</span>
+              <span data-field={t('second.label')} className="roll-what">
+                <Combo label={t('second.label')} value={secondShown} blank={t('second.same')} options={asCombo([['', t('second.same')], ...fieldOptions, [OWN_FIELD, t('what.ownField'), t('what.group.other')]])} onChange={pickSecond} />
               </span>
               {secondShown === OWN_FIELD ? (
-                <SlotFormula value={read.second} label="Адрес второго поля" system={context.system} where="бросок поля · второе поле" placeholder="начните набирать название поля" context={context}
+                <SlotFormula value={read.second} label={t('second.address.label')} system={context.system} where={t('second.address.where')} placeholder={t('own.field.placeholder')} context={context}
                   onSet={text => { setSecondHand(false); set(it => { if (text) it.second = { expr: text }; else delete it.second; }); }} />
               ) : null}
             </div>
@@ -185,17 +188,17 @@ export function RollBody({ step, context, edit, takenNames }: {
         </div>
       </div>
       {name.trouble}
-      {read.fixed !== undefined && read.fixed !== null ? <span className="field__error">в шаге осталась формула «{exprOf(read.fixed)}» — она снимется, когда выберете, что бросают</span> : null}
-      {picked && rule ? <span className="faint">по правилу «{picked.rule}»: {rollSaid(context.system, rule, `«${picked.label}»`)}</span> : null}
-      {constant && die ? <span className="faint">{constant.label || String(read.die)}: {die}</span> : null}
+      {read.fixed !== undefined && read.fixed !== null ? <span className="field__error">{t('fixed', { expr: exprOf(read.fixed) })}</span> : null}
+      {picked && rule ? <span className="faint">{t('rule', { rule: picked.rule, said: rollSaid(context.system, rule, `«${picked.label}»`) })}</span> : null}
+      {constant && die ? <span className="faint">{t('constant', { name: constant.label || String(read.die), said: die })}</span> : null}
       {!fielded && !constant && read.die && typeof read.die === 'object' ? <span className="faint">{ownDieSaid(context, exprOf(read.die))}</span> : null}
-      {!fielded && who === '' ? <span className="faint">кости ничьи: правки броска и вопросы «увидев кости» на них не действуют</span> : null}
+      {!fielded && who === '' ? <span className="faint">{t('nobodyNote')}</span> : null}
       <div className="roll-extras"><Extras items={extras} /></div>
       {current ? (
-        <ResultChips name={stepSaid(read)} system={context.system} nameSlot={<span className="result-row__name" title="так итог броска зовётся в формулах, а через точку — его части">{stepSaid(read)}</span>}
-          outputs={resultsOf(context.system, context.effect.params ?? [], step as never).map(one => ({ key: one.path.slice(1) || 'целиком', label: one.label.replace(/^да или нет: /, ''), kind: one.kind }))} />
+        <ResultChips name={stepSaid(read)} system={context.system} nameSlot={<span className="result-row__name" title={t('result.nameTitle')}>{stepSaid(read)}</span>}
+          outputs={resultsOf(context.system, context.effect.params ?? [], step as never).map(one => ({ key: one.path.slice(1) || 'whole', label: one.label.replace(/^\u0434\u0430 \u0438\u043b\u0438 \u043d\u0435\u0442: /u, ''), kind: one.kind }))} />
       ) : null}
-      <RollTags label={fielded ? 'Ещё метки' : 'Метки'} roll={read} system={context.system} {...(context.names ? { names: context.names } : {})} onRoll={change => set(change)} />
+      <RollTags label={fielded ? t('tags.more') : t('tags.label')} roll={read} system={context.system} {...(context.names ? { names: context.names } : {})} onRoll={change => set(change)} />
     </>
   );
 }

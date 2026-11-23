@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { login, setToken, currentToken, onSessionLost, whoAmI } from '../api/client.ts';
+import { t } from '../i18n/index.ts';
 
 export interface SessionState {
   name: string;
@@ -16,7 +17,7 @@ export const useSession = create<SessionState>()(persist(set => ({
   signed: Boolean(currentToken()),
 
   enter: async name => {
-    const session = await login(name.trim() || 'Гость');
+    const session = await login(name.trim() || t('app:guest'));
     setToken(session.token);
     set({ name: session.name, userId: session.userId, signed: true });
   },

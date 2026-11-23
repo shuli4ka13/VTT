@@ -1,1 +1,106 @@
-{}
+{
+  "bar": {
+    "title": "Compendium",
+    "notPublished": "not published: changes were not saved",
+    "published": "compendium published — it can be taken into a world",
+    "idle": "no changes",
+    "notCreated": "compendium not created",
+    "forSystem": "for system “{{name}}”",
+    "change": "change",
+    "publish": "Publish compendium"
+  },
+  "order": {
+    "time": "by time",
+    "title": "by title",
+    "author": "by author"
+  },
+  "start": {
+    "title": "Compendium — for which system?",
+    "lead": "A compendium fills a ready system with items. The system can be someone else's — it only has to be published: the item columns come from its book tables.",
+    "system": "System: <b>{{name}}</b>",
+    "chooseOther": "choose another",
+    "published": "Published systems",
+    "noSystems": {
+      "title": "No published systems",
+      "hint": "A compendium is written for a ready system — someone has to publish it first."
+    },
+    "head": {
+      "system": "System",
+      "author": "Author",
+      "changed": "Changed",
+      "book": "Compendium",
+      "state": "State",
+      "items": "Records",
+      "bookChanged": "Changed"
+    },
+    "pick": "Choose",
+    "newHead": "Create new",
+    "newTitle": "Book · {{name}}",
+    "create": "Create",
+    "creating": "creating…",
+    "existing": "Or continue an existing one",
+    "noBooks": {
+      "title": "No compendiums for this system",
+      "hint": "Create the first one — it will appear here."
+    },
+    "state": {
+      "published": "published",
+      "draft": "draft"
+    },
+    "open": "Open",
+    "copy": "Make a copy"
+  },
+  "list": {
+    "head": "Records",
+    "emptyTitle": "The compendium is empty",
+    "emptyHint": "Create a record by choosing a type on the right.",
+    "unknownKind": "unknown type"
+  },
+  "pick": {
+    "title": "Choose a record on the left",
+    "hint": "A record is the numbers for its type's form: you fill in whatever the type asks for."
+  },
+  "add": {
+    "head": "Create a record",
+    "asks": "will ask: {{n}}"
+  },
+  "noBooks": {
+    "title": "No books yet",
+    "mine": "Book tables are declared in the system builder, on the “{{tab}}” tab.",
+    "foreign": "The system “{{name}}” declares no record types — there is nothing to create items from. The system author does this: ask them to add types and publish the system again."
+  },
+  "new": {
+    "record": "New record ({{name}})"
+  },
+  "record": {
+    "table": {
+      "label": "Record table",
+      "hint": "Which book this record is from: its columns and shared buttons come from there."
+    },
+    "description": "Description",
+    "missing": "There is no table “{{name}}” in the system — the record does not know what to ask about itself.",
+    "owns": "the holder will get: {{list}}",
+    "apply": "Use",
+    "props": "Numbers",
+    "buttons": {
+      "title": "Own buttons",
+      "sub": "Buttons of this record only — on top of the type's shared buttons.",
+      "add": "+ button",
+      "none": "No own buttons — the record has only its type's buttons."
+    },
+    "grants": {
+      "title": "What it gives the holder",
+      "sub": "While the record is worn or learned."
+    },
+    "preview": {
+      "title": "What the player will see",
+      "sub": "This is how the record looks on the character sheet: label, description, “on sheet” numbers and buttons."
+    },
+    "modifiers": {
+      "item": "What this item modifies",
+      "other": "What this record modifies",
+      "emptyTitle": "This item has no modifiers of its own",
+      "emptyHint": "An addition on top of the type's shared ones: a ring gives +1 to defense, a cursed blade gives disadvantage. What is common to all items of the type lives on the record type itself and is not repeated here."
+    }
+  }
+}

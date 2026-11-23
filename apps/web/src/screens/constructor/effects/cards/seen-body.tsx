@@ -5,19 +5,21 @@ import { ValueField } from '../../value-field.tsx';
 import { AddendPick } from './die-pick.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
+import { useT } from '../../../../i18n/author.ts';
 
 type Loose = Record<string, unknown>;
 type Slot = { key: string; label: string; kind: string; allow?: string[]; choice?: [string, string][]; fallback?: string; placeholder?: string; dice?: boolean; onlyIf?: { key: string; is: string }; seed?: unknown };
 
 export function SeenBody({ step, context, edit }: { step: Step; context: SlotContext; edit: EditFn }) {
+  const t = useT('rollCards');
   const words = STEP_WORDS[step.type as keyof typeof STEP_WORDS];
   const read = step as unknown as Loose;
   const all = (words?.slots ?? []) as unknown as Slot[];
   if (step.type === 'roll-plus') {
     return (
       <div className="row">
-        <Field label="Сколько">
-          <AddendPick source={read} system={context.system} effect={context.effect} context={context} where="прибавить · сколько"
+        <Field label={t('count')}>
+          <AddendPick source={read} system={context.system} effect={context.effect} context={context} where={t('plusWhere')}
             onChange={change => edit(0, draft => change(draft as unknown as Loose))} />
         </Field>
       </div>
@@ -50,7 +52,7 @@ export function SeenBody({ step, context, edit }: { step: Step; context: SlotCon
         return (
           <Field key={slot.key} label={slot.label}>
             <ValueField
-              where={`${words?.label ?? step.type} · ${slot.label.toLowerCase()}`}
+              where={t('slotWhere', { step: words?.label ?? step.type, slot: slot.label.toLowerCase() })}
               value={read[slot.key] as never} context={context}
               {...(slot.placeholder ? { placeholder: slot.placeholder } : {})}
               onChange={next => edit(0, draft => {

@@ -4,8 +4,10 @@ import { CellEditor, spoken } from './rules/tables-section.tsx';
 import { rowNames } from './row-names.ts';
 import { onSheet, rowKeyOf } from '@vtt/engine';
 import type { System } from '@vtt/schema';
+import { useT } from '../../i18n/author.ts';
 
 export function RowPanel({ table: id, row: key, system }: { table: string; row: string; system: System }) {
+  const t = useT('sheetTab');
   const editSystem = useWorld(s => s.editSystem);
   const pick = useWorld(s => s.pick);
   const table = system.tables?.[id];
@@ -19,9 +21,9 @@ export function RowPanel({ table: id, row: key, system }: { table: string; row: 
   });
   return (
     <Card>
-      <CardHead title={`Строка «${name}»`} sub={`таблица «${table.label || id}»`}
-        actions={<Button size="sm" variant="ghost" title="закрыть" onClick={() => pick({ activeRow: null })}>×</Button>} />
-      <Field label="Подпись">
+      <CardHead title={t('row.title', { name })} sub={t('row.sub', { name: table.label || id })}
+        actions={<Button size="sm" variant="ghost" title={t('common:close')} onClick={() => pick({ activeRow: null })}>×</Button>} />
+      <Field label={t('row.label')}>
         <LabelInput value={row.label ?? ''} placeholder={String(row.value)}
           onCommit={next => change(target => { if (next.trim()) target.label = next.trim(); else delete target.label; })} />
       </Field>
@@ -42,7 +44,7 @@ export function RowPanel({ table: id, row: key, system }: { table: string; row: 
           />
         </Field>
       ))}
-      <Button size="sm" onClick={() => pick({ activeSheetTable: id, activeRow: null })}>Открыть таблицу «{table.label || id}»</Button>
+      <Button size="sm" onClick={() => pick({ activeSheetTable: id, activeRow: null })}>{t('row.openTable', { name: table.label || id })}</Button>
     </Card>
   );
 }

@@ -13,6 +13,7 @@ import { inUse as isUsed, usersOf } from '../usage.ts';
 import type { UsageIndex } from '../usage.ts';
 import type { System, SystemConstant, DiceTerm } from '@vtt/schema';
 import type { WorldState } from '../../../store/world.ts';
+import { useT, dataT } from '../../../i18n/author.ts';
 
 type EditSystem = WorldState['editSystem'];
 interface Props { system: System; editSystem: EditSystem; usage: UsageIndex }
@@ -34,25 +35,24 @@ function readKindOf(constant: SystemConstant): string {
 const kindWords = (system: System, key: string): string => kindsOfDie(system, key).map(kind => ROLL_KIND_WORDS[kind]).join(', ');
 
 export function DiceSection({ system, editSystem, usage }: Props) {
+  const t = useT('rolls');
   const entries = dieEntries(system);
 
   return (
     <Card>
       <CardHead
-        title="Кости"
-        sub="Чем бросают проверки в этом мире. Обычно тут одна запись; кости вещей живут в самих записях."
+        title={t('dice.title')}
+        sub={t('dice.sub')}
         actions={(
           <span className="head-pick">
-            <Select<string> value="" label="добавить кость" title="Какая кость: заготовка встанет в список, дальше её можно править"
-              options={[['', '+ кость'], ...dieKinds()]}
+            <Select<string> value="" label={t('dice.addLabel')} title={t('dice.addTitle')}
+              options={[['', t('dice.add')], ...dieKinds()]}
               onChange={kind => { if (kind) addDie(editSystem, kind as DieKind); }} />
           </span>
         )}
       />
       {entries.length === 0 ? (
-        <span className="faint">
-          Костей нет. Заведите ту, которой в этом мире бросают проверки.
-        </span>
+        <span className="faint">{t('dice.empty')}</span>
       ) : (
         <div className="stack">
           {entries.map(([key, constant]) => {
@@ -76,7 +76,7 @@ export function DiceSection({ system, editSystem, usage }: Props) {
             const reading = (
               <>
                   <div className="dict-row">
-                    <span className="dict-row__label">Из выпавшего берём</span>
+                    <span className="dict-row__label">{t('dice.reads')}</span>
                     <Select
                       value={readKind}
                       options={readingKinds().map(r => [r.kind, r.label] as const) as never}
@@ -92,7 +92,7 @@ export function DiceSection({ system, editSystem, usage }: Props) {
                     />
                     {readKind === 'count' ? (
                       <>
-                        <span className="dict-row__label dict-row__label--tight">не ниже</span>
+                        <span className="dict-row__label dict-row__label--tight">{t('dice.atLeast')}</span>
                         <span className="dict-row__num">
                           <Input
                             mono
@@ -116,7 +116,7 @@ export function DiceSection({ system, editSystem, usage }: Props) {
                 <div className="dict-row">
                   <Input
                     value={constant.label ?? ''}
-                    placeholder="название кости"
+                    placeholder={t('dice.namePlaceholder')}
                     onChange={label => editSystem(draft => {
                       const cur = draft.constants?.[key];
                       if (cur) cur.label = label;
@@ -127,7 +127,7 @@ export function DiceSection({ system, editSystem, usage }: Props) {
                       size="sm" variant="danger" disabled={inUse}
                       onClick={() => editSystem(draft => { delete draft.constants?.[key]; })}
                     >
-                      Убрать
+                      {t('common:remove')}
                     </Button>
                     {inUse ? <LockedTip users={usersOf(usage, 'constant', key, system)} /> : null}
                   </span>
@@ -136,7 +136,7 @@ export function DiceSection({ system, editSystem, usage }: Props) {
                 <Readback segments={dieReadback(constant, system, driven)} />
                 <span className="faint">{kindWords(system, key)}</span>
 
-                <DiceComposer dice={dice} onEdit={editDice} driven={driven} />
+                <DiceComposer dice={dice} onEdit={editDice} driven={driven} system={system} />
                 {counting.length ? <span className="faint">{COUNT_BY_ROLL(counting)}</span> : null}
 
                 {asksReading ? reading : null}
@@ -150,11 +150,14 @@ export function DiceSection({ system, editSystem, usage }: Props) {
   );
 }
 
-function DiceComposer({ dice, onEdit, driven = false }: {
+function DiceComposer({ dice, onEdit, driven = false, system }: {
   driven?: boolean;
+  system: System;
   dice: DiceTerm[];
   onEdit: (change: (list: DiceTerm[]) => void) => void;
 }) {
+  const t = useT('rolls');
+  const td = dataT(system);
   const many = dice.length > 1;
 
   return (
@@ -163,11 +166,11 @@ function DiceComposer({ dice, onEdit, driven = false }: {
         return (
           <div key={i} className="dice-term">
             <span className={`dice-term__num dice-term__num--wide${driven && !many ? ' dice-term__num--said' : ''}`}>
-              <CountField value={term.count ?? (driven && !many ? null : 1)} placeholder={driven && !many ? 'задаёт бросок' : 'сколько'}
+              <CountField value={term.count ?? (driven && !many ? null : 1)} placeholder={driven && !many ? t('dice.drivenCount') : t('dice.count')}
                 onCommit={next => onEdit(list => { if (next === null || next === 1) delete list[i]!.count; else list[i]!.count = next; })} />
             </span>
 
-            <span className="dice-term__d">к</span>
+            <span className="dice-term__d">{t('dice.letter')}</span>
 
             <span className="dice-term__num">
               <DraftNum
@@ -180,7 +183,7 @@ function DiceComposer({ dice, onEdit, driven = false }: {
             {many ? (
               <Input
                 value={term.label ?? term.name ?? ''}
-                placeholder="как зовётся эта часть"
+                placeholder={t('common:name.part')}
                 onChange={label => onEdit(list => {
                   const name = slugOf(label) || `part_${i + 1}`;
                   list[i]!.name = name;
@@ -191,7 +194,7 @@ function DiceComposer({ dice, onEdit, driven = false }: {
 
             {many ? (
               <Button
-                size="sm" variant="ghost" title="убрать часть"
+                size="sm" variant="ghost" title={t('dice.dropPart')}
                 onClick={() => onEdit(list => {
                   list.splice(i, 1);
                   if (list.length === 1) { delete list[0]!.name; delete list[0]!.label; }
@@ -206,16 +209,16 @@ function DiceComposer({ dice, onEdit, driven = false }: {
 
       <Button
         size="sm" variant="ghost"
-        title="Бросок из названных половин: Надежда и Страх в Daggerheart"
+        title={t('dice.addPartTitle')}
         onClick={() => onEdit(list => {
           if (list.length === 1) {
-            list[0]!.label ??= 'Первая';
-            list[0]!.name ??= 'первая';
+            list[0]!.label ??= td('data:die.first');
+            list[0]!.name ??= 'pervaya';
           }
           list.push({ sides: list[0]?.sides ?? 12 });
         })}
       >
-        + ещё часть
+        {t('dice.addPart')}
       </Button>
     </div>
   );
@@ -246,11 +249,12 @@ function CountField({ value, placeholder, onCommit }: {
 const SHOWN = 6;
 
 function LockedTip({ users }: { users: string[] }) {
+  const t = useT('rolls');
   return (
     <span className="locked__tip" role="tooltip">
-      <span className="locked__head">Убрать нельзя — кость используется. Сначала поменяйте её здесь:</span>
+      <span className="locked__head">{t('dice.lockedHead')}</span>
       {users.slice(0, SHOWN).map(user => <span key={user} className="locked__item">{user}</span>)}
-      {users.length > SHOWN ? <span className="locked__item faint">и ещё {users.length - SHOWN}</span> : null}
+      {users.length > SHOWN ? <span className="locked__item faint">{t('dice.lockedMore', { n: users.length - SHOWN })}</span> : null}
     </span>
   );
 }

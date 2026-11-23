@@ -1,1 +1,61 @@
-{}
+{
+  "prompt": {
+    "openTab": "Open the “{{name}}” tab.",
+    "unfold": "Expand the “{{name}}” panel."
+  },
+  "result": {
+    "done": "done",
+    "already": "already done: {{result}}"
+  },
+  "ok": "Got it",
+  "finish": {
+    "title": "Lesson complete",
+    "all": "All lessons complete.",
+    "next": "Next lesson: {{title}}",
+    "close": "Close"
+  },
+  "card": {
+    "region": "Lesson",
+    "where": "chapter {{chapter}} of {{chapters}} · step {{step}} of {{steps}}",
+    "strip": "Lesson · {{title}} · step {{step}} of {{steps}}",
+    "foldTitle": "collapse to a strip",
+    "start": "Where we start: {{text}}",
+    "alone": "On your own: ",
+    "goal": "Done when: ",
+    "sum": "Chapter “{{title}}”: {{sum}}",
+    "hintStuck": "stuck?",
+    "hintAlone": "hint",
+    "back": "Back",
+    "next": "Next",
+    "end": "Finish lesson",
+    "keep": "Keep as a new system",
+    "keepTitle": "the practice copy will become your new system",
+    "exit": "Leave the lesson",
+    "exitTitle": "your system will come back, the lesson will continue from this step"
+  },
+  "button": {
+    "label": "Tutorial",
+    "title": "lessons on the builder",
+    "running": "Lesson: {{title}}",
+    "runningTitle": "the lesson is running on a practice copy"
+  },
+  "drawer": {
+    "title": "Tutorial",
+    "sub": "The lesson runs on a practice copy: your system does not change and comes back after the lesson.",
+    "again": "Take again",
+    "begin": "Start",
+    "resume": "Continue",
+    "restart": "Start over",
+    "passed": "passed",
+    "stopped": "stopped: step {{n}} of {{total}}"
+  },
+  "note": {
+    "restoreFailed": "could not bring your system back: {{why}} — try again",
+    "badSaved": "the remembered system did not pass validation",
+    "notSaved": "lesson not started: the latest changes were not saved — the reason is in the header",
+    "cantStash": "lesson not started: your system could not be stored",
+    "keepFailed": "could not save as a new system: {{why}}",
+    "orphan": "the practice copy is left without your system — open it via “change”"
+  },
+  "keepUntitled": "Practice system"
+}

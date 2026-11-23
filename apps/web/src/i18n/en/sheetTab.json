@@ -1,1 +1,159 @@
-{}
+{
+  "block": {
+    "part": {
+      "reference": "{{name}} · reference"
+    },
+    "group": {
+      "here": "in this block",
+      "none": "in no block",
+      "elsewhere": "already in “{{name}}”"
+    },
+    "pick": {
+      "shown": "shown",
+      "reorder": " · drag to change the order"
+    },
+    "parent": {
+      "label": "Inside block",
+      "aria": "inside block",
+      "top": "top level"
+    },
+    "page": {
+      "label": "Page",
+      "aria": "block page",
+      "likeParent": "same as “{{name}}”",
+      "firstTab": "{{name}} — the first tab",
+      "firstTabPlain": "first — the first tab",
+      "aboveTabs": "{{name}} · above the tabs"
+    },
+    "width": {
+      "label": "Width",
+      "hintUnder": "shared with the block “{{name}}” it sits under",
+      "hint": "you can also drag the right edge of the block on the sample",
+      "aria": "block width"
+    },
+    "under": "Under the previous block",
+    "height": {
+      "label": "Height",
+      "hint": "in screen points; empty — fit the content; you can also drag the bottom edge of the block on the sample",
+      "placeholder": "fit the content"
+    },
+    "list": {
+      "label": "List in the block",
+      "hint": "Shown after the block's fields; in another block this list is removed.",
+      "aria": "list in the block"
+    },
+    "kinds": "Types in the list",
+    "per": {
+      "label": "Fields inside the block",
+      "aria": "fields inside the block",
+      "auto": "as they fit"
+    },
+    "split": {
+      "label": "Table rows",
+      "aria": "table rows"
+    },
+    "table": {
+      "label": "Fields from the table",
+      "hint": "“Sheet” — character fields, “Desk” — shared at the table; a reference table becomes separate on each sheet when chosen",
+      "aria": "part table"
+    },
+    "columns": "Columns",
+    "rows": "Rows",
+    "by": {
+      "label": "Group by",
+      "aria": "group by",
+      "none": "do not group"
+    },
+    "removePart": "Remove this table's fields",
+    "ask": {
+      "text": "“{{name}}” is a reference table: its values are the same for everyone. To put it on the sheet, they become separate on each sheet — every character gets their own.",
+      "yes": "Yes, separate on each sheet",
+      "no": "No"
+    },
+    "add": {
+      "aria": "add fields from a table",
+      "option": "+ fields from a table…"
+    },
+    "remove": "Delete block"
+  },
+  "blockPick": {
+    "placeholder": "name the block",
+    "create": "create",
+    "new": "+ new"
+  },
+  "tree": {
+    "settings": "block settings",
+    "addTo": "+ into “{{name}}”"
+  },
+  "page": {
+    "aboveTabs": "Above the tabs — always visible",
+    "order": "Page order",
+    "reorder": "drag to change the order of the tabs",
+    "remove": "Delete page",
+    "barTop": "above the tabs: {{name}}",
+    "add": "+ page"
+  },
+  "new": {
+    "pageFirst": "Main",
+    "page": "Page {{n}}"
+  },
+  "sample": {
+    "name": "Sheet sample",
+    "nothing": "The sample has nothing yet — add a sample item or ability.",
+    "otherValues": "other values",
+    "add": "add a sample",
+    "addOption": "+ sample item or ability",
+    "noKinds": "no item or ability types yet",
+    "nothingToApply": "Nothing to use — add an item or ability to “{{name}}”.",
+    "nothingHangs": "Nothing is hanging on the sample.",
+    "sheetKind": "Sheet type",
+    "allBlocks": "all blocks",
+    "badge": "sample",
+    "note": "sample: values are filled in as an example",
+    "service": "service fields"
+  },
+  "tab": {
+    "lookup": "Ready-made from samples",
+    "head": "Sheet",
+    "clickTitle": "Click a field on the sheet",
+    "clickHint": "Its column, view and formula will open here.",
+    "emptyTitle": "The sheet is empty",
+    "emptyHint": "Take ready-made pieces from “Ready-made from samples” or add a block: in it “+ field” is one value, “+ table” is rows and columns.",
+    "viewSample": "sheet sample",
+    "viewKinds": "blocks and sheet types"
+  },
+  "view": {
+    "alsoIn": "The field is also in other blocks: {{blocks}} — each has its own view.",
+    "nowhere": "The field is in no block — the view is set in the block.",
+    "openTable": "Open the table “{{name}}”",
+    "removeTable": "Remove the table from the sheet",
+    "rulesColumn": "Rules: column “{{name}}” →"
+  },
+  "row": {
+    "title": "Row “{{name}}”",
+    "sub": "table “{{name}}”",
+    "label": "Label",
+    "openTable": "Open the table “{{name}}”"
+  },
+  "thing": {
+    "title": "{{name}} in equipment",
+    "visible": "What shows in the row",
+    "hint": "What is switched off is not visible to the player at the table either; the engine still counts it.",
+    "noProps": "This type has no properties."
+  },
+  "gallery": {
+    "view": "View",
+    "unfit": "does not fit the value type",
+    "lacking": "{{hint}}; missing: {{list}}",
+    "unfitNote": "does not fit",
+    "needs": "needs {{name}}"
+  },
+  "pick": {
+    "empty": "— which sheet —"
+  },
+  "live": {
+    "tip": "A new sheet with default values: this is how the formula looks in numbers without a character.",
+    "onNew": "on a new sheet",
+    "depends": "Depends on:"
+  }
+}

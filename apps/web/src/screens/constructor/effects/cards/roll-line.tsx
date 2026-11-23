@@ -2,21 +2,23 @@ import type { System } from '@vtt/schema';
 import { TagsField } from '../../tags-field.tsx';
 import type { TagValue } from '../../tags-field.tsx';
 import { ROLL_CALL } from '@vtt/engine';
+import { useT } from '../../../../i18n/author.ts';
 
 type Roll = Record<string, unknown>;
 
-export function RollTags({ roll, system, label = 'Метки', names, onRoll }: {
+export function RollTags({ roll, system, label, names, onRoll }: {
   label?: string;
   names?: ReadonlyMap<string, string>;
   roll: Roll;
   system: System;
   onRoll: (change: (draft: Roll) => void) => void;
 }) {
+  const t = useT('rollCards');
   const tags = (roll.tags ?? []) as TagValue[];
   return (
-    <div className="field roll-tags" title="По меткам бросок находят правки и подписки; метка — строка любой таблицы системы">
-      <span className="field__label">{label}</span>
-      <TagsField system={system} value={tags} computed empty="+ метка" {...(names ? { names } : {})}
+    <div className="field roll-tags" title={t('tags.title')}>
+      <span className="field__label">{label ?? t('tags.label')}</span>
+      <TagsField system={system} value={tags} computed empty={t('tags.empty')} {...(names ? { names } : {})}
         onChange={next => onRoll(draft => { if (next.length) draft.tags = next; else delete draft.tags; })} />
       <Listeners names={rollListeners(system, tags.filter((tag): tag is string => typeof tag === 'string'))} />
     </div>
@@ -43,11 +45,12 @@ export function rollListeners(system: System, tags: string[]): string[] {
 }
 
 function Listeners({ names }: { names: string[] }) {
+  const t = useT('rollCards');
   if (!names.length) return null;
   const shown = names.slice(0, 3).map(name => `«${name}»`).join(', ');
   return (
     <span className="faint roll-line__listeners" title={names.map(name => `«${name}»`).join(', ')}>
-      правят по меткам: {shown}{names.length > 3 ? ` и ещё ${names.length - 3}` : ''}
+      {names.length > 3 ? t('listeners.more', { shown, n: names.length - 3 }) : t('listeners.some', { shown })}
     </span>
   );
 }

@@ -1,5 +1,6 @@
 import type { Anchor } from './types.ts';
 import { same } from './find.ts';
+import { t } from '../i18n/author.ts';
 
 const NAMED = [
   'button', '[role="tab"]', '[role="button"]', 'a', 'label', 'summary', 'select', '[role="combobox"]',
@@ -76,8 +77,11 @@ export const firstOf = (anchors: Anchor | Anchor[] | undefined, root: ParentNode
   return null;
 };
 
-export const foldOf = (panel: string, root: ParentNode = document): HTMLElement | null =>
-  [...root.querySelectorAll<HTMLElement>('[aria-label^="развернуть «"]')].find(el => el.getAttribute('aria-label') === `развернуть «${panel}»`) ?? null;
+export const foldOf = (panel: string, root: ParentNode = document): HTMLElement | null => {
+  const head = t('common:fold.expand', { name: '\u0000' }).split('\u0000')[0]!.replace(/["\\]/g, '\\$&');
+  const label = t('common:fold.expand', { name: panel });
+  return [...root.querySelectorAll<HTMLElement>(`[aria-label^="${head}"]`)].find(el => el.getAttribute('aria-label') === label) ?? null;
+};
 
 export const openedDialog = (name: string, root: ParentNode = document): boolean =>
   [...root.querySelectorAll('[role="dialog"]')].some(el => same(el.getAttribute('aria-label'), name));

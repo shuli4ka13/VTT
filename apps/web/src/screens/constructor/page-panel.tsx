@@ -5,13 +5,13 @@ import { moveKey } from '../../ui/pick-order.tsx';
 import { useDragList } from '../../ui/drag-list.ts';
 import { focusNew } from '../../ui/focus-new.ts';
 import type { System } from '@vtt/schema';
-
-export const FIRST_PAGE = 'Основное';
+import { useT, dataT } from '../../i18n/author.ts';
 
 export function freePageTitle(system: System): string {
+  const td = dataT(system);
   const taken = new Set(pagesOf(system).map(page => pageLabel(system, page.key)));
-  if (!taken.size) return FIRST_PAGE;
-  for (let n = pagesOf(system).length + 1; ; n++) if (!taken.has(`Страница ${n}`)) return `Страница ${n}`;
+  if (!taken.size) return td('sheetTab:new.pageFirst');
+  for (let n = pagesOf(system).length + 1; ; n++) if (!taken.has(td('sheetTab:new.page', { n }))) return td('sheetTab:new.page', { n });
 }
 
 export function addPage(draft: System, title: string): string {
@@ -35,6 +35,7 @@ export function setTop(draft: System, name: string, on: boolean): void {
 }
 
 export function PagePanel({ name, system }: { name: string; system: System }) {
+  const t = useT('sheetTab');
   const editSystem = useWorld(s => s.editSystem);
   const pick = useWorld(s => s.pick);
   const pages = pagesOf(system);
@@ -45,7 +46,7 @@ export function PagePanel({ name, system }: { name: string; system: System }) {
   return (
     <Card>
       <CardHead
-        title={<LabelInput value={pageLabel(system, name)} placeholder="как зовётся страница"
+        title={<LabelInput value={pageLabel(system, name)} placeholder={t('common:name.page')}
           onCommit={next => {
             const clean = next.trim();
             if (!clean || clean === pageLabel(system, name) || pages.some(other => other.key !== name && pageLabel(system, other.key) === clean)) return;
@@ -54,11 +55,11 @@ export function PagePanel({ name, system }: { name: string; system: System }) {
         actions={<Button size="sm" variant="ghost" onClick={() => pick({ activePage: null })}>×</Button>} />
       <label className="inline inline--tight">
         <input type="checkbox" checked={page.top === true} onChange={event => editSystem(draft => setTop(draft, name, event.currentTarget.checked))} />
-        Над закладками — видна всегда
+        {t('page.aboveTabs')}
       </label>
-      <Field label="Порядок страниц">
+      <Field label={t('page.order')}>
         <div className="stack stack--tight block-pick">
-          <span className="block-pick__title">перетащите, чтобы поменять порядок закладок</span>
+          <span className="block-pick__title">{t('page.reorder')}</span>
           <div className="inline inline--tight">
             {pages.map(item => (
               <span key={item.key} className={`inline inline--tight drag-item${drag.mark(item.key)}`} {...drag.props(item.key)}>
@@ -70,7 +71,7 @@ export function PagePanel({ name, system }: { name: string; system: System }) {
         </div>
       </Field>
       <div className="inline inline--tight">
-        <DangerButton size="sm" onConfirm={() => { editSystem(draft => removePage(draft, name)); pick({ activePage: null }); }}>Удалить страницу</DangerButton>
+        <DangerButton size="sm" onConfirm={() => { editSystem(draft => removePage(draft, name)); pick({ activePage: null }); }}>{t('page.remove')}</DangerButton>
       </div>
     </Card>
   );
@@ -79,6 +80,7 @@ export function PagePanel({ name, system }: { name: string; system: System }) {
 export const OPEN_PAGE = { activeThing: null, activeBlock: null, activeFieldTag: null, activeColumn: null, activeRow: null, activeSheetTable: null, activeGroupName: null } as const;
 
 export function PageBar({ system }: { system: System }) {
+  const t = useT('sheetTab');
   const editSystem = useWorld(s => s.editSystem);
   const pick = useWorld(s => s.pick);
   const activePage = useWorld(s => s.activePage);
@@ -90,16 +92,16 @@ export function PageBar({ system }: { system: System }) {
       {pages.filter(page => page.top).map(page => (
         <Button key={page.key} size="sm" variant={page.key === shown ? 'primary' : 'ghost'}
           onClick={() => pick({ ...OPEN_PAGE, activePage: page.key })}>
-          над закладками: {pageLabel(system, page.key)}
+          {t('page.barTop', { name: pageLabel(system, page.key) })}
         </Button>
       ))}
       <Button size="sm" onClick={() => {
-        focusNew('как зовётся страница');
+        focusNew(t('common:name.page'));
         const title = freePageTitle(useWorld.getState().system);
         let key = '';
         editSystem(draft => { key = addPage(draft, title); });
         pick({ ...OPEN_PAGE, activePage: key });
-      }}>+ страница</Button>
+      }}>{t('page.add')}</Button>
     </div>
   );
 }

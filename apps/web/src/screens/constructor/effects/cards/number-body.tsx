@@ -8,6 +8,7 @@ import { inputBadges } from '../../slots.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
 import { useStepName } from './step-name.tsx';
+import { useT } from '../../../../i18n/author.ts';
 
 type Loose = Record<string, unknown>;
 
@@ -26,6 +27,7 @@ export function NumberBody({ step, context, edit, onAddParam, takenNames }: {
   onAddParam?: (label: string, kind: ValueKind, want?: string) => string;
   takenNames?: readonly string[];
 }) {
+  const t = useT('rollCards');
   const name = useStepName({ step, context, edit, takenNames });
   const [draft, setDraft] = useState<string | null>(null);
   const read = loose(step);
@@ -55,15 +57,15 @@ export function NumberBody({ step, context, edit, onAddParam, takenNames }: {
       <div className="inline inline--tight number-line">
         {name.input}
         <span className="number-line__eq">=</span>
-        <div data-field="Формула" className="number-line__formula">
+        <div data-field={t('formula.label')} className="number-line__formula">
           <FormulaField
             value={shown}
             system={context.system}
-            where="число · сколько"
+            where={t('formula.where')}
             extraNames={names}
             {...(context.sheets ? { sheets: context.sheets } : {})}
             badges={inputBadges(context)}
-            placeholder="начните набирать название"
+            placeholder={t('formula.placeholder')}
             onChange={next => setDraft(next)}
             onCommit={commit}
             onCancel={() => setDraft(null)}
@@ -76,7 +78,7 @@ export function NumberBody({ step, context, edit, onAddParam, takenNames }: {
         <Button
           key={found} size="sm" variant="ghost"
           onClick={() => { onAddParam(found, 'number', found); }}
-        >{`взять «${found}» из записи`}</Button>
+        >{t('takeParam', { name: found })}</Button>
       )) : null}
     </>
   );

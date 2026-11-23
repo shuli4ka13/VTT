@@ -47,5 +47,12 @@
     "published": "published",
     "publishedBehind": "published · has changes"
   },
-  "copySuffix": "copy"
+  "copySuffix": "copy",
+  "save": {
+    "saving": "saving…",
+    "dirty": "there are unsaved changes",
+    "saved": "saved at {{at}}",
+    "failed": "not saved: {{why}}",
+    "untitled": "Untitled"
+  }
 }
