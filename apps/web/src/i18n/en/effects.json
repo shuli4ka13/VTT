@@ -1,1 +1,239 @@
-{}
+{
+  "chain": {
+    "title": "Steps",
+    "empty": "no steps yet — the effect does nothing",
+    "abovePay": "above the “Cost” line: runs first, once",
+    "belowPay": "below the “Cost” line: into the steps",
+    "degreesOf": "degrees of “{{name}}”",
+    "degreesList": "degrees: {{list}}",
+    "takeBlock": "take block “{{block}}” from “{{from}}”",
+    "removed": "Removed {{step}}: {{name}}",
+    "removedCleared": "references to it cleared: {{list}}",
+    "removedLeft": "still in formulas — fix them: {{list}}",
+    "else": "else",
+    "elseColon": "else:",
+    "then": "then:",
+    "dropArm": "remove branch",
+    "by": "By",
+    "if": "If",
+    "elseIf": "Else if",
+    "stop": "stop",
+    "emptyArm": "empty — add a step",
+    "addElseIf": "+ else if",
+    "addElse": "+ else",
+    "collapseAll": "collapse all",
+    "expandAll": "expand all",
+    "broken": "{{steps}} with broken references: {{n}}",
+    "ok": "effect is valid · {{steps}} {{n}}",
+    "restore": "restore {{step}}",
+    "gotIt": "got it",
+    "brickTitle": "Step",
+    "callTitle": "Call another effect of the system as a step: it runs here",
+    "addEffect": "+ effect",
+    "addStep": "+ step",
+    "addArmTitle": "Add a step to this branch",
+    "not": "not {{name}}",
+    "payTitle": "Cost: the steps above run first. Not enough — the action does not happen, nothing changes.",
+    "payWord": "Cost",
+    "payHint": "not enough — the action does not happen",
+    "costTitle": "What the effect costs: the chosen effect is called as the first step; not enough — the effect does not happen",
+    "costAdd": "+ cost",
+    "costNew": "+ new cost…"
+  },
+  "editor": {
+    "props": "properties",
+    "propsCollapse": "hide properties",
+    "propsTitle": "folder, tags, icon, name in formulas",
+    "descField": "Description",
+    "descTitle": "Text on the sheet. Does not affect calculation",
+    "descPlaceholder": "what it does — in the words of the rulebook",
+    "noteLabel": "Author's note",
+    "noteHint": "visible only here, not shown to the player",
+    "notePlaceholder": "for yourself: why it is so, what to check",
+    "folder": "Folder",
+    "blockField": "Block",
+    "tagsField": "Tags",
+    "tagsTitle": "Action tags: “everything with a tag” triggers, edits by tag and the tag contract (which inputs must be present)",
+    "tagsEmpty": "+ tag…",
+    "iconField": "Icon",
+    "iconTitle": "One symbol on the button and in the list",
+    "iconPlaceholder": "icon ⚔",
+    "swap": "change kind…",
+    "kindLabel": "Kind",
+    "kindHint": "Action steps and edits of a hanging effect do not carry over into each other",
+    "extras": {
+      "bond": "tie to an anchor",
+      "duration": "how long it hangs",
+      "grants": "what it grants"
+    },
+    "grantsLabel": "What it grants",
+    "grantsHint": "While this effect hangs, these hang too."
+  },
+  "hooks": {
+    "attach": {
+      "title": "On applying",
+      "word": "applied",
+      "hint": "steps right when the effect is applied"
+    },
+    "detach": {
+      "title": "On ending",
+      "word": "ended",
+      "hint": "steps at the moment the effect is gone: expired, removed, link broken"
+    }
+  },
+  "whileWhen": {
+    "title": "What it does while hanging",
+    "idle": "Does nothing yet.",
+    "addWhen": "+ trigger",
+    "removeHook": "remove “{{name}}”",
+    "does": "does:",
+    "hookEmpty": "no steps — does nothing",
+    "handlerEmpty": "no steps — reacts, but does nothing",
+    "whenNo": "trigger {{n}}",
+    "kindWhen": "when",
+    "kindWhile": "while"
+  },
+  "idle": {
+    "only": "no steps — only {{what}} works",
+    "both": "cost and modifiers",
+    "cost": "cost",
+    "mods": "modifiers"
+  },
+  "lifetime": {
+    "duration": "How long it hangs",
+    "count": "How many",
+    "countHint": "a number or a formula of the effect inputs",
+    "countWhere": "duration of the hanging effect",
+    "ends": "Ends",
+    "endsHint": "“At the start of the turn” — as “until the start of the next turn”: shield, dodge.",
+    "endsTurnEnd": "at the end of the turn",
+    "endsTurnStart": "at the start of the turn",
+    "by": "Whose turns to count",
+    "byHint": "A sheet from an input — as “until the start of the next turn of whoever applied it”: the “apply” step fills the input.",
+    "byHolder": "the holder — the one it hangs on",
+    "byInput": "the sheet from input “{{name}}”",
+    "reapply": "If applied a second time"
+  },
+  "name": {
+    "formulas": "name in formulas and references",
+    "title": "how the effect is named in buttons, triggers and calls",
+    "button": "name in formulas…"
+  },
+  "bond": {
+    "anchor": "Anchor",
+    "anchorHint": "A hanging effect that lands on the actor by itself — for example “Concentration”. When the anchor is removed, everything this action applied ends (except applications marked “stays”).",
+    "anchorEmpty": "— which hanging —",
+    "holder": "Who holds the anchor",
+    "ifWhere": "anchor · only if",
+    "ifPlaceholder": "for example: held by concentration",
+    "count": "How many anchors",
+    "one": "one — a new action releases the previous one",
+    "many": "its own for each action",
+    "argsWhere": "anchor · what it remembers"
+  },
+  "tab": {
+    "near": "Nearby",
+    "library": "Effect library",
+    "addBlock": "+ block",
+    "noneTitle": "No effects yet",
+    "noneHint": "Create the first one or take a ready one from the sample on the right.",
+    "addButton": "+ button",
+    "createFromScratch": "Create from scratch",
+    "pickTitle": "Pick an effect on the left",
+    "pickHint": "An effect is a unit of automation: everything the world does by itself. Checks, field changes, states — and what to call them is up to you.",
+    "everyone": "{{kind}} · for everyone",
+    "idle": "{{kind}} · does nothing"
+  },
+  "callMap": {
+    "more": "and {{n}} more"
+  },
+  "columnList": {
+    "drag": "drag to change the order"
+  },
+  "preview": {
+    "donors": "Ready-made",
+    "trial": "Trial",
+    "pickTitle": "Pick an effect",
+    "pickHint": "The trial shows what the effect will do: A applies it to B.",
+    "die": "Die",
+    "result": "What came out",
+    "applies": "{{actor}} applies the effect to {{target}}",
+    "nothing": "The effect did nothing.",
+    "after": "after the trial",
+    "who": "Who takes part",
+    "whoSub": "Two new sheets. You can adjust the numbers — for the trial only, nothing is saved.",
+    "reset": "reset to a new sheet",
+    "actor": "actor",
+    "target": "target"
+  },
+  "whatNext": {
+    "step": "step",
+    "how": {
+      "mul": "multiplies by",
+      "set": "sets equal to",
+      "add": "adds"
+    },
+    "where": "where {{column}} is {{is}}",
+    "rule": "rule",
+    "sub": "What the called effect does with the inputs passed to it.",
+    "edit": "edit “{{name}}”",
+    "missingTitle": "There is no such effect in the system",
+    "missingHint": "Choose whom to call in the “Which effect” field.",
+    "meddlers": "Which modifiers change the value along the way",
+    "ownField": "{{how}} its own sheet field",
+    "tagsMore": "· by tags: {{list}} and {{n}} more",
+    "tags": "· by tags: {{list}}",
+    "none": "Nothing: whatever is passed is applied. Resistances and vulnerabilities are rules that modify “{{name}}” by tag.",
+    "then": "Then the called effect does, in order",
+    "noSteps": "No steps",
+    "noStepsHint": "This effect does nothing to the target yet."
+  },
+  "handler": {
+    "kind": {
+      "call": "action or call",
+      "moment": "time",
+      "field": "field became true",
+      "gained": "effect appeared on the sheet",
+      "lost": "effect left the sheet"
+    },
+    "anyActionGen": "any button action",
+    "anyAction": "any button action",
+    "tagGen": "everything with the tag “{{name}}”",
+    "tag": "everything with the tag “{{name}}”",
+    "anyTarget": "for at least one target: {{label}}",
+    "withTag": "with the tag “{{name}}”",
+    "tagsGroup": "tags",
+    "filter": {
+      "only": "only with tags {{list}}",
+      "any": "with any of the tags {{list}}",
+      "not": "except rolls with tags {{list}}"
+    },
+    "fieldTrue": "{{name}} became true",
+    "gainedWord": "{{name}} appeared",
+    "lostWord": "{{name}} left",
+    "holderIs": "“{{name}}” — holder",
+    "and": "and",
+    "what": "what happened?",
+    "sentence": {
+      "ifOnly": "{{said}}, if {{condition}}",
+      "decides": "{{said}} — the holder's player decides",
+      "both": "{{said}}, if {{condition}} — the holder's player decides"
+    },
+    "when": "when: {{sentence}}",
+    "title": "Trigger #{{n}}: {{sentence}}",
+    "happened": "What happened",
+    "subject": {
+      "call": "Which exactly",
+      "moment": "When",
+      "other": "Which"
+    },
+    "phase": "When exactly",
+    "where": "trigger #{{n}} · only if",
+    "placeholderDone": "for example: count(results.step.success, yes) >= 1",
+    "placeholder": "for example: holder.field <= 0",
+    "holderTip": "The holder is the sheet this trigger hangs on.",
+    "decision": "Decision",
+    "auto": "automatic",
+    "asks": "the holder's player decides"
+  }
+}

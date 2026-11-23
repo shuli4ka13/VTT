@@ -26,19 +26,16 @@ import { BoundFormula } from '../bound-field.tsx';
 import { ReturnsEditor } from './returns-editor.tsx';
 import type { System, Effect, Step } from '@vtt/schema';
 import { placeNamesAt } from './names.ts';
+import { useT, t as tt } from '../../../i18n/author.ts';
 
-const DURATION_OPTIONS = Object.entries(DURATIONS).map(([key, word]) => [key, word.label] as const);
+const durationOptions = () => Object.entries(DURATIONS).map(([key, word]) => [key, word.label] as const);
 
 const COUNTED = new Set(['uses', 'rounds', 'turns', 'minutes', 'hours', 'days']);
 
-const ENDS = [
-  ['turn-end', 'в конце хода'],
-  ['turn-start', 'в начале хода'],
-] as const;
-
-const REAPPLY_OPTIONS = (Object.keys(REAPPLY) as (keyof typeof REAPPLY)[]).map(key => [key, REAPPLY[key].label] as const);
+const reapplyOptions = () => (Object.keys(REAPPLY) as (keyof typeof REAPPLY)[]).map(key => [key, REAPPLY[key].label] as const);
 
 export function EffectEditor({ id, effect, system }: { id: string; effect: Effect; system: System }) {
+  const t = useT('effects');
   const editSystem = useWorld(s => s.editSystem);
   const editEffect = useWorld(s => s.editEffect);
   const pick = useWorld(s => s.pick);
@@ -81,11 +78,11 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
       <Card className="effect-head">
         <div className="effect-head__top">
           <span className="effect-head__name">
-            <LabelInput value={effect.label ?? ''} placeholder="как зовётся эффект" onCommit={label => relabel(label)} />
+            <LabelInput value={effect.label ?? ''} placeholder={t('common:name.effect')} onCommit={label => relabel(label)} />
           </span>
           <span className={`effect-head__kind effect-head__kind--${launch.kind}`} title={role === 'unbound' ? UNBOUND_HINT : launchHint(launch.kind)}>{roleWordsOf(effect, role)}</span>
           <span className="spacer" />
-          <Button size="sm" variant="ghost" title="папка, метки, значок, имя в формулах" ariaLabel={more ? "свернуть «свойства»" : "развернуть «свойства»"} onClick={() => setMore(!more)}>{more ? 'свернуть свойства' : 'свойства'}</Button>
+          <Button size="sm" variant="ghost" title={t('editor.propsTitle')} ariaLabel={more ? t('common:fold.collapse', { name: t('editor.props') }) : t('common:fold.expand', { name: t('editor.props') })} onClick={() => setMore(!more)}>{more ? t('editor.propsCollapse') : t('editor.props')}</Button>
           <DangerButton size="sm" onConfirm={() => {
             editSystem(draft => {
               delete draft.effects[id];
@@ -93,23 +90,23 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
             });
             pick({ activeEffectId: null });
           }}>
-            Удалить
+            {t('common:delete')}
           </DangerButton>
         </div>
 
-        <div data-field="Описание" title="Текст на листе. На расчёт не влияет">
+        <div data-field={t('editor.descField')} title={t('editor.descTitle')}>
           <TextArea
             value={effect.description ?? ''}
-            placeholder="что делает — словами книги правил"
+            placeholder={t('editor.descPlaceholder')}
             onChange={next => edit(draft => { if (next) draft.description = next; else delete draft.description; })}
           />
         </div>
 
-        <Field label="Заметка автора" hint="видна только здесь, игроку не показывается">
-          <span data-field="Заметка автора">
+        <Field label={t('editor.noteLabel')} hint={t('editor.noteHint')}>
+          <span data-field={t('editor.noteLabel')}>
             <TextArea
               value={effect.note ?? ''}
-              placeholder="для себя: почему так, что проверить"
+              placeholder={t('editor.notePlaceholder')}
               onChange={next => edit(draft => { if (next.trim()) draft.note = next; else delete draft.note; })}
             />
           </span>
@@ -118,8 +115,8 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
         {more ? (
           <div className="stack stack--tight effect-head__more">
             <div className="effect-head__row">
-              <Field label="Папка">
-                <span data-field="Блок">
+              <Field label={t('editor.folder')}>
+                <span data-field={t('editor.blockField')}>
                   <BlockPick
                     of="effects"
                     system={system} value={effect.group}
@@ -129,21 +126,21 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
               </Field>
             </div>
             <div className="effect-head__row">
-              <span data-field="Метки" title="Метки действия: подписки «всё с меткой», правки по метке и договор метки (какие входы обязаны быть)">
+              <span data-field={t('editor.tagsField')} title={t('editor.tagsTitle')}>
                 <TagsField
                   system={system}
                   value={effect.tags}
-                  empty="+ метка…"
-                  onChange={next => edit(draft => { const list = next.filter((t): t is string => typeof t === 'string'); if (list.length) draft.tags = list; else delete draft.tags; })}
+                  empty={t('editor.tagsEmpty')}
+                  onChange={next => edit(draft => { const list = next.filter((tag): tag is string => typeof tag === 'string'); if (list.length) draft.tags = list; else delete draft.tags; })}
                 />
               </span>
-              <span data-field="Значок" title="Один символ на кнопке и в списке">
-                <Input value={effect.icon ?? ''} placeholder="значок ⚔" onChange={next => edit(draft => { if (next.trim()) draft.icon = next.trim(); else delete draft.icon; })} />
+              <span data-field={t('editor.iconField')} title={t('editor.iconTitle')}>
+                <Input value={effect.icon ?? ''} placeholder={t('editor.iconPlaceholder')} onChange={next => edit(draft => { if (next.trim()) draft.icon = next.trim(); else delete draft.icon; })} />
               </span>
             </div>
             <details className="effect-head__kind-swap">
-              <summary>сменить вид…</summary>
-              <Field label="Вид" hint="Шаги действия и правки висящего друг в друга не переносятся">
+              <summary>{t('editor.swap')}</summary>
+              <Field label={t('editor.kindLabel')} hint={t('editor.kindHint')}>
                 <span title={launchHint(launch.kind)}>
                   <Select
                     value={pipeline ? 'manual' : 'passive'}
@@ -161,7 +158,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
             {launch.kind === 'manual' && (effect.bond || (effect.steps ?? []).some(step => step.type === 'status' && String((step as { mode?: unknown }).mode ?? 'apply') === 'apply')) ? (
               <Extras
                 items={[{
-                  key: 'bond', label: 'привязка к якорю', on: !!effect.bond,
+                  key: 'bond', label: t('editor.extras.bond'), on: !!effect.bond,
                   add: () => edit(draft => {
                     const holder = Object.entries(system.effects).find(([key, other]) => key !== id && (other.activation ?? 'manual') === 'passive')?.[0];
                     const by = rolesOf({ params: paramsOf(system, draft) }).actor;
@@ -178,16 +175,16 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
         {launch.kind === 'manual' ? null : (
           <Extras
             items={[{
-              key: 'duration', label: 'сколько висит', on: !!effect.duration,
+              key: 'duration', label: t('editor.extras.duration'), on: !!effect.duration,
               add: () => edit(draft => { draft.duration = { kind: 'permanent' }; }),
               drop: () => edit(draft => { delete draft.duration; delete draft.reapply; }),
               node: <Lifetime effect={effect} system={system} edit={edit} />,
             }, {
-              key: 'grants', label: 'что даёт', on: !!effect.grants,
+              key: 'grants', label: t('editor.extras.grants'), on: !!effect.grants,
               add: () => edit(draft => { draft.grants = []; }),
               drop: () => edit(draft => { delete draft.grants; }),
               node: (
-                <Field label="Что даёт" hint="Пока висит этот эффект, висят и эти.">
+                <Field label={t('editor.grantsLabel')} hint={t('editor.grantsHint')}>
                   <GrantsEditor system={system} value={effect.grants} except={id}
                     onChange={next => edit(draft => { draft.grants = next ?? []; })} />
                 </Field>
@@ -220,13 +217,14 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
 }
 
 const HOOKS = [
-  { turn: 'attach', title: 'При наложении', word: 'повесили', hint: 'шаги сразу, когда эффект повесили' },
-  { turn: 'detach', title: 'При спадании', word: 'спало', hint: 'шаги в тот миг, когда эффект ушёл: истёк срок, сняли, оборвалась связь' },
+  { turn: 'attach', get title() { return tt('effects:hooks.attach.title'); }, get word() { return tt('effects:hooks.attach.word'); }, get hint() { return tt('effects:hooks.attach.hint'); } },
+  { turn: 'detach', get title() { return tt('effects:hooks.detach.title'); }, get word() { return tt('effects:hooks.detach.word'); }, get hint() { return tt('effects:hooks.detach.hint'); } },
 ] as const;
 
 function WhileWhen({ id, effect, system, edit }: {
   id: string; effect: Effect; system: System; edit: (change: (draft: Effect) => void) => void;
 }) {
+  const t = useT('effects');
   const editSystem = useWorld(s => s.editSystem);
   const modifiers = effect.modifiers ?? [];
   const list = useModifierRows({
@@ -237,8 +235,8 @@ function WhileWhen({ id, effect, system, edit }: {
   const idle = !modifiers.length && !effect.on?.length && absent.length === HOOKS.length;
   return (
     <div className="stack">
-      <CardHead title="Что делает, пока висит" />
-      {idle ? <WhileWhenEmpty>Пока ничего не делает.</WhileWhenEmpty> : (
+      <CardHead title={t('whileWhen.title')} />
+      {idle ? <WhileWhenEmpty>{t('whileWhen.idle')}</WhileWhenEmpty> : (
         <div className="mod-table">
           {list.rows}
           <Handlers id={id} effect={effect} system={system} edit={edit} />
@@ -247,7 +245,7 @@ function WhileWhen({ id, effect, system, edit }: {
       )}
       <div className="inline inline--tight mod-add">
         <AddModifiers add={list.add} />
-        <Button size="sm" onClick={() => edit(draft => { (draft.on ??= []).push(newHandler()); })}>+ когда</Button>
+        <Button size="sm" onClick={() => edit(draft => { (draft.on ??= []).push(newHandler()); })}>{t('whileWhen.addWhen')}</Button>
         {absent.map(({ turn, title, hint }) => (
           <Button key={turn} size="sm" title={hint} onClick={() => edit(draft => { draft[turn] = []; })}>
             + {title.toLowerCase()}
@@ -261,6 +259,7 @@ function WhileWhen({ id, effect, system, edit }: {
 function Hooks({ id, effect, system, edit }: {
   id: string; effect: Effect; system: System; edit: (change: (draft: Effect) => void) => void;
 }) {
+  const t = useT('effects');
   return (
     <>
       {HOOKS.filter(({ turn }) => effect[turn] !== undefined).map(({ turn, title, word, hint }) => {
@@ -272,11 +271,11 @@ function Hooks({ id, effect, system, edit }: {
         });
         return (
           <div key={turn} className="mod-item">
-            <WhileWhenRow when title={hint} removeTitle={`убрать «${title.toLowerCase()}»`} onRemove={() => edit(draft => { delete draft[turn]; })}>
+            <WhileWhenRow when title={hint} removeTitle={t('whileWhen.removeHook', { name: title.toLowerCase() })} onRemove={() => edit(draft => { delete draft[turn]; })}>
               {word}
             </WhileWhenRow>
             <div className="stack when-body">
-              <Chain id={id} placeAt={index => ({ part: turn, index })} effect={carrier} system={system} edit={editCarrier} title="делает:" lined empty="шагов нет — ничего не делает" />
+              <Chain id={id} placeAt={index => ({ part: turn, index })} effect={carrier} system={system} edit={editCarrier} title={t('whileWhen.does')} lined empty={t('whileWhen.hookEmpty')} />
             </div>
           </div>
         );
@@ -303,10 +302,11 @@ const shiftBetween = (holder: Holder, indices: number[], to: Lane): void => {
 function Handlers({ id, effect, system, edit }: {
   id: string; effect: Effect; system: System; edit: (change: (draft: Effect) => void) => void;
 }) {
+  const t = useT('effects');
   return (
     <>
       {(effect.on ?? []).map((handler, index) => {
-        const carrier = { ...effect, label: `${effect.label ?? ''} · когда ${index + 1}`, steps: handler.steps ?? [], cost: handler.cost } as Effect;
+        const carrier = { ...effect, label: `${effect.label ?? ''} · ${t('whileWhen.whenNo', { n: index + 1 })}`, steps: handler.steps ?? [], cost: handler.cost } as Effect;
         const editCarrier = (change: (draft: Effect) => void) => edit(draft => {
           const own = draft.on?.[index];
           if (!own) return;
@@ -334,9 +334,9 @@ function Handlers({ id, effect, system, edit }: {
               <Chain
                 id={id} placeAt={step => ({ part: 'handler', handler: index, index: step })}
                 effect={carrier} system={system} edit={editCarrier}
-                title="делает:"
+                title={t('whileWhen.does')}
                 lined
-                empty="шагов нет — отзывается, но ничего не делает"
+                empty={t('whileWhen.handlerEmpty')}
                 onEdgeUp={indices => moveLane(indices, 'cost')}
                 onRoll={handler.on === 'seen'}
                 startAt={groupSteps(carrier.cost ?? []).filter(card => card.kind !== 'flow').length}
@@ -354,26 +354,26 @@ function Handlers({ id, effect, system, edit }: {
 
 
 const idleWords = (effect: Effect): string => {
-  const also: string[] = [];
-  if (effect.cost?.length) also.push('стоимость');
-  if (effect.modifiers?.length) also.push('правки');
-  return also.length
-    ? `шагов нет — работает только ${also.join(' и ')}`
-    : 'шагов ещё нет — эффект ничего не делает';
+  const cost = Boolean(effect.cost?.length);
+  const mods = Boolean(effect.modifiers?.length);
+  if (!cost && !mods) return tt('effects:chain.empty');
+  return tt('effects:idle.only', { what: cost && mods ? tt('effects:idle.both') : cost ? tt('effects:idle.cost') : tt('effects:idle.mods') });
 };
 
 function Lifetime({ effect, system, edit }: {
   effect: Effect; system: System; edit: (change: (draft: Effect) => void) => void;
 }) {
+  const t = useT('effects');
   const kind = effect.duration?.kind ?? 'permanent';
+  const ends = [['turn-end', t('lifetime.endsTurnEnd')], ['turn-start', t('lifetime.endsTurnStart')]] as const;
   const sheets = paramsOf(system, effect).filter(param => param.kind === 'sheet' && !param.many);
 
   return (
     <div className="row">
-      <Field label="Сколько висит">
+      <Field label={t('lifetime.duration')}>
         <Select
           value={kind}
-          options={DURATION_OPTIONS as never}
+          options={durationOptions() as never}
           onChange={next => edit(draft => {
             draft.duration = COUNTED.has(next) ? { kind: next, max: draft.duration?.max ?? 1 } : { kind: next };
           })}
@@ -381,9 +381,9 @@ function Lifetime({ effect, system, edit }: {
       </Field>
 
       {COUNTED.has(kind) ? (
-        <Field label="Сколько" hint="число или формула от входов эффекта">
+        <Field label={t('lifetime.count')} hint={t('lifetime.countHint')}>
           <BoundFormula
-            value={effect.duration?.max ?? 1} system={system} where="срок висящего эффекта"
+            value={effect.duration?.max ?? 1} system={system} where={t('lifetime.countWhere')}
             onChange={next => edit(draft => {
               if (!draft.duration || !COUNTED.has(draft.duration.kind)) return;
               draft.duration.max = next === null ? 1 : typeof next === 'number' ? Math.max(1, Math.floor(next) || 1) : next;
@@ -393,10 +393,10 @@ function Lifetime({ effect, system, edit }: {
       ) : null}
 
       {kind === 'turns' ? (
-        <Field label="Спадает" hint="«В начале хода» — как «до начала следующего хода»: щит, уклонение.">
+        <Field label={t('lifetime.ends')} hint={t('lifetime.endsHint')}>
           <Select
             value={effect.duration?.ends ?? 'turn-end'}
-            options={ENDS}
+            options={ends}
             onChange={next => edit(draft => {
               if (!draft.duration) return;
               if (next === 'turn-start') draft.duration.ends = next; else delete draft.duration.ends;
@@ -406,10 +406,10 @@ function Lifetime({ effect, system, edit }: {
       ) : null}
 
       {kind === 'turns' ? (
-        <Field label="Чьи ходы считать" hint="Лист из входа — как «до начала следующего хода того, кто наложил»: вход заполняет шаг «наложить».">
+        <Field label={t('lifetime.by')} hint={t('lifetime.byHint')}>
           <Select
             value={effect.duration?.by ?? ''}
-            options={[['', 'носителя — того, на ком висит'], ...sheets.map(param => [param.key, `листа из входа «${param.label ?? param.key}»`] as const)] as never}
+            options={[['', t('lifetime.byHolder')], ...sheets.map(param => [param.key, t('lifetime.byInput', { name: param.label ?? param.key })] as const)] as never}
             onChange={next => edit(draft => {
               if (!draft.duration) return;
               if (next) draft.duration.by = next; else delete draft.duration.by;
@@ -418,10 +418,10 @@ function Lifetime({ effect, system, edit }: {
         </Field>
       ) : null}
 
-      <Field label="Если наложить второй раз">
+      <Field label={t('lifetime.reapply')}>
         <Select
           value={effect.reapply ?? 'ignore'}
-          options={REAPPLY_OPTIONS}
+          options={reapplyOptions()}
           onChange={next => edit(draft => { draft.reapply = next; })}
         />
       </Field>
@@ -458,15 +458,16 @@ function SelfTrack({ id, at, effect, system, edit, onMoveLane, onAddCost }: {
 }
 
 function EffectName({ id, locked, taken, onChange }: { id: string; locked: boolean; taken: string[]; onChange: (next: string) => void }) {
+  const t = useT('effects');
   const [open, setOpen] = useState(false);
   return (
     <div className="inline inline--tight step-name">
       {open ? (
         <>
-          <span className="faint">имя в формулах и ссылках</span>
+          <span className="faint">{t('name.formulas')}</span>
           <KeyField value={id} locked={locked} taken={taken} onChange={onChange} />
         </>
-      ) : <Button size="sm" variant="ghost" title="как эффект зовётся в кнопках, подписках и вызовах" onClick={() => setOpen(true)}>имя в формулах…</Button>}
+      ) : <Button size="sm" variant="ghost" title={t('name.title')} onClick={() => setOpen(true)}>{t('name.button')}</Button>}
     </div>
   );
 }
@@ -474,22 +475,23 @@ function EffectName({ id, locked, taken, onChange }: { id: string; locked: boole
 function Bond({ effect, system, id, edit }: {
   effect: Effect; system: System; id: string; edit: (change: (draft: Effect) => void) => void;
 }) {
+  const t = useT('effects');
   const sheets = paramsOf(system, effect).filter(param => param.kind === 'sheet' && !param.many);
   const holder = system.effects[effect.bond?.effect ?? ''];
   const holderParams = holder ? paramsOf(system, holder) : [];
   const inputNames = new Map(paramsOf(system, effect).map(param => [param.key, param.label ?? param.key] as const));
   return (
     <div className="row">
-      <Field label="Якорь" hint="Висящий эффект, который сам ляжет на того, кто действует, — например «Концентрация». Сняли якорь — спадает всё, что это действие наложило (кроме наложений с «остаётся»).">
+      <Field label={t('bond.anchor')} hint={t('bond.anchorHint')}>
         <EffectPick
           value={effect.bond?.effect || null}
           system={system}
           only={other => (other.activation ?? 'manual') === 'passive' && other !== system.effects[id]}
-          empty="— какой висящий —"
+          empty={t('bond.anchorEmpty')}
           onChange={next => edit(draft => { if (typeof next === 'string') draft.bond = { effect: next, by: draft.bond?.by ?? sheets[0]?.key ?? '' }; })}
         />
       </Field>
-      <Field label="У кого якорь">
+      <Field label={t('bond.holder')}>
         <Select
           value={effect.bond?.by ?? ''}
           options={sheets.map(param => [param.key, `«${param.label ?? param.key}»`] as const) as never}
@@ -506,13 +508,13 @@ function Bond({ effect, system, id, edit }: {
         system={system}
         quick={paramsOf(system, effect).filter(param => param.kind === 'boolean').map(param => ({ ref: param.key, label: param.label ?? param.key, kind: 'boolean' as const }))}
         names={inputNames}
-        where="якорь · только если"
-        placeholder="например: держится концентрацией"
+        where={t('bond.ifWhere')}
+        placeholder={t('bond.ifPlaceholder')}
       />
-      <Field label="Сколько якорей">
+      <Field label={t('bond.count')}>
         <Select
           value={effect.bond?.many ? 'many' : 'one'}
-          options={[['one', 'один — новое действие отпускает прежнее'], ['many', 'свой на каждое действие']] as const}
+          options={[['one', t('bond.one')], ['many', t('bond.many')]] as const}
           onChange={next => edit(draft => {
             if (!draft.bond) return;
             if (next === 'many') draft.bond.many = true; else { delete draft.bond.many; delete draft.bond.args; }
@@ -531,7 +533,7 @@ function Bond({ effect, system, id, edit }: {
             if (Object.keys(args).length) draft.bond.args = args; else delete draft.bond.args;
           })}
           context={{ system, effect, earlier: [], names: placeNamesAt(system, id, { part: 'steps', index: (effect.steps ?? []).length }) }}
-          where="якорь · что запомнит"
+          where={t('bond.argsWhere')}
         />
       ) : null}
     </div>

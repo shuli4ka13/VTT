@@ -1,6 +1,7 @@
 import { compile, STEP_WORDS, armsOf, balance, endOf, flowOf, inBlock, loopsAt } from '@vtt/engine';
 import type { Step } from '@vtt/schema';
 import { isThrow } from './cards-kind.ts';
+import { t } from '../../i18n/author.ts';
 
 export { isThrow };
 
@@ -212,9 +213,9 @@ export function removeSteps(steps: Step[], indices: number[]): Removal {
         const lone = loneName(value);
         if (key === 'if' || (lone && ids.has(lone.split('.')[0]!))) {
           delete node[key];
-          cleared.push({ step: at, slot: key === 'if' ? 'условие' : slot });
+          cleared.push({ step: at, slot: key === 'if' ? t('fields:cards.condition') : slot });
         } else {
-          cleared.push({ step: at, slot: `${slot} (формула)` });
+          cleared.push({ step: at, slot: t('fields:cards.formula', { slot }) });
         }
         continue;
       }

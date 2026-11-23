@@ -7,6 +7,7 @@ import type { EditFn } from '../words.ts';
 import { callable } from '../../slots.tsx';
 import { callArgs } from '../call-args.ts';
 import { WhatNext, meddlersOf } from '../what-next.tsx';
+import { useT } from '../../../../i18n/author.ts';
 
 const loose = (draft: unknown): Record<string, unknown> => draft as Record<string, unknown>;
 
@@ -18,6 +19,7 @@ export function SendBody({ step, at, context, edit, system, onOpenEffect }: {
   system: System;
   onOpenEffect?: (id: string) => void;
 }) {
+  const t = useT('stepCards');
   const [peek, setPeek] = useState(false);
   const commons = callable(system, context.effect);
   const args = (step.args ?? {}) as Record<string, unknown>;
@@ -39,7 +41,7 @@ export function SendBody({ step, at, context, edit, system, onOpenEffect }: {
         })}
         args={args}
         context={context}
-        where="вызов"
+        where={t('send.where')}
         onArg={(key, next) => edit(at, draft => {
           const all = { ...((loose(draft).args ?? {}) as Record<string, unknown>) };
           if (next === undefined || next === null) delete all[key]; else all[key] = next;
@@ -47,9 +49,9 @@ export function SendBody({ step, at, context, edit, system, onOpenEffect }: {
         })}
         headAction={(
           <>
-          {id && onOpenEffect ? <Button size="sm" variant="ghost" onClick={() => onOpenEffect(id)}>как устроено →</Button> : null}
+          {id && onOpenEffect ? <Button size="sm" variant="ghost" onClick={() => onOpenEffect(id)}>{t('send.open')}</Button> : null}
           <Button size="sm" variant="ghost" onClick={() => setPeek(true)}>
-            {`что будет дальше${meddlersOf(system, id).length ? ' · кто может изменить' : ''} →`}
+            {meddlersOf(system, id).length ? t('send.nextMeddlers') : t('send.next')}
           </Button>
           </>
         )}

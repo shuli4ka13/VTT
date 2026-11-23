@@ -2,6 +2,7 @@ import type { System } from '@vtt/schema';
 import { Button } from '../../ui/primitives.tsx';
 import { MultiChoice } from '../../ui/multi-choice.tsx';
 import { calledOf, isPipeline } from '@vtt/engine';
+import { useT } from '../../i18n/author.ts';
 
 export function GrantsEditor({ system, value, onChange, except, hanging = false, onCreate }: {
   system: System;
@@ -11,16 +12,17 @@ export function GrantsEditor({ system, value, onChange, except, hanging = false,
   hanging?: boolean;
   onCreate?: () => void;
 }) {
+  const t = useT('records');
   const called = new Set(calledOf(system).map(([key]) => key));
   const options = Object.entries(system.effects)
     .filter(([key, effect]) => key !== except && !called.has(key) && !(hanging && isPipeline(effect)))
-    .map(([key, effect]) => ({ value: key, label: effect.label || key, group: isPipeline(effect) ? 'кнопки' : 'правила' }));
-  const create = onCreate ? <Button size="sm" variant="ghost" onClick={onCreate}>+ новое правило</Button> : null;
+    .map(([key, effect]) => ({ value: key, label: effect.label || key, group: isPipeline(effect) ? t('grants.buttons') : t('grants.rules') }));
+  const create = onCreate ? <Button size="sm" variant="ghost" onClick={onCreate}>{t('grants.create')}</Button> : null;
   if (!options.length && !(value ?? []).length) {
     return (
       <div className="inline inline--tight">
         <span className="faint">
-          {onCreate ? 'Выдавать пока нечего.' : 'Выдавать пока нечего — заведите эффект на вкладке «Эффекты»: «+ висит» или «+ кнопкой».'}
+          {onCreate ? t('grants.nothing') : t('grants.nothingHint')}
         </span>
         {create}
       </div>

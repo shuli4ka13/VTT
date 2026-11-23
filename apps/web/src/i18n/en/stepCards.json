@@ -1,1 +1,225 @@
-{}
+{
+  "change": {
+    "calc": {
+      "hint": "calculated by a calculation step before the change",
+      "label": "calculation"
+    },
+    "removeTerm": "remove the term",
+    "diceByStep": "a die is rolled by a separate step — add a «roll» step and name it",
+    "group": {
+      "record": "from the record",
+      "result": "step result",
+      "die": "system die"
+    },
+    "newInput": "new input…",
+    "how": {
+      "label": "How",
+      "subtract": "subtract",
+      "add": "add",
+      "set": "set"
+    },
+    "amount": {
+      "label": "How much",
+      "where": "change · becomes",
+      "placeholder": {
+        "set": "for example: target.field",
+        "other": "for example: step name"
+      }
+    },
+    "kind": {
+      "field": "field",
+      "status": "state",
+      "emit": "call"
+    },
+    "retype": {
+      "title": "change what the step does: change a field, apply a state or call an effect",
+      "label": "change step kind"
+    },
+    "kept": "the amount is kept — it comes back if you pick «field» again",
+    "do": {
+      "label": "What we do",
+      "apply": "apply",
+      "remove": "remove"
+    },
+    "take": {
+      "label": "Remove",
+      "effect": "this effect",
+      "tag": "all effects with a tag"
+    },
+    "tag": {
+      "label": "Which tag",
+      "blank": "— which tag —"
+    },
+    "which": {
+      "label": "Which",
+      "empty": "— which state —"
+    },
+    "to": {
+      "apply": "On whom",
+      "remove": "From whom",
+      "blank": "— which sheet —",
+      "where": "state · on whom"
+    },
+    "drop": {
+      "title": "Which to remove",
+      "where": "state · which to remove",
+      "placeholder": "for example: spell == called_effect"
+    },
+    "howMany": {
+      "label": "How many to remove",
+      "all": "all",
+      "one": "one, the earliest"
+    },
+    "anchor": {
+      "label": "When the anchor is dropped",
+      "hint": "The anchor is what holds the action, for example «Concentration». By default the applied effect falls away with it.",
+      "falls": "falls away with it",
+      "stays": "stays"
+    },
+    "status": {
+      "where": "apply"
+    },
+    "remember": {
+      "label": "Remembers: {{name}}",
+      "hint": "The hanging effect keeps this value and reads it by name.",
+      "where": "apply · {{name}}",
+      "placeholder": {
+        "sheet": "for example: actor",
+        "field": "for example: actor.field"
+      }
+    }
+  },
+  "new": {
+    "howMuchDice": "how much — dice",
+    "which": "which"
+  },
+  "group": {
+    "byOutcome": {
+      "hint": "Put a «By …» fork right after the step, by its result",
+      "add": "+ by result",
+      "label": "by result"
+    },
+    "up": "up",
+    "down": "down",
+    "unknownType": "{{n}} · the engine does not know the type «{{type}}»",
+    "asIf": {
+      "by": "by result of {{by}}",
+      "named": "by result of «{{name}}»: {{outcome}}",
+      "plain": "by result: {{outcome}}",
+      "leadNamed": "by result of «{{name}}»:",
+      "leadPlain": "by result:"
+    },
+    "fold": {
+      "expand": "expand the step",
+      "collapse": "collapse the step"
+    },
+    "card": {
+      "label": "step «{{name}}»"
+    },
+    "tableRow": "Table row {{name}} by {{by}}.",
+    "tableNamed": "«{{name}}»",
+    "tableWhich": "which table?",
+    "tableByDice": "roll «{{name}}»"
+  },
+  "split": {
+    "title": "{{n}} · For each of",
+    "rowsOf": "rows of «{{name}}»",
+    "list": {
+      "label": "from which list",
+      "blank": "— which list —"
+    },
+    "rowName": "the row is called:",
+    "rowsNote": "steps below run for each row in turn, steps above run once",
+    "each": "each:",
+    "eachNote": "steps below run for each in turn, steps above run once"
+  },
+  "name": {
+    "hint": "how the step result is called in formulas",
+    "named": "name in formulas: {{name}}",
+    "add": "name in formulas…",
+    "label": "name in formulas",
+    "placeholder": "name"
+  },
+  "note": {
+    "placeholder": "for example: no slot left"
+  },
+  "stop": {
+    "hint": "We go no further. Before «For each of» and in the cost — the action did not happen; in the body — a stop for this target.",
+    "word": "{{n}} · Stop",
+    "log": "to the log:",
+    "note": "«stop»"
+  },
+  "head": {
+    "where": "{{word}} · condition",
+    "placeholder": "for example: step.natural >= 19",
+    "if": "If",
+    "hide": "collapse the step fields",
+    "show": "show the step fields",
+    "step": "step"
+  },
+  "outcome": {
+    "blank": "— what we check —",
+    "formula": "by formula…"
+  },
+  "actions": {
+    "keep": "only the fork — the steps stay"
+  },
+  "table": {
+    "which": {
+      "label": "Which table",
+      "blank": "— which —"
+    },
+    "by": {
+      "label": "What we look the row up by",
+      "hint": "A die roll — like a random encounter table; a number — like a distance or a level.",
+      "value": "by number or formula",
+      "dice": "roll a die"
+    },
+    "column": {
+      "label": "Which column",
+      "hint": "What to take from the found row. Empty — the «value» column.",
+      "blank": "— value —"
+    },
+    "die": {
+      "label": "Which die",
+      "blank": "— die —",
+      "own": "own die…"
+    },
+    "number": {
+      "label": "Number",
+      "where": "table · by what"
+    },
+    "dicePlaceholder": "1d10"
+  },
+  "ask": {
+    "question": {
+      "label": "Question",
+      "placeholder": "Who won?"
+    },
+    "whom": {
+      "label": "Whom",
+      "hint": "Who answers the question. Empty — the game master answers.",
+      "where": "ask · whom"
+    },
+    "yes": {
+      "label": "The «yes» answer in words",
+      "hint": "Button caption. Empty — «yes»."
+    },
+    "no": {
+      "label": "The «no» answer in words",
+      "hint": "Button caption. Empty — «no»."
+    }
+  },
+  "send": {
+    "where": "call",
+    "open": "how it works →",
+    "next": "what happens next →",
+    "nextMeddlers": "what happens next · who can change it →"
+  },
+  "extras": {
+    "remove": "remove «{{name}}»"
+  },
+  "quick": {
+    "tags": "call tags"
+  }
+}

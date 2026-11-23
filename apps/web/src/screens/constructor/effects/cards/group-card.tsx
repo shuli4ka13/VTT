@@ -23,6 +23,7 @@ import { AskBody } from './ask-body.tsx';
 import { StopStrip, StepHead, FlowActions } from './flow-parts.tsx';
 import { ResultChips } from './result-chips.tsx';
 import { titleOf } from '../words.ts';
+import { useT, t as say } from '../../../../i18n/author.ts';
 
 
 export function Readback({ segments }: { segments: Segment[] }) {
@@ -83,6 +84,7 @@ export function GroupCard({
   outcome?: string;
   takenNames?: readonly string[];
 }) {
+  const t = useT('stepCards');
   const context: SlotContext = { system, effect, earlier, ...(sheets ? { sheets } : {}), ...(names ? { names } : {}), ...(tables ? { tables } : {}), ...(scope ? { scope } : {}) };
   const step = group.step as any;
   const edit: typeof editStep = (at, change) => editStep(at, draft => {
@@ -90,18 +92,18 @@ export function GroupCard({
     if (draft.type === 'roll') delete (draft as Record<string, unknown>).against;
   });
 
-  const IF_BY = 'Поставить сразу после шага развилку «По …» по его итогу';
+  const IF_BY = t('group.byOutcome.hint');
   const ifByControl = !ifBy?.length || folded ? null
-    : ifBy.length === 1 ? <Button size="sm" variant="ghost" title={IF_BY} onClick={ifBy[0]!.run}>+ по итогу</Button>
-      : <Select<string> value="" title={IF_BY} label="по итогу"
-        options={[['', '+ по итогу'], ...ifBy.map((one, k) => [String(k + 1), one.label] as const)]}
+    : ifBy.length === 1 ? <Button size="sm" variant="ghost" title={IF_BY} onClick={ifBy[0]!.run}>{t('group.byOutcome.add')}</Button>
+      : <Select<string> value="" title={IF_BY} label={t('group.byOutcome.label')}
+        options={[['', t('group.byOutcome.add')], ...ifBy.map((one, k) => [String(k + 1), one.label] as const)]}
         onChange={pick => { if (pick) ifBy[Number(pick) - 1]!.run(); }} />;
   const actions = (
     <>
       {ifByControl}
-      <Button size="sm" variant="ghost" title={upTitle ?? 'выше'} disabled={!onMoveUp} onClick={onMoveUp}>↑</Button>
-      <Button size="sm" variant="ghost" title={downTitle ?? 'ниже'} disabled={!onMoveDown} onClick={onMoveDown}>↓</Button>
-      <DangerButton size="sm" onConfirm={onDelete}>Удалить</DangerButton>
+      <Button size="sm" variant="ghost" title={upTitle ?? t('group.up')} disabled={!onMoveUp} onClick={onMoveUp}>↑</Button>
+      <Button size="sm" variant="ghost" title={downTitle ?? t('group.down')} disabled={!onMoveDown} onClick={onMoveDown}>↓</Button>
+      <DangerButton size="sm" onConfirm={onDelete}>{t('common:delete')}</DangerButton>
     </>
   );
 
@@ -116,7 +118,7 @@ export function GroupCard({
   if (group.kind === 'unknown' || group.kind === 'flow') {
     return (
       <Card tone="bad">
-        <CardHead title={`${position} · движок не знает типа «${group.step.type}»`}
+        <CardHead title={t('group.unknownType', { n: position, type: group.step.type })}
           actions={actions} />
       </Card>
     );
@@ -146,8 +148,8 @@ export function GroupCard({
     return (
       <>
         <StepHead
-          position={position} word={called.replace(/^.*«(.+)».*$/, '$1')} words={headBy ? `по итогу ${headBy}` : `по итогу${step.id ? ` «${stepSaid(step)}»` : ''}: ${outcome}`} open={!folded} onToggle={onFold} problem={problem?.text ?? null}
-          {...(headCond ? { cond: <><span className="flow-head__by">по итогу{step.id ? ` «${stepSaid(step)}»` : ''}:</span>{headCond}</> } : {})}
+          position={position} word={called.replace(/^.*«(.+)».*$/, '$1')} words={headBy ? t('group.asIf.by', { by: headBy }) : step.id ? t('group.asIf.named', { name: stepSaid(step), outcome }) : t('group.asIf.plain', { outcome })} open={!folded} onToggle={onFold} problem={problem?.text ?? null}
+          {...(headCond ? { cond: <><span className="flow-head__by">{step.id ? t('group.asIf.leadNamed', { name: stepSaid(step) }) : t('group.asIf.leadPlain')}</span>{headCond}</> } : {})}
           actions={<FlowActions onUp={onMoveUp} onDown={onMoveDown} upTitle={upTitle} downTitle={downTitle} onDelete={onDelete} onKeep={onUnwrap} />}
         />
         {folded ? null : <div className={`step-card flow-block__source flow-block__source--${group.kind}`}>{body}</div>}
@@ -157,7 +159,7 @@ export function GroupCard({
 
   const head = onFold ? (
     <button type="button" className="step-fold" aria-expanded={!folded} onClick={onFold}
-      title={folded ? 'развернуть шаг' : 'свернуть шаг'}>
+      title={folded ? t('group.fold.expand') : t('group.fold.collapse')}>
       <span className="step-fold__arrow" aria-hidden>{folded ? '▸' : '▾'}</span>{title}
     </button>
   ) : title;
@@ -179,7 +181,7 @@ export function GroupCard({
 
   return (
     <>
-      <Card tone={problem ? 'bad' : toneOf(group.kind)} className="step-card" label={`шаг «${called}»`}>
+      <Card tone={problem ? 'bad' : toneOf(group.kind)} className="step-card" label={t('group.card.label', { name: called })}>
         <CardHead
           title={head}
           actions={actions}
@@ -217,8 +219,9 @@ function SplitStrip({ step, position, system, effect, earlier, edit, actions }: 
   edit: (slotIndexInGroup: number, change: (draft: Step) => void) => void;
   actions: ReactNode;
 }) {
+  const t = useT('stepCards');
   const lists = (effect.params ?? []).filter(p => p.kind === 'sheet' && p.many).map(p => [p.key, p.label || p.key] as const);
-  const tables = rowTables(system).filter(([, table]) => !isRange(table) && (table.rows ?? []).length).map(([id, table]) => [`${TABLE_ROWS}${id}`, `строки «${table.label || id}»`] as const);
+  const tables = rowTables(system).filter(([, table]) => !isRange(table) && (table.rows ?? []).length).map(([id, table]) => [`${TABLE_ROWS}${id}`, t('split.rowsOf', { name: table.label || id })] as const);
   const rows = typeof step.rows === 'string' ? step.rows : '';
   const value = rows ? `${TABLE_ROWS}${rows}` : String(step.of ?? '');
   const known = [...lists, ...tables].some(([key]) => key === value);
@@ -229,9 +232,9 @@ function SplitStrip({ step, position, system, effect, earlier, edit, actions }: 
   ].filter(one => one !== name);
   return (
     <div className="steps__split" title={STEP_WORDS.each.hint}>
-      <span className="steps__split-title">{position} · Для каждого из</span>
-      <Select<string> label="из какого списка" value={value}
-        options={[...(known ? [] : [['', '— какого списка —'] as const]), ...lists, ...tables]}
+      <span className="steps__split-title">{t('split.title', { n: position })}</span>
+      <Select<string> label={t('split.list.label')} value={value}
+        options={[...(known ? [] : [['', t('split.list.blank')] as const]), ...lists, ...tables]}
         onChange={next => edit(0, draft => {
           const loop = draft as { of?: string; rows?: string; as?: string; asLabel?: string };
           if (next.startsWith(TABLE_ROWS)) {
@@ -246,17 +249,17 @@ function SplitStrip({ step, position, system, effect, earlier, edit, actions }: 
         })} />
       {rows ? (
         <>
-          <span className="faint">строка зовётся:</span>
+          <span className="faint">{t('split.rowName')}</span>
           <NameField shown={name ? stepSaid({ id: name, label: step.asLabel }) : ''}
             check={typed => stepNameTrouble(typed, { id: name, label: step.asLabel }, [...namedSteps(effect), ...loopNames(effect).filter(one => one.id !== name)])}
             onCommit={typed => edit(0, draft => applyName(draft as unknown as Record<string, unknown>, LOOP_KEYS, typed, taken))} />
-          <span className="step-fold__summary">шаги ниже — для каждой строки по очереди, выше — один раз</span>
+          <span className="step-fold__summary">{t('split.rowsNote')}</span>
         </>
       ) : (
         <>
-          <span className="faint">каждый:</span>
+          <span className="faint">{t('split.each')}</span>
           <span className="chips__chip"><span>{loopOf(effect.params, step)?.label ?? '?'}</span></span>
-          <span className="step-fold__summary">шаги ниже — для каждого по очереди, выше — один раз</span>
+          <span className="step-fold__summary">{t('split.eachNote')}</span>
         </>
       )}
       <span className="spacer" />
@@ -266,6 +269,7 @@ function SplitStrip({ step, position, system, effect, earlier, edit, actions }: 
 }
 
 function StepName({ group, effect, system, edit, branches, active }: { group: CardGroup; effect: Effect; system: System; edit: (k: number, change: (draft: Step) => void) => void; branches?: Record<string, () => void> | undefined; active?: string | undefined }) {
+  const t = useT('stepCards');
   const [open, setOpen] = useState(false);
   const id = group.step.id ? String(group.step.id) : '';
   const calledId = group.step.type === 'emit' ? (group.step as { effect?: unknown }).effect : undefined;
@@ -294,13 +298,13 @@ function StepName({ group, effect, system, edit, branches, active }: { group: Ca
   if (!open) {
     return (
       <div className="inline inline--tight step-name">
-        <Button size="sm" variant="ghost" title="как итог шага зовётся в формулах" onClick={() => setOpen(true)}>{id ? `имя в формулах: ${said}` : 'имя в формулах…'}</Button>
+        <Button size="sm" variant="ghost" title={t('name.hint')} onClick={() => setOpen(true)}>{id ? t('name.named', { name: said }) : t('name.add')}</Button>
       </div>
     );
   }
   return (
     <div className="inline inline--tight step-name">
-      <span className="faint">имя в формулах</span>
+      <span className="faint">{t('name.label')}</span>
       {nameField}
     </div>
   );
@@ -308,9 +312,9 @@ function StepName({ group, effect, system, edit, branches, active }: { group: Ca
 
 function tableReadback(step: Record<string, unknown>, system: System): Segment[] {
   const table = typeof step.table === 'string' ? system.tables?.[step.table] : undefined;
-  const name = table ? `«${table.label || String(step.table)}»` : 'какая таблица?';
-  const by = typeof step.dice === 'string' ? `бросок «${system.constants?.[step.dice]?.label ?? step.dice}»`
+  const name = table ? say('stepCards:group.tableNamed', { name: table.label || String(step.table) }) : say('stepCards:group.tableWhich');
+  const by = typeof step.dice === 'string' ? say('stepCards:group.tableByDice', { name: system.constants?.[step.dice]?.label ?? step.dice })
     : String((step.value as { expr?: unknown } | undefined)?.expr ?? '?');
-  return [{ text: `Строка таблицы ${name} по ${by}.` }];
+  return [{ text: say('stepCards:group.tableRow', { name, by }) }];
 }
 

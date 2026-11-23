@@ -12,56 +12,49 @@ import { RollsPick } from './rolls-pick.tsx';
 import { ConditionField } from './condition-field.tsx';
 import { AddendPick } from './effects/cards/die-pick.tsx';
 import { rowPicks } from './row-picks.ts';
+import { useT, t, dataT } from '../../i18n/author.ts';
 
-const OPS = [
-  ['add', 'прибавить'],
-  ['mul', 'умножить'],
-  ['set', 'задать'],
-  ['floor', 'не меньше'],
-  ['cap', 'не больше'],
+const ops = () => [
+  ['add', t('fields:mod.op.add')],
+  ['mul', t('fields:mod.op.mul')],
+  ['set', t('fields:mod.op.set')],
+  ['floor', t('fields:mod.op.floor')],
+  ['cap', t('fields:mod.op.cap')],
 ] as const;
 
 const RECIPE = 'recipe:';
 
-const NUMBER_GROUP = 'число — складывается';
-const WORD_GROUP = 'слово из «Правил» — одно на бросок';
-const WORD_GROUP_STACKS = 'слово из «Правил» — считается, как задано там';
-const MORE_GROUP = 'ещё';
-
-const ROLL_PARAMS = [
-  ['count', CALL_WORDS.roll.params.count, NUMBER_GROUP],
-  ['bonus', CALL_WORDS.roll.params.bonus, NUMBER_GROUP],
-  ['threshold', CALL_WORDS.roll.params.threshold, NUMBER_GROUP],
-  ['edits', CALL_WORDS.roll.params.edits, WORD_GROUP],
-  ['tags', CALL_WORDS.roll.params.tags, MORE_GROUP],
-] as const;
-
 const rollParams = (system: System) => {
-  const words = Object.values(system.roll_edits ?? {}).some(edit => edit.stacks) ? WORD_GROUP_STACKS : WORD_GROUP;
-  return ROLL_PARAMS.map(([key, label, group]) => [key, label, group === WORD_GROUP ? words : group] as const);
+  const number = t('fields:mod.group.number');
+  const words = Object.values(system.roll_edits ?? {}).some(edit => edit.stacks) ? t('fields:mod.group.wordStacks') : t('fields:mod.group.word');
+  return [
+    ['count', CALL_WORDS.roll.params.count, number],
+    ['bonus', CALL_WORDS.roll.params.bonus, number],
+    ['threshold', CALL_WORDS.roll.params.threshold, number],
+    ['edits', CALL_WORDS.roll.params.edits, words],
+    ['tags', CALL_WORDS.roll.params.tags, t('common:more')],
+  ] as const;
 };
 
 function wordHint(system: System, key: string): string {
   const dictionary = system.roll_edits ?? {};
   const word = dictionary[key];
-  if (!word) return 'Как слово считается и с чем гасится — задано в «Правилах → Правки броска».';
-  const name = `«${word.label || key}»`;
-  const count = word.stacks
-    ? `${name} считается по разу от каждого разного эффекта; копии одного эффекта — один раз.`
-    : `${name} действует на бросок один раз, сколько бы эффектов его ни дали.`;
+  if (!word) return t('fields:mod.word.unknown');
+  const name = word.label || key;
+  const count = word.stacks ? t('fields:mod.word.stacks', { name }) : t('fields:mod.word.once', { name });
   const rivals = Object.keys(dictionary).filter(other => cancels(dictionary, key, other));
   if (!rivals.length) return count;
   const byOne = word.stacks && rivals.every(other => dictionary[other]!.stacks);
-  return `${count} Встретится с ${rivals.map(other => `«${dictionary[other]!.label || other}»`).join(', ')} — погасят друг друга${byOne ? ' по одному' : ''}.`;
+  const list = rivals.map(other => `«${dictionary[other]!.label || other}»`).join(', ');
+  return byOne ? t('fields:mod.word.rivalsOne', { lead: count, list }) : t('fields:mod.word.rivals', { lead: count, list });
 }
-
-const FIT_GROUP = 'подходят этим броскам';
-const MISFIT_GROUP = 'не подходят этим броскам';
 
 function wordOptions(system: System, edits: [string, { label?: string; ops?: unknown[] }][], m: Loose): (readonly [string, string] | readonly [string, string, string])[] {
   const targeted = Boolean((m.tags as unknown[] | undefined)?.length || (m.anyTags as unknown[] | undefined)?.length);
   const matched = targeted ? placesMatching(system, { tags: m.tags, anyTags: m.anyTags }) : [];
   if (!matched.length) return edits.map(([key, e]) => [key, e.label || key] as const);
+  const FIT_GROUP = t('fields:mod.group.fit');
+  const MISFIT_GROUP = t('fields:mod.group.misfit');
   const fits = (e: { ops?: unknown[] }) => wordFits(e as never, matched);
   return [
     ...edits.filter(([, e]) => fits(e)).map(([key, e]) => [key, e.label || key, FIT_GROUP] as const),
@@ -69,11 +62,10 @@ function wordOptions(system: System, edits: [string, { label?: string; ops?: unk
   ];
 }
 
-const ROLL_PARAM_HINTS: Record<string, string> = {
-  count: 'Складывается: каждый висящий эффект и каждая его копия дают своё число.',
-  bonus: 'Складывается: каждый висящий эффект и каждая его копия дают своё число.',
-  threshold: 'Складывается: каждый висящий эффект и каждая его копия дают своё число.',
-  tags: 'Бросок получает метку один раз, сколько бы эффектов её ни дали.',
+const rollParamHint = (key: string): string | undefined => {
+  if (key === 'count' || key === 'bonus' || key === 'threshold') return t('fields:mod.hint.sum');
+  if (key === 'tags') return t('fields:mod.hint.tag');
+  return undefined;
 };
 
 type Loose = Record<string, unknown>;
@@ -84,12 +76,13 @@ function StagePick({ system, stages, value, onChange }: {
   value: string | undefined;
   onChange: (stage: string | undefined) => void;
 }) {
+  const t = useT('fields');
   if (stages.length < 2 && value === undefined) return null;
   return (
-    <Field label="Этап" needed={stages.length > 1 && !value}>
+    <Field label={t('mod.stage')} needed={stages.length > 1 && !value}>
       <Select
         value={value ?? ''}
-        options={[['', '— выберите этап —'], ...(value && !stages.some(stage => stage.key === value) ? [[value, pathSaid(system, value) ?? value] as const] : []),
+        options={[['', t('mod.stagePick')], ...(value && !stages.some(stage => stage.key === value) ? [[value, pathSaid(system, value) ?? value] as const] : []),
           ...stages.map(stage => [stage.key, stage.label || stage.key] as const)] as never}
         onChange={stage => onChange(stage || undefined)}
       />
@@ -110,6 +103,7 @@ type ModifierRowsProps = {
 export type ModifierAdd = { field: () => void; call: () => void };
 
 export function useModifierRows({ system, modifiers, onEdit, editSystem, table, named = false }: ModifierRowsProps): { rows: ReactNode[]; add: ModifierAdd } {
+  const t = useT('fields');
   const names = rowNamesOf(system, table);
   const all = targets(system) as { tag: string; label: string; kind: string; group?: string }[];
   const valueTargets = all.filter(t => t.kind === 'value' || t.kind === 'cell');
@@ -148,34 +142,34 @@ export function useModifierRows({ system, modifiers, onEdit, editSystem, table, 
       {isOpen(index) ? (
         <Card className="mod-card">
           <CardHead
-            title={modifier.kind === 'value' ? 'Правит поле' : 'Правка вызова'}
+            title={modifier.kind === 'value' ? t('mod.title.value') : t('mod.title.call')}
             actions={<>
-              <Button size="sm" variant="ghost" ariaLabel={`свернуть «${modifierSentence(system, modifier, table)}»`} onClick={() => closeAt(index)}>свернуть</Button>
-              <DangerButton size="sm" onConfirm={() => { closeAt(index); onEdit(draft => { draft.splice(index, 1); }); }}>Удалить</DangerButton>
+              <Button size="sm" variant="ghost" ariaLabel={t('common:fold.collapse', { name: modifierSentence(system, modifier, table) })} onClick={() => closeAt(index)}>{t('common:collapse')}</Button>
+              <DangerButton size="sm" onConfirm={() => { closeAt(index); onEdit(draft => { draft.splice(index, 1); }); }}>{t('common:delete')}</DangerButton>
             </>}
           />
 
           {modifier.kind === 'value' ? (
             <div className="row">
-              <Field label="Что правим" needed={!modifier.target}>
+              <Field label={t('mod.target')} needed={!modifier.target}>
                 <Select
                   value={modifier.target}
-                  options={[['', '— выберите, что правим —'],
+                  options={[['', t('mod.targetPick')],
                     ...(modifier.target && !valueTargets.some(t => t.tag === modifier.target) ? [[modifier.target, targetLabel(system, modifier.target, table)] as const] : []),
                     ...valueTargets.map(t => [t.tag, t.label] as const)] as never}
                   onChange={target => onEdit(draft => { const d = draft[index] as { target: string; stage?: string }; d.target = target; delete d.stage; })}
                 />
               </Field>
-              <Field label="Как">
+              <Field label={t('mod.how')}>
                 <Select
                   value={String(modifier.op)}
-                  options={OPS}
+                  options={ops()}
                   onChange={op => onEdit(draft => { (draft[index] as { op: string }).op = op; })}
                 />
               </Field>
-              <Field label="На сколько">
+              <Field label={t('mod.amount')}>
                 <FormulaInput
-                  where="модификатор · на сколько"
+                  where={t('mod.where.amount')}
                   system={system}
                   {...(picks ? { extraNames: picks.names, options: picks.options } : names ? { extraNames: names } : {})}
                   value={modifier.value?.expr ?? ''}
@@ -211,9 +205,9 @@ export function useModifierRows({ system, modifiers, onEdit, editSystem, table, 
               })}
               system={system}
               {...(picks ? { names: picks.names, phrases: picks.phrases } : names ? { names } : {})}
-              where="модификатор · только когда"
-              placeholder="например: тяжёлая броня"
-              ruleHint="На листе носителя. Не сошлось — правка не действует."
+              where={t('mod.where.when')}
+              placeholder={t('mod.whenPlaceholder')}
+              ruleHint={t('mod.whenRule')}
             />
           ) : (
             <Concern system={system} modifier={modifier as Loose} names={inputNamesOf(system, String((modifier as Loose).call ?? ''), names)} onChange={change => onEdit(draft => { change(draft[index] as Loose); })} />
@@ -222,7 +216,7 @@ export function useModifierRows({ system, modifiers, onEdit, editSystem, table, 
       ) : (
         <WhileWhenRow
           when={false} named={named}
-          label={`развернуть «${modifierSentence(system, modifier, table)}»`}
+          label={t('common:fold.expand', { name: modifierSentence(system, modifier, table) })}
           onOpen={() => openAt(index)}
           onRemove={() => onEdit(draft => { draft.splice(index, 1); })}
         >
@@ -236,18 +230,19 @@ export function useModifierRows({ system, modifiers, onEdit, editSystem, table, 
   return { rows, add };
 }
 
-export function AddModifiers({ add, fieldsOnly = false, fieldLabel = '+ правит поле' }: { add: ModifierAdd; fieldsOnly?: boolean; fieldLabel?: string }) {
+export function AddModifiers({ add, fieldsOnly = false, fieldLabel }: { add: ModifierAdd; fieldsOnly?: boolean; fieldLabel?: string }) {
+  const t = useT('fields');
   return (
     <>
       <Button size="sm" onClick={add.field}>
-        {fieldLabel}
+        {fieldLabel ?? t('mod.addField')}
       </Button>
       {fieldsOnly ? null : <Button
         size="sm"
-        title="Правит вызов: бросок (преимущество, прибавка) или вход эффекта (урон вдвое по огню)"
+        title={t('mod.addCallTip')}
         onClick={add.call}
       >
-        + правка вызова
+        {t('mod.addCall')}
       </Button>}
     </>
   );
@@ -258,16 +253,17 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
   fieldLabel?: string;
   empty?: { title: string; hint: string };
 }) {
+  const t = useT('fields');
   const { rows, add } = useModifierRows({ system, modifiers, onEdit, editSystem, ...(table ? { table } : {}) });
   return (
     <>
       {title === ''
         ? <div className="inline"><span className="spacer" /><AddModifiers add={add} fieldsOnly={fieldsOnly} {...(fieldLabel ? { fieldLabel } : {})} /></div>
-        : <CardHead title={title ?? 'Что правит'} actions={<AddModifiers add={add} fieldsOnly={fieldsOnly} {...(fieldLabel ? { fieldLabel } : {})} />} />}
+        : <CardHead title={title ?? t('mod.what')} actions={<AddModifiers add={add} fieldsOnly={fieldsOnly} {...(fieldLabel ? { fieldLabel } : {})} />} />}
 
       {modifiers.length === 0 ? (
-        <WhileWhenEmpty title={empty?.hint ?? 'Пассивный эффект правит цифры: даёт бонус к полю или вешает преимущество на бросок.'}>
-          {empty?.title ?? 'Эффект пока ничего не делает'}
+        <WhileWhenEmpty title={empty?.hint ?? t('mod.empty.hint')}>
+          {empty?.title ?? t('mod.empty.title')}
         </WhileWhenEmpty>
       ) : null}
 
@@ -286,6 +282,8 @@ function EditBody({ system, modifier, calls, edits, recipes, names, onChange, on
   onChange: (change: (draft: Loose) => void) => void;
   onPickEdit: (value: string) => void;
 }) {
+  const t = useT('fields');
+  const td = dataT(system);
   const m = modifier as Loose;
   const call = String(m.call ?? '');
   const isRoll = call === ROLL_CALL;
@@ -306,31 +304,32 @@ function EditBody({ system, modifier, calls, edits, recipes, names, onChange, on
     d.param = amountParamOf(system.effects[next])?.key ?? '';
     Object.assign(d, { op: 'mul', value: { expr: '0.5' } });
   });
+  const tagWord = td('fields:mod.tagWord');
   const pickParam = (next: string) => onChange(d => {
     for (const key of ['edit', 'op', 'value', 'die', 'count', 'minus', 'stage']) delete d[key];
     d.param = next;
     if (next === 'edits') d.edit = edits[0]?.[0] ?? '';
-    else if (next === 'tags') d.value = { expr: '"метка"' };
+    else if (next === 'tags') d.value = { expr: `"${tagWord}"` };
     else Object.assign(d, { op: 'add', value: { expr: '1' } });
   });
   const number = (
     <>
       {isRoll ? null : (
-        <Field label="Как">
-          <Select value={String(m.op ?? 'add')} options={OPS} onChange={op => onChange(d => { d.op = op; })} />
+        <Field label={t('mod.how')}>
+          <Select value={String(m.op ?? 'add')} options={ops()} onChange={op => onChange(d => { d.op = op; })} />
         </Field>
       )}
       {isRoll && m.param === 'bonus' ? (
-        <Field label="Сколько">
-          <AddendPick source={m} system={system} where="правка броска · прибавка" onChange={onChange} />
+        <Field label={t('mod.howMany')}>
+          <AddendPick source={m} system={system} where={t('mod.where.addend')} onChange={onChange} />
         </Field>
       ) : (
-        <Field label={tagsParam ? 'Какая метка' : 'На сколько'} hint={tagsParam ? 'Формула, дающая текст метки, например «без Преимущества».' : undefined}>
+        <Field label={tagsParam ? t('mod.tag') : t('mod.amount')} hint={tagsParam ? t('mod.tagHint') : undefined}>
           <FormulaInput
-            where={tagsParam ? 'правка броска · какая метка' : 'правка вызова · на сколько'} system={system}
+            where={tagsParam ? t('mod.where.tag') : t('mod.where.callAmount')} system={system}
             {...(names ? { extraNames: names } : {})}
             {...(sheets.size ? { sheets } : {})}
-            {...(tagsParam ? { placeholder: 'например: "без Преимущества"' } : {})}
+            {...(tagsParam ? { placeholder: t('mod.tagPlaceholder') } : {})}
             value={(m.value as { expr?: string } | undefined)?.expr ?? ''}
             onChange={expr => onChange(d => { d.value = { expr }; })}
           />
@@ -347,7 +346,7 @@ function EditBody({ system, modifier, calls, edits, recipes, names, onChange, on
 
   return (
     <div className="row">
-      <Field label="Чей вызов" needed={!call}>
+      <Field label={t('mod.whose')} needed={!call}>
         <Select
           value={call}
           options={[[ROLL_CALL, CALL_WORDS.roll.label], ...calls.map(([id, e]) => [id, e.label || id] as const)] as never}
@@ -356,7 +355,7 @@ function EditBody({ system, modifier, calls, edits, recipes, names, onChange, on
       </Field>
       {isRoll ? (
         <>
-          <Field label="Что правим" hint={String(m.param ?? 'edits') === 'edits' ? wordHint(system, String(m.edit ?? '')) : ROLL_PARAM_HINTS[String(m.param)]}>
+          <Field label={t('mod.target')} hint={String(m.param ?? 'edits') === 'edits' ? wordHint(system, String(m.edit ?? '')) : rollParamHint(String(m.param))}>
             <Select
               value={String(m.param ?? 'edits')}
               options={rollParams(system) as never}
@@ -370,12 +369,12 @@ function EditBody({ system, modifier, calls, edits, recipes, names, onChange, on
           />
           {m.param === 'edits' ? (
             <Field
-              label="Какое слово" needed={!m.edit}
-              hint={recipes.length ? 'Готовые механизмы приедут в словарь «Правки броска» со всеми словами.' : undefined}
+              label={t('mod.wordLabel')} needed={!m.edit}
+              hint={recipes.length ? t('mod.wordHint') : undefined}
             >
               <Select
                 value={String(m.edit ?? '')}
-                options={[['', '— выберите слово —'],
+                options={[['', t('mod.wordPick')],
                   ...wordOptions(system, edits, m),
                   ...recipes.map(({ method, recipe }) =>
                     [`${RECIPE}${method.id}:${recipe.key}`, `+ ${recipe.label} · ${method.label}`] as const),
@@ -387,8 +386,8 @@ function EditBody({ system, modifier, calls, edits, recipes, names, onChange, on
         </>
       ) : (
         <>
-          <Field label="Что правим">
-            <span>{amount ? amount.label || amount.key : '— у эффекта нет величины —'}</span>
+          <Field label={t('mod.target')}>
+            <span>{amount ? amount.label || amount.key : t('mod.noAmount')}</span>
           </Field>
           {number}
           <EventCondition system={system} effect={effect} modifier={modifier} onChange={onChange} />
@@ -404,6 +403,7 @@ function EventCondition({ system, effect, modifier, onChange }: {
   modifier: Modifier;
   onChange: (change: (draft: Loose) => void) => void;
 }) {
+  const t = useT('fields');
   const m = modifier as Loose;
   const known = effect ? tagsOf(system, effect) : [];
   const tagTables = tagTablesOf(effect);
@@ -416,24 +416,24 @@ function EventCondition({ system, effect, modifier, onChange }: {
 
   return (
     <>
-      <Field label="По меткам" hint="Пусто — по любой метке.">
+      <Field label={t('mod.byTags')} hint={t('mod.byTagsHint')}>
         <TagsField
-          system={system} value={words(m.anyTags)} known={known} empty="любая метка"
+          system={system} value={words(m.anyTags)} known={known} empty={t('mod.anyTag')}
           onChange={next => onChange(d => { const list = next.filter((t): t is string => typeof t === 'string'); if (list.length) d.anyTags = list; else delete d.anyTags; })}
         />
       </Field>
-      <Field label="Кроме меток">
+      <Field label={t('mod.exceptTags')}>
         <TagsField
-          system={system} value={words(m.notTags)} known={known} empty="+ кроме метки…"
+          system={system} value={words(m.notTags)} known={known} empty={t('mod.exceptTag')}
           onChange={next => onChange(d => { const list = next.filter((t): t is string => typeof t === 'string'); if (list.length) d.notTags = list; else delete d.notTags; })}
         />
       </Field>
       {columns.length ? (
-        <Field label="Где у метки" hint="Смотрит в строку метки в таблице: один факт вместо перечня меток.">
+        <Field label={t('mod.tagWhere')} hint={t('mod.tagWhereHint')}>
           <div className="inline inline--tight">
             <Select
               value={column?.pick ?? ''}
-              options={[['', '— без условия —'], ...columns.map(c => [c.pick, c.name] as const)] as never}
+              options={[['', t('mod.noCondition')], ...columns.map(c => [c.pick, c.name] as const)] as never}
               onChange={next => onChange(d => {
                 const picked = columns.find(c => c.pick === next);
                 if (!picked) { delete d.where; return; }
@@ -446,7 +446,7 @@ function EventCondition({ system, effect, modifier, onChange }: {
                 {values.length ? (
                   <Select
                     value={String(where.is ?? '')}
-                    options={[['', '— что —'], ...values.map(o => [String(o.value), o.label] as const)] as never}
+                    options={[['', t('mod.pickWhat')], ...values.map(o => [String(o.value), o.label] as const)] as never}
                     onChange={next => onChange(d => { (d.where as Loose).is = next; })}
                   />
                 ) : (
@@ -467,10 +467,11 @@ function Concern({ system, modifier, names, onChange }: {
   names: Map<string, string> | undefined;
   onChange: (change: (draft: Loose) => void) => void;
 }) {
+  const t = useT('fields');
   const call = String(modifier.call ?? ROLL_CALL);
   const params = new Map((system.effects[call]?.params ?? []).map(p => [p.key, p.label ?? p.key]));
-  const words: Record<string, string> = { [NAMES.roller]: 'бросает носитель', [NAMES.against]: 'бросают против носителя' };
-  const holders = callNamesOf(system, call).sheets.map(name => [name, words[name] ?? `«${params.get(name) ?? name}» — носитель`] as const);
+  const words: Record<string, string> = { [NAMES.roller]: t('mod.rollerHolder'), [NAMES.against]: t('mod.againstHolder') };
+  const holders = callNamesOf(system, call).sheets.map(name => [name, words[name] ?? t('mod.holderOf', { name: params.get(name) ?? name })] as const);
   return (
     <div className="row">
       <ConditionField
@@ -479,9 +480,9 @@ function Concern({ system, modifier, names, onChange }: {
         system={system}
         {...(names ? { names } : {})}
         holders={holders}
-        where="правка · только если"
-        placeholder="например: носитель.ярость > 0"
-        holderHint="Носитель — лист, на котором висит эта правка."
+        where={t('mod.where.if')}
+        placeholder={t('mod.ifPlaceholder')}
+        holderHint={t('mod.ifHolder')}
       />
     </div>
   );

@@ -16,8 +16,10 @@ import { EffectEditor } from './effect-editor.tsx';
 import type { Effect } from '@vtt/schema';
 import { newGroup } from '../groups.ts';
 import { focusNew } from '../../../ui/focus-new.ts';
+import { useT, t as tt } from '../../../i18n/author.ts';
 
 export function EffectsTab() {
+  const t = useT('effects');
   const system = useWorld(s => s.system);
   const activeId = useWorld(s => s.activeEffectId);
   const pick = useWorld(s => s.pick);
@@ -29,7 +31,7 @@ export function EffectsTab() {
   const roles = rolesOf(system, compendium);
 
   const addTo = (block: string, title?: string) => {
-    focusNew('как зовётся эффект');
+    focusNew(t('common:name.effect'));
     const made = newEffect(system, 'manual');
     editSystem(draft => {
       draft.effects[made.key] = { ...made.value, group: block };
@@ -41,22 +43,22 @@ export function EffectsTab() {
 
   const add = (kind: LaunchKind) => { createEffect(kind); };
 
-  const right = useLookupPane({ head: 'Рядом', body: <PreviewPanel effectId={activeId} /> });
+  const right = useLookupPane({ head: t('tab.near'), body: <PreviewPanel effectId={activeId} /> });
   const freshEffects = useFreshKeys('effect');
   const everyone = new Set(system.grants ?? []);
 
   return (
     <Columns
       left={{
-        head: 'Библиотека эффектов',
-        tools: <Button size="sm" onClick={() => { const fresh = newGroup(system); addTo(fresh.key, fresh.title); }}>+ блок</Button>,
+        head: t('tab.library'),
+        tools: <Button size="sm" onClick={() => { const fresh = newGroup(system); addTo(fresh.key, fresh.title); }}>{t('tab.addBlock')}</Button>,
         body: (
           <>
             {tree.length === 0
               ? <Empty
-                  title="Эффектов ещё нет"
-                  hint="Заведите первый или возьмите готовый из образца справа."
-                  action={<Button size="sm" onClick={() => add('manual')}>+ кнопкой</Button>}
+                  title={t('tab.noneTitle')}
+                  hint={t('tab.noneHint')}
+                  action={<Button size="sm" onClick={() => add('manual')}>{t('tab.addButton')}</Button>}
                 />
               : (
                 <List>
@@ -81,7 +83,7 @@ export function EffectsTab() {
               )}
 
             <div className="stack stack--tight">
-              <span className="field__label">Создать с нуля</span>
+              <span className="field__label">{t('tab.createFromScratch')}</span>
               {CREATE_KINDS.map(kind => (
                 <Button key={kind.key} size="sm" wide onClick={() => add(kind.key)} title={kind.title}>
                   + {kind.label.toLowerCase()}
@@ -95,8 +97,8 @@ export function EffectsTab() {
         body: active && activeId
           ? <EffectEditor key={activeId} id={activeId} effect={active} system={system} />
           : <Empty
-              title="Выберите эффект слева"
-              hint="Эффект — единица автоматизации: всё, что мир делает сам. Проверки, изменения полей, состояния — а как их назвать, решаете вы."
+              title={t('tab.pickTitle')}
+              hint={t('tab.pickHint')}
             />,
       }}
       right={right}
@@ -105,9 +107,9 @@ export function EffectsTab() {
 }
 
 const metaOf = (effect: Effect, role: Role, everyone: boolean) => {
-  const kind = `${roleWordsOf(effect, role)}${everyone ? ' · у всех' : ''}`;
+  const kind = everyone ? tt('effects:tab.everyone', { kind: roleWordsOf(effect, role) }) : roleWordsOf(effect, role);
   const idle = !effect.steps?.length && !effect.cost?.length && !effect.modifiers?.length
     && !effect.attach?.length && !effect.detach?.length && !effect.grants?.length
     && !(effect.on ?? []).some(handler => handler.steps?.length || handler.cost?.length);
-  return idle ? `${kind.toLowerCase()} · ничего не делает` : kind.toLowerCase();
+  return idle ? tt('effects:tab.idle', { kind: kind.toLowerCase() }) : kind.toLowerCase();
 };

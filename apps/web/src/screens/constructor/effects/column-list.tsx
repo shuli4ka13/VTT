@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Button } from '../../../ui/primitives.tsx';
 import { useDragList } from '../../../ui/drag-list.ts';
+import { useT } from '../../../i18n/author.ts';
 
 export function ColumnList<T extends { key: string; label?: string }>({ items, isOpen, onToggle, summary, after, head, form, onDrop, onMove, dropTitle }: {
   items: T[];
@@ -14,6 +15,7 @@ export function ColumnList<T extends { key: string; label?: string }>({ items, i
   onMove: (from: string, to: string, after: boolean) => void;
   dropTitle: string;
 }) {
+  const t = useT('effects');
   const drag = useDragList(onMove);
   return (
     <div className={`param-list${head ? ' param-list--table' : ''}`}>
@@ -27,7 +29,7 @@ export function ColumnList<T extends { key: string; label?: string }>({ items, i
         return (
           <div key={item.key} className="param-item">
             <div className={`param-line${drag.mark(item.key)}`} {...(items.length > 1 ? drag.props(item.key) : {})}>
-              {items.length > 1 ? <span className="drag-grip" aria-hidden title="перетащите, чтобы поменять порядок">⋮⋮</span> : null}
+              {items.length > 1 ? <span className="drag-grip" aria-hidden title={t('columnList.drag')}>⋮⋮</span> : null}
               <button type="button" className="param-line__sum" aria-expanded={open} onClick={() => onToggle(item.key)}>
                 <span className="param-line__name">{item.label || item.key}</span>
                 <span className="faint">{summary(item)}</span>

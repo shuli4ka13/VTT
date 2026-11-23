@@ -20,14 +20,12 @@ import { sheetsAt, placeNamesAt, placeTablesAt } from './names.ts';
 import { filledStep } from './call-args.ts';
 import { useOpened } from '../../../store/opened.ts';
 import { findDonorBlock, copyDonorBlock } from '../donors.tsx';
+import { useT } from '../../../i18n/author.ts';
 import type { System, Effect, Step, ValueKind } from '@vtt/schema';
 
 export type Lane = 'steps' | 'cost';
 
 const CALL_PREFIX = 'call:';
-
-const ABOVE_PAY = 'над чертой «Плата»: выполняется сначала и один раз';
-const BELOW_PAY = 'под черту «Плата»: в шаги';
 
 export const callableOf = (system: System, except: string): [string, Effect, string | undefined][] =>
   Object.entries(system.effects ?? {})
@@ -48,7 +46,7 @@ function negationOf(text: string): { negated: boolean; inner: string } {
   } catch { return { negated: false, inner: text.trim() }; }
 }
 
-export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', empty = 'шагов ещё нет — эффект ничего не делает', lane = 'steps', onEdgeUp, onEdgeDown, bare = false, lined = false, startAt = 0, lead, onAddCost, onRoll = false }: {
+export function Chain({ id, placeAt, effect, system, edit, title: titleProp, empty: emptyProp, lane = 'steps', onEdgeUp, onEdgeDown, bare = false, lined = false, startAt = 0, lead, onAddCost, onRoll = false }: {
   id: string;
   placeAt: (index: number) => Place;
   effect: Effect;
@@ -66,6 +64,11 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
   onAddCost?: (id: string) => void;
   onRoll?: boolean;
 }) {
+  const t = useT('effects');
+  const title = titleProp ?? t('chain.title');
+  const empty = emptyProp ?? t('chain.empty');
+  const ABOVE_PAY = t('chain.abovePay');
+  const BELOW_PAY = t('chain.belowPay');
   const pick = useWorld(s => s.pick);
   const onOpenEffect = (id: string) => pick({ activeEffectId: id });
   const [removed, setRemoved] = useState<{ text: string; before: Step[]; after: string } | null>(null);
@@ -75,7 +78,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
     edit(draft => {
       draft.params ??= [];
       const taken = draft.params.map(p => p.key);
-      key = want && !taken.includes(want) ? want : freeId(taken, 'из_записи');
+      key = want && !taken.includes(want) ? want : freeId(taken, 'iz_zapisi');
       draft.params.push({ key, label, kind });
     });
     return key;
@@ -179,7 +182,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
       const id = ref.slice(0, -'.degree'.length);
       const check = steps.find(step => step.type === 'check' && step.id === id);
       const words = check ? degreeWords(system, (check as { degrees?: unknown }).degrees) : [];
-      return words.length ? { options: words.map(value => ({ value, label: value })), title: `ступени «${saidOf(id)}»` } : null;
+      return words.length ? { options: words.map(value => ({ value, label: value })), title: t('chain.degreesOf', { name: saidOf(id) }) } : null;
     }
     const param = (effect.params ?? []).find(one => one.key === ref && one.kind === 'choice' && one.from && !one.many);
     if (param) {
@@ -254,7 +257,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
     const words = group.kind === 'check' && !asIf ? checkWords(group) : null;
     const ifBy: { label: string; run: () => void }[] = fused ? [] : [
       ...(words ? [{ label: `${words.success} / ${words.fail}`, run: after(null, id => [branch(`@${id}.success`)]) }] : []),
-      ...(degrees.length ? [{ label: `ступени: ${degrees.join(' · ')}`, run: after(null, id => arms(`${id}.degree`, degrees)) }] : []),
+      ...(degrees.length ? [{ label: t('chain.degreesList', { list: degrees.join(' · ') }), run: after(null, id => arms(`${id}.degree`, degrees)) }] : []),
     ];
     const byOutput: Record<string, () => void> = fused ? {} : Object.fromEntries(returns.flatMap((one): [string, () => void][] => {
       if (one.kind === 'boolean') return [[one.key, after(String(calledKey), id => [branch(`@${id}.${one.key}`)])]];
@@ -296,7 +299,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
         onFold={() => toggleFold(foldKey(group))}
         problemAction={donorFix ? (
           <Button size="sm" onClick={() => copyDonorBlock(donorFix.donor, donorFix.group)}>
-            {`взять блок «${blockLabel(donorFix.donor, donorFix.group)}» из «${donorFix.donor.name}»`}
+            {t('chain.takeBlock', { block: blockLabel(donorFix.donor, donorFix.group), from: donorFix.donor.name })}
           </Button>
         ) : undefined}
         onAddParam={addParam}
@@ -338,9 +341,9 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
             before,
             after: JSON.stringify(removal.steps),
             text: [
-              `Убран ${STEP.one}: ${gone}`,
-              cleared.length ? `ссылки на него очищены: ${cleared.map(where).join(', ')}` : '',
-              left.length ? `остались в формулах — поправьте: ${left.map(where).join(', ')}` : '',
+              t('chain.removed', { step: STEP.one, name: gone }),
+              cleared.length ? t('chain.removedCleared', { list: cleared.map(where).join(', ') }) : '',
+              left.length ? t('chain.removedLeft', { list: left.map(where).join(', ') }) : '',
             ].filter(Boolean).join('; '),
           });
         }}
@@ -371,7 +374,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
     if (group.step.type === 'emit' && typeof called === 'string' && ref.startsWith(`@${id}.`)) {
       const key = ref.slice(id.length + 2);
       const column = (system.effects?.[called]?.returns ?? []).find(one => one.key === key && one.kind === 'boolean') as { label?: string; no?: string } | undefined;
-      if (column) return { yes: column.label ?? key, no: column.no ?? `не ${column.label ?? key}`, negated };
+      if (column) return { yes: column.label ?? key, no: column.no ?? t('chain.not', { name: column.label ?? key }), negated };
       const [head, flag] = key.split('.');
       const choice = flag ? (system.effects?.[called]?.returns ?? []).find(one => one.key === head && one.kind === 'choice' && one.from && !one.many) : undefined;
       const table = choice?.from ? system.tables?.[choice.from] : undefined;
@@ -396,8 +399,8 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
   const armAdd = (head: number) => (
     <Select<string>
       value=""
-      title="Добавить шаг в эту ветку"
-      options={[['', '+ шаг'],
+      title={t('chain.addArmTitle')}
+      options={[['', t('chain.addStep')],
         ...callOptions(system, id),
         ...[...BRICKS, ...(onRoll ? SEEN_BRICKS : [])].filter(b => !loopsAt({ type: b.key })).map(b => [b.key, b.label.replace(/^\+ /, '')] as const)]}
       onChange={key => {
@@ -420,7 +423,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
     const heads = headsOf(open);
     const caseOf = (head: number): string => {
       const found = caseAt(steps[head]);
-      return cases?.options.find(option => same(option.value, found?.value))?.label ?? String(found?.value ?? 'иначе');
+      return cases?.options.find(option => same(option.value, found?.value))?.label ?? String(found?.value ?? t('chain.else'));
     };
     const bareElse = heads.slice(1).some(head => (steps[head] as { if?: unknown }).if === undefined);
     const problem = (index: number) => problems[index]?.text ?? null;
@@ -475,26 +478,26 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
           const first = groupAt(head + 1);
           const last = groupAt(stop);
           const conditioned = k === 0 || (steps[head] as { if?: unknown }).if !== undefined;
-          const label = cases ? (conditioned ? `${caseOf(head)}:` : 'иначе:')
-            : conditioned ? (k === 0 && outcomes ? `${outcomes.first}:` : 'тогда:') : outcomes ? `${outcomes.other}:` : 'иначе:';
-          const armActions = <FlowActions onDelete={dropArm(head)} deleteLabel="убрать ветку" />;
+          const label = cases ? (conditioned ? `${caseOf(head)}:` : t('chain.elseColon'))
+            : conditioned ? (k === 0 && outcomes ? `${outcomes.first}:` : t('chain.then')) : outcomes ? `${outcomes.other}:` : t('chain.elseColon');
+          const armActions = <FlowActions onDelete={dropArm(head)} deleteLabel={t('chain.dropArm')} />;
           return (
             <div className="flow-block__part" key={head}>
               {k === 0 && fused && outcomes
                 ? cardOf(fused.group, fused.g, [fused.group.indices[0]!, end], { outcome: `${outcomes.first} / ${outcomes.other}`, ...(unwrap ? { unwrap } : {}), ...(callPick ? { cond: callPick } : {}) })
                 : k === 0 && cases ? (cases.group && cases.g !== undefined
                   ? cardOf(cases.group, cases.g, [cases.group.indices[0]!, end], { outcome: caseOf(open), by: cases.title })
-                  : <HeadFrame word="По" actions={headActions}><span className="flow-head__words">{cases.title}</span></HeadFrame>)
+                  : <HeadFrame word={t('chain.by')} actions={headActions}><span className="flow-head__words">{cases.title}</span></HeadFrame>)
                 : cases ? <ArmLabel word={label} actions={armActions} />
                 : conditioned ? <FlowHead
-                  word={k === 0 ? 'Если' : 'Иначе, если'} step={steps[head]!} context={contextAt(head)} earlier={earlierOf(head)}
-                  required problem={problem(head)} {...(guard && k === 0 ? { tail: 'стоп' } : {})}
+                  word={k === 0 ? t('chain.if') : t('chain.elseIf')} step={steps[head]!} context={contextAt(head)} earlier={earlierOf(head)}
+                  required problem={problem(head)} {...(guard && k === 0 ? { tail: t('chain.stop') } : {})}
                   edit={change => edit(draft => { change(draft.steps![head]!); })}
                   actions={k === 0 ? headActions : armActions}
                 /> : <ArmLabel word={label} actions={armActions} />}
               <div className="flow-block__arm">
                 {conditioned && !(cases && k > 0) ? <span className="flow-block__then">{label}</span> : null}
-                {first >= 0 && last > first ? render(first, last) : <span className="faint">пусто — добавьте шаг</span>}
+                {first >= 0 && last > first ? render(first, last) : <span className="faint">{t('chain.emptyArm')}</span>}
                 <div className="flow-block__add">{armAdd(head)}</div>
               </div>
             </div>
@@ -503,8 +506,8 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
         <div className="flow-block__foot">
           {cases ? cases.options.filter(option => !heads.some(head => same(caseAt(steps[head])?.value, option.value))).map(option => (
             <Button key={String(option.value)} size="sm" variant="ghost" onClick={() => edit(draft => { draft.steps = addArm(draft.steps ?? [], open, true, `@${cases.ref} == ${literalOf(option.value)}`); })}>+ {option.label}</Button>
-          )) : <Button size="sm" variant="ghost" onClick={() => edit(draft => { draft.steps = addArm(draft.steps ?? [], open, true); })}>+ иначе, если</Button>}
-          {bareElse ? null : <Button size="sm" variant="ghost" onClick={() => edit(draft => { draft.steps = addArm(draft.steps ?? [], open, false); })}>{outcomes ? `+ ${outcomes.other}` : '+ иначе'}</Button>}
+          )) : <Button size="sm" variant="ghost" onClick={() => edit(draft => { draft.steps = addArm(draft.steps ?? [], open, true); })}>{t('chain.addElseIf')}</Button>}
+          {bareElse ? null : <Button size="sm" variant="ghost" onClick={() => edit(draft => { draft.steps = addArm(draft.steps ?? [], open, false); })}>{outcomes ? `+ ${outcomes.other}` : t('chain.addElse')}</Button>}
         </div>
       </div>
     );
@@ -555,14 +558,14 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
     <>
       {real > 1 ? (
         <>
-          <Button size="sm" variant="ghost" onClick={() => setOpen(keys, false)}>свернуть все</Button>
-          <Button size="sm" variant="ghost" onClick={() => setOpen(keys, true)}>развернуть все</Button>
+          <Button size="sm" variant="ghost" onClick={() => setOpen(keys, false)}>{t('chain.collapseAll')}</Button>
+          <Button size="sm" variant="ghost" onClick={() => setOpen(keys, true)}>{t('chain.expandAll')}</Button>
         </>
       ) : null}
       {broken
-        ? <Verdict tone="bad">{STEP.manyGen} со сломанными ссылками: {broken}</Verdict>
+        ? <Verdict tone="bad">{t('chain.broken', { steps: STEP.manyGen, n: broken })}</Verdict>
         : steps.length || startAt
-          ? <Verdict tone="ok">эффект верный · {STEP.manyGen} {real + startAt}</Verdict>
+          ? <Verdict tone="ok">{t('chain.ok', { steps: STEP.manyGen, n: real + startAt })}</Verdict>
           : <Verdict tone="warn">{empty}</Verdict>}
     </>
   );
@@ -578,9 +581,9 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
           action={(
             <>
               <Button size="sm" onClick={() => { const before = removed.before; edit(draft => { draft.steps = before; }); setRemoved(null); }}>
-                вернуть {STEP.one}
+                {t('chain.restore', { step: STEP.one })}
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => setRemoved(null)}>ясно</Button>
+              <Button size="sm" variant="ghost" onClick={() => setRemoved(null)}>{t('chain.gotIt')}</Button>
             </>
           )}
         >
@@ -598,7 +601,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
 
       {bare ? null : <div className="bricks">
         <div className="bricks__row bricks__row--plain">
-        <span className="bricks__title">Шаг</span>
+        <span className="bricks__title">{t('chain.brickTitle')}</span>
         {[...BRICKS, ...(onRoll ? SEEN_BRICKS : [])].map(b => (
           <Button key={b.key} size="sm" title={b.hint}
             onClick={() => edit(draft => {
@@ -611,8 +614,8 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
         ))}
         <Select<string>
           value=""
-          title="Вызвать другой эффект системы шагом: он выполнится здесь"
-          options={[['', '+ эффект'], ...callOptions(system, id)]}
+          title={t('chain.callTitle')}
+          options={[['', t('chain.addEffect')], ...callOptions(system, id)]}
           onChange={key => {
             if (!key.startsWith(CALL_PREFIX)) return;
             const called = key.slice(CALL_PREFIX.length);
@@ -630,10 +633,11 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
 }
 
 export function PayDivider({ system, except, onAdd }: { system: System; except?: string; onAdd?: (id: string) => void }) {
+  const t = useT('effects');
   return (
-    <div className="pay-divider" title="Плата: шаги выше выполняются сначала. Не хватило — действие не состоится, ничего не изменится.">
-      <span className="pay-divider__word">Плата</span>
-      <span className="pay-divider__hint">не хватило — действие не состоится</span>
+    <div className="pay-divider" title={t('chain.payTitle')}>
+      <span className="pay-divider__word">{t('chain.payWord')}</span>
+      <span className="pay-divider__hint">{t('chain.payHint')}</span>
       {onAdd ? <CostPick system={system} except={except} onPick={onAdd} /> : null}
     </div>
   );
@@ -642,18 +646,19 @@ export function PayDivider({ system, except, onAdd }: { system: System; except?:
 const NEW_COST = ':новая';
 
 export function CostPick({ system, except, onPick }: { system: System; except?: string; onPick: (id: string) => void }) {
+  const t = useT('effects');
   const editSystem = useWorld(s => s.editSystem);
   const compendium = useWorld(s => s.compendium);
   return (
     <span className="add-cost">
       <Select<string>
         value=""
-        title="Чего стоит эффект: выбранный эффект зовётся первым шагом; не хватило — эффект не состоится"
-        options={[['', '+ плата'],
+        title={t('chain.costTitle')}
+        options={[['', t('chain.costAdd')],
           ...withRole(system, compendium, 'pay', except).map(([id, cost]) => [id, cost.label || id] as const),
           ...withRole(system, compendium, 'step', except).map(([id, other]) => [id, other.label || id] as const),
           ...withRole(system, compendium, 'button', except).map(([id, other]) => [id, other.label || id] as const),
-          [NEW_COST, '+ новая плата…']]}
+          [NEW_COST, t('chain.costNew')]]}
         onChange={pick => {
           if (!pick) return;
           if (pick !== NEW_COST) { onPick(pick); return; }

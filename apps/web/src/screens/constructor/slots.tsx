@@ -6,6 +6,7 @@ import type { Graded, RecordKind, NameAt } from '@vtt/engine';
 import { columnPaths } from '../../ui/formula.tsx';
 import { STEP } from '../../words.ts';
 import { withTables, withPicks } from '../../ui/formula-words.ts';
+import { t } from '../../i18n/author.ts';
 
 export interface StepOutput { path: string; label: string; kind?: string; no?: string }
 
@@ -45,7 +46,7 @@ export function outputRefs(earlier: EarlierStep[], nameOf: (step: EarlierStep) =
     const outputs = outputsAt(step);
     const name = nameOf(step);
     if (!outputs.length) {
-      out.push({ ref: step.id, label: `${name} — результат` });
+      out.push({ ref: step.id, label: t('fields:slots.result', { name }) });
       continue;
     }
     for (const o of outputs) {
@@ -72,7 +73,7 @@ export function outcomeRefs(earlier: EarlierStep[]): OutcomeRef[] {
       ref: `${step.id}${output.path}`,
       label: `${head} — ${yes}`,
       ...(output.kind ? { kind: output.kind } : {}),
-      ...(output.kind === 'boolean' ? { no: `${head} — ${output.no ?? `не ${yes}`}` } : {}),
+      ...(output.kind === 'boolean' ? { no: `${head} — ${output.no ?? t('fields:slots.not', { word: yes })}` } : {}),
     };
   });
 }
@@ -105,7 +106,13 @@ export interface SlotContext {
   scope?: readonly NameAt[];
 }
 
-export const EVENT_NAMES: [string, string][] = [[NAMES.tags, 'метки вызова: значения выборов']];
+const eventPair = (key: string, label: () => string): [string, string] => {
+  const pair: [string, string] = [key, ''];
+  Object.defineProperty(pair, 1, { enumerable: true, get: label });
+  return pair;
+};
+
+export const EVENT_NAMES: [string, string][] = [eventPair(NAMES.tags, () => t('fields:slots.eventTags'))];
 
 export const isCalled = (ctx: SlotContext): boolean =>
   Boolean(amountParamOf(ctx.effect))
@@ -124,7 +131,7 @@ export function stepNames(ctx: SlotContext): Map<string, string> {
 }
 
 export const inputBadges = (ctx: SlotContext): Map<string, string> =>
-  new Map((ctx.effect.params ?? []).map(param => [param.key, 'вход']));
+  new Map((ctx.effect.params ?? []).map(param => [param.key, t('fields:slots.input')]));
 
 export function namesOf(ctx: SlotContext): Map<string, string> {
   const out = new Map<string, string>();
@@ -163,7 +170,7 @@ export function sheetChoices(ctx: SlotContext): { singles: Map<string, string>; 
   const shared = lists.some(param => param.item && !ctx.sheets?.has(param.item.key));
   return {
     singles,
-    firsts: lists.map(param => [`first(@${param.key})`, `первый из «${param.label ?? param.key}»`] as const),
+    firsts: lists.map(param => [`first(@${param.key})`, t('fields:slots.first', { name: param.label ?? param.key })] as const),
     lists: new Map(lists.map(param => [param.key, param.label ?? param.key])),
     shared,
   };

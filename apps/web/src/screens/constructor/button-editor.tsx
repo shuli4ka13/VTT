@@ -10,10 +10,11 @@ import { formulaAsLabels, literalSaid, defaultSaid } from '../../ui/formula-labe
 import { kindWords } from './effects/params-editor.tsx';
 import { ConditionField } from './condition-field.tsx';
 import { shapeProblem, shapeOfKind, type Shape } from './formula-shape.ts';
+import { useT, t as tr } from '../../i18n/author.ts';
 
 const EMPTY = '';
 const NEW = '+';
-const OWN = 'Своё у каждой записи';
+const ownGroup = (): string => tr('records:button.own');
 
 export function ButtonEditor({ binding, system, recordKind: ownKind, kindId, onEdit, onDelete, onFillWithProps }: {
   binding: Binding;
@@ -26,9 +27,10 @@ export function ButtonEditor({ binding, system, recordKind: ownKind, kindId, onE
 
   onFillWithProps?: (params: Param[]) => void;
 }) {
+  const t = useT('records');
   const recordKind = useMemo(() => (kindId ? { ...ownKind, columns: typeColumns(system, kindId) } : ownKind), [system, ownKind, kindId]);
   const props = useMemo(() => propsOf(system, kindId), [system, kindId]);
-  const propNames = useMemo(() => new Map([[ITEM_NAME, 'эта вещь'], ...[...props].map(([key, one]) => [key, one.label] as const)]), [props]);
+  const propNames = useMemo(() => new Map([[ITEM_NAME, t('button.thisItem')], ...[...props].map(([key, one]) => [key, one.label] as const)]), [props, t]);
   const effect = system.effects[binding.effect];
   const params = effect ? paramsOf(system, effect) : [];
   const buttons = Object.entries(system.effects).filter(([, e]) => (e.activation ?? 'manual') !== 'passive');
@@ -48,15 +50,15 @@ export function ButtonEditor({ binding, system, recordKind: ownKind, kindId, onE
 
 
   return (
-    <Card tone="flat" label={`кнопка «${where}»`}>
+    <Card tone="flat" label={t('button.card', { where })}>
       <div className="button-head">
-        <Field label="Кнопка на листе">
-          <LabelInput value={binding.label ?? ''} placeholder="как назвать кнопку" onCommit={label => onEdit(draft => { draft.label = label; })} />
+        <Field label={t('button.label')}>
+          <LabelInput value={binding.label ?? ''} placeholder={t('button.labelPlaceholder')} onCommit={label => onEdit(draft => { draft.label = label; })} />
         </Field>
-        <Field label="Вызывает эффект" needed={!effect}>
+        <Field label={t('button.effect')} needed={!effect}>
           <Select
             value={binding.effect ?? ''}
-            options={[['', '— какой эффект —'], ...byRole(system, buttons).map(([id, e, group]) => [id, e.label || id, group] as const)] as never}
+            options={[['', t('button.effectEmpty')], ...byRole(system, buttons).map(([id, e, group]) => [id, e.label || id, group] as const)] as never}
             onChange={next => {
               const chosen = system.effects[next];
               const columns = new Set((recordKind.columns ?? []).map(prop => prop.key));
@@ -83,17 +85,17 @@ export function ButtonEditor({ binding, system, recordKind: ownKind, kindId, onE
         </Field>
         <div className="button-head__actions">
           {effect ? (
-            <Button size="sm" variant="ghost" title="открыть эффект"
+            <Button size="sm" variant="ghost" title={t('button.open')}
               onClick={() => useWorld.getState().pick({ activeTab: 'effects', activeEffectId: binding.effect, activeStepIndex: null })}>
-              как устроен →
+              {t('button.openLabel')}
             </Button>
           ) : null}
-          <DangerButton size="sm" onConfirm={onDelete}>Удалить</DangerButton>
+          <DangerButton size="sm" onConfirm={onDelete}>{t('common:delete')}</DangerButton>
         </div>
       </div>
       {effect ? (shown.length ? (
         <div className="args-table">
-          <div className="args-table__head" aria-hidden><span>Вход</span><span>Что это</span><span>Чем заполнить</span></div>
+          <div className="args-table__head" aria-hidden><span>{t('button.head.input')}</span><span>{t('button.head.what')}</span><span>{t('button.head.fill')}</span></div>
           {shown.map(param => (
             <ArgRow
               key={param.key}
@@ -113,13 +115,13 @@ export function ButtonEditor({ binding, system, recordKind: ownKind, kindId, onE
             />
           ))}
         </div>
-      ) : <span className="faint">{spare.length ? `Обязательных входов у «${effect.label || binding.effect}» нет.` : params.length ? `«${effect.label || binding.effect}» берёт только того, кто нажал, и цели — заполнять нечего.` : `«${effect.label || binding.effect}» ничего не принимает.`}</span>) : null}
+      ) : <span className="faint">{t(spare.length ? 'button.noRequired' : params.length ? 'button.onlyHolder' : 'button.takesNothing', { name: effect.label || binding.effect })}</span>) : null}
       {effect && spare.length ? (
         <div className="row">
           <Select<string>
-            label="передать ещё"
+            label={t('button.passMore')}
             value=""
-            options={[['', `+ передать… (${spare.length})`], ...spare.map(param => [param.key, `${param.label ?? param.key} — сейчас ${emptyWords(param, system)}`] as const)]}
+            options={[['', t('button.pass', { n: spare.length })], ...spare.map(param => [param.key, t('button.passRow', { name: param.label ?? param.key, now: emptyWords(param, system) })] as const)]}
             onChange={key => { if (key) setOpened(prev => new Set([...prev, key])); }}
           />
         </div>
@@ -131,13 +133,13 @@ export function ButtonEditor({ binding, system, recordKind: ownKind, kindId, onE
             onChange={expr => onEdit(draft => { if (expr) draft.if = { expr }; else delete draft.if; })}
             system={system}
             names={propNames}
-            where={`${where} · только если`}
-            placeholder="например: срок держится"
-            ruleHint="Пока условие неверно, у записи этой кнопки нет."
+            where={t('button.ifWhere', { where })}
+            placeholder={t('button.ifPlaceholder')}
+            ruleHint={t('button.ifHint')}
           />
         </div>
       ) : (
-        <Button size="sm" variant="ghost" title="условие кнопки" onClick={() => setMore(true)}>ещё</Button>
+        <Button size="sm" variant="ghost" title={t('button.ifTitle')} onClick={() => setMore(true)}>{t('common:more')}</Button>
       )}
     </Card>
   );
@@ -149,11 +151,11 @@ function pickSources(param: Param, kind: RecordKind, system: System, effectId: s
   const choice = param.kind === 'choice';
   const own = (kind.columns ?? [])
     .filter(prop => prop.key === param.key || (choice ? prop.kind === 'choice' && prop.from === param.from : prop.kind === 'effect'))
-    .map(prop => ({ key: `@${prop.key}`, label: `свойство «${prop.label ?? prop.key}»`, group: OWN }));
+    .map(prop => ({ key: `@${prop.key}`, label: tr('records:button.prop', { name: prop.label ?? prop.key }), group: ownGroup() }));
   if (choice) {
     const table = param.from ? system.tables?.[param.from] : undefined;
     const rows = param.from ? (listOf(system, param.from) ?? []) : [];
-    return [...own, ...rows.map(row => ({ key: JSON.stringify(row.value), label: row.label, group: `Один на всех — строка «${table?.label || param.from}»` }))];
+    return [...own, ...rows.map(row => ({ key: JSON.stringify(row.value), label: row.label, group: tr('records:button.oneForAll', { table: table?.label || param.from }) }))];
   }
   const effects = byRole(system, Object.entries(system.effects).filter(([id]) => id !== effectId))
     .map(([id, e, group]) => ({ key: JSON.stringify(id), label: e.label || id, group }));
@@ -161,18 +163,18 @@ function pickSources(param: Param, kind: RecordKind, system: System, effectId: s
 }
 
 function hintsOf(param: Param, system: System, effect: Effect, args: Record<string, unknown> | undefined, onNew: (() => void) | undefined): SlotOption[] {
-  const fresh = onNew ? [{ group: 'Завести', label: `+ новое свойство «${param.label ?? param.key}»`, onPick: onNew }] : [];
+  const fresh = onNew ? [{ group: tr('records:button.create'), label: tr('records:button.newProp', { name: param.label ?? param.key }), onPick: onNew }] : [];
   const asks = paymentsOf(system, effect, args ?? {})
     .flatMap(({ payment }) => (payment.params ?? []).filter(one => one.ask))
-    .map(one => ({ group: 'Спросят при оплате', label: one.label ?? one.key, name: one.key }));
+    .map(one => ({ group: tr('records:button.asked'), label: one.label ?? one.key, name: one.key }));
   return [...fresh, ...asks];
 }
 
 function emptyWords(param: Param, system: System): string {
-  if (param.default !== undefined) return `как у эффекта: ${defaultSaid(system, param, param.default)}`;
-  if (param.ask) return param.ask.by === 'gm' ? 'спросят ведущего' : 'спросят игрока';
-  if (param.optional) return 'не передаётся';
-  return '— не заполнено —';
+  if (param.default !== undefined) return tr('records:button.sameAsEffect', { value: defaultSaid(system, param, param.default) });
+  if (param.ask) return param.ask.by === 'gm' ? tr('records:button.askGm') : tr('records:button.askPlayer');
+  if (param.optional) return tr('records:button.notPassed');
+  return tr('records:button.notFilled');
 }
 
 const loose = (param: Param) => param as Param & { optional?: boolean };
@@ -196,6 +198,8 @@ function ArgRow({ param, binding, params, system, recordKind, props, propNames, 
   onArg: (next: SlotRef | null) => void;
   onNew?: () => void;
 }) {
+  const t = useT('records');
+  const own = ownGroup();
   const name = param.label ?? param.key;
   const kind = String(param.kind ?? 'number');
   const free = freeParam(param);
@@ -215,14 +219,14 @@ function ArgRow({ param, binding, params, system, recordKind, props, propNames, 
         <KindCell param={param} system={system} />
         <div className="args-row__fill">
           <Select<string>
-            label={`«${name}» — чем заполняет тип`}
+            label={t('button.fillsBy', { name })}
             value={text}
             options={[
               [EMPTY, emptyWords(param, system)] as const,
-              ...(known ? [] : [[text, `формула: ${formulaAsLabels(system, text)}`] as const]),
-              ...sources.filter(source => source.group === OWN).map(source => [source.key, source.label, source.group] as const),
-              ...(onNew && !byName ? [[NEW, `+ свойство «${name}»`, OWN] as const] : []),
-              ...sources.filter(source => source.group !== OWN).map(source => [source.key, source.label, source.group] as const),
+              ...(known ? [] : [[text, t('button.byFormula', { text: formulaAsLabels(system, text) })] as const]),
+              ...sources.filter(source => source.group === own).map(source => [source.key, source.label, source.group] as const),
+              ...(onNew && !byName ? [[NEW, t('button.addProp', { name }), own] as const] : []),
+              ...sources.filter(source => source.group !== own).map(source => [source.key, source.label, source.group] as const),
             ]}
             onChange={next => {
               if (next === NEW) { onNew?.(); return; }
@@ -258,7 +262,7 @@ function ArgRow({ param, binding, params, system, recordKind, props, propNames, 
           }}
         />
         {!text && onNew ? (
-          <Button size="sm" title={`завести у типа свойство «${name}»: у каждой записи своё значение, его заполняют в книге`} onClick={onNew}>+ свойство</Button>
+          <Button size="sm" title={t('button.addPropTitle', { name })} onClick={onNew}>{t('button.addPropShort')}</Button>
         ) : null}
         </div>
         {problem ? <span className="args-row__err">{problem}</span> : null}
@@ -278,12 +282,13 @@ function shapeIn(tag: string, props: ReadonlyMap<string, ColumnChoice>, system: 
 }
 
 function KindCell({ param, system }: { param: Param; system: System }) {
+  const t = useT('records');
   const table = param.kind === 'choice' && param.from ? param.from : null;
   if (!table) return <span className="args-row__kind">{kindWords(param, system)}</span>;
   return (
     <span className="args-row__kind">
-      {param.many ? 'строки таблицы' : 'строка таблицы'}{' '}
-      <button type="button" className="link-button" title="открыть таблицу"
+      {param.many ? t('button.rows') : t('button.row')}{' '}
+      <button type="button" className="link-button" title={t('button.openTable')}
         onClick={() => useWorld.getState().pick({ activeTab: 'dictionaries', activeTableId: table })}>
         «{system.tables?.[table]?.label || table}»
       </button>
@@ -304,6 +309,7 @@ function cellWords(system: System, column: { kind?: string; from?: string }, val
 }
 
 function Examples({ system, kind, kindId, prop }: { system: System; kind: RecordKind; kindId: string; prop: string }) {
+  const t = useT('records');
   const book = useBook();
   const column = (kind.columns ?? []).find(one => one.key === prop);
   if (!column) return null;
@@ -311,7 +317,7 @@ function Examples({ system, kind, kindId, prop }: { system: System; kind: Record
   if (!records.length) return null;
   const shown = records.slice(0, SHOWN).map(record => `${record.label || record.id} ${cellWords(system, column, propsOfRecord(record, system)?.[prop])}`);
   const rest = records.length - SHOWN;
-  return <span className="args-row__eg">в книге: {shown.join(' · ')}{rest > 0 ? ` · ещё ${rest}` : ''}</span>;
+  return <span className="args-row__eg">{t(rest > 0 ? 'button.exampleMore' : 'button.example', { shown: shown.join(' · '), n: rest })}</span>;
 }
 
 const propsOf = (system: System, kindId: string | undefined): Map<string, ColumnChoice> =>

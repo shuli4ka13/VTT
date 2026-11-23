@@ -3,6 +3,7 @@ import { ROW, slugOf } from '@vtt/engine';
 import type { BarOption } from '../../store/formula-bar.ts';
 import type { Phrase } from './condition-field.tsx';
 import { rowNames } from './row-names.ts';
+import { t } from '../../i18n/author.ts';
 
 const EACH_ROW = /^cell:([^.]+)\.\*\./u;
 
@@ -36,10 +37,10 @@ export function rowPicks(system: System, target: unknown, names?: Map<string, st
   return {
     names: new Map([...(names ?? []), ...rowNames(system, tableId)]),
     options: sources.map(([key, label]): BarOption => ({
-      group: 'эта строка',
-      label: `«${label}» → клетка этой строки`,
+      group: t('fields:row.this'),
+      label: t('fields:row.cell', { label }),
       onPick: (insert, bar) => bar.write(insert(`@${key}.[@${ROW}]`)),
     })),
-    phrases: sources.map(([key, label]) => ({ expr: `not empty(@${key})`, label: `«${label}» выбрано` })),
+    phrases: sources.map(([key, label]) => ({ expr: `not empty(@${key})`, label: t('fields:row.chosen', { label }) })),
   };
 }

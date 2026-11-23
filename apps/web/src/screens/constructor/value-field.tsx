@@ -4,7 +4,8 @@ import { FormulaField } from '../../ui/formula-field.tsx';
 import type { BarOption } from '../../store/formula-bar.ts';
 import { outputRefs, inputBadges } from './slots.tsx';
 import type { SlotContext, SlotKind } from './slots.tsx';
-import { writeTableCall, readableFields, rowTables, walkColumns } from '@vtt/engine';
+import { writeTableCall, readableFields, rowTables, walkColumns, wordsOf } from '@vtt/engine';
+import { useT, t } from '../../i18n/author.ts';
 
 export function asText(value: unknown): string | null {
   if (value === null || value === undefined) return null;
@@ -22,7 +23,7 @@ export function grownFrom(value: unknown, typed: string): SlotRef | null {
 }
 
 export function normalizeDice(text: string): string | null {
-  const m = /^(\d+)?\s*[dдк]\s*(\d+)$/i.exec(text.trim());
+  const m = new RegExp(`^(\\d+)?\\s*[${wordsOf('ru').dieLetters}]\\s*(\\d+)$`, 'i').exec(text.trim());
   if (!m) return null;
   return `${m[1] ? Number(m[1]) : 1}d${Number(m[2])}`;
 }
@@ -53,33 +54,33 @@ export function optionsFor(ctx: SlotContext, allow: SlotKind[] | undefined): Slo
   const ok = (kind: SlotKind) => !allow || allow.includes(kind);
   const out: SlotOption[] = [];
   if (ok('prop')) {
-    for (const p of ctx.recordKind?.columns ?? []) out.push({ group: 'Свойства записи', label: p.label ?? p.key, name: p.key });
+    for (const p of ctx.recordKind?.columns ?? []) out.push({ group: t('fields:value.group.props'), label: p.label ?? p.key, name: p.key });
   }
   if (ok('param')) {
-    for (const p of ctx.effect.params ?? []) out.push({ group: 'Входы эффекта', label: p.label ?? p.key, name: p.key });
+    for (const p of ctx.effect.params ?? []) out.push({ group: t('fields:value.group.params'), label: p.label ?? p.key, name: p.key });
   }
   if (ok('table')) {
     for (const [key, table] of rowTables(ctx.system)) {
       const name = table.label || key;
       for (const column of table.columns ?? []) {
-        for (const found of tableOptions(ctx, key, column.key)) out.push({ group: 'По таблице', ...found, label: found.label ?? `«${name}» → ${column.label || column.key}` });
+        for (const found of tableOptions(ctx, key, column.key)) out.push({ group: t('fields:value.group.table'), ...found, label: found.label ?? `«${name}» → ${column.label || column.key}` });
       }
     }
   }
   if (ok('ref')) {
-    for (const o of outputRefs(ctx.earlier)) out.push({ group: 'Результаты шагов', label: o.label, name: o.ref });
+    for (const o of outputRefs(ctx.earlier)) out.push({ group: t('fields:value.group.results'), label: o.label, name: o.ref });
   }
   if (ok('tag')) {
     const sheets = [...(ctx.sheets ?? new Map<string, string>())];
     for (const f of readableFields(ctx.system)) {
-      if (!sheets.length) { out.push({ group: 'Поля', label: f.label ?? f.tag, name: f.tag }); continue; }
-      for (const [name, label] of sheets) out.push({ group: `Поля: ${label}`, label: f.label ?? f.tag, name: `${name}.${f.tag}` });
+      if (!sheets.length) { out.push({ group: t('fields:value.group.fields'), label: f.label ?? f.tag, name: f.tag }); continue; }
+      for (const [name, label] of sheets) out.push({ group: t('fields:value.group.fieldsOf', { name: label }), label: f.label ?? f.tag, name: `${name}.${f.tag}` });
     }
   }
   return out;
 }
 
-export function ValueField({ value, onChange, context, allow, placeholder, extraOptions, dice, onCreateParam, where = 'значение' }: {
+export function ValueField({ value, onChange, context, allow, placeholder, extraOptions, dice, onCreateParam, where: whereProp }: {
   value: unknown;
   onChange: (next: SlotRef | null) => void;
   context: SlotContext;
@@ -90,11 +91,13 @@ export function ValueField({ value, onChange, context, allow, placeholder, extra
   onCreateParam?: () => string;
   where?: string;
 }) {
+  const t = useT('fields');
+  const where = whereProp ?? t('value.where');
   const [draft, setDraft] = useState<string | null>(null);
   const options = useMemo(() => {
     const base = [...(extraOptions ?? []), ...optionsFor(context, allow)];
-    return onCreateParam ? [{ group: 'Входы эффекта', label: 'новый вход…', synthetic: true } as SlotOption, ...base] : base;
-  }, [context, allow, extraOptions, onCreateParam]);
+    return onCreateParam ? [{ group: t('value.group.params'), label: t('value.newParam'), synthetic: true } as SlotOption, ...base] : base;
+  }, [context, allow, extraOptions, onCreateParam, t]);
 
   const names = useMemo(() => {
     const out = new Map<string, string>();
@@ -137,7 +140,7 @@ export function ValueField({ value, onChange, context, allow, placeholder, extra
         extraNames={names}
         badges={inputBadges(context)}
         options={menu}
-        placeholder={placeholder ?? 'число или формула — начните набирать название'}
+        placeholder={placeholder ?? t('value.placeholder')}
         barValue={draft ?? initial}
         onChange={next => setDraft(next)}
         onCommit={commitTyped}

@@ -5,6 +5,7 @@ import { Field, Select } from '../../ui/primitives.tsx';
 import { FieldPick } from '../../ui/field-pick.tsx';
 import { fieldsOf, readableFields, cellSource, typeColumns, DESK_ID, NAME_LABELS, stepSaid } from '@vtt/engine';
 import type { SlotContext } from './slots.tsx';
+import { useT } from '../../i18n/author.ts';
 
 const fieldTarget = (target: unknown): { sheet: string; tag: string } | null => {
   const expr = target && typeof target === 'object' && 'expr' in target ? String((target as { expr: unknown }).expr) : '';
@@ -30,6 +31,7 @@ export function TargetPick({ target, context, onChange, formula }: {
   context: SlotContext;
   onChange: (next: { expr: string } | null) => void;
 }) {
+  const t = useT('fields');
   const system = context.system;
   const picked = fieldTarget(target);
   const param = target && typeof target === 'object' && 'expr' in target && !picked ? String((target as { expr: unknown }).expr).replace(/^@/, '') : '';
@@ -43,10 +45,10 @@ export function TargetPick({ target, context, onChange, formula }: {
   const records = (context.effect.params ?? []).filter(p => p.kind === 'record' && !p.many && typeof p.from === 'string');
   const options: (readonly [string, string])[] = [
     ...sheets.map(([name, label]) => [name, `«${label}»`] as const),
-    ...records.map(p => [p.key, `«${p.label ?? p.key}» — вещь`] as const),
+    ...records.map(p => [p.key, t('target.item', { name: p.label ?? p.key })] as const),
     ...(desk ? [[DESK_ID, NAME_LABELS.desk] as const] : []),
-    ...fieldParams.map(p => [`:${p.key}`, `поле из входа «${p.label ?? p.key}»`] as const),
-    ...(formula ? [[BY_FORMULA, 'формулой…'] as const] : []),
+    ...fieldParams.map(p => [`:${p.key}`, t('target.fieldInput', { name: p.label ?? p.key })] as const),
+    ...(formula ? [[BY_FORMULA, t('target.byFormula')] as const] : []),
   ];
   const fields = readableFields(system).filter(f => f.value.kind === 'stored' && (owner === DESK_ID ? f.lives === 'desk' : f.lives !== 'desk'));
   const recordOwner = records.find(p => p.key === owner);
@@ -56,10 +58,10 @@ export function TargetPick({ target, context, onChange, formula }: {
     .flatMap(row => storedColumns(system, row.table).map(column => [`${row.name}.${column.key}`, `${row.label} · ${column.label ?? column.key}`] as const));
   return (
     <div className="row">
-      <Field label="У кого" needed={!owner}>
+      <Field label={t('target.owner')} needed={!owner}>
         <Select<string>
           value={owner}
-          options={options.length ? options : [['', '— у эффекта нет входов-листов —']]}
+          options={options.length ? options : [['', t('target.noSheets')]]}
           onChange={next => {
             if (next === BY_FORMULA) { setManual(true); return; }
             setManual(false);
@@ -70,7 +72,7 @@ export function TargetPick({ target, context, onChange, formula }: {
         />
       </Field>
       {byFormula ? formula : owner.startsWith(':') ? null : (
-        <Field label="Какое поле" needed={!picked}>
+        <Field label={t('target.field')} needed={!picked}>
           <FieldPick
             system={system}
             value={picked?.tag ?? ''}

@@ -18,10 +18,11 @@ import { createEffect } from './effects/factory.ts';
 import { blockTree, BlockBranches } from './block-tree.tsx';
 import { newGroup } from './groups.ts';
 import { focusNew } from '../../ui/focus-new.ts';
+import { useT, t as tr } from '../../i18n/author.ts';
 
-const BASIS = [
-  ['item', 'вещь — надевают и снимают'],
-  ['action', 'действие — учат и применяют'],
+const basis = () => [
+  ['item', tr('records:basis.item')],
+  ['action', tr('records:basis.action')],
 ] as const;
 
 function SheetKindCards({ id, kind, system, edit }: {
@@ -30,14 +31,15 @@ function SheetKindCards({ id, kind, system, edit }: {
   system: System;
   edit: (change: (draft: SheetKind) => void) => void;
 }) {
+  const t = useT('records');
   const editSystem = useWorld(s => s.editSystem);
   const common = (system.grants ?? []).map(key => system.effects[key]?.label || key);
   return (
     <>
       <Card>
         <CardHead
-          title="Что даёт каждому листу этого типа"
-          sub="Кнопки и правила, которые есть у каждого листа этого типа."
+          title={t('sheetKind.grants.title')}
+          sub={t('sheetKind.grants.sub')}
         />
         <GrantsEditor system={system} value={kind.grants}
           onCreate={() => createEffect('passive', (draft, key) => {
@@ -46,13 +48,13 @@ function SheetKindCards({ id, kind, system, edit }: {
           })}
           onChange={next => edit(draft => { if (next) draft.grants = next; else delete draft.grants; })} />
       </Card>
-      {common.length ? <span className="faint">Ещё действует общее для всех листов: {common.map(name => `«${name}»`).join(', ')}.</span> : null}
+      {common.length ? <span className="faint">{t('sheetKind.grants.common', { names: common.map(name => `«${name}»`).join(', ') })}</span> : null}
       <Card>
-        <CardHead title="Как считаются поля у этого типа" />
+        <CardHead title={t('sheetKind.fields.title')} />
         <ModifiersEditor
-          empty={{ title: 'своих формул у типа нет', hint: 'Например, «+2 к классу брони» каждому противнику. Правило, которое меняет бросок или чужой эффект, — эффектом «висит · правит» из вкладки «Эффекты», выданным выше.' }}
+          empty={{ title: t('sheetKind.fields.emptyTitle'), hint: t('sheetKind.fields.emptyHint') }}
           fieldsOnly
-          fieldLabel="+ формула поля"
+          fieldLabel={t('sheetKind.fields.add')}
           system={system}
           editSystem={editSystem}
           title=""
@@ -64,13 +66,13 @@ function SheetKindCards({ id, kind, system, edit }: {
   );
 }
 
-const ON_SHEET = [
-  ['sheet', 'на лист — игрок видит'],
-  ['service', 'служебное — только движку'],
+const onSheet = () => [
+  ['sheet', tr('records:onSheet.sheet')],
+  ['service', tr('records:onSheet.service')],
 ] as const;
 
-
 export function SheetKindEditor({ id, kind, system }: { id: string; kind: SheetKind; system: System }) {
+  const t = useT('records');
   const editSystem = useWorld(s => s.editSystem);
   const edit = (change: (draft: SheetKind) => void) => editSystem(draft => {
     const target = draft.sheets?.[id];
@@ -80,17 +82,17 @@ export function SheetKindEditor({ id, kind, system }: { id: string; kind: SheetK
   return (
     <>
       <div className="row">
-        <Field label="На основе" hint="Выдача и правки основы достанутся этому типу.">
+        <Field label={t('sheetKind.extends')} hint={t('sheetKind.extendsHint')}>
           <Select
             value={kind.extends ?? ''}
-            options={[['', '— сам по себе —'], ...peers.map(([key, other]) => [key, other.label ?? key] as const)] as never}
+            options={[['', t('sheetKind.standalone')], ...peers.map(([key, other]) => [key, other.label ?? key] as const)] as never}
             onChange={next => edit(draft => { if (next) draft.extends = next; else delete draft.extends; })}
           />
         </Field>
-        <Field label="Значок">
+        <Field label={t('sheetKind.icon')}>
           <Input value={kind.icon ?? ''} placeholder="🛡" onChange={next => edit(draft => { if (next.trim()) draft.icon = next.trim(); else delete draft.icon; })} />
         </Field>
-        <Field label="Подсказка заполняющему">
+        <Field label={t('sheetKind.hint')}>
           <Input value={kind.hint ?? ''} onChange={next => edit(draft => { if (next.trim()) draft.hint = next; else delete draft.hint; })} />
         </Field>
       </div>
@@ -100,6 +102,7 @@ export function SheetKindEditor({ id, kind, system }: { id: string; kind: SheetK
 }
 
 export function RecordsTab() {
+  const t = useT('records');
   const system = useWorld(s => s.system);
   const activeKind = useWorld(s => s.activeRecordKind);
   const pick = useWorld(s => s.pick);
@@ -109,14 +112,14 @@ export function RecordsTab() {
   const active = kinds.find(([key]) => key === activeKind)?.[1];
 
   const add = () => {
-    focusNew('как зовётся тип');
+    focusNew(t('common:name.kind'));
     const made = newRecordKind(system);
     editSystem(draft => { (draft.tables ??= {})[made.key] = made.value; if (blockLabel(draft, GEAR_BLOCK) === GEAR_BLOCK) labelBlock(draft, GEAR_BLOCK, GEAR_BLOCK_LABEL); });
     pick({ activeRecordKind: made.key });
   };
 
   const addTo = (block: string, title?: string) => {
-    focusNew('как зовётся тип');
+    focusNew(t('common:name.kind'));
     const made = newRecordKind(system);
     editSystem(draft => {
       (draft.tables ??= {})[made.key] = { ...made.value, block };
@@ -133,13 +136,13 @@ export function RecordsTab() {
     <Columns
       {...(lookup ? { right: lookup } : {})}
       left={{
-        head: 'книги',
-        tools: <Button size="sm" onClick={() => { const fresh = newGroup(system); addTo(fresh.key, fresh.title); }}>+ блок</Button>,
+        head: t('list.head'),
+        tools: <Button size="sm" onClick={() => { const fresh = newGroup(system); addTo(fresh.key, fresh.title); }}>{t('list.addBlock')}</Button>,
         body: kinds.length === 0
           ? <Empty
-              title="типов ещё нет"
-              hint="тип — форма заполнения: какие циферки спросить у человека и к каким эффектам их привязать."
-              action={<Button size="sm" onClick={add}>+ тип</Button>}
+              title={t('list.emptyTitle')}
+              hint={t('list.emptyHint')}
+              action={<Button size="sm" onClick={add}>{t('list.addKind')}</Button>}
             />
           : (
             <List>
@@ -156,7 +159,7 @@ export function RecordsTab() {
                   <ListItem
                     key={key}
                     name={kind.label ?? key}
-                    meta={key === DESK_ID ? 'тип стола' : system.sheets?.[key] ? 'тип листа' : `свойств: ${kind.columns?.length ?? 0} · кнопок: ${kind.bindings?.length ?? 0}`}
+                    meta={key === DESK_ID ? t('list.metaDesk') : system.sheets?.[key] ? t('list.metaSheet') : t('list.meta', { props: kind.columns?.length ?? 0, buttons: kind.bindings?.length ?? 0 })}
                     active={key === activeKind}
                     onClick={() => pick({ activeRecordKind: key })}
                   />
@@ -169,8 +172,8 @@ export function RecordsTab() {
         body: active && activeKind
           ? <KindEditor key={activeKind} id={activeKind} kind={active} system={system} />
           : <Empty
-              title="Выберите тип слева"
-              hint="У записи спрашивают только её циферки, а кнопка появляется у владельца сама. Это и настраивается здесь."
+              title={t('list.pickTitle')}
+              hint={t('list.pickHint')}
             />,
       }}
     />
@@ -178,6 +181,7 @@ export function RecordsTab() {
 }
 
 function BuiltIn({ kindId, system }: { kindId: string; system: System }) {
+  const t = useT('records');
   const editSystem = useWorld(s => s.editSystem);
   const records = (system.library ?? []).filter(record => record.table === kindId);
   const book = useWorld(s => s.compendium);
@@ -185,8 +189,8 @@ function BuiltIn({ kindId, system }: { kindId: string; system: System }) {
   if (!records.length && !candidates.length) return null;
 
   return (
-    <Fold title="Едут вместе с системой" count={records.length}>
-      <span className="faint">Встроенные записи системы — едут в любой мир на этой системе, перед книгами.</span>
+    <Fold title={t('builtIn.title')} count={records.length}>
+      <span className="faint">{t('builtIn.note')}</span>
       <div className="inline inline--tight">
         {records.map(record => (
           <Chip
@@ -203,7 +207,7 @@ function BuiltIn({ kindId, system }: { kindId: string; system: System }) {
         {candidates.length ? (
           <Select<string>
             value=""
-            options={[['', '+ из книги…'], ...candidates.map(record => [record.id, record.label ?? record.id] as const)]}
+            options={[['', t('builtIn.fromBook')], ...candidates.map(record => [record.id, record.label ?? record.id] as const)]}
             onChange={id => {
               const found = candidates.find(record => record.id === id);
               if (found) editSystem(draft => { draft.library = [...(draft.library ?? []), structuredClone(found)]; });
@@ -216,6 +220,7 @@ function BuiltIn({ kindId, system }: { kindId: string; system: System }) {
 }
 
 function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: System }) {
+  const t = useT('records');
   const editSystem = useWorld(s => s.editSystem);
   const pick = useWorld(s => s.pick);
   const [picked, setPicked] = useState<string | null>(null);
@@ -237,19 +242,19 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
       <Card>
         <CardHead
 
-          title={<LabelInput value={kind.label ?? ''} placeholder="как зовётся тип" onCommit={label => edit(draft => { draft.label = label; })} />}
+          title={<LabelInput value={kind.label ?? ''} placeholder={t('common:name.kind')} onCommit={label => edit(draft => { draft.label = label; })} />}
           actions={
             <DangerButton size="sm" onConfirm={() => {
               editSystem(draft => { delete draft.tables?.[id]; });
               pick({ activeRecordKind: null });
-            }}>Удалить</DangerButton>
+            }}>{t('common:delete')}</DangerButton>
           }
         />
         <div className="row">
-          <Field label="Чем является">
-            <Select value={kind.use ?? 'item'} options={BASIS} onChange={next => edit(draft => { draft.use = next; })} />
+          <Field label={t('kind.basis')}>
+            <Select value={kind.use ?? 'item'} options={basis()} onChange={next => edit(draft => { draft.use = next; })} />
           </Field>
-          <Field label="Блок">
+          <Field label={t('kind.block')}>
             <BlockPick
               of="records"
               system={system}
@@ -260,12 +265,12 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
             />
           </Field>
           <Field
-            label="На основе"
-            hint="Свойства и кнопки основы достанутся этому типу; своя первая кнопка правит первую кнопку основы."
+            label={t('sheetKind.extends')}
+            hint={t('kind.extendsHint')}
           >
             <Select
               value={kind.extends ?? ''}
-              options={[['', '— сам по себе —'],
+              options={[['', t('sheetKind.standalone')],
                 ...peers
                   .filter(([key]) => key !== id)
                   .map(([key, other]) => [key, other.label ?? key] as const)] as never}
@@ -276,10 +281,10 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
           </Field>
         </div>
         <div className="row">
-          <Field label="Значок" hint="Один символ на кнопках записей этой книги">
+          <Field label={t('sheetKind.icon')} hint={t('kind.iconHint')}>
             <Input value={kind.icon ?? ''} placeholder="🎲" onChange={next => edit(draft => { if (next.trim()) draft.icon = next.trim(); else delete draft.icon; })} />
           </Field>
-          <Field label="Подсказка заполняющему">
+          <Field label={t('sheetKind.hint')}>
             <Input value={kind.hint ?? ''} onChange={next => edit(draft => { if (next.trim()) draft.hint = next; else delete draft.hint; })} />
           </Field>
         </div>
@@ -289,23 +294,23 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
 
       <Card>
         <CardHead
-          title="Свойства"
-          sub="Что заполняют у каждой записи этого типа в книге."
+          title={t('kind.props.title')}
+          sub={t('kind.props.sub')}
           actions={
             <Button size="sm" onClick={() => {
               const made = newProp(kind, system);
               edit(draft => { (draft.columns ??= []).push(made); });
               setPicked(made.key);
-            }}>+ свойство</Button>
+            }}>{t('kind.props.add')}</Button>
           }
         />
         {props.length === 0
-          ? <span className="faint">Свойств нет.</span>
+          ? <span className="faint">{t('kind.props.none')}</span>
           : (
             <div className="inline inline--tight">
               {props.map(prop => (
                 <Button key={prop.key} size="sm" variant={prop.key === picked ? 'primary' : 'ghost'}
-                  title={[propDestiny(system, kind, prop.key), prop.expr !== undefined ? 'считается формулой' : ''].filter(Boolean).join(' · ')}
+                  title={[propDestiny(system, kind, prop.key), prop.expr !== undefined ? t('kind.props.byFormula') : ''].filter(Boolean).join(' · ')}
                   onClick={() => setPicked(prop.key === picked ? null : prop.key)}>
                   {prop.label || prop.key}<span className="prop-chip__kind" aria-hidden>{propKind(system, prop)}</span>
                 </Button>
@@ -315,10 +320,10 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
         {open ? (
           <TableColumnCard id={id} table={kind as Table} column={open} system={system} edit={edit} onClose={() => setPicked(null)}
             extra={<>
-              <Field label="Где показывать">
+              <Field label={t('kind.props.where')}>
                 <Select
                   value={open.onSheet === false ? 'service' : 'sheet'}
-                  options={ON_SHEET}
+                  options={onSheet()}
                   onChange={next => edit(draft => {
                     const target = draft.columns?.find(p => p.key === open.key);
                     if (!target) return;
@@ -334,7 +339,7 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
 
       <Card>
         <CardHead
-          title="Кнопки на листе"
+          title={t('kind.buttons.title')}
           actions={
             <Button
               size="sm"
@@ -342,17 +347,17 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
               onClick={() => edit(draft => {
                 (draft.bindings ??= []).push(newBinding());
               })}
-            >+ кнопка</Button>
+            >{t('kind.buttons.add')}</Button>
           }
         />
         {Object.keys(system.effects).length === 0 ? (
           <Verdict tone="warn">
-            В системе ещё нет эффектов — подключать нечего. Заведите их на вкладке «Эффекты».
+            {t('kind.buttons.noEffects')}
           </Verdict>
         ) : null}
 
         {bindings.length === 0
-          ? <span className="faint">Кнопок нет.</span>
+          ? <span className="faint">{t('kind.buttons.none')}</span>
           : bindings.map((binding, index) => (
             <ButtonEditor
               key={index}
@@ -382,7 +387,7 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
       </Card>
 
       <Card>
-        <CardHead title="Висит на владельце" sub="Пока запись у листа." />
+        <CardHead title={t('kind.hanging.title')} sub={t('kind.hanging.sub')} />
         <GrantsEditor system={system} value={kind.grants} hanging
           onChange={next => edit(draft => { if (next) draft.grants = next; else delete draft.grants; })} />
       </Card>
@@ -391,13 +396,13 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
       {kind.use === 'item' ? (
         <Card>
           <CardHead
-            title="Что правит каждая вещь этого типа"
-            sub="Пишется один раз — действует, пока надета любая вещь этого типа. То, что своё у конкретной вещи, правится в компендиуме."
+            title={t('kind.mods.title')}
+            sub={t('kind.mods.sub')}
           />
           <ModifiersEditor
             empty={{
-              title: 'тип пока ничего не правит',
-              hint: 'Правки, пока у листа есть любая вещь этого типа. Пишутся один раз здесь — каждая запись типа получает их без строчки на себе.',
+              title: t('kind.mods.emptyTitle'),
+              hint: t('kind.mods.emptyHint'),
             }}
             system={system}
             editSystem={editSystem}
@@ -414,7 +419,7 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
 }
 
 function propKind(system: System, prop: { kind?: string; from?: string }): string {
-  if (prop.kind === 'choice') return `«${(prop.from && system.tables?.[prop.from]?.label) || prop.from || 'таблица'}»`;
+  if (prop.kind === 'choice') return `«${(prop.from && system.tables?.[prop.from]?.label) || prop.from || tr('records:kind.props.table')}»`;
   return kindWord(prop.kind);
 }
 
@@ -422,8 +427,8 @@ function propDestiny(system: System, kind: RecordKind, propKey: string): string 
   const buttons = (kind.bindings ?? [])
     .filter(b => Object.values(argsWithProps(system, b, propKeysOf(kind)) ?? {}).some(arg =>
       new RegExp(`[@#]${propKey}(?![\\p{L}\\p{N}_])`, 'u').test(String((arg as { expr?: string }).expr ?? ''))))
-    .map(b => `«${b.label ?? 'Применение'}»`);
+    .map(b => `«${b.label ?? tr('records:kind.props.defaultButton')}»`);
   return buttons.length
-    ? `уходит в кнопку ${buttons.join(', ')}`
-    : 'никуда не уходит — просто справка на записи';
+    ? tr('records:kind.props.toButtons', { buttons: buttons.join(', ') })
+    : tr('records:kind.props.nowhere');
 }

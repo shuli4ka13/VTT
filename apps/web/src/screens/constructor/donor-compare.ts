@@ -1,6 +1,7 @@
 import type { System } from '@vtt/schema';
 import { fieldOf, kindOf } from '@vtt/engine';
 import type { Field, Part } from '@vtt/engine';
+import { t } from '../../i18n/author.ts';
 
 export type Standing = 'new' | 'same' | 'own';
 
@@ -70,7 +71,7 @@ export function piecesStanding(system: System, donor: System, added: readonly Pa
   return own ? { standing: 'own', own } : { standing: 'same' };
 }
 
-export const ownWords = (name: string): string => `в системе уже есть своё «${name}» — готовое не заменит его`;
+export const ownWords = (name: string): string => t('records:donors.own', { name });
 
 export function defaultDonor(system: System, donors: readonly System[], originId?: string): string {
   const named = donors.find(donor => donor.id && (donor.id === system.id || donor.id === originId));

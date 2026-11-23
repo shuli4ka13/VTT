@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { typedChoices, type ChoiceWant as Want } from '@vtt/engine';
 import { Combo, type ComboOption } from '../../ui/combo.tsx';
 import type { SlotContext } from './slots.tsx';
+import { useT } from '../../i18n/author.ts';
 
 export const BY_FORMULA = ':formula';
 
@@ -17,6 +18,7 @@ export function TypedPick({ want, value, onChange, context, blank, label, childr
   label?: string;
   children: ReactNode;
 }) {
+  const t = useT('records');
   const [formula, setFormula] = useState(false);
   if (!context.scope) return <>{children}</>;
   const choices = typedChoices(context.system, context.scope, want);
@@ -26,7 +28,7 @@ export function TypedPick({ want, value, onChange, context, blank, label, childr
   const options: ComboOption[] = [
     ...(text ? [{ value: '', label: blank }] : []),
     ...choices.map(one => ({ value: one.expr, label: one.label, group: one.group })),
-    { value: BY_FORMULA, label: 'формулой…', group: 'другое' },
+    { value: BY_FORMULA, label: t('typedPick.byFormula'), group: t('typedPick.other') },
   ];
   return (
     <div className="stack stack--tight typed-pick">

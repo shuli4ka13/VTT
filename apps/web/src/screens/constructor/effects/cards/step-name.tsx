@@ -4,6 +4,7 @@ import { stepNameTrouble, applyName, loopNames, namedSteps, type NameKeys } from
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
 import { stepSaid } from '@vtt/engine';
+import { useT } from '../../../../i18n/author.ts';
 
 export function useNameInput({ shown, check, onCommit, optional = false }: {
   shown: string;
@@ -11,6 +12,7 @@ export function useNameInput({ shown, check, onCommit, optional = false }: {
   onCommit: (typed: string) => void;
   optional?: boolean;
 }) {
+  const t = useT('stepCards');
   const [draft, setDraft] = useState<string | null>(null);
   const [trouble, setTrouble] = useState<string | null>(null);
   const commit = () => {
@@ -26,7 +28,7 @@ export function useNameInput({ shown, check, onCommit, optional = false }: {
     <Input
       mono
       value={draft ?? shown}
-      placeholder="имя"
+      placeholder={t('name.placeholder')}
       invalid={Boolean(trouble)}
       onChange={next => { setTrouble(null); setDraft(next); }}
       onBlur={commit}

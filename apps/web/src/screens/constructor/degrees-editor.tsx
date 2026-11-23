@@ -3,6 +3,7 @@ import { DegreeList } from './degree-list.tsx';
 import type { Degree } from './degree-list.tsx';
 import type { System } from '@vtt/schema';
 import { rowTables } from '@vtt/engine';
+import { useT } from '../../i18n/author.ts';
 
 type Shared = Parameters<typeof DegreeList>[0]['shared'];
 
@@ -16,6 +17,7 @@ export function DegreesEditor({ value, set, system, where, shared, placeholder }
   shared: Shared;
   placeholder?: string;
 }) {
+  const t = useT('fields');
   const tables = rowTables(system);
   const scale = value && !Array.isArray(value) ? value as { table: string; of?: string } : null;
   const list = Array.isArray(value) ? value as Degree[] : [];
@@ -24,18 +26,18 @@ export function DegreesEditor({ value, set, system, where, shared, placeholder }
       {tables.length || scale ? (
         <span className="inline inline--tight">
           <Select
-            label="Ступени"
+            label={t('degrees.label')}
             value={scale?.table ?? ''}
-            options={[['', 'списком'], ...tables.map(([key, t]) => [key, `из таблицы «${t.label || key}»`] as const)] as never}
+            options={[['', t('degrees.list')], ...tables.map(([key, table]) => [key, t('degrees.fromTable', { name: table.label || key })] as const)] as never}
             onChange={(next: string) => set(next ? { table: next, ...(scale?.of === 'margin' ? { of: 'margin' as const } : {}) } : undefined)}
           />
           {scale ? (
             <>
-              <span className="faint">ступень по</span>
+              <span className="faint">{t('degrees.by')}</span>
               <Select
-                label="Ступень по"
+                label={t('degrees.byLabel')}
                 value={scale.of === 'margin' ? 'margin' : 'total'}
-                options={[['total', 'итогу'], ['margin', 'запасу против порога']] as const}
+                options={[['total', t('degrees.byTotal')], ['margin', t('degrees.byMargin')]] as const}
                 onChange={(next: string) => set({ table: scale.table, ...(next === 'margin' ? { of: 'margin' as const } : {}) })}
               />
             </>

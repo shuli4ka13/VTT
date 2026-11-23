@@ -4,9 +4,10 @@ import { newEffect } from '../factory.ts';
 import type { LaunchKind } from '@vtt/engine';
 import type { System } from '@vtt/schema';
 import { focusNew } from '../../../ui/focus-new.ts';
+import { t } from '../../../i18n/author.ts';
 
 export function createEffect(kind: LaunchKind, alsoIn?: (draft: System, key: string) => void): string {
-  focusNew('как зовётся эффект');
+  focusNew(t('common:name.effect'));
   const { system, editSystem, pick } = useWorld.getState();
   const made = newEffect(system, kind);
   editSystem(draft => {

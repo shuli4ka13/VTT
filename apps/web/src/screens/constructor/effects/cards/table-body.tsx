@@ -9,12 +9,14 @@ import { ValueField } from '../../value-field.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
 import { dieEntries } from '../../rules/dice-section.tsx';
+import { useT } from '../../../../i18n/author.ts';
 
 const loose = (draft: unknown): Record<string, unknown> => draft as Record<string, unknown>;
 
-const OWN_DIE = ':своя';
+const OWN_DIE = 'own-die';
 
 export function TableBody({ step, context, edit, system }: { step: Record<string, unknown>; context: SlotContext; edit: EditFn; system: System }) {
+  const t = useT('stepCards');
   const tables = rowTables(system);
   const by = step.dice !== undefined ? 'dice' : 'value';
   const picked = typeof step.dice === 'string' ? step.dice : '';
@@ -22,17 +24,17 @@ export function TableBody({ step, context, edit, system }: { step: Record<string
   const ownText = own ? asDice(unquote(String((step.dice as { expr?: unknown }).expr ?? ''))) : '';
   return (
     <div className="row">
-      <Field label="Какая таблица" needed={!step.table}>
+      <Field label={t('table.which.label')} needed={!step.table}>
         <Select<string>
           value={typeof step.table === 'string' ? step.table : ''}
-          options={[['', '— какая —'], ...tables.map(([key, table]) => [key, table.label || key] as const)]}
+          options={[['', t('table.which.blank')], ...tables.map(([key, table]) => [key, table.label || key] as const)]}
           onChange={next => edit(0, draft => { if (next) loose(draft).table = next; else delete loose(draft).table; })}
         />
       </Field>
-      <Field label="По чему ищем строку" hint="Бросок кости — как таблица случайных встреч; число — как дистанция или уровень.">
+      <Field label={t('table.by.label')} hint={t('table.by.hint')}>
         <Select<string>
           value={by}
-          options={[['value', 'по числу или формуле'], ['dice', 'бросить кость']]}
+          options={[['value', t('table.by.value')], ['dice', t('table.by.dice')]]}
           onChange={next => edit(0, draft => {
             const d = loose(draft);
             if (next === 'dice') { delete d.value; d.dice = dieEntries(system).find(([, c]) => (c.dice ?? []).length === 1)?.[0] ?? { expr: '"1d6"' }; }
@@ -40,21 +42,21 @@ export function TableBody({ step, context, edit, system }: { step: Record<string
           })}
         />
       </Field>
-      <Field label="Какая колонка" hint="Что брать из найденной строки. Пусто — колонку «значение».">
+      <Field label={t('table.column.label')} hint={t('table.column.hint')}>
         <Select<string>
           value={typeof step.column === 'string' ? step.column : ''}
-          options={[['', '— значение —'], ...(((typeof step.table === 'string' ? system.tables?.[step.table]?.columns : undefined) ?? [])
+          options={[['', t('table.column.blank')], ...(((typeof step.table === 'string' ? system.tables?.[step.table]?.columns : undefined) ?? [])
             .filter(column => column.key !== 'value')
             .map(column => [column.key, column.label || column.key] as const))]}
           onChange={next => edit(0, draft => { if (next) loose(draft).column = next; else delete loose(draft).column; })}
         />
       </Field>
       {by === 'dice' ? (
-        <Field label="Какой костью">
+        <Field label={t('table.die.label')}>
           <div className="inline inline--tight">
             <Select<string>
               value={own ? OWN_DIE : picked}
-              options={[['', '— кость —'], ...dieEntries(system).filter(([, c]) => (c.dice ?? []).length === 1).map(([key, c]) => [key, c.label || key] as const), [OWN_DIE, 'своя кость…']]}
+              options={[['', t('table.die.blank')], ...dieEntries(system).filter(([, c]) => (c.dice ?? []).length === 1).map(([key, c]) => [key, c.label || key] as const), [OWN_DIE, t('table.die.own')]]}
               onChange={next => edit(0, draft => {
                 if (next === OWN_DIE) loose(draft).dice = { expr: JSON.stringify(dice(1, 6)) };
                 else if (next) loose(draft).dice = next;
@@ -66,9 +68,9 @@ export function TableBody({ step, context, edit, system }: { step: Record<string
           </div>
         </Field>
       ) : (
-        <Field label="Число">
+        <Field label={t('table.number.label')}>
           <ValueField
-            where="таблица · по чему"
+            where={t('table.number.where')}
             value={step.value} context={context}
             onChange={next => edit(0, draft => { if (next) loose(draft).value = next; else delete loose(draft).value; })}
           />
@@ -79,6 +81,7 @@ export function TableBody({ step, context, edit, system }: { step: Record<string
 }
 
 function DiceText({ value, onCommit }: { value: string; onCommit: (notation: string) => void }) {
+  const t = useT('stepCards');
   const [draft, setDraft] = useState<string | null>(null);
   const commit = () => {
     const notation = draft === null ? null : normalizeDice(draft);
@@ -86,7 +89,7 @@ function DiceText({ value, onCommit }: { value: string; onCommit: (notation: str
     setDraft(null);
   };
   return (
-    <Input mono value={draft ?? value} placeholder="1к10" invalid={draft !== null && !normalizeDice(draft)}
+    <Input mono value={draft ?? value} placeholder={t('table.dicePlaceholder')} invalid={draft !== null && !normalizeDice(draft)}
       onChange={setDraft} onBlur={commit} onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }} />
   );
 }

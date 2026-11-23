@@ -6,8 +6,8 @@ type Op = 'set' | 'add' | 'mul';
 
 const nextKey = (stages: readonly Stage[]): string => {
   let n = stages.length + 1;
-  while (stages.some(stage => stage.key === `этап_${n}`)) n += 1;
-  return `этап_${n}`;
+  while (stages.some(stage => stage.key === `stage_${n}`)) n += 1;
+  return `stage_${n}`;
 };
 
 export function StagesEditor({ stages, onChange }: {

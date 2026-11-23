@@ -1,5 +1,6 @@
 import { compile, AND, OR, NOT, FUNCTION_SPECS, DICE_BY_STEP } from '@vtt/engine';
 import type { Node } from '@vtt/engine';
+import { t } from '../../i18n/author.ts';
 
 export type Shape = 'number' | 'text' | 'bool' | 'any';
 
@@ -25,7 +26,7 @@ function shapeOf(node: Node, named: (tag: string) => Shape): Shape {
       if (isDice(node.operand)) throw new Clash(DICE_BY_STEP);
       const inner = shapeOf(node.operand, named);
       if (node.op === NOT) return 'bool';
-      if (node.op === '-' && inner === 'text') throw new Clash('минус перед словом');
+      if (node.op === '-' && inner === 'text') throw new Clash(t('fields:shape.minusWord'));
       return node.op === '-' ? 'number' : inner;
     }
     case 'Binary': {
@@ -36,7 +37,7 @@ function shapeOf(node: Node, named: (tag: string) => Shape): Shape {
       if (node.op === OR) return left === right ? left : 'any';
       if (!MATH.has(node.op)) return 'any';
       if (isDice(node.left) || isDice(node.right)) throw new Clash(DICE_BY_STEP);
-      if (left === 'text' || right === 'text') throw new Clash('слово нельзя складывать и умножать с числом');
+      if (left === 'text' || right === 'text') throw new Clash(t('fields:shape.wordMath'));
       return 'number';
     }
     case 'Conditional': {
@@ -62,8 +63,8 @@ export function shapeProblem(text: string, want: string, named: (tag: string) =>
     if (error instanceof Clash) return error.text;
     throw error;
   }
-  if (want === 'number' && got === 'text') return 'нужно число, а здесь слово';
-  if ((want === 'choice' || want === 'text') && got === 'number') return 'нужно слово, а здесь число';
+  if (want === 'number' && got === 'text') return t('fields:shape.wantNumber');
+  if ((want === 'choice' || want === 'text') && got === 'number') return t('fields:shape.wantWord');
   return null;
 }
 

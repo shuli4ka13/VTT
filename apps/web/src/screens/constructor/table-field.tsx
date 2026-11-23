@@ -9,8 +9,10 @@ import { Field, Input, Select, Chip, Button, NumInput, Segmented, Verdict, TextA
 import { useState } from 'react';
 import { ROW, NOTE_LIMIT, cellSource, onSheet, isSingle, fieldsOf, rowKeyOf, isFormulaCell } from '@vtt/engine';
 import type { System, Column, Control, SheetPart } from '@vtt/schema';
+import { useT, t as tr, dataT } from '../../i18n/author.ts';
 
 export function readyForSheet(draft: System, tableId: string): void {
+  const td = dataT(draft);
   const table = draft.tables?.[tableId];
   if (!table) return;
   const converting = !onSheet(table);
@@ -21,20 +23,21 @@ export function readyForSheet(draft: System, tableId: string): void {
   const taken = new Set(columns.map(c => c.key));
   let key = 'value';
   for (let n = 2; taken.has(key); n++) key = `value_${n}`;
-  columns.unshift({ key, label: 'Значение', kind: 'number' });
+  columns.unshift({ key, label: td('records:table.column.value'), kind: 'number' });
 }
 
 const parseStart = (text: string): number | string => (/^-?\d+(\.\d+)?$/.test(text) ? Number(text) : text);
 
-const SEES_OPTIONS: (readonly [string, string])[] = [
-  ['', 'все'], ['owner', 'тот, кто играет листом, и ведущий'], ['gm', 'только ведущий'], ['none', 'никто — служебное'],
+const seesOptions = (): (readonly [string, string])[] => [
+  ['', tr('records:table.sees.all')], ['owner', tr('records:table.sees.owner')], ['gm', tr('records:table.sees.gm')], ['none', tr('records:table.sees.none')],
 ];
 
-const EDITS_OPTIONS: (readonly [string, string])[] = [
-  ['', 'игрок'], ['gm', 'только ведущий'], ['none', 'никто — только правила'],
+const editsOptions = (): (readonly [string, string])[] => [
+  ['', tr('records:table.edits.player')], ['gm', tr('records:table.edits.gm')], ['none', tr('records:table.edits.none')],
 ];
 
 export function ColumnSheetFields({ tableId, column, system }: { tableId: string; column: Column; system: System }) {
+  const t = useT('records');
   const editColumn = useWorld(s => s.editColumn);
   const table = system.tables![tableId]!;
   const single = isSingle(table);
@@ -49,20 +52,20 @@ export function ColumnSheetFields({ tableId, column, system }: { tableId: string
 
   return (
     <>
-      <div className="inline inline--tight"><Chip>{stored ? 'вводит игрок' : 'считается'}</Chip></div>
+      <div className="inline inline--tight"><Chip>{stored ? t('table.stored') : t('table.computed')}</Chip></div>
       <div className="row">
-        <Field label="Видит">
-          <Select<string> label="кто видит" value={column.sees ?? ''}
-            options={SEES_OPTIONS}
+        <Field label={t('table.seesLabel')}>
+          <Select<string> label={t('table.seesAria')} value={column.sees ?? ''}
+            options={seesOptions()}
             onChange={next => edit(draft => {
               if (next) draft.sees = next as NonNullable<Column['sees']>; else delete draft.sees;
               if (next === 'none' && stored) draft.edits = 'none';
             })} />
         </Field>
         {stored ? (
-          <Field label="Правит">
-            <Select<string> label="кто правит" value={column.sees === 'none' ? 'none' : column.edits ?? ''}
-              options={column.sees === 'none' ? EDITS_OPTIONS.filter(([key]) => key === 'none') : EDITS_OPTIONS}
+          <Field label={t('table.editsLabel')}>
+            <Select<string> label={t('table.editsAria')} value={column.sees === 'none' ? 'none' : column.edits ?? ''}
+              options={column.sees === 'none' ? editsOptions().filter(([key]) => key === 'none') : editsOptions()}
               onChange={next => edit(draft => { if (next) draft.edits = next as NonNullable<Column['edits']>; else delete draft.edits; })} />
           </Field>
         ) : null}
@@ -70,24 +73,24 @@ export function ColumnSheetFields({ tableId, column, system }: { tableId: string
       <div className="row">
         {stored && !column.many ? (
           <div className="start-field">
-            <Field label="В новом листе">
+            <Field label={t('table.start')}>
               {column.kind === 'boolean' ? (
-                <Select<string> label="в новом листе" value={column.default === undefined ? '' : column.default ? 'да' : 'нет'}
-                  options={[['', '— не задано'], ['да', 'да'], ['нет', 'нет']]}
-                  onChange={next => edit(draft => { if (!next) delete draft.default; else draft.default = next === 'да'; })} />
+                <Select<string> label={t('table.startAria')} value={column.default === undefined ? '' : column.default ? 'yes' : 'no'}
+                  options={[['', t('table.notSet')], ['yes', t('common:yes')], ['no', t('common:no')]]}
+                  onChange={next => edit(draft => { if (!next) delete draft.default; else draft.default = next === 'yes'; })} />
               ) : column.kind === 'choice' && column.from && system.tables?.[column.from] ? (
-                <Select<string> label="в новом листе" value={column.default === undefined ? '' : String(column.default)}
-                  options={[['', '— не задано'], ...(system.tables[column.from]!.rows ?? []).map(row => [String(row.value), row.label ?? String(row.value)] as const)]}
+                <Select<string> label={t('table.startAria')} value={column.default === undefined ? '' : String(column.default)}
+                  options={[['', t('table.notSet')], ...(system.tables[column.from]!.rows ?? []).map(row => [String(row.value), row.label ?? String(row.value)] as const)]}
                   onChange={next => edit(draft => {
                     const row = (system.tables?.[column.from!]?.rows ?? []).find(r => String(r.value) === next);
                     if (!next || !row) delete draft.default; else draft.default = row.value as never;
                   })} />
               ) : column.kind === 'note' ? (
-                <TextArea rows={3} max={NOTE_LIMIT} value={typeof column.default === 'string' ? column.default : ''} placeholder="текст, с которым лист заводят"
+                <TextArea rows={3} max={NOTE_LIMIT} value={typeof column.default === 'string' ? column.default : ''} placeholder={t('table.startNote')}
                   onChange={text => edit(draft => { if (!text.trim()) delete draft.default; else draft.default = text; })} />
               ) : byFormula ? (
-                <BoundFormula value={column.default} system={system} placeholder="формула: поле равно ей, пока его не тронули"
-                  where={`${table.label || tableId} · ${column.label || column.key} · в новом листе`}
+                <BoundFormula value={column.default} system={system} placeholder={t('table.startFormula')}
+                  where={t('table.startWhere', { table: table.label || tableId, column: column.label || column.key })}
                   {...(single ? {} : { table: tableId, names: rowNames(system, tableId) })}
                   onChange={next => edit(draft => { if (next === null) delete draft.default; else draft.default = next; })} />
               ) : (
@@ -96,31 +99,31 @@ export function ColumnSheetFields({ tableId, column, system }: { tableId: string
               )}
             </Field>
             {numeric && byFormula ? (
-              <Button size="sm" variant="ghost" title="вписать само число"
-                onClick={() => { setAsFormula(false); if (isFormulaCell(column.default)) edit(draft => { delete draft.default; }); }}>число</Button>
+              <Button size="sm" variant="ghost" title={t('table.toNumberTitle')}
+                onClick={() => { setAsFormula(false); if (isFormulaCell(column.default)) edit(draft => { delete draft.default; }); }}>{t('table.toNumber')}</Button>
             ) : numeric ? (
-              <Button size="sm" variant="ghost" title="поле равно формуле, пока его не тронули: например, хиты равны максимуму"
-                onClick={() => setAsFormula(true)}>формула</Button>
+              <Button size="sm" variant="ghost" title={t('table.toFormulaTitle')}
+                onClick={() => setAsFormula(true)}>{t('table.toFormula')}</Button>
             ) : null}
           </div>
         ) : null}
         {single ? null : (
-          <Field label="Подпись">
+          <Field label={t('table.title')}>
             <Input value={column.title ?? ''} placeholder={first?.label ?? ''}
               onChange={next => edit(draft => { if (next.trim()) draft.title = next; else delete draft.title; })} />
           </Field>
         )}
       </div>
       {column.kind === 'note' ? null : (
-      <Field label="Бросок" hint="Как бросают — в «Правилах» → «Броски».">
+      <Field label={t('table.roll')} hint={t('table.rollHint')}>
         <div className="stack stack--tight">
           <Select
             value={rolled?.key ?? ''}
-            options={[['', 'не бросают'], ...Object.entries(system.rolls ?? {}).map(([key, roll]) => [key, roll.label || key] as const)] as never}
+            options={[['', t('table.noRoll')], ...Object.entries(system.rolls ?? {}).map(([key, roll]) => [key, roll.label || key] as const)] as never}
             onChange={next => editSystem(draft => setColumnRoll(draft, tableId, column.key, next || null))}
           />
           {rolled && single ? (
-            <TagsField system={system} value={rolled.entry.tags} empty="+ своё слово-метка…"
+            <TagsField system={system} value={rolled.entry.tags} empty={t('table.ownTag')}
               onChange={tags => editSystem(draft => setEntryTags(draft, tableId, column.key, tags.filter((t): t is string => typeof t === 'string')))} />
           ) : null}
         </div>
@@ -134,6 +137,8 @@ export const holds = (part: SheetPart, table: string, column: string, row?: stri
   part.table === table && (!part.columns || part.columns.includes(column)) && (!row || !part.rows || part.rows.includes(row));
 
 export function BlockViewField({ tableId, column, system, block, row, cell = row }: { tableId: string; column: Column; system: System; block: string; row?: string; cell?: string }) {
+  const t = useT('records');
+  const td = dataT(system);
   const editColumn = useWorld(s => s.editColumn);
   const editSystem = useWorld(s => s.editSystem);
   const table = system.tables![tableId]!;
@@ -168,26 +173,26 @@ export function BlockViewField({ tableId, column, system, block, row, cell = row
       if (!target) return;
       const columns = (target.columns ??= []);
       const at = columns.findIndex(c => c.key === column.key);
-      columns.splice(at, 0, { key, label: `Максимум: ${name}`, kind: 'number' });
+      columns.splice(at, 0, { key, label: td('records:table.column.max', { name }), kind: 'number' });
       const own = columns.find(c => c.key === column.key);
       if (own) own.max = { expr: single ? `@${key}` : `@${ROW}.${key}` };
     });
   };
   const title = row
-    ? `Вид «${own?.label ?? row}» в блоке «${block}»`
-    : single ? `Вид «${column.label || column.key}» в блоке «${block}»` : `Вид колонки «${column.label || column.key}» в блоке «${block}»`;
-  if (column.kind === 'note') return <span className="faint">Текст на листе — поле в несколько строк во всю ширину блока.</span>;
+    ? t('table.viewRow', { name: own?.label ?? row, block })
+    : single ? t('table.viewRow', { name: column.label || column.key, block }) : t('table.viewColumn', { name: column.label || column.key, block });
+  if (column.kind === 'note') return <span className="faint">{t('table.note')}</span>;
   return (
     <>
       <Field label={title}>
         <ViewGallery
-          label={row ? title : 'Вид'}
+          label={row ? title : t('table.view')}
           value={kind}
           family={columnFamily(column)}
           computed={!stored}
           plain={row
-            ? { label: 'Как у колонки', hint: base ? `вид колонки в этом блоке: ${VIEWS[base.kind].label}` : 'у колонки в этом блоке вида нет — как есть' }
-            : { label: 'Как есть', hint: stored ? 'окошко: игрок вписывает число или текст' : 'значение без оформления — его считает формула, вписать нельзя' }}
+            ? { label: t('table.likeColumn'), hint: base ? t('table.likeColumnHint', { view: VIEWS[base.kind].label }) : t('table.noColumnView') }
+            : { label: t('table.plain'), hint: stored ? t('table.plainStored') : t('table.plainComputed') }}
           needs={next => viewNeeds(next, column)}
           onChange={next => editView(views => {
             if (!next) { delete views[key]; return; }
@@ -206,64 +211,64 @@ export function BlockViewField({ tableId, column, system, block, row, cell = row
       </Field>
       {kind && (!row || !base) && (lacking.length || takesBounds(kind, column) || TAKES_STEP.includes(kind) || ['bar', 'toggle', 'ring', 'choice', 'chips'].includes(kind)) ? (
         <div className="view-settings">
-          {lacking.length ? <Verdict tone="warn">Виду «{VIEWS[kind].label}» не хватает: {lacking.join(', ')}. Пока не задано, на листе вместо него «—».</Verdict> : null}
+          {lacking.length ? <Verdict tone="warn">{t('table.lacking', { view: VIEWS[kind].label, what: lacking.join(', ') })}</Verdict> : null}
           {takesBounds(kind, column) ? (
             <div className="row">
-              <Field label={kind === 'slider' || kind === 'ring' || kind === 'choice' ? 'Низ' : 'Не ниже'}>
-                <BoundFormula value={column.min} system={system} table={tableId} {...(single ? {} : { names: rowNames(system, tableId) })} where={`${table.label || tableId} · ${column.label || column.key} · низ`}
+              <Field label={kind === 'slider' || kind === 'ring' || kind === 'choice' ? t('table.low') : t('table.notBelow')}>
+                <BoundFormula value={column.min} system={system} table={tableId} {...(single ? {} : { names: rowNames(system, tableId) })} where={t('table.whereLow', { table: table.label || tableId, column: column.label || column.key })}
                   onChange={next => edit(draft => { if (next === null) delete draft.min; else draft.min = next; })} />
               </Field>
-              <Field label={kind === 'stepper' ? 'Не выше' : kind === 'ring' || kind === 'choice' ? 'Верх' : 'Верх — сколько всего'}>
-                <BoundFormula value={column.max} system={system} table={tableId} {...(single ? {} : { names: rowNames(system, tableId) })} where={`${table.label || tableId} · ${column.label || column.key} · верх`} placeholder="число или формула: 3 или название поля"
+              <Field label={kind === 'stepper' ? t('table.notAbove') : kind === 'ring' || kind === 'choice' ? t('table.top') : t('table.topTotal')}>
+                <BoundFormula value={column.max} system={system} table={tableId} {...(single ? {} : { names: rowNames(system, tableId) })} where={t('table.whereTop', { table: table.label || tableId, column: column.label || column.key })} placeholder={t('table.topPlaceholder')}
                   onChange={next => edit(draft => { if (next === null) delete draft.max; else draft.max = next; })} />
               </Field>
             </div>
           ) : null}
           {takesBounds(kind, column) && column.max === undefined && kind !== 'stepper' ? (
-            <Button size="sm" variant="ghost" onClick={addTop}>+ колонка для верха</Button>
+            <Button size="sm" variant="ghost" onClick={addTop}>{t('table.addTop')}</Button>
           ) : null}
           {TAKES_STEP.includes(kind) ? (
-            <Field label="Шаг">
+            <Field label={t('table.step')}>
               <NumInput value={control?.step ?? 1} least={0}
                 onCommit={n => setControl({ step: n > 0 && n !== 1 ? n : undefined })} />
             </Field>
           ) : null}
           {kind === 'bar' ? (
-            <Field label="Красная, когда">
+            <Field label={t('table.redWhen')}>
               <Segmented value={control?.worse ?? 'low'}
-                options={[{ key: 'low', label: 'мало' }, { key: 'high', label: 'много' }]}
+                options={[{ key: 'low', label: t('table.worseLow') }, { key: 'high', label: t('table.worseHigh') }]}
                 onChange={next => setControl({ worse: next === 'high' ? 'high' : undefined })} />
             </Field>
           ) : null}
           {kind === 'bar' && stored ? (
             <div className="row">
-              <Field label="Кнопка «отнять»">
+              <Field label={t('table.minusButton')}>
                 <Input value={control?.minus ?? ''} placeholder="−" onChange={text => setControl({ minus: text.trim() || undefined })} />
               </Field>
-              <Field label="Кнопка «прибавить»">
+              <Field label={t('table.plusButton')}>
                 <Input value={control?.plus ?? ''} placeholder="+" onChange={text => setControl({ plus: text.trim() || undefined })} />
               </Field>
             </div>
           ) : null}
           {kind === 'toggle' || ((kind === 'ring' || kind === 'choice') && column.kind === 'boolean') ? (
             <div className="row">
-              <Field label="Подпись «да»">
-                <Input value={control?.yes ?? ''} placeholder="да" onChange={text => setControl({ yes: text.trim() || undefined })} />
+              <Field label={t('table.yesLabel')}>
+                <Input value={control?.yes ?? ''} placeholder={t('common:yes')} onChange={text => setControl({ yes: text.trim() || undefined })} />
               </Field>
-              <Field label="Подпись «нет»">
-                <Input value={control?.no ?? ''} placeholder="нет" onChange={text => setControl({ no: text.trim() || undefined })} />
+              <Field label={t('table.noLabel')}>
+                <Input value={control?.no ?? ''} placeholder={t('common:no')} onChange={text => setControl({ no: text.trim() || undefined })} />
               </Field>
             </div>
           ) : null}
           {kind === 'ring' || kind === 'choice' || kind === 'chips' ? (
             <span className="faint">
               {column.kind === 'boolean'
-                ? <>Две ступени: «нет» и «да» — подписи выше.</>
+                ? <>{t('table.stepsBool')}</>
                 : column.kind !== 'choice' && kind !== 'chips'
-                  ? <>Ступени — числа от низа до верха (не больше 8). Нужны слова — тип «выбор» и таблица.</>
+                  ? <>{t('table.stepsNumbers')}</>
                   : column.from
-                    ? <>Ступени — строки таблицы «{system.tables?.[column.from]?.label || column.from}» по порядку; подписи берутся оттуда.</>
-                    : <>Варианты задаются так: тип «выбор» → «Из таблицы».</>}
+                    ? <>{t('table.stepsTable', { table: system.tables?.[column.from]?.label || column.from })}</>
+                    : <>{t('table.stepsNone')}</>}
             </span>
           ) : null}
         </div>

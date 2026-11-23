@@ -6,12 +6,13 @@ import type { System, Effect } from '@vtt/schema';
 import { SAMPLE_SYSTEMS, PIECES, bringPiece, donorOf } from '@vtt/engine/samples';
 import { bringIn, blockParts, closure, blockLine, launchOf, LAUNCHES, fieldsOf, fieldOf, kindOf, NO_BLOCK, blockLabel } from '@vtt/engine';
 import type { Part, PartKind } from '@vtt/engine';
-import { counted } from '../../ui/plural.ts';
+import { useT, t as tr, Trans } from '../../i18n/author.ts';
 import { defaultDonor, effectStanding, fieldsStanding, ownWords, piecesStanding } from './donor-compare.ts';
 
 const DONORS = SAMPLE_SYSTEMS as System[];
 
 export function DonorPalette({ kind }: { kind: 'blocks' | 'effects' }) {
+  const t = useT('records');
   const [donorId, setDonorId] = useState<string>(() => {
     const now = useWorld.getState();
     return defaultDonor(now.system, DONORS, now.origin.systemId);
@@ -23,14 +24,14 @@ export function DonorPalette({ kind }: { kind: 'blocks' | 'effects' }) {
       <FreshNote />
       <Select
         value={donorId}
-        options={[['*', 'все системы'], ...DONORS.map(d => [d.id ?? '', d.name ?? ''] as const)] as never}
+        options={[['*', t('donors.all')], ...DONORS.map(d => [d.id ?? '', d.name ?? ''] as const)] as never}
         onChange={setDonorId}
       />
       {donors.map(donor => (
         <div key={donor.id} className="stack stack--tight">
           <span className="field__label">{donor.name}</span>
           <Pieces donor={donor} />
-          <Fold title={kind === 'blocks' ? 'Отдельные блоки' : 'Отдельные эффекты'}>
+          <Fold title={kind === 'blocks' ? t('donors.blocks') : t('donors.effects')}>
             {kind === 'blocks' ? <Blocks donor={donor} /> : <Effects donor={donor} />}
           </Fold>
         </div>
@@ -48,13 +49,10 @@ export function findDonorBlock(tag: string): { donor: System; group: string } | 
 }
 
 export function copyDonorBlock(donor: System, group: string): void {
-  bring(`Блок «${blockLabel(donor, group)}»`, system => bringIn(system, donor, blockParts(donor, group)));
+  bring(tr('records:donors.blockBrought', { name: blockLabel(donor, group) }), system => bringIn(system, donor, blockParts(donor, group)));
 }
 
-const PART_WORDS: Record<PartKind, string> = {
-  field: 'Поля', group: 'Папки', block: 'Блоки листа', effect: 'Эффекты', table: 'Таблицы',
-  constant: 'Кости', rollEdit: 'Правки броска', recordKind: 'Книги', record: 'Записи', roll: 'Броски',
-};
+const partWord = (kind: PartKind): string => tr(`records:donors.part.${kind}`);
 
 const PART_ORDER: PartKind[] = ['field', 'block', 'effect', 'record', 'recordKind', 'table', 'roll', 'rollEdit', 'constant', 'group'];
 
@@ -74,6 +72,7 @@ function partLabel(system: System, part: Part): string {
 }
 
 function FreshNote() {
+  const t = useT('records');
   const fresh = useCurrentFresh();
   const pick = useWorld(s => s.pick);
   if (!fresh) return null;
@@ -86,17 +85,17 @@ function FreshNote() {
   return (
     <div className="fresh">
       <div className="fresh__head">
-        <span><b>{fresh.label}</b> — добавлено</span>
-        <Button size="sm" variant="ghost" onClick={undoFresh}>отменить</Button>
+        <span><Trans i18nKey="records:donors.added" values={{ label: fresh.label }} components={{ b: <b /> }} /></span>
+        <Button size="sm" variant="ghost" onClick={undoFresh}>{t('donors.undo')}</Button>
       </div>
-      <Fold title="что пришло" count={fresh.added.length}>
+      <Fold title={t('donors.came')} count={fresh.added.length}>
         <div className="stack stack--tight">
           {PART_ORDER.map(kind => {
             const parts = fresh.added.filter(part => part.kind === kind);
             if (!parts.length) return null;
             return (
               <div key={kind} className="fresh__row">
-                <span className="faint">{PART_WORDS[kind]}:</span>{' '}
+                <span className="faint">{partWord(kind)}:</span>{' '}
                 {parts.map((part, at) => (
                   <span key={part.key}>
                     {part.kind === 'field' || part.kind === 'effect'
@@ -115,6 +114,7 @@ function FreshNote() {
 }
 
 function Pieces({ donor }: { donor: System }) {
+  const t = useT('records');
   const system = useWorld(s => s.system);
   const pieces = useMemo(
     () => PIECES.filter(piece => piece.donor === donor.id && donorOf(piece))
@@ -140,7 +140,7 @@ function Pieces({ donor }: { donor: System }) {
         >
           <span className="card__title">{piece.label}</span>
           <span className="card__sub card__sub--clamp">
-            {standing === 'new' ? piece.hint : standing === 'own' && own ? ownWords(partLabel(system, own)) : 'уже в системе'}
+            {standing === 'new' ? piece.hint : standing === 'own' && own ? ownWords(partLabel(system, own)) : t('donors.already')}
           </span>
         </button>
       ))}
@@ -149,6 +149,7 @@ function Pieces({ donor }: { donor: System }) {
 }
 
 function Blocks({ donor }: { donor: System }) {
+  const t = useT('records');
   const system = useWorld(s => s.system);
 
   const blocks = useMemo(() => {
@@ -183,8 +184,8 @@ function Blocks({ donor }: { donor: System }) {
           >
             <span className="card__title">{blockLabel(donor, group)}</span>
             <span className="card__sub">
-              {standing === 'same' ? 'уже в системе' : standing === 'own' ? ownWords(blockLabel(donor, group)) : `полей: ${count}`}
-              {!already && brings.length > 1 ? ` · и ещё ${counted(brings.length - 1, 'блок', 'блока', 'блоков')}` : ''}
+              {standing === 'same' ? t('donors.already') : standing === 'own' ? ownWords(blockLabel(donor, group)) : t('donors.fields', { n: count })}
+              {!already && brings.length > 1 ? ` · ${t('donors.moreBlocks', { count: brings.length - 1 })}` : ''}
             </span>
           </button>
         );
@@ -194,11 +195,12 @@ function Blocks({ donor }: { donor: System }) {
 }
 
 function Effects({ donor }: { donor: System }) {
+  const t = useT('records');
   const system = useWorld(s => s.system);
   const pick = useWorld(s => s.pick);
 
   const list = Object.entries(donor.effects);
-  if (!list.length) return <Empty title="У этого донора эффектов нет" />;
+  if (!list.length) return <Empty title={t('donors.noEffects')} />;
 
   const copy = (id: string, effect: Effect) => {
     bring(`«${effect.label ?? id}»`, current => bringIn(current, donor, [{ kind: 'effect', key: id }]));
@@ -221,7 +223,7 @@ function Effects({ donor }: { donor: System }) {
           >
             <span className="card__title">{effect.label ?? id}</span>
             <span className="card__sub">
-              {standing === 'same' ? 'уже в системе' : standing === 'own' ? ownWords(effect.label ?? id) : `${effect.group ? blockLabel(donor, effect.group) : 'Механики'} · ${activationWord(effect)}`}
+              {standing === 'same' ? t('donors.already') : standing === 'own' ? ownWords(effect.label ?? id) : `${effect.group ? blockLabel(donor, effect.group) : t('donors.mechanics')} · ${activationWord(effect)}`}
             </span>
           </button>
         );

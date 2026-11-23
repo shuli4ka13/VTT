@@ -7,6 +7,7 @@ import { FormulaField } from '../../ui/formula-field.tsx';
 import { formulaWords } from '../../ui/formula-words.ts';
 import type { SheetNames } from '../../ui/formula-chips.tsx';
 import { splitHolder, joinHolder, holderIn } from './guard-expr.ts';
+import { useT, t } from '../../i18n/author.ts';
 
 export type QuickKind = 'boolean' | 'number' | 'text' | 'tags';
 
@@ -16,7 +17,7 @@ export interface Phrase { expr: string; label: string }
 
 export const holderPhrase = (name: string): string => `@${name} == @${HOLDER}`;
 
-export const yesNo = (one: QuickRef): [string, string] => (one.no !== undefined ? [one.label, one.no] : [`${one.label} — да`, `${one.label} — нет`]);
+export const yesNo = (one: QuickRef): [string, string] => (one.no !== undefined ? [one.label, one.no] : [t('fields:cond.yes', { label: one.label }), t('fields:cond.no', { label: one.label })]);
 
 const compiles = (text: string): boolean => {
   try { compile(text); return true; } catch { return false; }
@@ -26,7 +27,7 @@ export function readyOf(quick: readonly QuickRef[], phrases: readonly Phrase[]):
   return [
     ...phrases.map(one => [one.expr, one.label] as const),
     ...quick.flatMap((one): (readonly [string, string])[] => {
-      if (one.kind === 'tags') return (one.tags ?? []).map(tag => [`has(@${one.ref}, ${JSON.stringify(tag)})`, `${one.label}: «${tag}»`] as const);
+      if (one.kind === 'tags') return (one.tags ?? []).map(tag => [`has(@${one.ref}, ${JSON.stringify(tag)})`, t('fields:cond.tag', { label: one.label, tag })] as const);
       if (one.kind !== 'boolean') return [];
       const [yes, no] = yesNo(one);
       return [[`@${one.ref}`, yes] as const, [`not @${one.ref}`, no] as const];
@@ -36,7 +37,7 @@ export function readyOf(quick: readonly QuickRef[], phrases: readonly Phrase[]):
 
 export function ConditionField({
   value, onChange, system, holders = [], quick = [], phrases = [], names, tables, sheets, where, placeholder,
-  title = 'Только если', holderLabel = 'Кого касается', holderHint, holderTip, aside, ruleHint, bare = false, spoken, tail,
+  title: titleProp, holderLabel: holderLabelProp, holderHint, holderTip, aside, ruleHint, bare = false, spoken, tail,
 }: {
   value: string | undefined;
   onChange: (expr: string | null) => void;
@@ -60,6 +61,9 @@ export function ConditionField({
   spoken?: boolean;
   tail?: string;
 }) {
+  const t = useT('fields');
+  const title = titleProp ?? t('cond.title');
+  const holderLabel = holderLabelProp ?? t('cond.holder');
   const options = holders.map(([name, label]) => [holderPhrase(name), label] as const);
   const { holder, rest } = splitHolder(value, options.map(([expr]) => expr));
   const write = (nextHolder: string, nextRest: string) =>
@@ -68,10 +72,10 @@ export function ConditionField({
   const said = rest.trim() && compiles(rest) ? `${formulaWords(system, rest, names, tables)}${tail ? ` — ${tail}` : ''}` : '';
 
   const holderField = options.length ? (
-    <Field label={holderLabel} {...(holderTip ? { tip: holderTip } : { hint: holderHint ?? 'Носитель — лист, на котором это висит.' })}>
+    <Field label={holderLabel} {...(holderTip ? { tip: holderTip } : { hint: holderHint ?? t('cond.holderHint') })}>
       <Select<string>
         value={holder}
-        options={[['', 'всех — без условия'], ...options]}
+        options={[['', t('cond.all')], ...options]}
         onChange={next => write(next, rest)}
       />
     </Field>
@@ -91,7 +95,7 @@ export function ConditionField({
               {...(names ? { extraNames: names } : {})}
               {...(sheets ? { sheets } : {})}
               {...(placeholder ? { placeholder } : {})}
-              {...(ready.length ? { options: ready.map(([expr, label]): BarOption => ({ group: 'частые условия', label, onPick: (insert, bar) => bar.write(insert(expr)) })) } : {})}
+              {...(ready.length ? { options: ready.map(([expr, label]): BarOption => ({ group: t('cond.common'), label, onPick: (insert, bar) => bar.write(insert(expr)) })) } : {})}
               {...(said && spoken !== false ? { spoken: said } : {})}
               onCommit={next => write(holder, next.trim())}
             />

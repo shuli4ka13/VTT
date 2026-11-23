@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { DangerButton } from '../../../ui/primitives.tsx';
+import { useT } from '../../../i18n/author.ts';
 
 export function WhileWhenRow({ when, named = false, label, title, removeTitle, onOpen, onRemove, children }: {
   when: boolean;
@@ -11,9 +12,10 @@ export function WhileWhenRow({ when, named = false, label, title, removeTitle, o
   onRemove: () => void;
   children: ReactNode;
 }) {
+  const t = useT('effects');
   const inside = (
     <>
-      {when || named ? <span className="mod-row__kind">{when ? 'когда' : 'пока'}</span> : null}
+      {when || named ? <span className="mod-row__kind">{when ? t('whileWhen.kindWhen') : t('whileWhen.kindWhile')}</span> : null}
       <span className="mod-row__phrase">{children}</span>
     </>
   );

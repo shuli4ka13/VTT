@@ -8,10 +8,12 @@ import type { DiceMode } from '../../../engine/dry-run.ts';
 import type { Sheet, StoredValue } from '@vtt/schema';
 import { DonorPalette } from '../donors.tsx';
 import { fieldOf } from '@vtt/engine';
+import { useT } from '../../../i18n/author.ts';
 
-const DICE_OPTIONS = (Object.keys(DICE_MODES) as DiceMode[]).map(key => [key, DICE_MODES[key].label] as const);
+const diceOptions = () => (Object.keys(DICE_MODES) as DiceMode[]).map(key => [key, DICE_MODES[key].label] as const);
 
 export function PreviewPanel({ effectId }: { effectId: string | null }) {
+  const t = useT('effects');
   const system = useWorld(s => s.system);
   const compendium = useBook();
   const [tab, setTab] = useState<'donors' | 'trial'>('donors');
@@ -35,7 +37,7 @@ export function PreviewPanel({ effectId }: { effectId: string | null }) {
     <>
       <Segmented
         value={tab}
-        options={[{ key: 'donors' as const, label: 'Готовое' }, { key: 'trial' as const, label: 'Проба' }]}
+        options={[{ key: 'donors' as const, label: t('preview.donors') }, { key: 'trial' as const, label: t('preview.trial') }]}
         onChange={setTab}
       />
 
@@ -43,21 +45,21 @@ export function PreviewPanel({ effectId }: { effectId: string | null }) {
 
       {tab === 'trial' ? (
         !effectId
-          ? <Empty title="Выберите эффект" hint="Проба показывает, что эффект сделает: А применяет его к Б." />
+          ? <Empty title={t('preview.pickTitle')} hint={t('preview.pickHint')} />
           : (
             <>
               <Card>
-                <CardHead title="Кость" sub={DICE_MODES[dice].hint} />
-                <Select value={dice} options={DICE_OPTIONS as never} onChange={setDice} />
+                <CardHead title={t('preview.die')} sub={DICE_MODES[dice].hint} />
+                <Select value={dice} options={diceOptions() as never} onChange={setDice} />
               </Card>
 
               {run?.trouble ? <Verdict tone="bad">{run.trouble}</Verdict> : null}
 
               {run && !run.trouble ? (
                 <Card>
-                  <CardHead title="Что вышло" sub={`${before!.name} применяет эффект к ${after!.name}`} />
+                  <CardHead title={t('preview.result')} sub={t('preview.applies', { actor: before!.name, target: after!.name })} />
                   {run.lines.length === 0
-                    ? <span className="faint">Эффект ничего не сделал.</span>
+                    ? <span className="faint">{t('preview.nothing')}</span>
                     : run.lines.map((line, at) => <p key={at} className="trial__line">{line}</p>)}
                   {run.changes.length ? (
                     <div className="stack stack--tight">
@@ -71,14 +73,14 @@ export function PreviewPanel({ effectId }: { effectId: string | null }) {
                 </Card>
               ) : null}
 
-              <SheetView system={system} sheet={target} reader={reader} badge="после пробы" />
+              <SheetView system={system} sheet={target} reader={reader} badge={t('preview.after')} />
 
               <Card>
-                <CardHead title="Кто участвует" sub="Два новых листа. Числа можно поправить — только для пробы, ничего не сохраняется." />
-                {Object.keys(own).length ? <button type="button" className="linkish" onClick={() => setOwn({})}>вернуть как в новом листе</button> : null}
+                <CardHead title={t('preview.who')} sub={t('preview.whoSub')} />
+                {Object.keys(own).length ? <button type="button" className="linkish" onClick={() => setOwn({})}>{t('preview.reset')}</button> : null}
               </Card>
-              <SheetView system={system} sheet={before} reader={actorReader} badge="действует" onChange={write(before.id)} />
-              <SheetView system={system} sheet={after} reader={targetReader} badge="цель" onChange={write(after.id)} />
+              <SheetView system={system} sheet={before} reader={actorReader} badge={t('preview.actor')} onChange={write(before.id)} />
+              <SheetView system={system} sheet={after} reader={targetReader} badge={t('preview.target')} onChange={write(after.id)} />
             </>
           )
       ) : null}

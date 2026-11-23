@@ -11,6 +11,7 @@ import { readGuard, writeGuard } from '../../guard-expr.ts';
 import { yesNo } from '../../condition-field.tsx';
 import type { QuickRef } from '../../condition-field.tsx';
 import { functionSpec } from '@vtt/engine';
+import { useT } from '../../../../i18n/author.ts';
 
 const quoted = (text: string): string => (text.includes('"') ? `'${text}'` : `"${text}"`);
 
@@ -20,11 +21,12 @@ const isFormula = (text: string): boolean => {
   return Boolean(call && functionSpec(call[1]!.trim()));
 };
 
-export function NoteField({ value, onChange, placeholder = 'например: не хватает ячейки' }: {
+export function NoteField({ value, onChange, placeholder }: {
   value: unknown;
   onChange: (next: { expr: string } | null) => void;
   placeholder?: string;
 }) {
+  const t = useT('stepCards');
   const expr = value && typeof value === 'object' ? String((value as { expr?: unknown }).expr ?? '') : '';
   const literal = /^(["'])(.*)\1$/su.exec(expr.trim());
   const shown = literal ? literal[2]! : expr;
@@ -39,7 +41,7 @@ export function NoteField({ value, onChange, placeholder = 'например: н
     if (text.includes('"') && text.includes("'")) { onChange({ expr: quoted(text.replace(/"/g, '«').replace(/'/g, '»')) }); return; }
     onChange({ expr: quoted(text) });
   };
-  return <Input value={draft ?? shown} placeholder={placeholder} onChange={setDraft} onBlur={commit} />;
+  return <Input value={draft ?? shown} placeholder={placeholder ?? t('note.placeholder')} onChange={setDraft} onBlur={commit} />;
 }
 
 export function StopStrip({ step, position, problem, edit, actions }: {
@@ -49,14 +51,15 @@ export function StopStrip({ step, position, problem, edit, actions }: {
   edit: (change: (draft: Step) => void) => void;
   actions: ReactNode;
 }) {
+  const t = useT('stepCards');
   const note = (step as { note?: unknown }).note;
   return (
-    <div className={`flow-stop${problem ? ' flow-stop--bad' : ''}`} title="Дальше не идём. До «Для каждого из» и в цене — действие не состоялось; в теле — стоп для этой цели.">
+    <div className={`flow-stop${problem ? ' flow-stop--bad' : ''}`} title={t('stop.hint')}>
       <span className="flow-stop__mark" aria-hidden>■</span>
-      <span className="flow-stop__word">{position} · Стоп</span>
-      <span className="faint">в журнал:</span>
+      <span className="flow-stop__word">{t('stop.word', { n: position })}</span>
+      <span className="faint">{t('stop.log')}</span>
       <span className="flow-stop__note">
-        <NoteField value={note} placeholder="«стоп»" onChange={next => edit(draft => {
+        <NoteField value={note} placeholder={t('stop.note')} onChange={next => edit(draft => {
           const d = draft as { note?: unknown };
           if (next) d.note = next; else delete d.note;
         })} />
@@ -95,6 +98,7 @@ export function FlowHead({ word, step, context, earlier, required, edit, actions
   problem: string | null;
   tail?: string;
 }) {
+  const t = useT('stepCards');
   const written = (step as { if?: { expr?: string } }).if?.expr;
   const bare = !required && written === undefined;
   return (
@@ -113,8 +117,8 @@ export function FlowHead({ word, step, context, earlier, required, edit, actions
           {...(context.tables ? { tables: context.tables } : {})}
           {...(context.sheets ? { sheets: context.sheets } : {})}
           {...(tail ? { tail } : {})}
-          where={`${word.toLowerCase()} · условие`}
-          placeholder="например: шаг.natural >= 19"
+          where={t('head.where', { word: word.toLowerCase() })}
+          placeholder={t('head.placeholder')}
         />
       )}
       {problem ? <span className="field__error">{problem}</span> : null}
@@ -130,21 +134,22 @@ export function OutcomePick({ quick, value, onPick, onFormula }: {
   onPick: (expr: string) => void;
   onFormula: () => void;
 }) {
+  const t = useT('stepCards');
   const when = readGuard(value);
   const current = when ? writeGuard({ ref: when.ref, ...(when.not ? { not: true } : {}) }) : '';
   const own = (one: QuickRef) => writeGuard({ ref: one.ref, ...(when?.ref === one.ref && when.not ? { not: true } : {}) });
   return (
     <Select<string>
       value={current}
-      options={[['', '— что проверяем —'],
+      options={[['', t('outcome.blank')],
         ...quick.map(one => [own(one), yesNo(one).join(' / ')] as const),
-        [BY_FORMULA, 'формулой…']]}
+        [BY_FORMULA, t('outcome.formula')]]}
       onChange={next => { if (next === BY_FORMULA) onFormula(); else if (next) onPick(next); }}
     />
   );
 }
 
-export function StepHead({ position, words, word = 'Если', open, onToggle, problem, actions, cond }: {
+export function StepHead({ position, words, word, open, onToggle, problem, actions, cond }: {
   position: number;
   words: string;
   word?: string;
@@ -154,16 +159,17 @@ export function StepHead({ position, words, word = 'Если', open, onToggle, p
   problem: string | null;
   actions: ReactNode;
 }) {
+  const t = useT('stepCards');
   return (
-    <HeadFrame word={`${position} · ${word}`} bad={Boolean(problem)} actions={actions}>
+    <HeadFrame word={`${position} · ${word ?? t('head.if')}`} bad={Boolean(problem)} actions={actions}>
       {cond ? (
         <>
           {cond}
-          <button type="button" className="step-fold" aria-expanded={open} title={open ? 'свернуть поля шага' : 'показать поля шага'} onClick={onToggle}>
-            {open ? '▾' : '▸'} шаг
+          <button type="button" className="step-fold" aria-expanded={open} title={open ? t('head.hide') : t('head.show')} onClick={onToggle}>
+            {open ? '▾' : '▸'} {t('head.step')}
           </button>
         </>
-      ) : <button type="button" className="step-fold flow-head__words" aria-expanded={open} title={open ? 'свернуть поля шага' : 'показать поля шага'} onClick={onToggle}>
+      ) : <button type="button" className="step-fold flow-head__words" aria-expanded={open} title={open ? t('head.hide') : t('head.show')} onClick={onToggle}>
         {words}
       </button>}
       {problem && !open ? <span className="field__error">{problem}</span> : null}
@@ -181,9 +187,7 @@ export function ArmLabel({ word, actions }: { word: string; actions: ReactNode }
   );
 }
 
-export const KEEP_STEPS = 'только развилку — шаги останутся';
-
-export function FlowActions({ onUp, onDown, onDelete, onKeep, extra, deleteLabel = 'Удалить', upTitle = 'выше', downTitle = 'ниже' }: {
+export function FlowActions({ onUp, onDown, onDelete, onKeep, extra, deleteLabel, upTitle, downTitle }: {
   onUp?: (() => void) | undefined;
   onDown?: (() => void) | undefined;
   onDelete?: (() => void) | undefined;
@@ -193,16 +197,19 @@ export function FlowActions({ onUp, onDown, onDelete, onKeep, extra, deleteLabel
   upTitle?: string | undefined;
   downTitle?: string | undefined;
 }) {
+  const t = useT('stepCards');
+  const up = upTitle ?? t('group.up');
+  const down = downTitle ?? t('group.down');
   return (
     <>
       {extra}
       {onUp || onDown ? (
         <>
-          <Button size="sm" variant="ghost" title={upTitle} disabled={!onUp} onClick={onUp}>↑</Button>
-          <Button size="sm" variant="ghost" title={downTitle} disabled={!onDown} onClick={onDown}>↓</Button>
+          <Button size="sm" variant="ghost" title={up} disabled={!onUp} onClick={onUp}>↑</Button>
+          <Button size="sm" variant="ghost" title={down} disabled={!onDown} onClick={onDown}>↓</Button>
         </>
       ) : null}
-      {onDelete ? <DangerButton size="sm" onConfirm={onDelete} keep={onKeep ? { label: KEEP_STEPS, run: onKeep } : undefined}>{deleteLabel}</DangerButton> : null}
+      {onDelete ? <DangerButton size="sm" onConfirm={onDelete} keep={onKeep ? { label: t('actions.keep'), run: onKeep } : undefined}>{deleteLabel ?? t('common:delete')}</DangerButton> : null}
     </>
   );
 }

@@ -24,6 +24,7 @@ import { CallEditor } from '../../call-editor.tsx';
 import { ConditionField } from '../../condition-field.tsx';
 import { TargetPick } from '../../field-target.tsx';
 import { TypedPick } from '../../typed-pick.tsx';
+import { useT, dataT } from '../../../../i18n/author.ts';
 
 function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onCreateFromRecord }: {
   amount?: Step;
@@ -36,6 +37,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
   withNumber?: WithNumber;
   onCreateFromRecord?: () => SlotRef;
 }) {
+  const t = useT('stepCards');
   const [draft, setDraft] = useState<string | null>(null);
   const [trouble, setTrouble] = useState<string | null>(null);
   const рядом = useMemo(() => stepNames(context), [context]);
@@ -68,9 +70,9 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
   const sentChip = (label: ReactNode, onRemove: () => void, key: string) => (
     <span key={key} className="chips__chip chips__chip--sent">
       {label}
-      <span className="chips__side chips__side--calc" title="считается шагом-расчётом раньше изменения">расчёт</span>
+      <span className="chips__side chips__side--calc" title={t('change.calc.hint')}>{t('change.calc.label')}</span>
       <button
-        type="button" className="chips__x" aria-label="убрать слагаемое"
+        type="button" className="chips__x" aria-label={t('change.removeTerm')}
         onMouseDown={e => { e.preventDefault(); onRemove(); }}
       >×</button>
     </span>
@@ -117,7 +119,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
     };
     if (!withNumber && !amountId) {
 
-      setTrouble('кость бросает отдельный шаг — заведите шаг «бросок» и назовите его');
+      setTrouble(t('change.diceByStep'));
       return;
     }
     if (withNumber) withNumber(put);
@@ -178,7 +180,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
 
 
   const needs = (context.effect.params ?? []).map(p => ({
-    group: 'из записи',
+    group: t('change.group.record'),
     label: p.label ?? p.key,
     onPick: (insert: (piece: string) => string, bar: BarApi) => {
       if (p.kind !== 'dice') { bar.write(insert(`@${p.key}`)); return; }
@@ -188,8 +190,8 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
   }));
   if (onCreateFromRecord) {
     needs.push({
-      group: 'из записи',
-      label: 'новый вход…',
+      group: t('change.group.record'),
+      label: t('change.newInput'),
       onPick: (insert: (piece: string) => string, bar: BarApi) => { bar.dismiss(); putIntoAmount(onCreateFromRecord(), insert); },
     });
   }
@@ -197,7 +199,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
   for (const output of outputRefs(context.earlier)) {
     if (output.kind !== 'number') continue;
     needs.push({
-      group: 'результат шага',
+      group: t('change.group.result'),
       label: output.label,
       onPick: (_insert: (piece: string) => string, bar: BarApi) => {
         bar.dismiss();
@@ -214,7 +216,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
   for (const [key, c] of Object.entries(context.system.constants ?? {})) {
     if (c.kind !== 'die') continue;
     needs.push({
-      group: 'кость системы',
+      group: t('change.group.die'),
       label: c.label || key,
       onPick: (insert: (piece: string) => string, bar: BarApi) => { bar.dismiss(); putIntoAmount(key, insert); },
     });
@@ -232,27 +234,27 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
         })}
       />
 
-      <Field label="Как">
+      <Field label={t('change.how.label')}>
         <Select<string>
           value={direction}
-          options={[['subtract', 'отнять'], ['add', 'прибавить'], ['set', 'поставить']]}
+          options={[['subtract', t('change.how.subtract')], ['add', t('change.how.add')], ['set', t('change.how.set')]]}
           onChange={next => edit(applyIndex, step => { const d = step as Record<string, unknown>; if (next === 'subtract') delete d.direction; else d.direction = next; })}
         />
       </Field>
       <Field
-        label="Сколько"
+        label={t('change.amount.label')}
         error={trouble}
       >
         <FormulaField
           value={shown}
           system={context.system}
-          where="изменение · станет"
+          where={t('change.amount.where')}
           names={names}
           extraNames={рядом}
           {...(context.sheets ? { sheets: context.sheets } : {})}
           badges={inputBadges(context)}
           invalid={Boolean(trouble)}
-          placeholder={direction === 'set' ? 'например: цель.поле' : 'например: название шага'}
+          placeholder={direction === 'set' ? t('change.amount.placeholder.set') : t('change.amount.placeholder.other')}
           options={needs}
           onChange={next => { setTrouble(null); setDraft(next); }}
           onCommit={commit}
@@ -273,6 +275,8 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
   onOpenEffect?: (id: string) => void;
   lane?: 'steps' | 'cost';
 }) {
+  const t = useT('stepCards');
+  const td = dataT(system);
   const step = group.step as any;
   const mode = step.type === 'status' ? 'status' : step.type === 'emit' ? 'emit' : 'apply';
   const applyIndex = group.amount ? 1 : 0;
@@ -297,8 +301,8 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
       {blank ? <Segmented
         value={mode}
         options={[
-          { key: 'apply', label: 'поле' }, { key: 'status', label: 'состояние' },
-          ...(firstEvent || mode === 'emit' ? [{ key: 'emit', label: 'вызов' }] : []),
+          { key: 'apply', label: t('change.kind.field') }, { key: 'status', label: t('change.kind.status') },
+          ...(firstEvent || mode === 'emit' ? [{ key: 'emit', label: t('change.kind.emit') }] : []),
         ]}
         onChange={next => edit(applyIndex, draft => {
           const d = draft as any;
@@ -322,7 +326,7 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
         })}
       /> : (
         <div className="inline inline--tight step-retype">
-          <Button size="sm" variant="ghost" title="поменять, что делает шаг: изменить поле, наложить состояние или вызвать эффект" onClick={() => setRetyping(true)}>сменить вид шага</Button>
+          <Button size="sm" variant="ghost" title={t('change.retype.title')} onClick={() => setRetyping(true)}>{t('change.retype.label')}</Button>
         </div>
       )}
 
@@ -338,7 +342,7 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
           <ChangeValue
             amount={group.amount ?? undefined} apply={step} applyIndex={applyIndex}
             context={context} edit={edit} withNumber={withNumber}
-            onCreateFromRecord={fromRecord('сколько — кости', 'dice')} />
+            onCreateFromRecord={fromRecord(td('stepCards:new.howMuchDice'), 'dice')} />
         </>
       ) : null}
 
@@ -347,13 +351,13 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
           {}
           {group.amount ? (
             <span className="faint">
-              величина сохранена — вернётся, если снова выбрать «поле»
+              {t('change.kept')}
             </span>
           ) : null}
-          <Field label="Что делаем">
+          <Field label={t('change.do.label')}>
             <Select
               value={String(step.mode ?? 'apply')}
-              options={[['apply', 'вешаем'], ['remove', 'снимаем']] as const}
+              options={[['apply', t('change.do.apply')], ['remove', t('change.do.remove')]] as const}
               onChange={next => edit(applyIndex, draft => {
                 const d = draft as any;
                 if (next === 'apply') { delete d.mode; delete d.where; delete d.one; delete d.by; } else { d.mode = next; delete d.unbound; }
@@ -361,10 +365,10 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
             />
           </Field>
           {String(step.mode ?? 'apply') === 'remove' ? (
-            <Field label="Снять">
+            <Field label={t('change.take.label')}>
               <Select
                 value={step.by === 'tag' ? 'tag' : 'effect'}
-                options={[['effect', 'этот эффект'], ['tag', 'все эффекты с меткой']] as const}
+                options={[['effect', t('change.take.effect')], ['tag', t('change.take.tag')]] as const}
                 onChange={next => edit(applyIndex, draft => {
                   const d = draft as any;
                   delete d.effect; delete d.args;
@@ -374,22 +378,22 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
             </Field>
           ) : null}
           {String(step.mode ?? 'apply') === 'remove' && step.by === 'tag' ? (
-            <Field label="Какая метка" needed={!step.effect}>
+            <Field label={t('change.tag.label')} needed={!step.effect}>
               <Select
                 value={typeof step.effect === 'string' ? step.effect : ''}
-                options={[['', '— какая метка —'], ...[...new Set(Object.values(system.effects ?? {}).flatMap(one => one.tags ?? []))].sort().map(tag => [tag, tagSaid(system, tag)] as const)] as never}
+                options={[['', t('change.tag.blank')], ...[...new Set(Object.values(system.effects ?? {}).flatMap(one => one.tags ?? []))].sort().map(tag => [tag, tagSaid(system, tag)] as const)] as never}
                 onChange={next => edit(applyIndex, draft => { const d = draft as any; if (next) d.effect = next; else delete d.effect; })}
               />
             </Field>
           ) : (
-          <Field label="Какое">
+          <Field label={t('change.which.label')}>
             <EffectPick
               value={step.effect}
               system={system}
               only={effect => (effect.activation ?? 'manual') === 'passive'}
               inputs={context.effect.params ?? []}
-              {...(onAddParam ? { onCreateParam: () => onAddParam('какое', 'effect') } : {})}
-              empty="— какое состояние —"
+              {...(onAddParam ? { onCreateParam: () => onAddParam(td('stepCards:new.which'), 'effect') } : {})}
+              empty={t('change.which.empty')}
               onChange={next => edit(applyIndex, draft => {
                 const d = draft as any;
                 if (!next) { delete d.effect; return; }
@@ -401,10 +405,10 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
             />
           </Field>
           )}
-          <Field label={String(step.mode ?? 'apply') === 'remove' ? 'С кого' : 'На кого'} needed={!step.to}>
-            <TypedPick want={{ kind: 'sheet' }} value={step.to} context={context} blank="— какой лист —" label="На кого" onChange={toSheet}>
+          <Field label={String(step.mode ?? 'apply') === 'remove' ? t('change.to.remove') : t('change.to.apply')} needed={!step.to}>
+            <TypedPick want={{ kind: 'sheet' }} value={step.to} context={context} blank={t('change.to.blank')} label={t('change.to.apply')} onChange={toSheet}>
               <SheetPick
-                value={step.to} sheets={sheetChoices(context).singles} system={system} where="состояние · на кого"
+                value={step.to} sheets={sheetChoices(context).singles} system={system} where={t('change.to.where')}
                 onChange={toSheet}
               />
             </TypedPick>
@@ -421,24 +425,24 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
                   ...(system.effects[effectNameOf(step.effect)]?.params ?? []),
                 ].map(param => [param.key, param.label ?? param.key] as const))}
                 quick={(system.effects[effectNameOf(step.effect)]?.params ?? []).filter(param => param.kind === 'boolean').map(param => ({ ref: param.key, label: param.label ?? param.key, kind: 'boolean' as const }))}
-                title="Какие снять"
-                where="состояние · какие снять"
-                placeholder="например: заклинание == вызванный_эффект"
+                title={t('change.drop.title')}
+                where={t('change.drop.where')}
+                placeholder={t('change.drop.placeholder')}
               />}
-              <Field label="Сколько снять">
+              <Field label={t('change.howMany.label')}>
                 <Select
                   value={step.one ? 'one' : 'all'}
-                  options={[['all', 'все'], ['one', 'одно, самое раннее']] as const}
+                  options={[['all', t('change.howMany.all')], ['one', t('change.howMany.one')]] as const}
                   onChange={next => edit(applyIndex, draft => { const d = draft as any; if (next === 'one') d.one = true; else delete d.one; })}
                 />
               </Field>
             </>
           ) : null}
           {String(step.mode ?? 'apply') === 'apply' && context.effect.bond && lane !== 'cost' && (context.effect.steps ?? []).includes(step) ? (
-            <Field label="Когда сняли якорь" hint="Якорь — то, что держит действие, например «Концентрация». По умолчанию наложенное спадает вместе с ним.">
+            <Field label={t('change.anchor.label')} hint={t('change.anchor.hint')}>
               <Select
                 value={step.unbound ? 'stays' : 'falls'}
-                options={[['falls', 'спадает вместе с ним'], ['stays', 'остаётся']] as const}
+                options={[['falls', t('change.anchor.falls')], ['stays', t('change.anchor.stays')]] as const}
                 onChange={next => edit(applyIndex, draft => { const d = draft as any; if (next === 'stays') d.unbound = true; else delete d.unbound; })}
               />
             </Field>
@@ -460,6 +464,7 @@ function StatusArgs({ step, context, onArg }: {
   context: SlotContext;
   onArg: (key: string, next: SlotRef | null) => void;
 }) {
+  const t = useT('stepCards');
   if (String(step.mode ?? 'apply') === 'remove') return null;
   const id = effectNameOf(step.effect);
   const known = context.system.effects[id];
@@ -473,7 +478,7 @@ function StatusArgs({ step, context, onArg }: {
         args={step.args as Record<string, unknown> | undefined}
         onArg={onArg}
         context={context}
-        where="наложить"
+        where={t('change.status.where')}
       />
     );
   }
@@ -485,13 +490,13 @@ function StatusArgs({ step, context, onArg }: {
   return (
     <>
       {params.map(param => (
-        <Field key={param.key} label={`Запомнит: ${param.label ?? param.key}`} hint="Висящий эффект хранит это значение и читает его по имени.">
+        <Field key={param.key} label={t('change.remember.label', { name: param.label ?? param.key })} hint={t('change.remember.hint')}>
           <FormulaField
             value={String(step.args?.[param.key]?.expr ?? '')}
             system={context.system}
-            where={`наложить · ${param.label ?? param.key}`}
+            where={t('change.remember.where', { name: param.label ?? param.key })}
             {...(context.sheets ? { sheets: context.sheets } : {})}
-            placeholder={param.kind === 'sheet' ? 'например: действующий' : 'например: действующий.поле'}
+            placeholder={param.kind === 'sheet' ? t('change.remember.placeholder.sheet') : t('change.remember.placeholder.field')}
             onCommit={next => onArg(param.key, next.trim() ? { expr: next } : null)}
           />
         </Field>

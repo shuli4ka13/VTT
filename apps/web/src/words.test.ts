@@ -76,7 +76,7 @@ describe('одно слово на одно понятие', () => {
     expect(asDice('2d6')).toBe('2к6');
     expect(toDice('2к6')).toBe('2d6');
     expect(toDice('д8')).toBe('1d8');
-    const said = sources.flatMap(f => f.code.split('\n').filter(line => /[а-яё]/i.test(line.replace(/\$\{[^}]*\}/g, '')) && LATIN_DICE.test(line) && !/expr|die:|dice:|toBe|toEqual|toContain|\bit\(/.test(line)).map(line => `${f.path}: ${line.trim().slice(0, 120)}`));
+    const said = sources.filter(f => !f.path.includes('/words/en/')).flatMap(f => f.code.split('\n').filter(line => /[а-яё]/i.test(line.replace(/\$\{[^}]*\}/g, '')) && LATIN_DICE.test(line) && !/expr|die:|dice:|toBe|toEqual|toContain|\bit\(/.test(line)).map(line => `${f.path}: ${line.trim().slice(0, 120)}`));
     expect(said, said.join('\n')).toEqual([]);
   });
 

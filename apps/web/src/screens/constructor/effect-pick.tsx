@@ -1,6 +1,7 @@
 import type { System, Effect, Param } from '@vtt/schema';
 import { Select } from '../../ui/primitives.tsx';
 import { grouped } from './effects/roles.ts';
+import { useT } from '../../i18n/author.ts';
 
 const FROM_INPUT = ':вход:';
 const NEW_INPUT = ':новый';
@@ -12,7 +13,7 @@ const inputOf = (value: unknown): string => {
   return /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(expr)?.[1] ?? '';
 };
 
-export function EffectPick({ value, onChange, system, only, inputs = [], onCreateParam, empty = '— какой эффект —' }: {
+export function EffectPick({ value, onChange, system, only, inputs = [], onCreateParam, empty }: {
   value: unknown;
   onChange: (next: string | { expr: string } | null) => void;
   system: System;
@@ -21,6 +22,7 @@ export function EffectPick({ value, onChange, system, only, inputs = [], onCreat
   onCreateParam?: () => string;
   empty?: string;
 }) {
+  const t = useT('records');
   const named = effectNameOf(value);
   const input = inputOf(value);
   const effects = Object.entries(system.effects ?? {}).filter(([, effect]) => !only || only(effect));
@@ -29,10 +31,10 @@ export function EffectPick({ value, onChange, system, only, inputs = [], onCreat
     <Select<string>
       value={input ? `${FROM_INPUT}${input}` : named}
       options={[
-        ['', empty],
+        ['', empty ?? t('effectPick.empty')],
         ...grouped(system, effects).map(([id, effect, group]) => [id, `«${effect.label ?? id}»`, group] as const),
-        ...fromInputs.map(param => [`${FROM_INPUT}${param.key}`, `«${param.label ?? param.key}»`, 'Что передали во вход'] as const),
-        ...(onCreateParam ? [[NEW_INPUT, 'новый вход…', 'Что передали во вход'] as const] : []),
+        ...fromInputs.map(param => [`${FROM_INPUT}${param.key}`, `«${param.label ?? param.key}»`, t('effectPick.passed')] as const),
+        ...(onCreateParam ? [[NEW_INPUT, t('effectPick.newInput'), t('effectPick.passed')] as const] : []),
       ]}
       onChange={next => {
         if (!next) { onChange(null); return; }

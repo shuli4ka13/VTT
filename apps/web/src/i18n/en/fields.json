@@ -1,1 +1,205 @@
-{}
+{
+  "mod": {
+    "op": {
+      "add": "add",
+      "mul": "multiply",
+      "set": "set",
+      "floor": "at least",
+      "cap": "at most"
+    },
+    "group": {
+      "number": "number — stacks",
+      "word": "word from “Rules” — one per roll",
+      "wordStacks": "word from “Rules” — counted as set there",
+      "fit": "fit these rolls",
+      "misfit": "do not fit these rolls"
+    },
+    "word": {
+      "unknown": "How the word is counted and what cancels it is set in “Rules → Roll edits”.",
+      "stacks": "“{{name}}” is counted once per different effect; copies of one effect count once.",
+      "once": "“{{name}}” applies to a roll once, however many effects grant it.",
+      "rivals": "{{lead}} Meets {{list}} — they cancel each other.",
+      "rivalsOne": "{{lead}} Meets {{list}} — they cancel each other one for one."
+    },
+    "hint": {
+      "sum": "Stacks: each hanging effect and each of its copies adds its own number.",
+      "tag": "The roll gets the tag once, however many effects grant it."
+    },
+    "stage": "Stage",
+    "stagePick": "— pick a stage —",
+    "title": {
+      "value": "Edits a field",
+      "call": "Call edit"
+    },
+    "target": "What to edit",
+    "targetPick": "— pick what to edit —",
+    "how": "How",
+    "amount": "By how much",
+    "howMany": "How much",
+    "where": {
+      "amount": "modifier · by how much",
+      "when": "modifier · only when",
+      "addend": "roll edit · addend",
+      "tag": "roll edit · which tag",
+      "callAmount": "call edit · by how much",
+      "if": "edit · only if"
+    },
+    "whenPlaceholder": "for example: heavy armor",
+    "whenRule": "On the holder’s sheet. If it does not match, the edit does not apply.",
+    "addField": "+ edits a field",
+    "addCall": "+ call edit",
+    "addCallTip": "Edits a call: a roll (advantage, addend) or an effect input (double damage from fire)",
+    "what": "What it edits",
+    "empty": {
+      "hint": "A passive effect edits numbers: gives a bonus to a field or hangs advantage on a roll.",
+      "title": "The effect does nothing yet"
+    },
+    "tagWord": "tag",
+    "tag": "Which tag",
+    "tagHint": "A formula that gives the tag text, for example “no Advantage”.",
+    "tagPlaceholder": "for example: \"no Advantage\"",
+    "whose": "Whose call",
+    "wordLabel": "Which word",
+    "wordHint": "Ready-made mechanisms will arrive in the “Roll edits” dictionary with all the words.",
+    "wordPick": "— pick a word —",
+    "noAmount": "— the effect has no amount —",
+    "byTags": "By tags",
+    "byTagsHint": "Empty — any tag.",
+    "anyTag": "any tag",
+    "exceptTags": "Except tags",
+    "exceptTag": "+ except tag…",
+    "tagWhere": "Where the tag has",
+    "tagWhereHint": "Looks at the tag’s row in a table: one fact instead of a list of tags.",
+    "noCondition": "— no condition —",
+    "pickWhat": "— what —",
+    "rollerHolder": "the holder rolls",
+    "againstHolder": "rolled against the holder",
+    "holderOf": "“{{name}}” — holder",
+    "ifPlaceholder": "for example: holder.rage > 0",
+    "ifHolder": "The holder is the sheet this edit hangs on."
+  },
+  "cond": {
+    "yes": "{{label}} — yes",
+    "no": "{{label}} — no",
+    "tag": "{{label}}: “{{tag}}”",
+    "title": "Only if",
+    "holder": "Whom it concerns",
+    "holderHint": "The holder is the sheet this hangs on.",
+    "all": "everyone — no condition",
+    "common": "common conditions"
+  },
+  "degree": {
+    "placeholder": "rolled <= number",
+    "expr": "rolled <= number",
+    "first": "The first one that fits from the top is taken.",
+    "elseTip": "all outcomes that did not fit the degrees above",
+    "else": "otherwise",
+    "if": "if",
+    "remove": "remove degree",
+    "new": "New degree",
+    "add": "+ degree",
+    "otherwise": "Otherwise",
+    "addElse": "+ otherwise"
+  },
+  "degrees": {
+    "label": "Degrees",
+    "list": "as a list",
+    "fromTable": "from table “{{name}}”",
+    "by": "degree by",
+    "byLabel": "Degree by",
+    "byTotal": "total",
+    "byMargin": "margin over the threshold"
+  },
+  "target": {
+    "item": "“{{name}}” — item",
+    "fieldInput": "field from input “{{name}}”",
+    "byFormula": "by formula…",
+    "owner": "Whose",
+    "noSheets": "— the effect has no sheet inputs —",
+    "field": "Which field"
+  },
+  "rolls": {
+    "rules": "roll rules",
+    "kinds": "tags that rolls carry",
+    "hintEmpty": "Empty — all rolls.",
+    "hintRule": "“{{name}}” — rolls by the fields of this rule and step rolls with the tag “{{tag}}”.",
+    "hintTwo": "One roll cannot have two rules at once — take “Or at least one of”.",
+    "hintAll": "The roll must match everything chosen.",
+    "which": "Which rolls",
+    "allEmpty": "all rolls",
+    "any": "Or at least one of",
+    "anyHint": "One of these tags is enough. Empty — not checked.",
+    "ignore": "not checked",
+    "not": "Except",
+    "notHint": "A roll with any of these tags does not fit. Empty — not checked.",
+    "addNot": "+ except tag…",
+    "more": "+ or / except"
+  },
+  "bound": {
+    "placeholder": "number or formula"
+  },
+  "lookup": {
+    "head": "Where this comes from",
+    "close": "close the note",
+    "rollWord": "roll rule name",
+    "sub": "{{kind}} · in “{{where}}”",
+    "onSheet": "On the sheet",
+    "newSheet": "new sheet",
+    "from": "Where it comes from",
+    "fromEmpty": "nobody passes it",
+    "shown": "Where it shows",
+    "users": "Who else uses it"
+  },
+  "problems": {
+    "none": "No problems",
+    "errors_one": "{{count}} error",
+    "warnings_one": "{{count}} warning",
+    "head": "Problems: {{list}}",
+    "errorsTip": "a system with errors is not published",
+    "warningsTip": "warnings do not block publishing",
+    "dialog": "System problems",
+    "noneHint": "All references are in place, names are filled in, effects are connected.",
+    "open": "Open",
+    "errors_other": "{{count}} errors",
+    "warnings_other": "{{count}} warnings"
+  },
+  "cards": {
+    "condition": "condition",
+    "formula": "{{slot}} (formula)"
+  },
+  "row": {
+    "this": "this row",
+    "cell": "“{{label}}” → cell of this row",
+    "chosen": "“{{label}}” is chosen"
+  },
+  "value": {
+    "group": {
+      "props": "Record properties",
+      "params": "Effect inputs",
+      "table": "By table",
+      "results": "Step results",
+      "fields": "Fields",
+      "fieldsOf": "Fields: {{name}}"
+    },
+    "newParam": "new input…",
+    "placeholder": "number or formula — start typing a name",
+    "where": "value"
+  },
+  "rollExpr": {
+    "start": "a roll starts with a die: “1d20” or “1d20 + bonus”",
+    "pickName": "{{name}} — pick a name from the list"
+  },
+  "shape": {
+    "minusWord": "minus before a word",
+    "wordMath": "a word cannot be added to or multiplied with a number",
+    "wantNumber": "a number is needed, but this is a word",
+    "wantWord": "a word is needed, but this is a number"
+  },
+  "slots": {
+    "result": "{{name}} — result",
+    "not": "not {{word}}",
+    "eventTags": "call tags: values of the choices",
+    "input": "input",
+    "first": "first of “{{name}}”"
+  }
+}

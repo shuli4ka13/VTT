@@ -8,6 +8,7 @@ import { focusNew } from '../../ui/focus-new.ts';
 import { storedFormula } from '../../ui/formula-lang.ts';
 import { useWorld, freeId } from '../../store/world.ts';
 import { formulaAsLabels } from '../../ui/formula-labels.ts';
+import { useT } from '../../i18n/author.ts';
 
 export type TagValue = string | { expr: string };
 
@@ -20,7 +21,7 @@ const COMPUTED = ':formula';
 
 export interface TagGroup { title: string; list: readonly (readonly [string, string])[] }
 
-export function TagsField({ system, value, onChange, known = [], templates = [], computed = false, empty = '+ метка…', boxed = false, lead = [], labels, names }: {
+export function TagsField({ system, value, onChange, known = [], templates = [], computed = false, empty, boxed = false, lead = [], labels, names }: {
   system: System;
   value: readonly TagValue[] | undefined;
   onChange: (next: TagValue[]) => void;
@@ -33,6 +34,7 @@ export function TagsField({ system, value, onChange, known = [], templates = [],
   labels?: ReadonlyMap<string, string>;
   names?: ReadonlyMap<string, string>;
 }) {
+  const t = useT('records');
   const editSystem = useWorld(state => state.editSystem);
   const ownSystem = useWorld(state => state.origin.mode) !== 'compendium';
   const [typing, setTyping] = useState<'own' | 'formula' | null>(null);
@@ -48,11 +50,11 @@ export function TagsField({ system, value, onChange, known = [], templates = [],
   const once = (list: readonly (readonly [string, string])[]) => list.filter(([word]) => !seen.has(word) && Boolean(seen.add(word)));
   const listed: [string, (readonly [string, string])[]][] = [
     ...lead.map(group => [group.title, [...group.list]] as [string, (readonly [string, string])[]]),
-    ['шаблоны строки', templates.map(t => [t.value, t.label] as const)],
-    ['метки с договором', contracts],
-    ['метки вызова', known.map(word => [word, tagSaid(system, word)] as const)],
+    [t('tags.templates'), templates.map(one => [one.value, one.label] as const)],
+    [t('tags.contracts'), contracts],
+    [t('tags.known'), known.map(word => [word, tagSaid(system, word)] as const)],
     ...[...new Set(rows.map(([, table]) => table))].map(table => [
-      `метки бросков · ${table}`, rows.filter(([, t]) => t === table).map(([word]) => [word, rowSaid(system, word)] as const),
+      t('tags.rolls', { table }), rows.filter(([, one]) => one === table).map(([word]) => [word, rowSaid(system, word)] as const),
     ] as [string, (readonly [string, string])[]]),
   ];
   const groups = listed.map(([title, list]) => [title, once(list)] as [string, (readonly [string, string])[]]);
@@ -79,29 +81,29 @@ export function TagsField({ system, value, onChange, known = [], templates = [],
     <div className={boxed ? 'tagbox' : 'inline inline--tight'}>
       {picked.map(tag => (
         <Chip key={keyOf(tag)} active={typeof tag === 'string'} onRemove={() => drop(tag)}
-          {...(typeof tag === 'string' ? {} : { title: 'метка вычисляется формулой при броске' })}>
-          {typeof tag === 'string' ? (labels?.get(tag) ?? templates.find(t => t.value === tag)?.label ?? said.get(tag) ?? tagSaid(system, tag)) : `= ${formulaAsLabels(system, tag.expr, names)}`}
-          {typeof tag === 'string' && !dictionary.has(tag) ? <span className="faint tag-unknown" title="такой метки нет в словаре меток бросков"> · нет в словаре</span> : null}
+          {...(typeof tag === 'string' ? {} : { title: t('tags.computedTitle') })}>
+          {typeof tag === 'string' ? (labels?.get(tag) ?? templates.find(one => one.value === tag)?.label ?? said.get(tag) ?? tagSaid(system, tag)) : `= ${formulaAsLabels(system, tag.expr, names)}`}
+          {typeof tag === 'string' && !dictionary.has(tag) ? <span className="faint tag-unknown" title={t('tags.unknownTitle')}> · {t('tags.unknown')}</span> : null}
         </Chip>
       ))}
       {typing ? (
         <>
           <Input
             value={draft}
-            placeholder={typing === 'formula' ? 'например: если(рейтинг == 0, "нулевой", "")' : 'как назвать метку'}
+            placeholder={typing === 'formula' ? t('tags.formulaPlaceholder') : t('tags.namePlaceholder')}
             onChange={setDraft}
             onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); commit(); } }}
           />
-          <Button size="sm" variant="ghost" disabled={!draft.trim()} onClick={commit}>добавить</Button>
-          <Button size="sm" variant="ghost" onClick={() => { setDraft(''); setTyping(null); }}>отмена</Button>
+          <Button size="sm" variant="ghost" disabled={!draft.trim()} onClick={commit}>{t('tags.add')}</Button>
+          <Button size="sm" variant="ghost" onClick={() => { setDraft(''); setTyping(null); }}>{t('common:cancel')}</Button>
         </>
       ) : (
         <AddCombo
-          prompt={picked.length ? '+ ещё…' : empty}
+          prompt={picked.length ? t('tags.more') : empty ?? t('tags.emptyPrompt')}
           options={[
             ...free.flatMap(([title, list]) => list.map(([word, label]) => ({ value: word, label, group: title }))),
-            ...(ownSystem ? [{ value: OWN, label: 'новая метка…', group: 'другое' }] : []),
-            ...(computed ? [{ value: COMPUTED, label: 'вычисляемая формулой…', group: 'другое' }] : []),
+            ...(ownSystem ? [{ value: OWN, label: t('tags.own'), group: t('tags.other') }] : []),
+            ...(computed ? [{ value: COMPUTED, label: t('tags.computed'), group: t('tags.other') }] : []),
           ]}
           onPick={next => {
             if (next === OWN) { focusNew(); setTyping('own'); return; }
