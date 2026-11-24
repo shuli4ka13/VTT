@@ -109,3 +109,5 @@
   .sun__body { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(300px, 1fr) auto; }
   .sun-inspector { border-left: 0; border-top: 1px solid var(--border); }
 }
+.sun-says__head { cursor: pointer; }
+.sun-says:not([open]) { max-height: none; }

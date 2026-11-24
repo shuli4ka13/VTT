@@ -83,10 +83,10 @@ export function Canvas({ sun, layout, selectedId, description, onPick, onEscape 
       {sun.rays.length === 0 ? <p className="sun-empty">{t('canvas.empty')}</p> : null}
 
       {description ? (
-        <div className="sun-says">
-          <span className="sun-says__head">{t('canvas.says')}</span>
+        <details className="sun-says" open>
+          <summary className="sun-says__head">{t('canvas.says')}</summary>
           <p>{description}</p>
-        </div>
+        </details>
       ) : null}
 
       {repeats ? <span className="sun-legend-note"><span className="sun-legend-note__ring" aria-hidden />{t('canvas.repeat')}</span> : null}
