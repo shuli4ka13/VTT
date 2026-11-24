@@ -1,9 +1,10 @@
-import type { KeyboardEvent, ReactElement } from 'react';
+import type { KeyboardEvent, PointerEvent as ReactPointerEvent, ReactElement, RefObject } from 'react';
 import type { Sun } from '@vtt/engine';
 import { useT } from '../../../../i18n/author.ts';
 import { Bubble } from './bubble.tsx';
 import type { Placed, SunLayout } from './layout.ts';
 import { percent, useViewport } from './viewport.ts';
+import type { Geometry } from './edit/drag.ts';
 
 export interface CanvasProps {
   sun: Sun;
@@ -12,6 +13,9 @@ export interface CanvasProps {
   description?: string;
   onPick: (placed: Placed) => void;
   onEscape: () => void;
+  geometry?: RefObject<Geometry | null>;
+  drop?: { id: string; ok: boolean; note: string } | null;
+  onGrab?: (placed: Placed, event: ReactPointerEvent<HTMLButtonElement>) => void;
 }
 
 export function neighbour(layout: SunLayout, fromId: string, key: string): string | null {
@@ -36,10 +40,11 @@ export function neighbour(layout: SunLayout, fromId: string, key: string): strin
   return null;
 }
 
-export function Canvas({ sun, layout, selectedId, description, onPick, onEscape }: CanvasProps): ReactElement {
+export function Canvas({ sun, layout, selectedId, description, onPick, onEscape, geometry, drop, onGrab }: CanvasProps): ReactElement {
   const t = useT('sun');
   const port = useViewport(layout, sun.effect);
   const { view } = port;
+  if (geometry) geometry.current = { node: port.ref, view };
   const repeats = sun.rays.some(ray => ray.repeat);
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -68,7 +73,9 @@ export function Canvas({ sun, layout, selectedId, description, onPick, onEscape 
       >
         <div className="sun-layer" style={{ transform: `translate(${view.x}px, ${view.y}px) scale(${view.k})` }}>
           {layout.placed.map(one => (
-            <Bubble key={one.id} placed={one} sun={sun} selected={one.id === selectedId} onPick={onPick} />
+            <Bubble key={one.id} placed={one} sun={sun} selected={one.id === selectedId} onPick={onPick}
+              drop={drop && drop.id === one.id ? drop : null} onGrab={onGrab}
+            />
           ))}
         </div>
       </div>

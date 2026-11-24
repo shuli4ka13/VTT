@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { ReactElement } from 'react';
+import type { PointerEvent as ReactPointerEvent, ReactElement } from 'react';
 import { PHASES, rolledLabel, seenLabel } from '@vtt/engine';
 import type { Sun, SunRay } from '@vtt/engine';
 import type { Effect, System } from '@vtt/schema';
@@ -24,6 +24,7 @@ export interface PaletteProps {
   onSelect: (key: string | null) => void;
   collapsed: boolean;
   onToggle: () => void;
+  onGrab?: (chip: { label: string; template: Template }, event: ReactPointerEvent<HTMLButtonElement>) => void;
 }
 
 interface Chip {
@@ -50,7 +51,7 @@ const happeningLabel = (kind: HappeningKind): string => {
   }
 };
 
-export function Palette({ system, sun, effectId, effect, ray, mode, edit, onSelect, collapsed, onToggle }: PaletteProps): ReactElement {
+export function Palette({ system, sun, effectId, effect, ray, mode, edit, onSelect, collapsed, onToggle, onGrab }: PaletteProps): ReactElement {
   const t = useT('sunEdit');
   const compendium = useWorld(state => state.compendium);
   const [query, setQuery] = useState('');
@@ -123,6 +124,7 @@ export function Palette({ system, sun, effectId, effect, ray, mode, edit, onSele
         aria-label={reason ? `${chip.label}: ${reason}` : chip.label}
         aria-disabled={reason ? true : undefined}
         onClick={() => { if (!reason) run(chip); }}
+        onPointerDown={onGrab && chip.template ? event => onGrab({ label: chip.label, template: chip.template! }, event) : undefined}
       >
         {chip.label}
       </button>

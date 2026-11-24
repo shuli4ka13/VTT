@@ -184,6 +184,64 @@ export function moveAtom(draft: Effect, system: System, id: string, span: SunSpa
   return moved < 0 ? null : rayKey(system, id, draft, at, moved);
 }
 
+const parentOf = (steps: readonly Step[], index: number): Step | null => {
+  const stack: Step[] = [];
+  for (let i = 0; i < index; i++) {
+    const flow = flowOf(steps[i]!.type);
+    if (flow === 'open') stack.push(steps[i]!);
+    else if (flow === 'close') stack.pop();
+  }
+  return stack[stack.length - 1] ?? null;
+};
+
+const sameChain = (a: SunSpan, b: SunSpan): boolean =>
+  CHAIN_PARTS.has(a.part) && a.part === b.part && (a.handler ?? 0) === (b.handler ?? 0);
+
+const reorder = (steps: Step[], from: number, target: number): { steps: Step[]; lead: Step } | string => {
+  const source = atomRange(steps, from);
+  const aim = atomRange(steps, target);
+  if (!source || source.arm || !aim || aim.arm) return 'reason.moveNo';
+  if (target >= source.from && target <= source.to) return 'reason.moveHere';
+  if (aim.to + 1 === source.from) return 'reason.moveHere';
+  const parent = parentOf(steps, source.from);
+  if (parent !== parentOf(steps, aim.from)) return 'reason.moveLevel';
+  const lead = steps[source.from]!;
+  const mark = steps[aim.from]!;
+  let current = steps;
+  for (let guard = 0; guard < steps.length * 2 + 2; guard++) {
+    const here = atomRange(current, current.indexOf(lead));
+    const there = atomRange(current, current.indexOf(mark));
+    if (!here || !there) return 'reason.moveNo';
+    if (here.from === there.to + 1) return { steps: current, lead };
+    const next = moveSpan(current, [here.from, here.to], here.from > there.to ? -1 : 1, true);
+    if (next === current) return 'reason.moveLevel';
+    if (parentOf(next, next.indexOf(lead)) !== parent) return 'reason.moveLevel';
+    current = next;
+  }
+  return 'reason.moveLevel';
+};
+
+export const moveVerdict = (effect: Effect, span: SunSpan | null, target: SunSpan | null): true | string => {
+  if (!span || !target || !sameChain(span, target)) return 'reason.moveLevel';
+  const result = reorder(stepsOf(effect, carrierPartOf(span)!) as Step[], span.from, target.from);
+  return typeof result === 'string' ? result : true;
+};
+
+export const canMoveTo = (effect: Effect, span: SunSpan | null, target: SunSpan | null): boolean => moveVerdict(effect, span, target) === true;
+
+export function moveAtomTo(draft: Effect, system: System, id: string, span: SunSpan, target: SunSpan): string | null {
+  if (!sameChain(span, target)) return null;
+  const at = carrierPartOf(span)!;
+  let moved = -1;
+  withList(draft, at, view => {
+    const result = reorder(view.steps ?? [], span.from, target.from);
+    if (typeof result === 'string') return;
+    view.steps = result.steps;
+    moved = result.steps.indexOf(result.lead);
+  });
+  return moved < 0 ? null : rayKey(system, id, draft, at, moved);
+}
+
 export function removeAtom(draft: Effect, span: SunSpan): null {
   const at = carrierPartOf(span);
   if (!at || COST_PARTS.has(at.part)) return null;

@@ -1,5 +1,5 @@
 import type { TFunction } from 'i18next';
-import type { CSSProperties, ReactElement } from 'react';
+import type { CSSProperties, PointerEvent as ReactPointerEvent, ReactElement } from 'react';
 import { LAUNCHES, SUN_KINDS, SUN_STAGES, type Sun } from '@vtt/engine';
 import { useT } from '../../../../i18n/author.ts';
 import { lookOf } from './kinds.ts';
@@ -10,6 +10,8 @@ export interface BubbleProps {
   sun: Sun;
   selected: boolean;
   onPick: (placed: Placed) => void;
+  drop?: { ok: boolean; note: string } | null;
+  onGrab?: (placed: Placed, event: ReactPointerEvent<HTMLButtonElement>) => void;
 }
 
 export type Said = TFunction;
@@ -30,11 +32,13 @@ export function groupText(group: SunGroup, t: Said, full: boolean): string {
   return shown;
 }
 
-export function Bubble({ placed, sun, selected, onPick }: BubbleProps): ReactElement {
+export function Bubble({ placed, sun, selected, onPick, drop, onGrab }: BubbleProps): ReactElement {
   const t = useT('sun');
+  const e = useT('sunEdit');
   const style: CSSProperties = { left: placed.x - placed.r, top: placed.y - placed.r, width: placed.r * 2, height: placed.r * 2 };
   const classes = ['sun-bubble'];
   if (selected) classes.push('sun-bubble--on');
+  if (drop) classes.push(drop.ok ? 'sun-bubble--drop' : 'sun-bubble--nodrop');
   let body: ReactElement;
   let full: string;
 
@@ -77,10 +81,12 @@ export function Bubble({ placed, sun, selected, onPick }: BubbleProps): ReactEle
       data-bubble={placed.id}
       aria-label={full}
       aria-pressed={selected}
-      title={full}
+      title={drop && !drop.ok ? drop.note : full}
       onClick={() => onPick(placed)}
+      onPointerDown={onGrab ? event => onGrab(placed, event) : undefined}
     >
       {body}
+      {drop?.ok ? <span className="sun-bubble__here" aria-hidden>{e('drag.here')}</span> : null}
     </button>
   );
 }

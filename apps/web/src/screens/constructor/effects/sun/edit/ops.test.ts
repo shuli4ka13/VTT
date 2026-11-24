@@ -4,7 +4,7 @@ import { sunOf } from '@vtt/engine';
 import type { Effect, Step, System } from '@vtt/schema';
 import { addArm, removeSteps, validFlow } from '../../../cards.ts';
 import { withRole } from '../../roles.ts';
-import { addHandler, canInsert, insertStep, moveAtom, placeFor, removeAtom, removeHandler, templateKey } from './ops.ts';
+import { addHandler, canInsert, canMoveTo, insertStep, moveAtom, moveAtomTo, placeFor, removeAtom, removeHandler, templateKey } from './ops.ts';
 import type { Mode, Template } from './ops.ts';
 
 const dnd = SAMPLE_WORLDS.find(world => world.system.name === 'D&D 5e')!;
@@ -208,6 +208,50 @@ describe('операции пузырей: перенос и удаление', 
     expect(validFlow(effect.steps!)).toBe(true);
     const blockDown = moveAtom(effect, sys, 'strike', rayOf('strike', effect, 'steps:10').span!, 1);
     expect(blockDown).toBe('steps:11');
+    expect(effect.steps).toEqual(original);
+  });
+
+  it('перенос после луча: блок «Если» вниз на два места и обратно возвращает эффект', () => {
+    const effect = structuredClone(system.effects.strike!);
+    const original = structuredClone(effect.steps);
+    const sys = withEffect('strike', effect);
+    const from = rayOf('strike', effect, 'steps:1').span!;
+    const to = rayOf('strike', effect, 'steps:10').span!;
+    expect(canMoveTo(effect, from, to)).toBe(true);
+    const key = moveAtomTo(effect, sys, 'strike', from, to);
+    expect(key).not.toBeNull();
+    expect(keys('strike', effect)).toContain(key);
+    expect(validFlow(effect.steps!)).toBe(true);
+    expect(effect.steps).not.toEqual(original);
+    expect(effect.steps![1]!.type).toBe('branch');
+    const back = moveAtomTo(effect, sys, 'strike', rayOf('strike', effect, key!).span!, rayOf('strike', effect, 'steps:0').span!);
+    expect(back).toBe('steps:1');
+    expect(effect.steps).toEqual(original);
+  });
+
+  it('перенос шага внутри одной ветки', () => {
+    const effect = structuredClone(system.effects.strike!);
+    const sys = withEffect('strike', effect);
+    const before = effect.steps!.map(step => step.type);
+    const key = moveAtomTo(effect, sys, 'strike', rayOf('strike', effect, 'steps:12').span!, rayOf('strike', effect, 'steps:13').span!);
+    expect(key).toBe('steps:13');
+    expect(effect.steps![12]!.type).toBe(before[13]);
+    expect(effect.steps![13]!.type).toBe(before[12]);
+    expect(validFlow(effect.steps!)).toBe(true);
+  });
+
+  it('между уровнями, частями и в никуда эффект не меняется', () => {
+    const effect = structuredClone(system.effects.strike!);
+    const sys = withEffect('strike', effect);
+    const original = structuredClone(effect.steps);
+    const inner = rayOf('strike', effect, 'steps:12').span!;
+    const outer = rayOf('strike', effect, 'steps:10').span!;
+    expect(canMoveTo(effect, inner, outer)).toBe(false);
+    expect(moveAtomTo(effect, sys, 'strike', inner, outer)).toBeNull();
+    expect(moveAtomTo(effect, sys, 'strike', outer, inner)).toBeNull();
+    expect(moveAtomTo(effect, sys, 'strike', outer, { ...outer, part: 'handler', handler: 0 })).toBeNull();
+    expect(moveAtomTo(effect, sys, 'strike', outer, outer)).toBeNull();
+    expect(canMoveTo(effect, outer, { ...outer, part: 'cost' })).toBe(false);
     expect(effect.steps).toEqual(original);
   });
 

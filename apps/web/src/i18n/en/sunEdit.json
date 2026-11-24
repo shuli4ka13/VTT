@@ -48,6 +48,9 @@
     "chipTitle": "Insert: {{name}}",
     "handlerTitle": "Add a subscription: {{name}}"
   },
+  "drag": {
+    "here": "here"
+  },
   "reason": {
     "noPlace": "Nowhere to insert: the effect has no subscription",
     "costOnly": "Only costs go into the cost",
@@ -58,6 +61,9 @@
     "noEffect": "No such effect",
     "callPassive": "A hanging effect is not called, it is applied",
     "statusManual": "Only hanging effects can be applied",
-    "eachInside": "\"For each of\" cannot go inside \"If\""
+    "eachInside": "\"For each of\" cannot go inside \"If\"",
+    "moveNo": "This step cannot be moved this way",
+    "moveHere": "The step is already here",
+    "moveLevel": "A step moves only within its own branch and level"
   }
 }

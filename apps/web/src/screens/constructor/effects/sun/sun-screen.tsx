@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import type { ReactElement } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { PointerEvent as ReactPointerEvent, ReactElement } from 'react';
 import { sunOf } from '@vtt/engine';
 import { useWorld } from '../../../../store/world.ts';
 import { useEffectView } from '../../../../store/effect-view.ts';
@@ -15,7 +15,10 @@ import { useT } from '../../../../i18n/author.ts';
 import { Palette } from './edit/palette.tsx';
 import { SunPanel } from './edit/panel.tsx';
 import { useSunEdit } from './edit/use-sun-edit.ts';
+import { canMove } from './edit/ops.ts';
 import type { Mode } from './edit/ops.ts';
+import { useSunDrag } from './edit/drag.ts';
+import type { Geometry } from './edit/drag.ts';
 import './sun.css';
 
 export function SunScreen({ id }: { id: string }): ReactElement | null {
@@ -31,6 +34,7 @@ export function SunScreen({ id }: { id: string }): ReactElement | null {
   const [notice, setNotice] = useState<unknown>(null);
   const e = useT('sunEdit');
   const editing = useSunEdit(id);
+  const geometry = useRef<Geometry | null>(null);
 
   const lang = useLocale(state => state.lang);
   const sun = useMemo(() => sunOf(system, id, compendium), [system, id, compendium, lang]);
@@ -39,6 +43,10 @@ export function SunScreen({ id }: { id: string }): ReactElement | null {
   useEffect(() => {
     if (selectedId && !found) setSelectedId(null);
   }, [selectedId, found]);
+  const dragging = useSunDrag({
+    geometry, placed: layout?.placed ?? [], sun, effect: system.effects[id], system, effectId: id, mode,
+    edit: editing.edit, onSelect: setSelectedId,
+  });
   if (!sun || !layout) return null;
 
   const selected = layout.placed.find(one => one.id === selectedId) ?? null;
@@ -62,6 +70,16 @@ export function SunScreen({ id }: { id: string }): ReactElement | null {
     if (previous) pick({ activeEffectId: previous });
   };
 
+  const { drag } = dragging;
+  const lifted = (placed: Placed, event: ReactPointerEvent<HTMLButtonElement>) => {
+    const span = placed.ray?.span;
+    if (placed.what !== 'ray' || !span || !effect || !canMove(effect, span)) return;
+    dragging.begin({ kind: 'bubble', id: placed.id, span, label: placed.ray!.label }, event);
+  };
+  const dropping = drag && drag.target
+    ? { id: drag.target, ok: drag.verdict === true, note: typeof drag.verdict === 'string' ? e(drag.verdict) : '' }
+    : null;
+
   const after = (move: () => boolean) => () => {
     if (move()) { setSelectedId(null); setOpened(false); setNotice(null); }
   };
@@ -81,6 +99,7 @@ export function SunScreen({ id }: { id: string }): ReactElement | null {
           <Palette
             system={system} sun={sun} effectId={id} effect={effect} ray={ray} mode={mode}
             edit={editing.edit} onSelect={setSelectedId} collapsed={shut} onToggle={() => setShut(!shut)}
+            onGrab={(chip, event) => dragging.begin({ kind: 'chip', template: chip.template, label: chip.label }, event)}
           />
         ) : null}
         <div className="sun__stage">
@@ -97,6 +116,9 @@ export function SunScreen({ id }: { id: string }): ReactElement | null {
             description={system.effects[id]?.description}
             onPick={onPick}
             onEscape={() => setOpened(false)}
+            geometry={geometry}
+            drop={dropping}
+            onGrab={lifted}
           />
           {opened && selected && selected.what !== 'center' ? (
             <BubbleWindow
@@ -120,6 +142,12 @@ export function SunScreen({ id }: { id: string }): ReactElement | null {
           />
         ) : null}
       </div>
+      {drag ? (
+        <div className={`sun-ghost${dropping && !dropping.ok ? ' sun-ghost--no' : ''}`} style={{ left: drag.x + 14, top: drag.y + 14 }} aria-hidden>
+          <span>{drag.source.label}</span>
+          {dropping && !dropping.ok ? <span className="sun-ghost__note">{dropping.note}</span> : null}
+        </div>
+      ) : null}
       <SunDock system={system} effectId={id} sun={sun} onOpenEffect={onOpenEffect} onOpenForm={onOpenForm} />
     </div>
   );
