@@ -248,6 +248,7 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove, startO
               <label className="inline inline--tight">
                 <input
                   type="checkbox" className="sheet-grid__check"
+                  aria-label={t('handler.manual')}
                   checked={Boolean(handler.manual)}
                   onChange={e => edit(draft => { if (e.target.checked) draft.manual = true; else delete draft.manual; })}
                 />

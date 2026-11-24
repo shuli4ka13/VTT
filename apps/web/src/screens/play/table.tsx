@@ -635,7 +635,7 @@ function TableRules({ room }: { room: RoomState }) {
           <span>{t(`table.rules.${key}`)}</span>
         </label>
       ))}
-      <div className="table-rules__row">
+      <div className="table-rules__pick">
         <span>{t('table.rules.payment')}</span>
         <Select<string>
           value={rules.payment ?? ''}

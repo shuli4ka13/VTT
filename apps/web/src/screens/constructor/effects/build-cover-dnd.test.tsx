@@ -56,12 +56,6 @@ const marks = (card: HTMLElement, ...tags: string[]): void => {
   }
 };
 
-const markManual = (root: ParentNode = document): void => {
-  const box = [...root.querySelectorAll<HTMLLabelElement>('label')].find(l => (l.textContent ?? '').trim() === 'Можно кнопкой')?.querySelector<HTMLInputElement>('input[type="checkbox"]');
-  if (!box) throw new Error('нет галочки «Можно кнопкой»');
-  if (!box.checked) act(() => { fireEvent.click(box); });
-};
-
 const built = (id: string): Effect | undefined => folded(useWorld.getState().system.effects[id]);
 
 const printed = (effect: Effect | undefined): unknown => JSON.parse(JSON.stringify(effect), (key, value) => (key === 'expr' && typeof value === 'string' ? printFormula(compile(value).ast) : value));
@@ -465,7 +459,7 @@ describe('эффекты D&D собираются в конструкторе р
       within(handlerHead(n)).select('Кого касается', '@cel == @holder');
       within(handlerHead(n)).when(`=${when}`);
       askWith(within(handlerHead(n)), { question: goal!.on![index]!.confirm!.question! });
-      if (goal!.on![index]!.manual) markManual(handlerHead(n));
+      if (goal!.on![index]!.manual) within(handlerHead(n)).check('Можно кнопкой');
 
       ui.select(at().querySelector<HTMLElement>('.add-cost [role="combobox"]')!, 'cost_reaction');
       let card = stepCard(/^1 · /, at());

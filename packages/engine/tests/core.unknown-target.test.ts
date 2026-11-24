@@ -34,7 +34,7 @@ const system = {
       { key: 'ячейки', label: 'Ячейки', kind: 'number', default: 1, min: 0 }, { key: 'щит', label: 'Под щитом', kind: 'number', default: 0 },
     ] },
     приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [
-      button('удар', 'Удар'), button('шар', 'Шар'), button('пиявка', 'Пиявка'), button('яд', 'Яд'), button('лечение', 'Лечение'), button('залп', 'Залп'),
+      button('удар', 'Удар'), button('шар', 'Шар'), button('пиявка', 'Пиявка'), button('яд', 'Яд'), button('лечение', 'Лечение'), button('залп', 'Залп'), button('заряд', 'Заряд'),
     ] },
   },
   effects: {
@@ -112,6 +112,11 @@ const system = {
       label: 'Лечение', activation: 'manual', params: [ACTOR],
       steps: [{ type: 'apply', target: { expr: '@действующий.хп' }, direction: 'add', value: { expr: '5' } }],
     },
+    заряд: {
+      label: 'Заряд', activation: 'manual',
+      params: [ACTOR, TARGETS, { key: 'успехи', label: 'Чистые успехи цели', kind: 'number', ask: { by: 'actor' } }],
+      steps: [{ type: 'each', of: 'цели' }, hurt('2 + @успехи')],
+    },
     залп: {
       label: 'Залп', activation: 'manual', params: [ACTOR, { ...TARGETS, count: { expr: '3' }, repeat: true }],
       steps: [{ type: 'each', of: 'цели' }, { id: 'к', type: 'roll', die: 'к6', by: { expr: '@действующий' } }, hurt('@к.total')],
@@ -148,7 +153,7 @@ const book = { records: [{ id: 'приём', table: 'приём', label: 'При
 const sheet = (id: string, values: Record<string, number> = {}, effects: string[] = []): Sheet =>
   ({ id, systemId: 'н', name: id, values: { хп: 20, кд: 12, ячейки: 1, щит: 0, ...values }, has: [{ of: 'приём' }], effects: effects.map(effectId => ({ effectId })) }) as unknown as Sheet;
 
-const ACTIONS = ['удар', 'шар', 'пиявка', 'яд', 'лечение', 'залп'];
+const ACTIONS = ['удар', 'шар', 'пиявка', 'яд', 'лечение', 'залп', 'заряд'];
 const idOf = (effect: string): string => `приём:${ACTIONS.indexOf(effect)}`;
 const value = (played: { sheets: Sheet[] }, id: string, key: string): unknown => played.sheets.find(one => one.id === id)!.values[key];
 const told = (played: { log: string[] }): string => played.log.join(' | ');
@@ -210,6 +215,14 @@ group('действие без цели: «никто» вместо листа'
     eq(value(played, 'а', 'хп'), 23);
     const spared = blind('пиявка', queue(), question => [question.offers.find(offer => offer.label === 'спасся')!.id]);
     eq(value(spared, 'а', 'хп'), 20);
+  });
+
+  test('эффекту нужно число от цели — оно объявлено вопросом формы и входит в «легло бы»', () => {
+    const played = exchange({ system, compendium: book, die: queue(), sheets: [sheet('а'), sheet('б')], actionId: idOf('заряд'), fromId: 'а', toIds: [NOBODY], inputs: { успехи: 3 } });
+    ok(told(played).includes('на цель легло бы: Урон 5'), told(played));
+    let refused = '';
+    try { exchange({ system, compendium: book, die: queue(), sheets: [sheet('а'), sheet('б')], actionId: idOf('заряд'), fromId: 'а', toIds: [NOBODY] }); } catch (err) { refused = (err as Error).message; }
+    ok(refused.includes('Чистые успехи цели'), refused);
   });
 
   test('число «никого» — «сколько» параметра', () => {

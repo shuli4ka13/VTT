@@ -72,12 +72,6 @@ const viaLabels = (effect: Effect, text: string): string => {
   return text.replace(/@([\p{L}\p{N}_]+)/gu, (whole, name: string) => (said.has(name) ? `@${said.get(name)}` : whole));
 };
 
-const markManual = (root: ParentNode = document): void => {
-  const box = [...root.querySelectorAll<HTMLLabelElement>('label')].find(l => (l.textContent ?? '').trim() === 'Можно кнопкой')?.querySelector<HTMLInputElement>('input[type="checkbox"]');
-  if (!box) throw new Error('нет галочки «Можно кнопкой»');
-  if (!box.checked) act(() => { fireEvent.click(box); });
-};
-
 const built = (id: string): Effect | undefined => folded(useWorld.getState().system.effects[id]);
 
 const dump = (what: unknown) => {
@@ -235,7 +229,7 @@ describe('эффекты пресетов собираются в констру
     ui.select('Кого касается', '@list == @holder');
     ui.when('=@нанесено > 0 и не пусто(@источник) и @источник != @holder');
     askWith(ui, { question: goal!.on![0]!.confirm!.question! });
-    markManual();
+    within().check('Можно кнопкой');
 
     ui.select(document.querySelector<HTMLElement>('.add-cost [role="combobox"]')!, 'cost_reaction');
     let card = stepCard(/^1 · /);

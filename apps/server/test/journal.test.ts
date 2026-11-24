@@ -113,6 +113,58 @@ describe('журнал стола: намерение + кости = тот же
     await second.close();
   });
 
+  it('вопросы мягкого отказа и действия без цели — часть журнала: повтор с теми же костями и ответами совпадает до байта', async () => {
+    const dnd = () => JSON.parse(readFileSync(fileURLToPath(new URL('../../../samples/dnd5e.world.json', import.meta.url)), 'utf8'));
+    const first = await stand(lcg(20261124), dnd());
+    const me = first.userId;
+    const room = first.roomId;
+    const act = (actionId: string, fromId: string, toIds: string[], inputs?: Record<string, number>) => ({ op: 'act', userId: me, input: { roomId: room, actionId, fromId, toIds, ...(inputs ? { inputs } : {}) } });
+    const script = [
+      { op: 'turn', userId: me, input: { roomId: room, op: 'start', order: ['arven', 'orc', 'mirra', 'sil'] } },
+      act('longsword:0', 'arven', ['orc']), act('longsword:0', 'arven', ['orc']), act('longsword:0', 'arven', ['orc']),
+      act('rapier:0', 'sil', ['~nobody']),
+      act('fireball:0', 'mirra', ['~nobody'], { slot: 3 }),
+      act('magic_missile:0', 'mirra', ['~nobody'], { slot: 1 }),
+      act('!shield', 'mirra', []),
+    ];
+    const asked: string[] = [];
+    for (const step of script) {
+      let delta = await play(first.rooms, room, step);
+      while (delta.pending) {
+        asked.push(delta.pending.stage);
+        const chosen = delta.pending.one ? [delta.pending.options[0]!.id] : [];
+        delta = await first.rooms.answer(me, { roomId: room, pendingId: delta.pending.id, chosen });
+      }
+    }
+    expect(asked, 'был вопрос мягкого отказа').toContain('cost');
+    expect(asked, 'был вопрос исхода своего броска').toContain('step');
+
+    const written = await first.journal();
+    const told = (await first.state()).log.map((line: { text: string }) => line.text).join(' | ');
+    expect(told).toContain('разрешил ведущий');
+    expect(told).toContain('на цель легло бы');
+    expect(told).toContain('не спасся');
+
+    const tape = written.flatMap(entry => entry.dice);
+    let at = 0;
+    const second = await stand(() => {
+      if (at >= tape.length) throw new Error('кость бросили сверх журнала');
+      return tape[at++]!;
+    }, dnd());
+    for (const entry of written) await play(second.rooms, second.roomId, { ...entry, input: JSON.parse(JSON.stringify(entry.input).split(room).join(second.roomId)) });
+
+    expect(at, 'все кости журнала израсходованы').toBe(tape.length);
+    const norm = (value: unknown) => JSON.stringify(value).split(second.roomId).join(room);
+    expect(norm(await second.journal())).toBe(norm(written));
+    const [a, b] = [await first.state(), await second.state()];
+    expect(norm(b.sheets)).toBe(norm(a.sheets));
+    expect(b.log.map((line: { text: string }) => line.text)).toEqual(a.log.map((line: { text: string }) => line.text));
+    expect(JSON.stringify(a.sheets)).not.toContain('~nobody');
+
+    await first.close();
+    await second.close();
+  });
+
   it('язык журнала идёт от системы: запись и повтор при разных языках запроса совпадают до байта', async () => {
     const english = (): ReturnType<typeof sliceWorld> => { const world = sliceWorld(); world.system.langs = ['en']; return world; };
     const first = await stand(lcg(20261124), english());
