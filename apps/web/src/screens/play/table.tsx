@@ -406,7 +406,7 @@ function claimsOf(actorId: string, targets: Sheet[], mine: string[], theirs: str
   return Object.keys(claims).length ? { claims } : {};
 }
 
-const actionsOf = (room: RoomState, sender: Sheet): { id: string; label: string }[] => {
+const actionsOf = (room: RoomState, sender: Sheet): { id: string; label: string; manual?: string }[] => {
   try { return availableActions(sender, { system: room.system, compendium: room.compendium }); } catch { return []; }
 };
 
@@ -458,7 +458,7 @@ function Actions({ room, sender, targets, to, repeating, onDrop, places, refused
     const out = new Map<string, string>();
     if (!sender || blind) return out;
     for (const action of actionsOf(room, sender)) {
-      const why = unpaidWhy(room, sender.id, JSON.parse(aimed) as string[], action.id);
+      const why = unpaidWhy(room, sender.id, action.manual ? [] : JSON.parse(aimed) as string[], action.id);
       if (why) out.set(action.id, why);
     }
     return out;
@@ -474,16 +474,18 @@ function Actions({ room, sender, targets, to, repeating, onDrop, places, refused
     return <Empty title={t('table.actions.who')} hint={t('table.actions.whoHint')} />;
   }
 
-  let available: { id: string; label: string }[] = [];
+  let available: { id: string; label: string; manual?: string }[] = [];
   try {
     available = availableActions(sender, { system: room.system, compendium: room.compendium });
   } catch (err) {
     onError((err as Error).message);
   }
 
+  const strict = room.rules?.payment === 'strict';
+  const note = leading ? null : t(room.rules?.payment === 'trust' ? 'table.actions.payTrust' : 'table.actions.payAsk');
   const ready = available.filter(action => !unpaid.has(action.id));
   const reasons = [...new Set(available.flatMap(action => unpaid.get(action.id) ?? []))];
-  const form = (action: { id: string; label: string }) => (
+  const form = (action: { id: string; label: string; manual?: string }) => (
     <ActionForm
       key={action.id}
       system={room.system as System}
@@ -492,14 +494,19 @@ function Actions({ room, sender, targets, to, repeating, onDrop, places, refused
       targets={targets}
       places={places}
       picked={to.length}
-      aim={request => aimOf(
+      {...(action.manual ? { manual: true } : {
+      aim: (request: ActionRequest) => aimOf(
         { system: room.system as System, compendium: room.compendium, clock: room.clock ?? null, sheets: room.sheets },
-        { actionId: request.actionId, fromId: sender.id, toIds: [], ...(request.inputs ? { inputs: request.inputs } : {}) })}
+        { actionId: request.actionId, fromId: sender.id, toIds: [], ...(request.inputs ? { inputs: request.inputs } : {}) }) })}
       actionId={action.id}
       label={action.label}
       disabled={Boolean(room.pending)}
-      blocked={unpaid.get(action.id) ?? null}
-      refuse={request => (blind ? null : unpaidWhy(room, sender.id, to, request.actionId, request.inputs))}
+      blocked={strict ? unpaid.get(action.id) ?? null : null}
+      soft={strict ? null : unpaid.get(action.id) ?? null}
+      strict={strict}
+      note={note}
+      canWaive={leading}
+      refuse={request => (blind ? null : unpaidWhy(room, sender.id, action.manual ? [] : to, request.actionId, request.inputs))}
       expect={request => {
         if (!sender || blind) return null;
         const chosen = to;
@@ -517,7 +524,8 @@ function Actions({ room, sender, targets, to, repeating, onDrop, places, refused
         onError(null);
         tableSocket.act({
           roomId: room.id, actionId: request.actionId,
-          fromId: sender.id, toIds: to,
+          fromId: sender.id, toIds: action.manual ? [] : to,
+          ...(request.waive ? { waive: true } : {}),
           ...(request.inputs ? { inputs: request.inputs } : {}),
           ...claimsOf(sender.id, targets, mine, theirs),
           ...(secret ? { hidden: true } : {}),
@@ -575,6 +583,7 @@ function Actions({ room, sender, targets, to, repeating, onDrop, places, refused
             {reasons.map(reason => (
               <div key={reason} className="actions-off">
                 <span className="faint">{reason}</span>
+                {!strict && note ? <span className="faint">{note}</span> : null}
                 <div className="inline inline--tight actions">{available.filter(action => unpaid.get(action.id) === reason).map(form)}</div>
               </div>
             ))}
@@ -626,6 +635,19 @@ function TableRules({ room }: { room: RoomState }) {
           <span>{t(`table.rules.${key}`)}</span>
         </label>
       ))}
+      <div className="table-rules__row">
+        <span>{t('table.rules.payment')}</span>
+        <Select<string>
+          value={rules.payment ?? ''}
+          label={t('table.rules.payment')}
+          options={[['', t('table.rules.payAsk')], ['trust', t('table.rules.payTrust')], ['strict', t('table.rules.payStrict')]]}
+          onChange={next => {
+            const { payment: _, ...rest } = rules;
+            tableSocket.setRules(room.id, next ? { ...rest, payment: next as 'trust' | 'strict' } : rest);
+          }}
+        />
+      </div>
+      <span className="faint">{t('table.rules.paymentHint')}</span>
     </div>
   );
 }

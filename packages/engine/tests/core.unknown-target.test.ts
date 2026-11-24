@@ -268,7 +268,7 @@ group('висящий эффект кнопкой', () => {
   const holder = (values: Record<string, number> = {}) => [sheet('а', values, ['щит']), sheet('б')];
   const press = (sheets: Sheet[], extra: Record<string, unknown> = {}) => exchange({ system, compendium: book, die: queue(), sheets, actionId: '!щит', fromId: 'а', toIds: [], ...extra });
 
-  test('у носителя есть кнопка; без события условие о событии не проверяется, плата списана, шаги идут', () => {
+  test('у носителя есть кнопка; условие о том, что случилось, не проверяется, плата списана, шаги идут', () => {
     ok(availableActions(holder()[0]!, { system, compendium: book }).some(action => action.id === '!щит' && action.label === 'Щит'));
     ok(!availableActions(sheet('в'), { system, compendium: book }).some(action => action.id === '!щит'));
     const played = press(holder());

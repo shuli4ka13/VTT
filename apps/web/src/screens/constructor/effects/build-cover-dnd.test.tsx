@@ -56,6 +56,12 @@ const marks = (card: HTMLElement, ...tags: string[]): void => {
   }
 };
 
+const markManual = (root: ParentNode = document): void => {
+  const box = [...root.querySelectorAll<HTMLLabelElement>('label')].find(l => (l.textContent ?? '').trim() === 'Можно кнопкой')?.querySelector<HTMLInputElement>('input[type="checkbox"]');
+  if (!box) throw new Error('нет галочки «Можно кнопкой»');
+  if (!box.checked) act(() => { fireEvent.click(box); });
+};
+
 const built = (id: string): Effect | undefined => folded(useWorld.getState().system.effects[id]);
 
 const printed = (effect: Effect | undefined): unknown => JSON.parse(JSON.stringify(effect), (key, value) => (key === 'expr' && typeof value === 'string' ? printFormula(compile(value).ast) : value));
@@ -459,6 +465,7 @@ describe('эффекты D&D собираются в конструкторе р
       within(handlerHead(n)).select('Кого касается', '@cel == @holder');
       within(handlerHead(n)).when(`=${when}`);
       askWith(within(handlerHead(n)), { question: goal!.on![index]!.confirm!.question! });
+      if (goal!.on![index]!.manual) markManual(handlerHead(n));
 
       ui.select(at().querySelector<HTMLElement>('.add-cost [role="combobox"]')!, 'cost_reaction');
       let card = stepCard(/^1 · /, at());
@@ -579,27 +586,40 @@ describe('общие эффекты D&D собираются руками: ци�
     expect(built('spell_slot')).toEqual(folded(goal));
   });
 
-  it('D&D «Ресурсы классов после отдыха» (resources_rest): две подписки, цикл по строкам ресурсов, «Если» по колонке строки', { timeout: 120000 }, () => {
+  it('D&D «Вернуть ресурсы класса» (restore_resources): цикл по строкам ресурсов, «Если» по входу и колонке строки', { timeout: 120000 }, () => {
+    const [goal] = start('dnd5e', ['restore_resources']);
+    const ui = calledHead(goal!, 'restore_resources');
+    param(ui, 'restore_resources', 0, 'Лист', 'sheet', 'list', { role: 'target' });
+    param(ui, 'restore_resources', 1, 'Только короткого отдыха', 'boolean', 'short_only', { ask: 'empty' });
+    ui.click('+ для каждого из списка');
+    rows(document, 'resources', 'ресурс');
+    const auto = [...document.querySelectorAll<HTMLElement>('.param-line')].find(line => (line.querySelector('.param-line__name')?.textContent ?? '') === 'Цели')!;
+    act(() => { fireEvent.click([...auto.querySelectorAll<HTMLElement>('button')].find(b => (b.textContent ?? '').trim() === '×')!); });
+    ui.click('+ если');
+    within(headOf(block(0))).when('=не @short_only или @list.resurs.short');
+    addToArm(block(0), 0, 'change');
+    change(() => stepCard(/^2 · /), 'list', 'resurs.left', 'set', '@list.resurs.max');
+    dump({ got: built('restore_resources'), goal });
+    expect(built('restore_resources')).toEqual(folded(goal));
+  });
+
+  it('D&D «Ресурсы классов после отдыха» (resources_rest): две подписки зовут «Вернуть ресурсы класса», у короткого отдыха «только короткого»', { timeout: 120000 }, () => {
     const [goal] = start('dnd5e', ['resources_rest']);
     const ui = fresh('+ висит', goal!.label!, 'resources_rest', goal!.group!, goal!.description!);
-    within().click('+ когда');
-    lifetime('permanent');
-    within(handlerHead(1)).select('Что случилось', 'moment');
-    within(handlerHead(1)).select('Когда', 'short-rest');
-    within(handlerAt(1)).click('+ для каждого из списка');
-    rows(handlerAt(1), 'resources', 'ресурс');
-    within(handlerAt(1)).click('+ если');
-    within(headOf(block(0, handlerAt(1)))).when('=@holder.resurs.short');
-    addToArm(block(0, handlerAt(1)), 0, 'change');
-    change(() => stepCard(/^2 · /, handlerAt(1)), 'holder', 'resurs.left', 'set', '@holder.resurs.max');
-
-    ui.click('+ когда');
-    within(handlerHead(2)).select('Что случилось', 'moment');
-    within(handlerHead(2)).select('Когда', 'long-rest');
-    within(handlerAt(2)).click('+ для каждого из списка');
-    rows(handlerAt(2), 'resources', 'ресурс');
-    within(handlerAt(2)).click('+ изменение');
-    change(() => stepCard(/^2 · /, handlerAt(2)), 'holder', 'resurs.left', 'set', '@holder.resurs.max');
+    ['short-rest', 'long-rest'].forEach((moment, index) => {
+      const n = index + 1;
+      if (index === 0) within().click('+ когда'); else ui.click('+ когда');
+      if (index === 0) lifetime('permanent');
+      within(handlerHead(n)).select('Что случилось', 'moment');
+      within(handlerHead(n)).select('Когда', moment);
+      within(handlerAt(n)).click('+ изменение');
+      let card = stepCard(/^1 · /, handlerAt(n));
+      within(card).click('вызов');
+      card = stepCard(/^1 · /, handlerAt(n));
+      within(card).select('Какой эффект', 'restore_resources');
+      within(card).formula(within(card).arg('Лист'), '@holder');
+      if (index === 0) within(card).formula(within(card).arg('Только короткого отдыха'), 'true');
+    });
 
     dump({ got: built('resources_rest'), goal });
     expect(built('resources_rest')).toEqual(folded(goal));

@@ -603,7 +603,7 @@ describe('список слева: «ничего не делает» знает
 describe('одно правило «вызывается»', () => {
   afterEach(cleanup);
 
-  it('все «вызываемые» из библиотеки есть в выборе «+ эффект», висящих и самого эффекта там нет: D&D — «Урон», «Лечение», «Бросок атаки», «Спасбросок», «Повторный спасбросок», «Новый ход», «Костей с учётом ячейки»', () => {
+  it('все «вызываемые» из библиотеки есть в выборе «+ эффект», висящих и самого эффекта там нет: D&D — «Урон», «Лечение», «Бросок атаки», «Спасбросок», «Повторный спасбросок», «Новый ход», «Костей с учётом ячейки», «Вернуть ресурсы класса»', () => {
     const world = SAMPLE_WORLDS.find(one => one.system.name === 'D&D 5e')!;
     const strike = Object.entries(world.system.effects).find(([, effect]) => effect.label === 'Атака')![0];
     useWorld.setState(state => ({ ...state, system: world.system, compendium: world.compendium, activeEffectId: strike }));
@@ -613,7 +613,7 @@ describe('одно правило «вызывается»', () => {
       .map(item => item.querySelector('.list__name')?.textContent).sort();
     const pick = combos(document.querySelector('.bricks')!).find(el => (el as HTMLInputElement).placeholder === '+ эффект')!;
     const offered = comboOptions(pick).slice(1).map(option => option.label);
-    expect(offered).toEqual(expect.arrayContaining(['Бросок атаки', 'Костей с учётом ячейки', 'Лечение', 'Новый ход', 'Повторный спасбросок', 'Спасбросок', 'Урон']));
+    expect(offered).toEqual(expect.arrayContaining(['Бросок атаки', 'Вернуть ресурсы класса', 'Вернуть ячейки', 'Костей с учётом ячейки', 'Лечение', 'Новый ход', 'Повторный спасбросок', 'Спасбросок', 'Урон']));
     for (const name of listed) expect(offered).toContain(name);
     expect(offered).not.toContain('Атака');
     const passive = Object.values(world.system.effects).filter(effect => effect.activation === 'passive').map(effect => effect.label);

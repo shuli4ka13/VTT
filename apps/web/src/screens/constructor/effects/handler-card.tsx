@@ -170,9 +170,10 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove, startO
     }).join(` ${t('handler.and')} `);
   })();
   const said = happened || t('handler.what');
-  const sentence = condition
+  const base = condition
     ? (handler.confirm ? t('handler.sentence.both', { said, condition }) : t('handler.sentence.ifOnly', { said, condition }))
     : (handler.confirm ? t('handler.sentence.decides', { said }) : said);
+  const sentence = handler.manual ? t('handler.sentence.button', { base }) : base;
 
   if (!open) {
     return (
@@ -236,13 +237,24 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove, startO
           holderHint=""
           holderTip={t('handler.holderTip')}
           aside={(
-            <Field label={t('handler.decision')}>
-              <Select<string>
-                value={handler.confirm ? 'ask' : ''}
-                options={[['', t('handler.auto')], ['ask', t('handler.asks')]]}
-                onChange={next => edit(draft => { if (!next) delete draft.confirm; else if (!draft.confirm) draft.confirm = {}; })}
-              />
-            </Field>
+            <div className="stack stack--tight">
+              <Field label={t('handler.decision')}>
+                <Select<string>
+                  value={handler.confirm ? 'ask' : ''}
+                  options={[['', t('handler.auto')], ['ask', t('handler.asks')]]}
+                  onChange={next => edit(draft => { if (!next) delete draft.confirm; else if (!draft.confirm) draft.confirm = {}; })}
+                />
+              </Field>
+              <label className="inline inline--tight">
+                <input
+                  type="checkbox" className="sheet-grid__check"
+                  checked={Boolean(handler.manual)}
+                  onChange={e => edit(draft => { if (e.target.checked) draft.manual = true; else delete draft.manual; })}
+                />
+                <span>{t('handler.manual')}</span>
+              </label>
+              <span className="faint">{t('handler.manualHint')}</span>
+            </div>
           )}
         />
         {handler.confirm ? <ConfirmMore confirm={handler.confirm} edit={edit} /> : null}

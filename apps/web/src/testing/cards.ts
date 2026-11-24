@@ -350,7 +350,7 @@ export const wrapIf = (card: () => HTMLElement, fact: string, root: ParentNode =
   const armAdd = arm?.querySelector<HTMLElement>(':scope > .flow-block__add select, :scope > .flow-block__add [role="combobox"]');
   if (armAdd) within(armAdd.parentElement!).select(armAdd, 'branch');
   else within(scope).click('+ если');
-  const empty = () => blocks(scope).filter(flow => !flow.querySelector('.card')).length;
+  const empty = () => blocks(scope).filter(flow => !flow.querySelector('.card, .flow-stop')).length;
   for (let k = 0; k < 40 && empty(); k++) within(mine()).click('↓');
   const flow = mine().closest<HTMLElement>('.flow-block');
   if (!flow) throw new Error('шаг не попал в «Если»');

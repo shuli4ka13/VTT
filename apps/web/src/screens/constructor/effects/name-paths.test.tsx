@@ -26,7 +26,7 @@ describe('имена из справочной движка', () => {
   afterEach(cleanup);
 
   it('строка цикла читается подписями колонок, а не ключами', () => {
-    open('resources_rest');
+    open('restore_resources');
     expect(text()).toContain('ресурс → Осталось');
     expect(text()).toContain('ресурс → Восполняется коротким отдыхом');
     expect(text()).not.toMatch(/ресурс\.(left|short|max)/u);
@@ -58,8 +58,8 @@ describe('имена из справочной движка', () => {
   it('после строки цикла через лист подсказки — её колонки, голой формы нет', () => {
     const world = structuredClone(SAMPLE_WORLDS.find(one => one.system.id === 'dnd5e')!);
     const system = world.system as System;
-    const names = placeNamesAt(system, 'resources_rest', { part: 'handler', handler: 0, index: 2 });
-    render(<FormulaChips value="@holder.resurs" system={system} sheets={new Map([['holder', 'носитель']])} extraNames={names} onChange={() => {}} />);
+    const names = placeNamesAt(system, 'restore_resources', { part: 'steps', index: 2 });
+    render(<FormulaChips value="@list.resurs" system={system} sheets={new Map([['list', 'лист']])} extraNames={names} onChange={() => {}} />);
     const input = document.querySelectorAll('input.chips__text')[1] as HTMLInputElement;
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: '.', selectionStart: 1 } });

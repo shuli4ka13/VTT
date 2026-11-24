@@ -8,7 +8,8 @@
     "byField": "from the field: {{words}}",
     "perTargetFirst": "asks for each target — choose targets first",
     "aimCount": "chosen {{n}} of {{max}}",
-    "pickOption": "— which option —"
+    "pickOption": "— which option —",
+    "waive": "Run without the cost"
   },
   "col": {
     "system": "System",
@@ -228,7 +229,9 @@
       "secretOn": "only you see the rolls and actions, players see “The game master rolls in secret”",
       "secretOff": "everyone sees the rolls",
       "none": "This sheet has no usable actions — wear an item or learn a move on the character sheet.",
-      "wontWork": "won't work: {{why}}"
+      "wontWork": "won't work: {{why}}",
+      "payAsk": "The request goes to the GM",
+      "payTrust": "You will confirm it yourself"
     },
     "items": {
       "byGm": "items edited by: game master",
@@ -239,7 +242,12 @@
     "rules": {
       "title": "Table rules",
       "reactionRolls": "Show the roll in reaction questions",
-      "reactionUseful": "Offer a reaction only when it changes the outcome"
+      "reactionUseful": "Offer a reaction only when it changes the outcome",
+      "payment": "Cost strictness",
+      "payAsk": "ask the GM",
+      "payTrust": "on trust — the player confirms",
+      "payStrict": "strict — refuse with the reason",
+      "paymentHint": "What to do when an action cannot be paid for."
     },
     "aim": {
       "drop": "remove choice: {{name}}"

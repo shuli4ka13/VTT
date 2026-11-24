@@ -53,6 +53,7 @@ export function StopStrip({ step, position, problem, edit, actions }: {
 }) {
   const t = useT('stepCards');
   const note = (step as { note?: unknown }).note;
+  const refusal = (step as { refusal?: string }).refusal;
   return (
     <div className={`flow-stop${problem ? ' flow-stop--bad' : ''}`} title={t('stop.hint')}>
       <span className="flow-stop__mark" aria-hidden>■</span>
@@ -64,6 +65,16 @@ export function StopStrip({ step, position, problem, edit, actions }: {
           if (next) d.note = next; else delete d.note;
         })} />
       </span>
+      <Select<string>
+        value={refusal ?? ''}
+        label={t('stop.refusal.label')}
+        title={t('stop.refusal.label')}
+        options={[['', t('stop.refusal.place')], ['soft', t('stop.refusal.soft')], ['hard', t('stop.refusal.hard')]]}
+        onChange={next => edit(draft => {
+          const d = draft as { refusal?: string };
+          if (next) d.refusal = next; else delete d.refusal;
+        })}
+      />
       {problem ? <span className="field__error">{problem}</span> : null}
       <span className="spacer" />
       {actions}

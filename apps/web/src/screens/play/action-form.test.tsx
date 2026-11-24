@@ -175,7 +175,7 @@ describe('форма действия: плата', () => {
   it('открытая форма: с введённым ответом плату не внести — причина видна, отправить нельзя; другой ответ — можно', () => {
     const sent: unknown[] = [];
     const asked: unknown[] = [];
-    render(<ActionForm system={system} compendium={compendium} actionId="ствол:0" label="Выстрел" onAct={r => sent.push(r)}
+    render(<ActionForm system={system} compendium={compendium} actionId="ствол:0" label="Выстрел" strict onAct={r => sent.push(r)}
       refuse={request => { asked.push(request); return request.inputs?.дистанция === 40 ? 'на этой дистанции оружие не бьёт' : null; }} />);
     fireEvent.click(screen.getByText('Выстрел…'));
     expect(asked).toEqual([]);
@@ -188,6 +188,19 @@ describe('форма действия: плата', () => {
     fireEvent.change(number, { target: { value: '10' } });
     expect(screen.queryByText('на этой дистанции оружие не бьёт')).toBeNull();
     expect((screen.getByRole('button', { name: 'Выстрел' }) as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it('открытая форма не в строгом режиме: причина и строка, кнопка нажимается, ведущему — «без платы»', () => {
+    const sent: unknown[] = [];
+    render(<ActionForm system={system} compendium={compendium} actionId="ствол:0" label="Выстрел" canWaive note="Запрос уйдёт ведущему" onAct={r => sent.push(r)}
+      refuse={() => 'нет патронов'} />);
+    fireEvent.click(screen.getByText('Выстрел…'));
+    fireEvent.change(document.querySelector('input[type=number]') as HTMLInputElement, { target: { value: '10' } });
+    pickCombo(document.querySelector<HTMLElement>('[role="combobox"]')!, 'голова');
+    expect(screen.getByText('нет патронов')).toBeTruthy();
+    expect(screen.getByText('Запрос уйдёт ведущему')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Провести без платы' }));
+    expect(sent).toEqual([{ actionId: 'ствол:0', inputs: { дистанция: 10, куда: 'голова' }, waive: true }]);
   });
 });
 

@@ -495,8 +495,8 @@ describe('стол: отказ действия виден у действия',
   });
   afterEach(() => { cleanup(); tableSocket.act = original; useSession.setState(state => ({ ...state, userId: '' })); });
 
-  it('действие, которое нечем оплатить, неактивно, и рядом сказано почему', () => {
-    useRoom.setState(state => ({ ...state, room: paid(0), log: [], error: null }));
+  it('строго: действие, которое нечем оплатить, неактивно, и рядом сказано почему', () => {
+    useRoom.setState(state => ({ ...state, room: { ...paid(0), rules: { payment: 'strict' } } as RoomState, log: [], error: null }));
     renderOpen(<TableScreen />);
     fireEvent.click(token('Арвен'));
     const button = screen.getByRole('button', { name: 'Меч' }) as HTMLButtonElement;
@@ -505,6 +505,52 @@ describe('стол: отказ действия виден у действия',
     expect(screen.getAllByText('действие на этом ходу уже потрачено')).toHaveLength(1);
     fireEvent.click(button);
     expect(sent).toEqual([]);
+  });
+
+  it('по умолчанию кнопка без платы серая, но нажимается; ведущему предложено провести без платы', () => {
+    useRoom.setState(state => ({ ...state, room: paid(0), log: [], error: null }));
+    renderOpen(<TableScreen />);
+    fireEvent.click(token('Арвен'));
+    const button = screen.getByRole('button', { name: 'Меч' }) as HTMLButtonElement;
+    expect(button.disabled).toBe(false);
+    expect(button.className).toContain('btn--ghost');
+    expect(button.closest('.actions-off')!.textContent).toContain('действие на этом ходу уже потрачено');
+    fireEvent.click(button);
+    expect(sent.at(-1)).toMatchObject({ actionId: 'меч:0' });
+    expect(sent.at(-1)).not.toHaveProperty('waive');
+    fireEvent.click(screen.getByRole('button', { name: 'Провести без платы' }));
+    expect(sent.at(-1)).toMatchObject({ actionId: 'меч:0', waive: true });
+  });
+
+  it('игроку — строка про запрос ведущему и нет кнопки «без платы»; на доверии — другая строка', () => {
+    useRoom.setState(state => ({ ...state, room: { ...paid(0), members: [{ userId: 'u', name: 'Я', role: 'player' }] } as unknown as RoomState, log: [], error: null }));
+    renderOpen(<TableScreen />);
+    fireEvent.click(token('Арвен'));
+    expect(screen.getByText('Запрос уйдёт ведущему')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Провести без платы' })).toBeNull();
+    cleanup();
+    useRoom.setState(state => ({ ...state, room: { ...paid(0), rules: { payment: 'trust' }, members: [{ userId: 'u', name: 'Я', role: 'player' }] } as unknown as RoomState, log: [], error: null }));
+    renderOpen(<TableScreen />);
+    fireEvent.click(token('Арвен'));
+    expect(screen.getByText('Подтверждать будешь сам')).toBeTruthy();
+  });
+
+  it('кнопка висящего эффекта «!…» не просит целей и уходит без них', () => {
+    const base = paid(1) as unknown as { system: { effects: Record<string, unknown> }; sheets: unknown[] };
+    const room2 = {
+      ...base,
+      system: { ...base.system, effects: { ...base.system.effects,
+        щит: { label: 'Щит', activation: 'passive', on: [{ on: 'before:удар', manual: true, steps: [] }] } } },
+    } as unknown as RoomState;
+    const sender = { id: 'а', systemId: 'x', name: 'Арвен', values: { очки: 1 }, has: [{ of: 'меч' }], effects: [{ effectId: 'щит' }] };
+    useRoom.setState(state => ({ ...state, room: { ...room2, sheets: [sender, room2.sheets[1]] } as unknown as RoomState, log: [], error: null }));
+    renderOpen(<TableScreen />);
+    fireEvent.click(token('Арвен'));
+    fireEvent.click(token('Мирра'));
+    const button = screen.getByRole('button', { name: 'Щит' });
+    expect(screen.queryByText(/выбрано \d+ из/)).toBeNull();
+    fireEvent.click(button);
+    expect(sent.at(-1)).toMatchObject({ actionId: expect.stringMatching(/^!/), fromId: 'а', toIds: [] });
   });
 
   it('оплатить есть чем — действие активно и без пояснений', () => {
@@ -639,6 +685,18 @@ describe('стол: правила стола', () => {
     expect((screen.getByLabelText('Предлагать реакцию, только когда она меняет исход') as HTMLInputElement).checked).toBe(true);
     fireEvent.click(rolls);
     expect(sent).toEqual([{ roomId: 'к', rules: { reactionUseful: true, reactionRolls: true } }]);
+  });
+
+  it('выбор строгости платы шлёт правила, «спросить ведущего» снимает ключ', () => {
+    useRoom.setState(state => ({ ...state, room: as('gm', { reactionUseful: true }), log: [], error: null }));
+    renderOpen(<TableScreen />);
+    pickCombo(screen.getByLabelText('Строгость платы'), 'strict');
+    expect(sent.at(-1)).toEqual({ roomId: 'к', rules: { reactionUseful: true, payment: 'strict' } });
+    cleanup();
+    useRoom.setState(state => ({ ...state, room: as('gm', { payment: 'trust' }), log: [], error: null }));
+    renderOpen(<TableScreen />);
+    pickCombo(screen.getByLabelText('Строгость платы'), '');
+    expect(sent.at(-1)).toEqual({ roomId: 'к', rules: {} });
   });
 
   it('игроку блока нет', () => {

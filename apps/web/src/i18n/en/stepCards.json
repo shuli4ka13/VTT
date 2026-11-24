@@ -147,7 +147,13 @@
     "hint": "We go no further. Before «For each of» and in the cost — the action did not happen; in the body — a stop for this target.",
     "word": "{{n}} · Stop",
     "log": "to the log:",
-    "note": "«stop»"
+    "note": "«stop»",
+    "refusal": {
+      "label": "Refusal",
+      "place": "refusal by place: soft in a cost, hard in steps",
+      "soft": "soft — the table can be asked",
+      "hard": "hard — no questions"
+    }
   },
   "head": {
     "where": "{{word}} · condition",

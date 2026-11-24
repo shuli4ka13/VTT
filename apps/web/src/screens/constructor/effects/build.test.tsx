@@ -1,12 +1,12 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { render, cleanup } from '@testing-library/react';
+import { render, cleanup, fireEvent, act } from '@testing-library/react';
 import { writeFileSync } from 'node:fs';
 import { SAMPLE_WORLDS, LITE_WORLDS } from '@vtt/engine/samples';
 import type { System, Effect } from '@vtt/schema';
 import { useWorld } from '../../../store/world.ts';
 import { openAll } from '../../../testing/render-open.tsx';
-import { within, askWith, stepCard, callIf, dragParamBefore, blocks, block, headOf, armLabel, addToArm, addArm, stopNote, lastNumber, outcomeIf, wrapIf, forkBy } from '../../../testing/cards.ts';
+import { within, askWith, stepCard, callIf, dragParamBefore, blocks, block, headOf, armLabel, addToArm, addArm, stopNote, stopStrip, lastNumber, outcomeIf, wrapIf, forkBy } from '../../../testing/cards.ts';
 import { EffectsTab } from './effects-tab.tsx';
 import { folded } from '../../../testing/folded.ts';
 
@@ -72,6 +72,12 @@ const viaLabels = (effect: Effect, text: string): string => {
   return text.replace(/@([\p{L}\p{N}_]+)/gu, (whole, name: string) => (said.has(name) ? `@${said.get(name)}` : whole));
 };
 
+const markManual = (root: ParentNode = document): void => {
+  const box = [...root.querySelectorAll<HTMLLabelElement>('label')].find(l => (l.textContent ?? '').trim() === 'Можно кнопкой')?.querySelector<HTMLInputElement>('input[type="checkbox"]');
+  if (!box) throw new Error('нет галочки «Можно кнопкой»');
+  if (!box.checked) act(() => { fireEvent.click(box); });
+};
+
 const built = (id: string): Effect | undefined => folded(useWorld.getState().system.effects[id]);
 
 const dump = (what: unknown) => {
@@ -133,17 +139,35 @@ describe('эффекты пресетов собираются в констру
     within(cost).formula(within(cost).arg('Лист'), '@deystvuyuschiy');
     within(cost).formula(within(cost).arg('Источник'), '@deystvuyuschiy');
 
+    const softStop = (n: number, note: string) => {
+      stopNote(n, note);
+      within(stopStrip(n)).select(stopStrip(n).querySelector<HTMLElement>('[role="combobox"]')!, 'soft');
+    };
+    ui.click('+ если');
+    within(headOf(block(0))).when('=@cel.cover_full >= 1');
+    addToArm(block(0), 0, 'stop');
+    softStop(3, 'цель за полным укрытием');
+    ui.click('+ если');
+    within(headOf(block(1))).when('=@desk.sprashivat_dalnost and @dalnost == "dalniy"');
+    addToArm(block(1), 0, 'ask');
+    within(stepCard(/^4 · /)).type('Вопрос', 'Цель в пределах дальности?');
+    within(stepCard(/^4 · /)).formula('Кого', '@deystvuyuschiy');
+    nameStep(stepCard(/^4 · /), 'в_дальности');
+    addToArm(block(1), 0, 'branch');
+    within(headOf(block(2))).when('=не @в_дальности');
+    addToArm(block(2), 0, 'stop');
+    softStop(5, 'цель вне дальности');
 
     ui.click('+ изменение');
-    let card = stepCard(/^3 · /);
+    let card = stepCard(/^6 · /);
     within(card).click('вызов');
-    card = stepCard(/^3 · /);
+    card = stepCard(/^6 · /);
     within(card).select('Какой эффект', 'attack_roll');
     within(card).formula(within(card).arg('Бонус атаки'), '@attack_with');
     const outcome = () => [...document.querySelectorAll<HTMLElement>('.card')].find(c => /^Что получит тот, кто вызвал/.test((c.textContent ?? '').replace(/\s+/g, ' ').trim()))!;
     within(card).formula(within(card).arg('Способ атаки'), '@дальность');
     within(card).formula(within(card).arg('Вплотную'), 'if(empty(@вплотную), @дальность == "blizhniy", @вплотную)');
-    nameStep(stepCard(/^3 · /), 'бросок');
+    nameStep(stepCard(/^6 · /), 'бросок');
     ([
       ['попал', 'промах'],
       ['крит', 'не крит'],
@@ -155,9 +179,9 @@ describe('эффекты пресетов собираются в констру
       within(outcome()).type(within(outcome()).cell('Как назвать «нет»', row), no);
     });
 
-    const hit = callIf(3, 'Бросок атаки', 'попал');
+    const hit = callIf(6, 'Бросок атаки', 'попал');
     addToArm(block(hit), 0, 'roll');
-    card = stepCard(/^4 · /);
+    card = stepCard(/^7 · /);
     within(card).select('Кто бросает', '@deystvuyuschiy');
     within(card).select('Что бросает', 'own-die');
     within(card).formula('Своя кость', '@damage_dice');
@@ -165,27 +189,27 @@ describe('эффекты пресетов собираются в констру
     within(card).formula('Сколько раз', '@dice');
     within(card).click('+ прибавка');
     within(card).formula('Прибавка', '@damage_with');
-    card = stepCard(/^4 · /);
+    card = stepCard(/^7 · /);
     marks(card, 'uron', 'oruzhie', '=@dalnost', '=@svoystva', '=if(@бросок.krit, "krit", "")');
     nameStep(card, 'урон');
 
     addToArm(block(hit), 0, 'change');
-    card = stepCard(/^5 · /);
+    card = stepCard(/^8 · /);
     within(card).click('вызов');
-    card = stepCard(/^5 · /);
+    card = stepCard(/^8 · /);
     within(card).select('Какой эффект', 'damage');
     within(card).formula(within(card).arg('Сколько урона'), '@урон.total');
     within(card).formula(within(card).arg('От крита'), '@бросок.krit');
 
     addToArm(block(hit), 0, 'change');
-    card = stepCard(/^6 · /);
+    card = stepCard(/^9 · /);
     within(card).click('состояние');
-    card = stepCard(/^6 · /);
+    card = stepCard(/^9 · /);
     within(card).select('Какое', ':input:status');
     within(card).formula('На кого', '@цель');
-    card = stepCard(/^6 · /);
+    card = stepCard(/^9 · /);
     within(card).formula('Запомнит: Кто наложил', '@deystvuyuschiy');
-    wrapIf(() => stepCard(/^6 · /), '=не пусто(@status)');
+    wrapIf(() => stepCard(/^9 · /), '=не пусто(@status)');
     const got = built('strike');
     const listed = got?.params?.find(one => one.label === 'Свойства оружия');
     if (listed) (listed as { many?: boolean }).many = true;
@@ -211,6 +235,7 @@ describe('эффекты пресетов собираются в констру
     ui.select('Кого касается', '@list == @holder');
     ui.when('=@нанесено > 0 и не пусто(@источник) и @источник != @holder');
     askWith(ui, { question: goal!.on![0]!.confirm!.question! });
+    markManual();
 
     ui.select(document.querySelector<HTMLElement>('.add-cost [role="combobox"]')!, 'cost_reaction');
     let card = stepCard(/^1 · /);

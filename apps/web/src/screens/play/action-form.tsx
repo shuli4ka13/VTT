@@ -9,11 +9,12 @@ import { useT } from '../../i18n/play.ts';
 export interface ActionRequest {
   actionId: string;
   inputs?: Inputs;
+  waive?: boolean;
 }
 
 type Answer = string | Record<string, string>;
 
-export function ActionForm({ system, compendium, actor, targets = [], actionId, label, disabled, blocked, refuse, onAct, expect, places, aim, picked = 0 }: {
+export function ActionForm({ system, compendium, actor, targets = [], actionId, label, disabled, blocked, strict, soft, note, canWaive, manual, refuse, onAct, expect, places, aim, picked = 0 }: {
   system: System;
   compendium: Compendium;
   actor?: Sheet;
@@ -22,6 +23,11 @@ export function ActionForm({ system, compendium, actor, targets = [], actionId, 
   label: string;
   disabled?: boolean;
   blocked?: string | null;
+  strict?: boolean;
+  soft?: string | null;
+  note?: string | null;
+  canWaive?: boolean;
+  manual?: boolean;
   refuse?: (request: ActionRequest) => string | null;
   onAct: (request: ActionRequest) => void;
   expect?: (request: ActionRequest) => string | null;
@@ -31,8 +37,9 @@ export function ActionForm({ system, compendium, actor, targets = [], actionId, 
 }) {
   const t = useT('play');
   const asked = useMemo<AskedParam[]>(() => {
+    if (manual) return [];
     try { return asksOf(actionId, { system, compendium }); } catch { return []; }
-  }, [system, compendium, actionId]);
+  }, [system, compendium, actionId, manual]);
 
   const [answers, setAnswers] = useState<Record<string, Answer>>({});
   const ids = targets.map(target => target.id);
@@ -88,13 +95,13 @@ export function ActionForm({ system, compendium, actor, targets = [], actionId, 
   const [open, setOpen] = useState(false);
   const [tip, setTip] = useState<string | null>(null);
 
-  const send = () => {
+  const send = (waive = false) => {
     const given = collect();
     const problem = problemOf(given);
     if (problem) { setTrouble(problem); return; }
     setTip(null);
     setTrouble(null);
-    onAct({ actionId, ...(asked.length ? { inputs: normalizeInputs(asked, given) } : {}) });
+    onAct({ actionId, ...(asked.length ? { inputs: normalizeInputs(asked, given) } : {}), ...(waive ? { waive: true } : {}) });
     setAnswers({});
     setOpen(false);
   };
@@ -118,9 +125,15 @@ export function ActionForm({ system, compendium, actor, targets = [], actionId, 
     </span>
   );
 
+  const pending = blocked ?? soft ?? null;
+  const waiver = (why: string | null) => (canWaive && why
+    ? <Button size="sm" variant="ghost" disabled={disabled} onClick={() => send(true)}>{t('form.waive')}</Button>
+    : null);
+
   if (!asked.length) {
     return <>
-      <Button variant="primary" disabled={disabled || Boolean(blocked) || over} onClick={send} onMouseEnter={guess} title={blocked ?? tip ?? undefined}>{label}</Button>
+      <Button variant={soft ? 'ghost' : 'primary'} disabled={disabled || Boolean(blocked) || over} onClick={() => send()} onMouseEnter={guess} title={pending ?? tip ?? undefined}>{label}</Button>
+      {waiver(pending)}
       {count}
     </>;
   }
@@ -129,8 +142,8 @@ export function ActionForm({ system, compendium, actor, targets = [], actionId, 
     return (
       <>
         <Button
-          variant="primary" disabled={disabled || Boolean(blocked) || over}
-          title={blocked ?? t('form.willAsk', { list: asked.map(p => p.label ?? p.key).join(', ') })}
+          variant={soft ? 'ghost' : 'primary'} disabled={disabled || Boolean(blocked) || over}
+          title={blocked ?? soft ?? t('form.willAsk', { list: asked.map(p => p.label ?? p.key).join(', ') })}
           onClick={() => setOpen(true)}
         >
           {label}…
@@ -141,7 +154,9 @@ export function ActionForm({ system, compendium, actor, targets = [], actionId, 
   }
 
   const given = collect();
-  const unpaid = refuse && !problemOf(given) ? refuse({ actionId, inputs: normalizeInputs(asked, given) }) : null;
+  const asking = refuse && !problemOf(given) ? refuse({ actionId, inputs: normalizeInputs(asked, given) }) : null;
+  const unpaid = asking ?? pending;
+  const hard = Boolean(blocked) || (Boolean(asking) && Boolean(strict));
 
   return (
     <div className="stack stack--tight action-form">
@@ -177,8 +192,12 @@ export function ActionForm({ system, compendium, actor, targets = [], actionId, 
       })}
       {trouble ? <Verdict tone="bad">{trouble}</Verdict> : null}
       {unpaid ? <Verdict tone="bad">{unpaid}</Verdict> : null}
+      {unpaid && note ? <span className="faint">{note}</span> : null}
       {count}
-      <Button variant="primary" disabled={disabled || Boolean(unpaid) || over} onClick={send} onMouseEnter={guess} title={unpaid ?? tip ?? undefined}>{label}</Button>
+      <div className="inline inline--tight">
+        <Button variant={unpaid && !hard ? 'ghost' : 'primary'} disabled={disabled || hard || over} onClick={() => send()} onMouseEnter={guess} title={unpaid ?? tip ?? undefined}>{label}</Button>
+        {waiver(unpaid)}
+      </div>
     </div>
   );
 }

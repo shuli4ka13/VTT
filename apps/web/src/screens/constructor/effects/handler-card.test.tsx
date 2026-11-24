@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, afterEach } from 'vitest';
-import { render, cleanup } from '@testing-library/react';
+import { render, cleanup, fireEvent } from '@testing-library/react';
 import { openAll } from '../../../testing/render-open.tsx';
 import { HandlerCard } from './handler-card.tsx';
 import { within, pickCombo, comboOptions } from '../../../testing/cards.ts';
@@ -189,5 +189,24 @@ describe('«когда»: фраза по-русски', () => {
     openAll();
     const subjects = comboWith('*');
     expect(comboOptions(subjects).map(o => o.label)).toEqual(['любое действие кнопкой', 'всё с меткой «Атака»', '«Удар»']);
+  });
+});
+
+
+describe('«когда»: можно кнопкой', () => {
+  afterEach(cleanup);
+
+  it('галочка пишет признак, снятая — убирает ключ', () => {
+    const { get } = card({ on: 'after:удар', steps: [] });
+    const box = document.querySelector('input[type=checkbox]') as HTMLInputElement;
+    expect(box.checked).toBe(false);
+    fireEvent.click(box);
+    expect(get().manual).toBe(true);
+    cleanup();
+    const again = card({ on: 'after:удар', manual: true, steps: [] });
+    const on = document.querySelector('input[type=checkbox]') as HTMLInputElement;
+    expect(on.checked).toBe(true);
+    fireEvent.click(on);
+    expect('manual' in again.get()).toBe(false);
   });
 });

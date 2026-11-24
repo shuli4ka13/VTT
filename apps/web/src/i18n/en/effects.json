@@ -217,7 +217,8 @@
     "sentence": {
       "ifOnly": "{{said}}, if {{condition}}",
       "decides": "{{said}} — the holder's player decides",
-      "both": "{{said}}, if {{condition}} — the holder's player decides"
+      "both": "{{said}}, if {{condition}} — the holder's player decides",
+      "button": "{{base}} — can be pressed"
     },
     "when": "when: {{sentence}}",
     "title": "Trigger #{{n}}: {{sentence}}",
@@ -253,6 +254,8 @@
         "roll": "the roll",
         "versus": "against what"
       }
-    }
+    },
+    "manual": "Can be pressed",
+    "manualHint": "The holder gets a button on the sheet: the event condition is not checked, the cost and steps run"
   }
 }
