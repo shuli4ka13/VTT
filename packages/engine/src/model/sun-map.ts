@@ -9,6 +9,7 @@ import { tagSaid } from '../engine/roll-tags.ts';
 import { kindOfRecord, findRecord, withLibrary } from './owned.ts';
 import { bindingsOf } from '../events/actions.ts';
 import { launchOf, type LaunchKind } from './effect-kinds.ts';
+import { blockLabel } from './blocks.ts';
 import { ROLL_CALL } from '../words/calls.ts';
 import { ANY_ACTION, type Phase } from '../events/happenings.ts';
 import { callSlot, depsOf, exprsIn, mergeMeddle, moduleOf, rollMeddle, seamsOf, standsOf, sunOf, sureTags, tagsSlot, type Meddle, type Seam, type Stand, type Sun } from './sun.ts';
@@ -237,7 +238,6 @@ export function mapOf(raw: System, compendium?: Compendium): SunMap {
     if (!used) leaks.push({ kind: 'silent-tag', tag });
   }
   const count = (test: (one: MapLink) => boolean): number => links.filter(test).length;
-  const groups = (system.groups ?? {}) as Record<string, { label?: string } | undefined>;
   return {
     effects: effects.map(([id, effect]) => {
       const launch = launchOf(effect).kind;
@@ -245,7 +245,7 @@ export function mapOf(raw: System, compendium?: Compendium): SunMap {
       const layer: MapLayer = launch !== 'manual' ? 'hanging' : calledBy > 0 ? 'called' : 'action';
       return {
         id, label: effect.label ?? id, launch, layer,
-        ...(effect.group ? { group: effect.group, groupLabel: groups[effect.group]?.label ?? effect.group } : {}),
+        ...(effect.group ? { group: effect.group, groupLabel: blockLabel(system, effect.group) } : {}),
         calls: count(one => one.from === id && (one.kind === 'calls' || one.kind === 'applies')),
         calledBy,
         hears: count(one => one.from === id && one.kind === 'hears'),

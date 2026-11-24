@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import type { CellValue } from '@vtt/schema';
 import { ButtonEditor } from '../constructor/button-editor.tsx';
 import { newBinding } from '../constructor/factory.ts';
-import { bindingsOf, recordsOf, isItem, propsNeeded, recordKindOf, recordKinds, flattenSystem } from '@vtt/engine';
+import { chainOf, bindingsOf, recordsOf, isItem, propsNeeded, recordKindOf, recordKinds, flattenSystem } from '@vtt/engine';
 import type { RecordKind } from '@vtt/engine';
 import { GrantsEditor } from '../constructor/grants-editor.tsx';
 import { CallSummary } from '../constructor/call-editor.tsx';
@@ -19,6 +19,7 @@ import { RecordView } from '../../sheet/record-view.tsx';
 import { ValueEditor } from '../../ui/value-editor.tsx';
 import type { CompendiumRecord, System, Compendium } from '@vtt/schema';
 import { dataT, useT } from '../../i18n/author.ts';
+import { useEffectView } from '../../store/effect-view.ts';
 
 export function CompendiumScreen() {
   const t = useT('book');
@@ -125,6 +126,8 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
   };
 
   const bindings = bindingsOf(record, system);
+  const ts = useT('sunChain');
+  const hasChain = (chainOf(system, compendium, record.id)?.buttons.length ?? 0) > 0;
 
   const mustFill = propsNeeded(system, kind, bindings);
 
@@ -136,7 +139,7 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
         <CardHead
           title={<LabelInput value={record.label ?? ''} placeholder={t('common:name.record')} onCommit={label => edit(draft => { draft.label = label; })} />}
           badge={<span className="chip">{kind?.label ?? t('list.unknownKind')}</span>}
-          actions={<DangerButton size="sm" onConfirm={remove}>{t('common:delete')}</DangerButton>}
+          actions={<>{hasChain ? <Button size="sm" title={ts('enterHint')} onClick={() => useEffectView.getState().openChain(record.id)}>{ts('enter')}</Button> : null}<DangerButton size="sm" onConfirm={remove}>{t('common:delete')}</DangerButton></>}
         />
         <Field label={t('record.table.label')} hint={t('record.table.hint')}>
           <Select<string>

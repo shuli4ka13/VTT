@@ -95,6 +95,7 @@ describe('связи метки и карта', () => {
     expect(layer('shield')).toBe('hanging');
     expect(map.tags.find(tag => tag.id === 'ataka')).toMatchObject({ contract: true, carries: 1, hears: 1 });
     expect(map.effects.find(one => one.id === 'shield')!.groupLabel).toBe('Реакции');
+    expect(map.effects.find(one => one.id === 'strike')!.groupLabel).toBe('Атака');
   });
 
   it('карта: связи ведут к существующим эффектам и меткам', () => {

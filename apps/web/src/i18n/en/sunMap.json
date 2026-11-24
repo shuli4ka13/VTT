@@ -1,0 +1,78 @@
+{
+  "head": {
+    "path": "Where you are",
+    "system": "System",
+    "title": "Link map",
+    "ok": "no extra links",
+    "bad": "extra links: {{n}}",
+    "badTitle": "The list «What should not be here» under the scheme"
+  },
+  "title": "Who knows whom",
+  "lead": "Four layers. What is not on the scheme should not be there.",
+  "scheme": "Link scheme",
+  "layer": {
+    "tags": { "title": "System vocabulary", "note": "Everyone knows it, it knows no one" },
+    "called": { "title": "Shared effects", "note": "They are called. They listen to no one and do not know who will call them" },
+    "action": { "title": "Actions", "note": "By button. They call shared effects by name and carry marks from the vocabulary" },
+    "hanging": { "title": "Hanging", "note": "They fire on their own. They know only the vocabulary" },
+    "hangingSide": "they listen only to the vocabulary",
+    "empty": "Nothing here yet"
+  },
+  "between": {
+    "calls": "↑ call by name",
+    "none": "there are no arrows between hanging effects and actions: they connect only through the vocabulary"
+  },
+  "tag": {
+    "contract": "with a contract",
+    "counts": "carried by {{carries}} · heard by {{hears}} · edited by {{edits}}",
+    "silent": "no one hears it"
+  },
+  "block": {
+    "noBlock": "No block",
+    "count_one": "{{count}} effect",
+    "count_other": "{{count}} effects",
+    "more": "{{count}} more",
+    "toggle": "Block «{{name}}»: show or hide effects"
+  },
+  "row": {
+    "counts": "calls {{calls}} · called by {{calledBy}} · hears {{hears}} · edits {{edits}}"
+  },
+  "panel": {
+    "title": "Links",
+    "hint": "Pick an effect or a mark on the scheme: its links will show here.",
+    "clear": "Clear selection",
+    "nobody": "no one",
+    "calls": "Calls",
+    "calledBy": "Called by",
+    "carries": "Carries marks",
+    "hears": "Hears",
+    "edits": "Edits",
+    "contract": "Contract",
+    "noContract": "no contract",
+    "inputs": "Inputs",
+    "each": "For each",
+    "outputs": "Outputs",
+    "carriers": "Carried by",
+    "marks": "Put on a roll by",
+    "hearers": "Heard by",
+    "editors": "Edited by",
+    "open": "Open bubbles ›"
+  },
+  "via": {
+    "tag": "by mark",
+    "id": "by effect name",
+    "any": "any action"
+  },
+  "heard": "{{phase}} · {{via}} «{{name}}»",
+  "heardAny": "{{phase}} · {{via}}",
+  "edited": "{{via}} «{{name}}»",
+  "leaks": {
+    "title": "What should not be here",
+    "none": "no extra links: everything goes through the vocabulary",
+    "byName": "the subscription of effect «{{effect}}» listens to effect «{{of}}» by name — better listen to a mark",
+    "inner": "the subscription «{{effect}}» reads the steps of «{{of}}»: {{names}}",
+    "silent": "no one hears or edits the mark «{{tag}}»",
+    "open": "Open «{{name}}» ›",
+    "showTag": "Show mark «{{name}}»"
+  }
+}

@@ -130,6 +130,7 @@
     "callers": "Called by a step",
     "book": "Given as a button",
     "heard": "Subscribed to it",
+    "moreN": "{{n}} more",
     "nobody": "nobody calls it",
     "fold": "fold",
     "unfold": "unfold"

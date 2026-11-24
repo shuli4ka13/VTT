@@ -1,0 +1,39 @@
+{
+  "title": "Breakdown: what “{{name}}” triggers",
+  "lead": "What the record's effect does in order and who steps in from the side. Read only.",
+  "dialog": "Record breakdown",
+  "closeX": "Close window",
+  "col": {
+    "record": "Book record",
+    "effect": "Effect",
+    "order": "What it triggers, in order",
+    "meddle": "Who steps in on their own"
+  },
+  "fills": "Fills the inputs",
+  "noFills": "fills no inputs",
+  "hangs": "hanging",
+  "button": "button “{{said}}”",
+  "shared": "shared with: {{names}}",
+  "moreN": "{{n}} more",
+  "open": "Open bubbles ›",
+  "after": "after",
+  "and": "and",
+  "empty": "The record has no buttons or granted effects.",
+  "note": {
+    "each": "for each target",
+    "calls": "calls {{names}}",
+    "tags": "tags {{names}}",
+    "sets": "changes {{names}}",
+    "applies": "applies {{names}}",
+    "asks": "asks",
+    "stops": "may cut off"
+  },
+  "meddle": {
+    "own": "editing: {{n}}",
+    "dice": "dice rolled",
+    "amount": "edit the amount on the way",
+    "after": "after the call these hear it:"
+  },
+  "enter": "Breakdown",
+  "enterHint": "What this record's effect triggers, in order"
+}

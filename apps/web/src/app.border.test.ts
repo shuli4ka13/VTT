@@ -22,6 +22,7 @@ const AUTHOR_ONLY = [
   'constructor/effects/launch-card.tsx',
   'constructor/effects/chain.tsx',
   'constructor/effects/sun/sun-screen.tsx',
+  'constructor/effects/sun/map/map-screen.tsx',
   'constructor/effects/sun/view-switch.tsx',
   'constructor/effects/sun/head.tsx',
   'constructor/effects/sun/canvas.tsx',

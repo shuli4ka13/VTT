@@ -4,7 +4,9 @@
     "bubbles": "Bubbles",
     "form": "Form",
     "bubblesTitle": "The effect as bubbles: steps in a circle, around each what it reads, changes and who steps in",
-    "formTitle": "The effect as a list of steps: this is how it is edited"
+    "formTitle": "The effect as a list of steps: this is how it is edited",
+    "map": "Map",
+    "mapTitle": "Link map: the whole system in layers and a list of what should not be on the scheme"
   },
   "head": {
     "path": "Where this effect lives",

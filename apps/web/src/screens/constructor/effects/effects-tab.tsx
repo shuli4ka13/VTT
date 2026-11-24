@@ -20,6 +20,7 @@ import { useT, t as tt } from '../../../i18n/author.ts';
 import { useEffectView } from '../../../store/effect-view.ts';
 import { SunScreen } from './sun/sun-screen.tsx';
 import { ViewSwitch } from './sun/view-switch.tsx';
+import { MapScreen } from './sun/map/map-screen.tsx';
 
 export function EffectsTab() {
   const t = useT('effects');
@@ -34,6 +35,7 @@ export function EffectsTab() {
   const storedView = useEffectView(s => s.view);
   const lesson = useWorld(s => s.origin.lesson);
   const bubbles = storedView === 'sun' && !lesson;
+  const linkMap = storedView === 'map' && !lesson;
   const roles = rolesOf(system, compendium);
 
   const addTo = (block: string, title?: string) => {
@@ -100,7 +102,9 @@ export function EffectsTab() {
         ),
       }}
       main={{
-        body: active && activeId
+        body: linkMap
+          ? <MapScreen />
+          : active && activeId
           ? (bubbles
             ? <SunScreen key={activeId} id={activeId} />
             : (
@@ -114,7 +118,7 @@ export function EffectsTab() {
               hint={t('tab.pickHint')}
             />,
       }}
-      right={bubbles ? undefined : right}
+      right={bubbles || linkMap ? undefined : right}
     />
   );
 }
