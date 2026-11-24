@@ -56,4 +56,4 @@ export { rollMeddle, seamsOf, standsOf, sunOf } from '../model/sun.ts';
 export type { Meddle, MeddleAsk, MeddleEdit, Seam, Stand, Sun, SunBubble, SunKind, SunPart, SunRay, SunRef, SunRole, SunSpan, SunStage } from '../model/sun.ts';
 export { SUN_KINDS, SUN_STAGES } from '../words/sun.ts';
 export { chainOf, mapOf, tagLinks } from '../model/sun-map.ts';
-export type { ChainNode, ChainVia, MapLeak, MapLink, MapLinkKind, RecordChain, SunMap, TagLinks } from '../model/sun-map.ts';
+export type { ChainButton, ChainFill, ChainNode, ChainVia, MapEffect, MapLayer, MapLeak, MapLink, MapLinkKind, MapTag, RecordChain, SunMap, TagLinks } from '../model/sun-map.ts';

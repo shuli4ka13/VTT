@@ -11,7 +11,7 @@ import { bindingsOf } from '../events/actions.ts';
 import { launchOf, type LaunchKind } from './effect-kinds.ts';
 import { ROLL_CALL } from '../words/calls.ts';
 import { ANY_ACTION, type Phase } from '../events/happenings.ts';
-import { callSlot, depsOf, exprsIn, mergeMeddle, moduleOf, rollMeddle, seamsOf, standsOf, sureTags, tagsSlot, type Meddle, type Seam, type Stand } from './sun.ts';
+import { callSlot, depsOf, exprsIn, mergeMeddle, moduleOf, rollMeddle, seamsOf, standsOf, sunOf, sureTags, tagsSlot, type Meddle, type Seam, type Stand, type Sun } from './sun.ts';
 import type { Place } from './names-at.ts';
 
 export type ChainVia = 'button' | 'grant' | 'call' | 'cost' | 'state';
@@ -28,7 +28,11 @@ export interface ChainNode {
   children: ChainNode[];
 }
 
-export interface RecordChain { record: string; label: string; nodes: ChainNode[] }
+export interface ChainFill { key: string; label: string; value: unknown }
+
+export interface ChainButton { effect: string; label: string; via: 'button' | 'grant'; said?: string; sun: Sun; fills: ChainFill[]; shared: string[]; node: ChainNode }
+
+export interface RecordChain { record: string; label: string; table: string; tableLabel: string; nodes: ChainNode[]; buttons: ChainButton[] }
 
 const DEPTH = 5;
 
@@ -93,18 +97,35 @@ export function chainOf(raw: System, book: Compendium | null | undefined, record
   const record = findRecord(compendium, recordId);
   if (!record) return null;
   const nodes: ChainNode[] = [];
+  const buttons: ChainButton[] = [];
   const own: Compendium = { ...compendium, records: [record] };
+  const others = (compendium.records ?? []).filter(one => one.id !== record.id);
+  const sharedBy = (id: string): string[] => others
+    .filter(one => bindingsOf(one, system).some(binding => binding.effect === id))
+    .map(one => one.label ?? one.id);
   for (const binding of bindingsOf(record, system)) {
     const id = typeof binding.effect === 'string' ? binding.effect : '';
     const effect = id ? system.effects?.[id] : undefined;
     if (!effect) continue;
-    const node = nodeOf(system, own, id, 'button', ownRolls(system, id, effect, own), new Set(), 0);
-    nodes.push({ ...node, ...(binding.label ? { said: binding.label } : {}) });
+    const node = { ...nodeOf(system, own, id, 'button', ownRolls(system, id, effect, own), new Set(), 0), ...(binding.label ? { said: binding.label } : {}) };
+    nodes.push(node);
+    const fills = Object.entries((binding.args ?? {}) as Record<string, unknown>).map(([key, value]) => ({
+      key, label: (effect.params ?? []).find(param => param.key === key)?.label ?? key, value,
+    }));
+    const sun = sunOf(system, id, own);
+    if (sun) buttons.push({ effect: id, label: effect.label ?? id, via: 'button', ...(binding.label ? { said: binding.label } : {}), sun, fills, shared: sharedBy(id), node });
   }
   for (const id of [...(kindOfRecord(system, record)?.grants ?? []), ...(record.grants ?? [])]) {
-    if (system.effects?.[id]) nodes.push(nodeOf(system, own, id, 'grant', null, new Set(), 0));
+    const effect = system.effects?.[id];
+    if (!effect) continue;
+    const node = nodeOf(system, own, id, 'grant', null, new Set(), 0);
+    nodes.push(node);
+    const sun = sunOf(system, id, own);
+    if (sun) buttons.push({ effect: id, label: effect.label ?? id, via: 'grant', sun, fills: [], shared: [], node });
   }
-  return { record: recordId, label: record.label ?? recordId, nodes };
+  const tableId = record.table ?? '';
+  const table = system.tables?.[tableId] as { label?: string } | undefined;
+  return { record: recordId, label: record.label ?? recordId, table: tableId, tableLabel: table?.label ?? tableId, nodes, buttons };
 }
 
 export interface TagLinks {
@@ -162,9 +183,15 @@ export type MapLeak =
   | { kind: 'inner'; effect: string; handler: number; of: string; names: string[] }
   | { kind: 'silent-tag'; tag: string };
 
+export type MapLayer = 'called' | 'action' | 'hanging';
+
+export interface MapEffect { id: string; label: string; launch: LaunchKind; layer: MapLayer; group?: string; groupLabel?: string; calls: number; calledBy: number; hears: number; edits: number }
+
+export interface MapTag { id: string; label: string; contract: boolean; carries: number; hears: number; edits: number }
+
 export interface SunMap {
-  effects: { id: string; label: string; launch: LaunchKind; group?: string }[];
-  tags: { id: string; label: string; contract: boolean }[];
+  effects: MapEffect[];
+  tags: MapTag[];
   links: MapLink[];
   leaks: MapLeak[];
 }
@@ -209,9 +236,28 @@ export function mapOf(raw: System, compendium?: Compendium): SunMap {
       || Object.values(system.tags ?? {}).some(contract => (contract.includes ?? []).includes(tag) && contract !== system.tags![tag]);
     if (!used) leaks.push({ kind: 'silent-tag', tag });
   }
+  const count = (test: (one: MapLink) => boolean): number => links.filter(test).length;
+  const groups = (system.groups ?? {}) as Record<string, { label?: string } | undefined>;
   return {
-    effects: effects.map(([id, effect]) => ({ id, label: effect.label ?? id, launch: launchOf(effect).kind, ...(effect.group ? { group: effect.group } : {}) })),
-    tags: [...tagIds].map(id => ({ id, label: tagSaid(system, id), contract: Boolean(system.tags?.[id]) })),
+    effects: effects.map(([id, effect]) => {
+      const launch = launchOf(effect).kind;
+      const calledBy = count(one => one.to === id && one.kind === 'calls');
+      const layer: MapLayer = launch !== 'manual' ? 'hanging' : calledBy > 0 ? 'called' : 'action';
+      return {
+        id, label: effect.label ?? id, launch, layer,
+        ...(effect.group ? { group: effect.group, groupLabel: groups[effect.group]?.label ?? effect.group } : {}),
+        calls: count(one => one.from === id && (one.kind === 'calls' || one.kind === 'applies')),
+        calledBy,
+        hears: count(one => one.from === id && one.kind === 'hears'),
+        edits: count(one => one.from === id && one.kind === 'edits'),
+      };
+    }),
+    tags: [...tagIds].map(id => ({
+      id, label: tagSaid(system, id), contract: Boolean(system.tags?.[id]),
+      carries: count(one => one.to === id && one.kind === 'carries'),
+      hears: count(one => one.to === id && one.kind === 'hears'),
+      edits: count(one => one.to === id && one.kind === 'edits'),
+    })),
     links,
     leaks,
   };

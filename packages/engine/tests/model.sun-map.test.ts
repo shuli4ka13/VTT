@@ -21,6 +21,18 @@ describe('цепочка записи', () => {
     expect(damage.seams.map(seam => seam.by)).toContain('concentration');
   });
 
+  it('запись несёт шаги своего эффекта по порядку, чем кнопка заполняет входы и с кем эффект общий', () => {
+    const chain = chainOf(dnd, world.compendium, 'fireball')!;
+    const button = chain.buttons[0]!;
+    expect(button).toMatchObject({ effect: 'spell_save', via: 'button', said: 'Сотворить' });
+    expect(button.sun.rays[0]!.stage).toBe('cost');
+    expect(button.sun.rays.some(ray => ray.bubbles.some(bubble => bubble.role === 'meddle'))).toBe(true);
+    expect(button.fills.map(fill => fill.label)).toContain('Кость урона');
+    expect(button.shared.length).toBeGreaterThan(0);
+    expect(button.shared).not.toContain('Огненный шар');
+    expect(chain.tableLabel.length).toBeGreaterThan(0);
+  });
+
   it('цепочка идёт по записи, а не по всем записям того же эффекта: состояния чужих заклинаний не подмешиваются', () => {
     const fireball = chainOf(dnd, world.compendium, 'fireball')!.nodes.flatMap(flat);
     const record = world.compendium.records!.find(one => one.id === 'fireball')!;
@@ -72,6 +84,17 @@ describe('связи метки и карта', () => {
     const system = structuredClone(dnd);
     system.tags!.t_tihaya = { label: 'Тихая' };
     expect(mapOf(system).leaks).toContainEqual({ kind: 'silent-tag', tag: 't_tihaya' });
+  });
+
+  it('карта раскладывает эффекты по слоям: общие вызываемые, действия кнопкой, висящие', () => {
+    const map = mapOf(dnd, world.compendium);
+    const layer = (id: string): string => map.effects.find(one => one.id === id)!.layer;
+    expect(layer('damage')).toBe('called');
+    expect(layer('attack_roll')).toBe('called');
+    expect(layer('strike')).toBe('action');
+    expect(layer('shield')).toBe('hanging');
+    expect(map.tags.find(tag => tag.id === 'ataka')).toMatchObject({ contract: true, carries: 1, hears: 1 });
+    expect(map.effects.find(one => one.id === 'shield')!.groupLabel).toBe('Реакции');
   });
 
   it('карта: связи ведут к существующим эффектам и меткам', () => {
