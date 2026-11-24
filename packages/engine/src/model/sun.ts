@@ -86,7 +86,7 @@ const exprOf = (value: unknown): string | null => {
   return text || null;
 };
 
-const exprsIn = (value: unknown, out: string[] = []): string[] => {
+export const exprsIn = (value: unknown, out: string[] = []): string[] => {
   if (!value || typeof value !== 'object') return out;
   const own = exprOf(value);
   if (own) { out.push(own); return out; }
@@ -94,13 +94,13 @@ const exprsIn = (value: unknown, out: string[] = []): string[] => {
   return out;
 };
 
-const depsOf = (source: string): readonly string[] => formulaDeps(source) ?? [];
+export const depsOf = (source: string): readonly string[] => formulaDeps(source) ?? [];
 
 const astOf = (source: string): Node | null => {
   try { return compile(source).ast; } catch { return null; }
 };
 
-const moduleOf = (step: { type?: unknown }): StepModule | undefined => registry.get(String(step.type));
+export const moduleOf = (step: { type?: unknown }): StepModule | undefined => registry.get(String(step.type));
 
 const TAG_SLOTS: ReadonlySet<string> = new Set(['roll', 'tags']);
 const CALL_SLOT = 'event';
@@ -111,8 +111,8 @@ function slotOf(step: Step, fits: (kind: string) => boolean): unknown {
   return slot ? (step as Bag)[slot.key] : undefined;
 }
 
-const tagsSlot = (step: Step): unknown => slotOf(step, kind => TAG_SLOTS.has(kind));
-const callSlot = (step: Step): unknown => slotOf(step, kind => kind === CALL_SLOT);
+export const tagsSlot = (step: Step): unknown => slotOf(step, kind => TAG_SLOTS.has(kind));
+export const callSlot = (step: Step): unknown => slotOf(step, kind => kind === CALL_SLOT);
 
 interface Atom { from: number; to: number; fold: number | null; under: string | null; alt: boolean }
 
@@ -197,7 +197,7 @@ function readBubble(ctx: Ctx, names: ReadonlyMap<string, NameAt>, dep: string): 
 
 const tagsSaid = (system: System, tags: readonly string[]): string => tags.map(tag => tagSaid(system, tag)).join(', ');
 
-const sureTags = (raw: unknown): string[] => (Array.isArray(raw) ? raw.filter((tag): tag is string => typeof tag === 'string' && tag !== '') : []);
+export const sureTags = (raw: unknown): string[] => (Array.isArray(raw) ? raw.filter((tag): tag is string => typeof tag === 'string' && tag !== '') : []);
 
 type Three = boolean | null;
 
@@ -316,7 +316,7 @@ function meddleOf(system: System, reach: Reach, compendium?: Compendium): Meddle
   };
 }
 
-function mergeMeddle(list: readonly Meddle[]): Meddle | null {
+export function mergeMeddle(list: readonly Meddle[]): Meddle | null {
   if (!list.length) return null;
   const edits: MeddleEdit[] = [];
   const asks: MeddleAsk[] = [];
