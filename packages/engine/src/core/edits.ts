@@ -1,7 +1,7 @@
 import { NAMES } from '../words/names.ts';
 import { EngineError, isRuleError } from '../engine/errors.ts';
 import { resolveRef, toolsOf } from '../engine/refs.ts';
-import { compile } from '../formula/index.ts';
+import { compile, isUnknown } from '../formula/index.ts';
 import { PLUS_OP, MUL_OP } from './dice.ts';
 import type { PendingAddend } from './dice.ts';
 import { hasDie, dieAddend } from './dice-addend.ts';
@@ -73,8 +73,20 @@ function holds(mod: EditMod, ref: RefContext): boolean {
     if (isRuleError(err)) return false;
     throw err;
   }
+  if (isUnknown(value)) return false;
   if (typeof value !== 'boolean') throw new EngineError(tr`условие правки «${condition.expr}» у «${who(mod)}» должно давать да или нет`);
   return value;
+}
+
+function lost(mod: EditMod, ref: RefContext): boolean {
+  const raw = (mod as { value?: { expr?: string } }).value;
+  if (!raw?.expr?.trim()) return false;
+  try {
+    return isUnknown(resolveRef(raw, ref));
+  } catch (err) {
+    if (isRuleError(err)) return false;
+    throw err;
+  }
 }
 
 const AGAINST_NAME = new RegExp(`@${NAMES.against}(?![\\p{L}\\p{N}_])`, 'u');
@@ -87,7 +99,7 @@ export function gather(holders: readonly Holder[], spec: Gather): Held[] {
   return holders.flatMap(holder => (editsOf(holder.view, spec.call, spec.param) as EditMod[])
     .filter(mod => editMatches(mod, spec.tags, holder.view.system) && !unbound(mod, spec))
     .map(mod => ({ ...mod, view: holder.view, ref: refOf(mod, holder, spec, tr`правка «${who(mod)}»`) }))
-    .filter(mod => holds(mod, mod.ref)));
+    .filter(mod => holds(mod, mod.ref) && !lost(mod, mod.ref)));
 }
 
 export function amountOf(held: Held): number {

@@ -67,7 +67,7 @@ function previewLinesIn(system: System, effectId: string, trace: Record<string, 
     lines.push(`${title}: ${rollsText(one)}${addendsText(addsOf(one))}${one.bonus ? ` + ${one.bonus}` : ''} = ${one.total}`);
   }
   for (const one of shown) {
-    if (!parts.versus || one.type !== 'check') continue;
+    if (!parts.versus || one.type !== 'check' || one.unknown || one.blind) continue;
     const words = outcomeWords(system, (one.tags as string[] | undefined) ?? []);
     const forced = one.forced != null ? ` (${forcedWords(Number(one.forced), Boolean(one.success))})` : '';
     const named = typeof one.versusTag === 'string' ? `${tagLabel(system, one.versusTag, system.effects?.[effectId]?.params) ?? one.versusTag} ` : '';
@@ -230,10 +230,11 @@ export function describeParts(
     if (trace.skipped || trace.landed || idle(trace) || secret(trace)) return [];
     if (trace.unknown) {
       if (trace.within) return [];
-      if (flowOf(trace.type)) return [tr`условие не выяснено — ветка пропущена`];
+      const blind = isNobody(entry.toId);
+      if (flowOf(trace.type)) return blind ? [] : [tr`условие не выяснено — ветка пропущена`];
       const step = stepOf(trace);
       const said = typeof step?.label === 'string' && step.label ? step.label : null;
-      return [said ? tr`«${said}»: не выяснено — шаг пропущен` : tr`не выяснено — шаг пропущен`];
+      return said ? [tr`«${said}»: не выяснено — шаг пропущен`] : blind ? [] : [tr`не выяснено — шаг пропущен`];
     }
     const named = trace.within && !rolled(trace) ? null : namedTrace(trace);
     if (named) return [named];

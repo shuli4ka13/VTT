@@ -120,6 +120,14 @@ const system = {
       label: 'Добавка', activation: 'passive', duration: { kind: 'permanent' },
       on: [{ on: 'after:удар', if: { expr: '@действующий == @holder and @попал' }, steps: [hurt('2')] }],
     },
+    ответ: {
+      label: 'Ответ', activation: 'passive', duration: { kind: 'permanent' },
+      on: [{ on: 'after:удар', if: { expr: '@цель == @holder and @попал' }, confirm: {}, manual: true, steps: [{ type: 'emit', effect: 'урон', args: { кому: { expr: '@действующий' }, сколько: { expr: '4' } } }] }],
+    },
+    сторож: {
+      label: 'Сторож', activation: 'passive', duration: { kind: 'permanent' },
+      on: [{ on: 'after:урон', if: { expr: '@кому == @holder' }, steps: [{ type: 'apply', target: { expr: '@holder.щит' }, direction: 'set', value: { expr: '9' } }] }],
+    },
     щит: {
       label: 'Щит', activation: 'passive', duration: { kind: 'permanent' },
       on: [{
@@ -173,7 +181,7 @@ group('действие без цели: «никто» вместо листа'
     ok(!told(miss).includes('легло бы'), told(miss));
   });
 
-  test('слушатель действующего «после: удар» получает ответ и бьёт «никого»', () => {
+  test('подписка действующего «после: удар» получает ответ и бьёт «никого»', () => {
     const played = blind('удар', queue(10, 4), question => [question.offers[0]!.id], [sheet('а', {}, ['добавка']), sheet('б')]);
     ok(told(played).includes('Урон 2'), told(played));
   });
@@ -280,6 +288,13 @@ group('висящий эффект кнопкой', () => {
     eq(asked[0]!.window, 'cost');
     eq(value(played, 'а', 'щит'), 1);
     eq(value(played, 'а', 'ячейки'), 0);
+  });
+
+  test('шаги кнопки бьют невыясненного обидчика: урон «лёг бы», чужие правила «по мне попали» на него не срабатывают', () => {
+    const played = exchange({ system, compendium: book, die: queue(), sheets: [sheet('а', {}, ['ответ', 'сторож']), sheet('б', {}, ['сторож'])], actionId: '!ответ', fromId: 'а', toIds: [] });
+    ok(told(played).includes('на цель легло бы: Урон 4'), told(played));
+    eq(value(played, 'а', 'щит'), 0);
+    eq(value(played, 'б', 'щит'), 0);
   });
 
   test('сам на свой удар без цели Щит не предлагается: «никто» — не носитель', () => {

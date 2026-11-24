@@ -1601,6 +1601,78 @@ function nameClashProblems(system: System): Problem[] {
   return out;
 }
 
+function bareReads(source: string): string[] {
+  let ast: Node;
+  try { ast = compile(source).ast; } catch { return []; }
+  const out: string[] = [];
+  const guardedIn = (node: Node, into: Set<string>): void => {
+    if (node.kind === 'Call' && node.name === 'known') for (const arg of node.args) if (arg.kind === 'Ref') into.add(arg.tag);
+    if (node.kind === 'Call') node.args.forEach(arg => guardedIn(arg, into));
+    if (node.kind === 'Unary') guardedIn(node.operand, into);
+    if (node.kind === 'Binary') { guardedIn(node.left, into); guardedIn(node.right, into); }
+  };
+  const visit = (node: Node, safe: ReadonlySet<string>): void => {
+    switch (node.kind) {
+      case 'Ref': if (!safe.has(node.tag)) out.push(node.tag); return;
+      case 'Pick': if (!safe.has(node.tag)) out.push(node.tag); visit(node.key, safe); return;
+      case 'Unary': visit(node.operand, safe); return;
+      case 'Binary': visit(node.left, safe); visit(node.right, safe); return;
+      case 'Call': if (node.name !== 'known') node.args.forEach(arg => visit(arg, safe)); return;
+      case 'Conditional': {
+        const guarded = new Set(safe);
+        guardedIn(node.test, guarded);
+        visit(node.test, safe);
+        visit(node.then, guarded);
+        visit(node.otherwise, safe);
+        return;
+      }
+      default:
+    }
+  };
+  visit(ast, new Set());
+  return out;
+}
+
+const exprOf = (ref: unknown): string => (ref && typeof ref === 'object' && 'expr' in ref ? String((ref as { expr: unknown }).expr) : '');
+
+const headOf = (name: string): string => name.split('.')[0]!;
+
+function unknownProblems(system: System): Problem[] {
+  const out: Problem[] = [];
+  const writes = (steps: readonly Step[] | undefined, lost: ReadonlySet<string>, needsPath: boolean): { index: number; name: string }[] =>
+    (steps ?? []).flatMap((step, index) => {
+      if (step.type !== 'apply') return [];
+      const one = step as { target?: unknown; value?: unknown };
+      const to = /^\s*@([\p{L}\p{N}_]+)/u.exec(exprOf(one.target))?.[1];
+      if (!to || lost.has(to)) return [];
+      const read = bareReads(exprOf(one.value)).find(name => lost.has(headOf(name)) && (!needsPath || name.includes('.')));
+      return read ? [{ index, name: read }] : [];
+    });
+  for (const [id, effect] of Object.entries(system.effects ?? {})) {
+    const own = new Set((effect.params ?? []).map(param => param.key));
+    (effect.on ?? []).forEach((handler, index) => {
+      if (!(handler as { manual?: boolean }).manual) return;
+      const heard = heardNames(system, listenerOf(handler));
+      const lost = new Set([...heard.sheets, ...heard.seeds].filter(name => !own.has(name) && name !== SERVICE.holder && name !== SERVICE.tags));
+      const where = { tab: 'effects' as const, effect: id, part: 'on' as const, handler: index };
+      const paid = exprsIn(handler.cost).flatMap(bareReads).find(name => lost.has(headOf(name)));
+      if (paid) out.push({ where, level: 'warn', text: tr`плата читает «${saidName(headOf(paid))}» — его даёт то, что подписка слышит, а кнопкой его не будет: плата не посчитается. Запас — «если(известно(…), …, …)»` });
+      for (const found of writes(handler.steps, lost, false)) {
+        out.push({ where: { ...where, step: found.index }, level: 'warn', text: tr`шаг пишет на известный лист «${saidName(headOf(found.name))}» — его даёт то, что подписка слышит, а кнопкой его не будет: шаг не выполнится. Запас — «если(известно(…), …, …)»` });
+      }
+    });
+    if (!isPipeline(effect)) continue;
+    const roles = tableOf(effect);
+    const aimed = (effect.params ?? []).filter(param => param.kind === 'sheet' && roles[param.key] === 'targets');
+    if (!aimed.length) continue;
+    const lost = new Set(aimed.flatMap(param => [param.key, ...(param.item?.key ? [param.item.key] : [])]));
+    for (const found of writes(effect.steps, lost, true)) {
+      out.push({ where: { tab: 'effects', effect: id, part: 'steps', step: found.index }, level: 'warn', text: tr`шаг пишет на известный лист «${found.name.split('.').map(saidName).join(' · ')}» — значение с листа цели: без цели его не будет, шаг не выполнится. Запас — «если(известно(…), …, …)»` });
+    }
+  }
+  return out;
+}
+
 function recordCellProblems(system: System, compendium?: Compendium): Problem[] {
   const flat = flattenSystem(system, true);
   const fields = new Set(fieldsOf(flat).map(field => field.tag));
@@ -1840,6 +1912,7 @@ function lintSystemIn(system: System, compendium?: Compendium): Problem[] {
   out.push(...cycleProblems(system));
   out.push(...paramProblems(system, compendium));
   out.push(...nameClashProblems(system));
+  out.push(...unknownProblems(system));
   out.push(...recordCellProblems(system, compendium));
   out.push(...orphanProblems(system, compendium));
   out.push(...sheetKindProblems(system), ...layoutProblems(system));

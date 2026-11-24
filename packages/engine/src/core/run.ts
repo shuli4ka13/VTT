@@ -23,7 +23,7 @@ import { burnsUse } from '../events/durations.ts';
 import { refusalWords } from '../events/refusal.ts';
 import { rollTitle } from '../engine/roll-tags.ts';
 import { previewLines } from '../events/describe.ts';
-import { isDesk, isNobody, DESK_ID } from '../engine/owners.ts';
+import { isDesk, isNobody, DESK_ID, NOBODY } from '../engine/owners.ts';
 import { Views } from './view.ts';
 import { State } from './state.ts';
 import { limitsOf, cutWords, probesWords } from './limits.ts';
@@ -245,7 +245,7 @@ export function namesOf(params: readonly Param[] | undefined, args: Record<strin
   const names: Record<string, Bound> = {};
   for (const key of sheetParams(params)) {
     const value = args[key];
-    names[key] = isUnknown(value) ? UNKNOWN : Array.isArray(value) ? value.map(String) : value === undefined || value === null || value === '' ? null : String(value);
+    names[key] = isUnknown(value) ? NOBODY : Array.isArray(value) ? value.map(one => (isAbsent(one) ? NOBODY : String(one))) : value === undefined || value === null || value === '' ? null : String(value);
   }
   return names;
 }
@@ -1071,7 +1071,7 @@ export class Run {
     if (frame.inSub) {
       const { entries, delivered } = this.group([{
         effectId: event, label: callee.label || event, steps: callee.steps ?? [], path: at, hop: frame.hop + 1, top: false,
-        home: frame.home, subject: Object.values(names).find((id): id is string => typeof id === 'string') ?? home, bound: names, keys, args: values, paramDefs: callee.params ?? [], seed: { [NAMES.tags]: payload.tags }, rolls: passed,
+        home: frame.home, subject: Object.values(names).some(isAbsent) ? NOBODY : home, bound: names, keys, args: values, paramDefs: callee.params ?? [], seed: { [NAMES.tags]: payload.tags }, rolls: passed,
         ...(frame.cost ? { cost: true } : {}),
         ...(frame.waived ? { waived: true } : {}),
       }], at);
