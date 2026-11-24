@@ -1,0 +1,137 @@
+{
+  "close": "Close",
+  "closeX": "Close window",
+  "openForm": "Open in form",
+  "openMore": "open ›",
+  "step": {
+    "title": "Step {{n}} · {{label}}",
+    "does": "What it does",
+    "made": "What it is made of",
+    "sets": "What it changes and sets",
+    "gives": "What it hands on",
+    "meddle": "Who steps in",
+    "condition": "Condition",
+    "noWords": "No words for this step yet"
+  },
+  "meddle": {
+    "own": "Edit by themselves: {{n}}",
+    "ask": "Ask the player: {{n}}",
+    "withNames": "{{head}} — {{names}}",
+    "others": "and others",
+    "seams": "Attachments",
+    "title": "Who steps in",
+    "edits": "Edit by themselves",
+    "asks": "Ask the player",
+    "decides": "the player decides",
+    "itself": "on its own",
+    "roller": "on the roller",
+    "against": "on the target",
+    "any": "on anyone",
+    "needs": "depends on \"{{tags}}\"",
+    "none": "nobody steps in",
+    "other": "Other"
+  },
+  "stage": {
+    "cost": "Takes the price of the action.",
+    "target": "Picks who the effect acts on.",
+    "roll": "Rolls dice for the participant.",
+    "check": "Checks a condition and goes on or stops.",
+    "amount": "Works out how much comes out.",
+    "deliver": "Hands the result to whoever the effect acts on.",
+    "then": "Does what is left after the main steps.",
+    "when": "Waits for this to happen.",
+    "onlyIf": "Fires only if the condition holds.",
+    "decides": "Asks the player or lets them press a button.",
+    "does": "Does what the subscription is for.",
+    "while": "Edits while the effect hangs on.",
+    "lasts": "How long the effect lasts."
+  },
+  "call": {
+    "title": "Effect call · {{name}}",
+    "titleMany": "Effect calls · {{names}}",
+    "does": "What it does",
+    "gives": "What we pass",
+    "inside": "What is inside",
+    "returns": "What it returns",
+    "notPassed": "not passed",
+    "same": "as in the called one",
+    "asked": "asked at the table",
+    "open": "Open bubbles of \"{{name}}\" ›",
+    "noEffect": "The called effect is not in the system",
+    "insideRay": "{{n}} {{label}}"
+  },
+  "tag": {
+    "title": "Tag · {{names}}",
+    "contract": "Tag contract",
+    "noContract": "no contract: just a word on the roll",
+    "inputs": "Inputs",
+    "each": "For each",
+    "outputs": "Outputs",
+    "traits": "Traits",
+    "carries": "Who carries it · {{n}}",
+    "hears": "Who listens · {{n}}",
+    "edits": "Who edits · {{n}}",
+    "nobody": "nobody",
+    "more": "and {{n}} more",
+    "times": "edits: {{n}}"
+  },
+  "seam": {
+    "title": "Attachment · {{names}}",
+    "whose": "Whose effect",
+    "when": "When",
+    "by": "By what",
+    "byTag": "by tag \"{{tag}}\"",
+    "byId": "by effect name",
+    "byAny": "any action",
+    "condition": "Condition",
+    "decides": "the player decides",
+    "manual": "can be pressed",
+    "found": "found its place by what the condition reads",
+    "lost": "found no place, stands by default"
+  },
+  "stand": {
+    "title": "Stands in",
+    "ray": "{{effect}} › {{ray}}",
+    "byTag": "by tag",
+    "byId": "by effect name"
+  },
+  "reads": {
+    "title": "What it is made of · {{names}}"
+  },
+  "sets": {
+    "title": "What it changes and sets · {{names}}"
+  },
+  "gives": {
+    "title": "What it hands on · {{names}}"
+  },
+  "hint": {
+    "input": "comes from whoever called",
+    "aside": "a person at the table is asked, the engine does not count it",
+    "field": "read from the sheet",
+    "state": "how many times it hangs",
+    "result": "result of an earlier step",
+    "value": "a number, a die or a system lookup",
+    "setField": "changes on the sheet",
+    "setState": "put on or taken off",
+    "setTag": "tags ride on the roll, other effects find it by them",
+    "ask": "soft refusal: when short, the table is asked whether to go on anyway",
+    "stop": "the action did not happen",
+    "gives": "goes back to the caller",
+    "other": "part of the step"
+  },
+  "dock": {
+    "tabs": "Bottom panel",
+    "trial": "Trial",
+    "problems": "Problems · {{n}}",
+    "used": "Where it is used",
+    "later": "Trial run of hanging effects will come later",
+    "noProblems": "no problems",
+    "openForm": "open in form",
+    "callers": "Called by a step",
+    "book": "Given as a button",
+    "heard": "Subscribed to it",
+    "nobody": "nobody calls it",
+    "fold": "fold",
+    "unfold": "unfold"
+  }
+}

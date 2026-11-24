@@ -12,11 +12,11 @@ import { useT } from '../../../i18n/author.ts';
 
 const diceOptions = () => (Object.keys(DICE_MODES) as DiceMode[]).map(key => [key, DICE_MODES[key].label] as const);
 
-export function PreviewPanel({ effectId }: { effectId: string | null }) {
+export function PreviewPanel({ effectId, only }: { effectId: string | null; only?: 'trial' }) {
   const t = useT('effects');
   const system = useWorld(s => s.system);
   const compendium = useBook();
-  const [tab, setTab] = useState<'donors' | 'trial'>('donors');
+  const [tab, setTab] = useState<'donors' | 'trial'>(only ?? 'donors');
   const [dice, setDice] = useState<DiceMode>('avg');
 
   const [own, setOwn] = useState<Record<string, Record<string, StoredValue>>>({});
@@ -35,11 +35,13 @@ export function PreviewPanel({ effectId }: { effectId: string | null }) {
 
   return (
     <>
-      <Segmented
-        value={tab}
-        options={[{ key: 'donors' as const, label: t('preview.donors') }, { key: 'trial' as const, label: t('preview.trial') }]}
-        onChange={setTab}
-      />
+      {only ? null : (
+        <Segmented
+          value={tab}
+          options={[{ key: 'donors' as const, label: t('preview.donors') }, { key: 'trial' as const, label: t('preview.trial') }]}
+          onChange={setTab}
+        />
+      )}
 
       {tab === 'donors' ? <DonorPalette kind="effects" /> : null}
 

@@ -14,7 +14,7 @@ type Loose = Record<string, unknown>;
 
 const loose = (thing: unknown): Loose => thing as Loose;
 
-function linesOf(
+export function linesOf(
   kind: string, step: Step, amount: Step | null, system: System, effect: Effect, names: Map<string, string>,
 ): Segment[] {
   if (kind === 'check') return checkReadback(step, system, effect, names);

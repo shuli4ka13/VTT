@@ -1,0 +1,14 @@
+.sundock { display: flex; flex-direction: column; flex: none; min-height: 0; height: clamp(160px, 28vh, 280px); border-top: 1px solid var(--border); background: var(--surface); }
+.sundock__tabs { display: flex; gap: var(--s-5); border-bottom: 1px solid var(--border); padding: 0 var(--s-5); }
+.sundock__tab { background: none; border: 0; border-bottom: 2px solid transparent; padding: var(--s-3) 0; color: var(--text-muted); cursor: pointer; font: inherit; font-size: var(--fs-3); }
+.sundock__tab:hover { color: var(--text); }
+.sundock__tab.is-on { color: var(--text); border-bottom-color: var(--accent); }
+.sundock__body { flex: 1; min-height: 0; overflow: auto; padding: var(--s-4) var(--s-5); display: flex; flex-direction: column; gap: var(--s-3); }
+.sundock__list { display: flex; flex-direction: column; }
+.sundock__row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-4); padding: var(--s-3) 0; border-bottom: 1px solid var(--border); font-size: var(--fs-3); }
+.sundock__text { display: flex; flex-direction: column; gap: var(--s-1); min-width: 0; }
+.sundock__name { color: var(--text-muted); flex: none; min-width: 140px; }
+.sundock__chips { flex: 1; display: flex; flex-wrap: wrap; gap: var(--s-3); }
+.sundock.is-folded { height: auto; }
+.sundock__gap { flex: 1; }
+.sundock__body[hidden] { display: none; }

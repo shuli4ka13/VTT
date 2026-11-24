@@ -17,6 +17,9 @@ import type { Effect } from '@vtt/schema';
 import { newGroup } from '../groups.ts';
 import { focusNew } from '../../../ui/focus-new.ts';
 import { useT, t as tt } from '../../../i18n/author.ts';
+import { useEffectView } from '../../../store/effect-view.ts';
+import { SunScreen } from './sun/sun-screen.tsx';
+import { ViewSwitch } from './sun/view-switch.tsx';
 
 export function EffectsTab() {
   const t = useT('effects');
@@ -28,6 +31,9 @@ export function EffectsTab() {
   const tree = blockTree<[string, Effect]>(system, Object.entries(system.effects), ([, effect]) => blockOf(system, effect));
   const active = activeId ? system.effects[activeId] : undefined;
   const compendium = useWorld(s => s.compendium);
+  const storedView = useEffectView(s => s.view);
+  const lesson = useWorld(s => s.origin.lesson);
+  const bubbles = storedView === 'sun' && !lesson;
   const roles = rolesOf(system, compendium);
 
   const addTo = (block: string, title?: string) => {
@@ -95,13 +101,20 @@ export function EffectsTab() {
       }}
       main={{
         body: active && activeId
-          ? <EffectEditor key={activeId} id={activeId} effect={active} system={system} />
+          ? (bubbles
+            ? <SunScreen key={activeId} id={activeId} />
+            : (
+              <>
+                {lesson ? null : <div className="sun-switch-row"><ViewSwitch /></div>}
+                <EffectEditor key={activeId} id={activeId} effect={active} system={system} />
+              </>
+            ))
           : <Empty
               title={t('tab.pickTitle')}
               hint={t('tab.pickHint')}
             />,
       }}
-      right={right}
+      right={bubbles ? undefined : right}
     />
   );
 }

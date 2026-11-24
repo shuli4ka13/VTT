@@ -295,7 +295,7 @@ function meddleOf(system: System, reach: Reach, compendium?: Compendium): Meddle
       source, label, param: String(mod.param ?? ''),
       ...(table ? { table: true as const } : {}),
       ...(typeof word === 'string' && word ? { word } : {}),
-      needs: [...(mod.tags ?? []), ...(mod.anyTags ?? [])].filter(tag => !reach.sure.has(tag)),
+      needs: [...(mod.tags ?? []), ...((mod.anyTags ?? []).some(tag => reach.sure.has(tag)) ? [] : mod.anyTags ?? [])].filter(tag => !reach.sure.has(tag)),
       side: sideOf(mod.if?.expr),
     });
   }
