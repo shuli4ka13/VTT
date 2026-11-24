@@ -18,10 +18,11 @@ export type Step =
     inputs?: Record<string, number | string>; edits?: string[];
     answers?: Answer[];
     refused?: string;
+    waive?: boolean;
   }
   | { turn: 'start' | 'next' | 'stop'; order?: string[]; answers?: Answer[] }
   | { set: [sheetId: string, tag: string, value: number | string | boolean | null] }
-  | { rules: { reactionRolls?: boolean; reactionUseful?: boolean } };
+  | { rules: { reactionRolls?: boolean; reactionUseful?: boolean; payment?: 'trust' | 'strict' } };
 
 export interface Scenario {
   name: string;
@@ -141,6 +142,7 @@ export async function playScenario(scenario: Scenario): Promise<Played> {
           roomId, actionId: step.act, fromId: step.from, toIds: targets,
           ...(step.inputs ? { inputs: step.inputs } : {}),
           ...(step.edits ? { claims: { [step.from]: step.edits } } : {}),
+          ...(step.waive ? { waive: true } : {}),
         }), step.answers, step.refused);
       } else if ('turn' in step) {
         await settle(rooms.turn(userId, { roomId, op: step.turn, ...(step.order ? { order: step.order } : {}) }), step.answers);

@@ -4,6 +4,14 @@ export interface Change { tag: string; from: unknown; to: unknown; sheetId?: str
 
 export interface Stop { step: string | number; type: string; reason?: string; note?: string }
 
+export type Would =
+  | { effect: string; amount?: number; tags: string[]; values: Record<string, number | string | boolean> }
+  | { field: string; direction: string; amount?: number }
+  | { status: string; mode: string }
+  | { roll: string; tags: string[] };
+
+export interface World { label: string; trace: Record<string, unknown>[]; would: Would[] }
+
 export interface Report {
   kind: 'effect' | 'cost' | 'moment';
   effect: string;
@@ -18,6 +26,8 @@ export interface Report {
   spent: string[];
   emitted: EmittedEvent[];
   reactions?: Report[];
+  would?: Would[];
+  worlds?: World[];
 }
 
 export type Entry =

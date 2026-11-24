@@ -90,6 +90,7 @@ export const scenarios: Scenario[] = [
     steps: [
       { turn: 'start', order: ['kai', 'orc'] },
       { act: 'longsword:0', from: 'kai', to: 'orc' },
+      { rules: { payment: 'strict' } },
       { act: 'longsword:0', from: 'kai', to: 'orc', refused: 'потрачено' },
     ],
     expect: { values: { kai: { turn_standard: 0 }, orc: { hp: 18 } } },

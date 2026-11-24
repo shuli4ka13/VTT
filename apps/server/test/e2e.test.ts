@@ -276,7 +276,7 @@ describe('сквозной прогон стенда', () => {
     expect(stepped.body.clock.active).toBe(started.body.clock.order[1]);
   });
 
-  it('в бою действие с ценой тратится: второе за ход — отказ, после смены хода — снова можно', async () => {
+  it('в бою действие с ценой тратится: второе за ход — вопрос ведущему, «нет» закрывает ход; после смены хода — снова можно', async () => {
     const state = await http().get(`/rooms/${roomId}`)
       .set('Authorization', `Bearer ${token}`).expect(200);
     const [arven, mirra] = state.body.sheets;
@@ -285,8 +285,15 @@ describe('сквозной прогон стенда', () => {
       .send({ roomId, actionId: 'longsword-item:0', fromId: arven.id, toIds: [mirra.id] });
 
     await swing().expect(201);
-    const denied = await swing().expect(400);
-    expect(denied.body.message).toContain('потрачено');
+    const asked = await swing().expect(201);
+    expect(asked.body.pending.stage).toBe('cost');
+    expect(asked.body.pending.question).toContain('потрачено');
+    expect(asked.body.pending.options.map((o: { id: string }) => o.id)).toEqual(['yes', 'no']);
+    const denied = await http().post(`/rooms/${roomId}/answer`).set('Authorization', `Bearer ${token}`)
+      .send({ roomId, pendingId: asked.body.pending.id, chosen: ['no'] }).expect(201);
+    expect(denied.body.pending).toBeNull();
+    expect(denied.body.sheets).toEqual([]);
+    expect(denied.body.log.map((entry: { text: string }) => entry.text).join(' ')).toContain('ведущий не разрешил');
 
     await http().post(`/rooms/${roomId}/turn`).set('Authorization', `Bearer ${token}`)
       .send({ roomId, op: 'next' }).expect(201);

@@ -1,6 +1,10 @@
 import { NAMES } from '../words/names.ts';
 export const DESK_ID = NAMES.desk;
 
+export const NOBODY = '~nobody';
+
+export const isNobody = (id: unknown): boolean => id === NOBODY;
+
 export const COMBAT_NAME = NAMES.combat;
 
 export const isDesk = (sheet: { id: string }): boolean => sheet.id === DESK_ID;

@@ -20,6 +20,8 @@ import type { Thrown } from '../../core/roll.ts';
 import type { Faced } from '../../core/against.ts';
 import type { Check, FieldThrow } from '../check.ts';
 import { tr } from '../../words/tongue.ts';
+import type { Unknown } from '../../formula/index.ts';
+import type { Would } from '../../core/log.ts';
 import { STEP_WORDS } from '../../words/steps.ts';
 import type { StepWords } from '../../words/steps.ts';
 
@@ -36,6 +38,12 @@ export interface StepContext {
   number(ref: unknown, what: string): number;
   optional(ref: unknown, what: string): number | null;
   holds(guard: unknown): boolean;
+  truth(guard: unknown): boolean | Unknown;
+  absent(ref: unknown): boolean;
+  land(would: Would): void;
+  verdict(stepId: string, total: number): boolean | Unknown;
+  said(stepId: string): { yes: string; no: string };
+  fork(outcomes: readonly { id: string; label: string }[]): string | null;
   sheet(ref: unknown, what: string): string | null;
   numberOn(sheetId: string, ref: unknown, what: string): number;
   field(ref: unknown): FieldRef;
@@ -66,7 +74,7 @@ export interface FieldRef {
 export interface StepResult {
   value?: unknown;
   trace: Record<string, unknown>;
-  break?: { reason: string; note?: string } | null;
+  break?: { reason: string; note?: string; soft?: boolean } | null;
   roll?: RollResult;
 }
 

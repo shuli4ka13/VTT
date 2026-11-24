@@ -107,7 +107,7 @@ describe('почему действие сейчас не оплатить', () 
     const sheets = [sheet('а', { действие: 0 }), sheet('б')];
     let caught: unknown;
     try {
-      perform({ system, compendium: book, clock: null, sheets, die: () => 1 }, { op: 'act', intent: { actionId: 'меч:0', fromId: 'а', toIds: ['б'] } });
+      perform({ system, compendium: book, clock: null, sheets, die: () => 1, table: { payment: 'strict' } }, { op: 'act', intent: { actionId: 'меч:0', fromId: 'а', toIds: ['б'] } });
     } catch (err) { caught = err; }
     expect(caught).toBeInstanceOf(ActRefused);
     expect((caught as ActRefused).why).toBe(why(sheets, 'меч:0'));

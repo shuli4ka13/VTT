@@ -17,7 +17,7 @@ export interface Offer { id: string; label: string; text?: string }
 
 export const QUIET = '~quiet';
 
-export interface TableRules { reactionRolls?: boolean; reactionUseful?: boolean }
+export interface TableRules { reactionRolls?: boolean; reactionUseful?: boolean; payment?: 'trust' | 'strict' }
 
 export interface Question {
   key: string;

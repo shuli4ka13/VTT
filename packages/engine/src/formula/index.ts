@@ -15,6 +15,8 @@ export { translateFormula, diceText, wordsOf, NEUTRAL_WORDS, RU_WORDS, FORMULA_W
 export type { FormulaWords, FunctionId } from './words.ts';
 export { andParts, joinAnd, andText, andPartsText, operandText } from './logic.ts';
 export { given } from './evaluate.ts';
+export { UNKNOWN, isUnknown, hasUnknown } from './unknown.ts';
+export type { Unknown } from './unknown.ts';
 export { FUNCTIONS as FUNCTION_SPECS, functionSpec, partAt, callAt } from './functions.ts';
 export type { FunctionSpec, Part as FunctionPart, Result as FunctionResult } from './functions.ts';
 export { printFormula } from './print.ts';

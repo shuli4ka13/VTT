@@ -28,7 +28,7 @@ const system = flattenSystem({
 const book = { records: [{ id: 'кольт', table: 'оружие', label: 'Кольт', cells: { ammo_max: 2 } }] } as unknown as Compendium;
 const hero = (has: Sheet['has']): Sheet => ({ id: 'г', systemId: 'с', name: 'Герой', values: {}, has, effects: [] } as unknown as Sheet);
 const ids = () => { let n = 0; return () => `в${++n}`; };
-const shoot = (sheet: Sheet, action: string) => perform({ system, compendium: book, clock: null, sheets: [sheet], die: () => 1, newId: ids() }, { op: 'act', intent: { actionId: action, fromId: 'г', toIds: [] } } as never);
+const shoot = (sheet: Sheet, action: string) => perform({ system, compendium: book, clock: null, sheets: [sheet], die: () => 1, newId: ids(), table: { payment: 'strict' } }, { op: 'act', intent: { actionId: action, fromId: 'г', toIds: [] } } as never);
 
 describe('вход-ссылка: кнопка вещи передаёт клетку этой вещи, эффект о вещи не знает', () => {
   it('выстрел пишет в патроны своего ствола', () => {

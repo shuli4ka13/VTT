@@ -6,6 +6,8 @@ import { byOrder, typeColumn } from '../model/inherit.ts';
 import { orDefault } from '../model/blank.ts';
 import { EngineError } from '../engine/errors.ts';
 import { isDesk } from './desk.ts';
+import { subscribers, subscriberByKey } from './bus.ts';
+import type { Subscriber } from './bus.ts';
 import type { System, Sheet, Compendium, CompendiumRecord, Binding } from '../model/types.ts';
 import { tr } from '../words/tongue.ts';
 
@@ -16,6 +18,7 @@ export interface Action {
   binding: Binding;
   effect: string;
   inst?: string;
+  manual?: string;
 }
 
 export function bindingsOf(record: CompendiumRecord, system: System): Binding[] {
@@ -37,6 +40,19 @@ function grantedAction(id: string, system: System): Action | null {
   };
 }
 
+export const MANUAL_ACTION = '!';
+
+const manualAction = (sub: Subscriber): Action => {
+  const label = sub.effect.label || sub.id;
+  const id = [MANUAL_ACTION, sub.key].join('');
+  return {
+    id, label, manual: sub.key, effect: sub.id, binding: { effect: sub.id },
+    record: { id, label, ...(sub.effect.description ? { description: sub.effect.description } : {}) },
+  };
+};
+
+const byButton = (sub: Subscriber): boolean => (sub.handler as { manual?: boolean }).manual === true;
+
 export function availableActions(
   sheet: Sheet, { system, compendium }: { system: System; compendium: Compendium },
 ): Action[] {
@@ -46,12 +62,19 @@ export function availableActions(
   const granted = grantedTo(system, sheet, compendium)
     .map(id => grantedAction(id, system))
     .filter((action): action is Action => action !== null && !own.some(o => o.effect === action.effect));
-  return [...own, ...granted];
+  const pressed = new Map(subscribers(system, sheet, { compendium }).filter(byButton).map(sub => [sub.key, manualAction(sub)]));
+  return [...own, ...granted, ...pressed.values()];
 }
 
 export function actionOf(
   actionId: string, { system, compendium }: { system: System; compendium: Compendium },
 ): Action {
+  if (String(actionId).startsWith(MANUAL_ACTION)) {
+    const key = String(actionId).slice(MANUAL_ACTION.length);
+    const sub = subscriberByKey(system, key);
+    if (!sub || !byButton(sub)) throw new EngineError(tr`кнопки висящего эффекта «${key}» в системе нет`);
+    return manualAction(sub);
+  }
   if (String(actionId).startsWith(GRANTED_ACTION)) {
     const id = String(actionId).slice(GRANTED_ACTION.length);
     const action = grantedAction(id, system);

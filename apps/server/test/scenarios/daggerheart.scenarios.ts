@@ -64,7 +64,7 @@ export const scenarios: Scenario[] = [
     world: 'daggerheart',
     sheets: { bran: { values: { hope: 0 } } },
     dice: [],
-    steps: [{ act: 'act:0', from: 'bran', to: 'bran', inputs: { trait: 'provorstvo', opyt: 2, slozhnost: 14 }, refused: 'на опыт нужна Надежда' }],
+    steps: [{ rules: { payment: 'strict' } }, { act: 'act:0', from: 'bran', to: 'bran', inputs: { trait: 'provorstvo', opyt: 2, slozhnost: 14 }, refused: 'на опыт нужна Надежда' }],
     expect: { values: { bran: { hope: 0 }, 'desk': { fear: 0 } } },
   },
   {
@@ -124,6 +124,7 @@ export const scenarios: Scenario[] = [
     world: 'daggerheart',
     dice: [],
     steps: [
+      { rules: { payment: 'strict' } },
       { act: 'hope_dodge:0', from: 'ilse', to: 'ilse', refused: 'нужно 3 Надежды' },
       { set: ['ilse', 'hope', 3] },
       { act: 'hope_dodge:0', from: 'ilse', to: 'ilse' },

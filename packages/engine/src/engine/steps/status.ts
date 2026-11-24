@@ -1,4 +1,7 @@
 import { EngineError } from '../errors.ts';
+import { hasUnknown } from '../../formula/index.ts';
+import { isNobody } from '../owners.ts';
+import { aimed } from './roll.ts';
 import type { StepContext, StepModule, StepData } from './index.ts';
 import type { StoredValue, System } from '../../model/types.ts';
 import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
@@ -37,6 +40,7 @@ const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
     const mode = String(step.mode || 'apply');
     if (!(mode in MODES)) throw new EngineError(tr`${who(ctx)}: у шага «состояние» нет режима «${mode}»; умею ${Object.keys(MODES).join(', ')}`);
     const picked = ctx.value(step.effect);
+    if (hasUnknown(picked)) return { value: picked, trace: { mode, unknown: true }, break: null };
     const ids = (Array.isArray(picked) ? picked : [picked]).filter(one => one !== null && one !== undefined && one !== '');
     if (!ids.length) return { value: null, trace: { mode, effect: null }, break: null };
     if (ids.length > 1) {
@@ -45,7 +49,7 @@ const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
     }
     const id = ids[0];
     if (typeof id !== 'string') throw new EngineError(tr`${who(ctx)}: состоянию нужен id эффекта, а пришло ${JSON.stringify(id)}`);
-    const to = ctx.sheet(step.to, tr`на кого`);
+    const to = aimed(ctx, () => ctx.sheet(step.to, tr`на кого`), () => ({ status: id, mode }));
     if (!to) throw new EngineError(tr`${who(ctx)}: шагу «состояние» не сказано, на чей лист`);
     if (mode === 'remove' && step.by === 'tag') {
       const tagged = Object.entries(ctx.system.effects ?? {}).filter(([, effect]) => effect.tags?.includes(id)).map(([key]) => key);
@@ -64,7 +68,7 @@ const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
     const given: Record<string, StoredValue> = {};
     for (const [key, ref] of Object.entries((step.args ?? {}) as Record<string, unknown>)) {
       const value = ctx.value(ref);
-      if (value === null || value === undefined) continue;
+      if (value === null || value === undefined || hasUnknown(value) || isNobody(value)) continue;
       if (typeof value !== 'number' && typeof value !== 'string' && typeof value !== 'boolean') {
         throw new EngineError(tr`${who(ctx)}: наложенное запоминает число, строку или лист, а «${key}» дал ${JSON.stringify(value)}`);
       }

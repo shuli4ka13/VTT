@@ -1,6 +1,6 @@
 import { compile } from '../formula/index.ts';
 import { calc, baseOf } from '../engine/calc.ts';
-import { EngineError, NO_SHEET } from '../engine/errors.ts';
+import { EngineError, Declined, NO_SHEET } from '../engine/errors.ts';
 import { availableActions, actionOf } from '../events/actions.ts';
 import { asksOf, checkInputs, normalizeInputs } from '../model/asks.ts';
 import { findRecord, sheetKindOf, keyOf } from '../model/owned.ts';
@@ -15,7 +15,7 @@ import { itemCell, parseItemTag, withItemValue, withoutItemValue } from '../mode
 import { isBlank } from '../model/blank.ts';
 import { freshSheet } from '../model/fresh.ts';
 import { isSecret } from '../model/roles.ts';
-import { DESK_ID, isDesk } from '../engine/owners.ts';
+import { DESK_ID, isDesk, isNobody } from '../engine/owners.ts';
 import { External, Pause, emptyJournal } from './external.ts';
 import { Path } from './path.ts';
 import { addendsText, verdictText } from './dice.ts';
@@ -79,6 +79,13 @@ function performIn(world: PerformWorld, op: Op): Performed {
       entries: log, journal: ext.settled(), fresh: ext.fresh,
     };
   } catch (err) {
+    if (err instanceof Declined) {
+      const log = [...run.state.log];
+      return {
+        kind: 'done', sheets: [...world.sheets], clock: world.clock, log: render(log, world.system, world.sheets), lines: renderLines(log, world.system, world.sheets),
+        entries: log, journal: ext.settled(), fresh: ext.fresh,
+      };
+    }
     if (!(err instanceof Pause)) throw err;
     const log = [...run.state.log];
     return {
@@ -188,7 +195,7 @@ export function initiative(run: Run, root: Path, who?: string[], phase = 'initia
 const OPS: { [K in Op['op']]: Handler<K> } = {
   act(run, { intent }, root) {
     const actor = sheetOf(run, intent.fromId);
-    for (const id of intent.toIds) sheetOf(run, id);
+    for (const id of intent.toIds) if (!isNobody(id)) sheetOf(run, id);
     const { system, compendium } = run.world;
     const action = actionOf(intent.actionId, { system, compendium });
     if (!availableActions(actor, { system, compendium }).some(one => one.id === intent.actionId)) {

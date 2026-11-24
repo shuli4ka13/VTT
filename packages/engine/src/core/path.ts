@@ -3,7 +3,7 @@ const escape = (id: string | number): string =>
 
 const segment = (kind: string, ids: readonly (string | number)[]): string => [kind, ...ids.map(escape)].join(':');
 
-export type Window = 'target' | 'after' | 'done' | 'seen' | 'moment' | 'step';
+export type Window = 'target' | 'after' | 'done' | 'seen' | 'moment' | 'step' | 'cost';
 
 export class Path {
   private constructor(private readonly text: string) {}

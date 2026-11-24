@@ -168,6 +168,7 @@ export class RoomsService {
         actionId: intent.actionId, fromId: intent.fromId, toIds: [...intent.toIds],
         ...(intent.inputs ? { inputs: intent.inputs } : {}),
         ...(intent.claims && Object.keys(intent.claims).length ? { claims: intent.claims } : {}),
+        ...(intent.waive ? { waive: true } : {}),
       },
     };
     return this.world(intent.roomId, userId, 'act', intent, op, Boolean(intent.hidden));
@@ -280,7 +281,7 @@ export class RoomsService {
     return this.inTurn(roomId, () => {
       const room = this.requireRoom(roomId);
       this.allow(room, userId, { kind: 'rules' });
-      const kept = Object.fromEntries(Object.entries(rules).filter(([, on]) => on === true)) as TableRules;
+      const kept = Object.fromEntries(Object.entries(rules).filter(([, on]) => on === true || typeof on === 'string')) as TableRules;
       const delta: RoomDelta = { roomId, sheets: [], log: [] };
       this.store.saveRules(roomId, kept);
       this.store.commit({ roomId, journal: this.journalRow(userId, 'rules', kept, [], delta) });

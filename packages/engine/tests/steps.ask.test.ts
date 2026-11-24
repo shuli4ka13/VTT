@@ -96,7 +96,7 @@ group('шаг «Спросить»', () => {
 
   test('в плате: «нет» — действие не состоялось', () => {
     const system = world({
-      cost: [{ ...ASK, question: 'Разрешить?', yes: 'да', no: 'нет' }, { type: 'branch', if: { expr: 'not(@решение)' } }, { type: 'stop' }, { type: 'end' }],
+      cost: [{ ...ASK, question: 'Разрешить?', yes: 'да', no: 'нет' }, { type: 'branch', if: { expr: 'not(@решение)' } }, { type: 'stop', refusal: 'hard' }, { type: 'end' }],
       steps: [EACH, hit(5)],
     });
     eq(play(system).kind, 'paused');

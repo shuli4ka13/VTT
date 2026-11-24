@@ -1,4 +1,4 @@
-import { isDesk, DESK_ID } from '../engine/owners.ts';
+import { isDesk, isNobody, DESK_ID } from '../engine/owners.ts';
 import { holderOf } from './view.ts';
 import { parseItemTag } from '../model/item-ref.ts';
 import { fieldOf } from '../model/sheet-columns.ts';
@@ -117,6 +117,8 @@ export function authorize(room: Room, userId: string, want: Want): string | null
     return null;
   }
   if (want.hidden && me.role !== 'gm') return tr`втайне бросает только ведущий`;
+  if (want.op.op === 'act' && want.op.intent.waive && me.role !== 'gm') return tr`без платы действие проводит только ведущий`;
+  if (want.op.op === 'act' && want.op.intent.toIds.some(isNobody) && me.role !== 'gm') return tr`без цели за столом действует только ведущий`;
   if (want.op.op === 'set' || want.op.op === 'shift') {
     return parseItemTag(want.op.tag) ? mayItem(room, me, want.op.sheetId) : mayField(room, me, want.op.sheetId, want.op.tag);
   }

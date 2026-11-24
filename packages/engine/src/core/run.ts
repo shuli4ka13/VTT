@@ -1,9 +1,10 @@
 import { NAMES } from '../words/names.ts';
 import { paramStages } from '../engine/stages.ts';
-import { compile, printFormula } from '../formula/index.ts';
+import { compile, printFormula, UNKNOWN, isUnknown } from '../formula/index.ts';
 import type { Node } from '../formula/index.ts';
-import { EngineError, isRuleError } from '../engine/errors.ts';
-import { resolveRef, resolveNumber, resolveOptionalNumber, holdsNow, sheetHead } from '../engine/refs.ts';
+import { EngineError, NotKnown, ActRefused, Declined, isRuleError } from '../engine/errors.ts';
+import { heardNames, listenerOf } from '../model/references.ts';
+import { resolveRef, resolveNumber, resolveOptionalNumber, holdsNow, truthNow, sheetHead, isAbsent } from '../engine/refs.ts';
 import type { RefContext, Bound } from '../engine/refs.ts';
 import { splitPath, referencedTable, reach } from '../engine/navigate.ts';
 import { findField, calc, baseOf } from '../engine/calc.ts';
@@ -15,13 +16,14 @@ import { ROLLED, rolledLabel } from '../events/happenings.ts';
 import type { MomentKey } from '../events/moments.ts';
 import { effectLabelOf } from '../events/actions.ts';
 import { requireEffect, requireCalled, reapplyOf, usesMax } from '../engine/effects.ts';
+import { amountParamOf } from '../model/lists.ts';
 import { tagsFit } from '../engine/roll-tags.ts';
 import { expiryOf, inCombat } from '../engine/clock.ts';
 import { burnsUse } from '../events/durations.ts';
 import { refusalWords } from '../events/refusal.ts';
 import { rollTitle } from '../engine/roll-tags.ts';
 import { previewLines } from '../events/describe.ts';
-import { isDesk, DESK_ID } from '../engine/owners.ts';
+import { isDesk, isNobody, DESK_ID } from '../engine/owners.ts';
 import { Views } from './view.ts';
 import { State } from './state.ts';
 import { limitsOf, cutWords, probesWords } from './limits.ts';
@@ -44,10 +46,10 @@ import type { Pass } from '../engine/calc.ts';
 import type { EmittedEvent, NestedRun } from '../engine/rule.ts';
 import type { System, Sheet, Compendium, Step, Param, StoredValue, WornEffect, Die, Effect } from '../model/types.ts';
 import { Pause, QUIET } from './external.ts';
-import { askOneWords, askRolled } from '../words/steps.ts';
+import { askOneWords, askRolled, outcomeYes, outcomeNo, sayYes, sayNo, softWords, nobodyWords, ASK_YES, ASK_NO } from '../words/steps.ts';
 import type { External, Question, Offer, TableRules } from './external.ts';
 import type { Path, Window } from './path.ts';
-import type { Report, Entry, Stop, Change } from './log.ts';
+import type { Report, Entry, Stop, Change, Would, World as Told } from './log.ts';
 import type { Roll, RollResult, Spec } from './dice.ts';
 import type { Thrown } from './roll.ts';
 import type { Sub } from './subs.ts';
@@ -74,15 +76,19 @@ export interface Sink {
   emitted: EmittedEvent[];
   reactions: Report[];
   after: Entry[];
+  would: Would[];
+  worlds?: Told[];
 }
 
-export const newSink = (): Sink => ({ trace: [], changes: [], effects: [], removed: [], spent: [], emitted: [], reactions: [], after: [] });
+export const newSink = (): Sink => ({ trace: [], changes: [], effects: [], removed: [], spent: [], emitted: [], reactions: [], after: [], would: [] });
 
 export function reportOf(kind: Report['kind'], effect: string, from: string, label: string, sink: Sink, stopped: Stop | null, reply: boolean): Report {
   return {
     kind, effect, from, label, reply, trace: sink.trace, stopped, changes: sink.changes,
     effects: sink.effects, removed: sink.removed, spent: sink.spent, emitted: sink.emitted,
     ...(sink.reactions.length ? { reactions: sink.reactions } : {}),
+    ...(sink.would.length ? { would: sink.would } : {}),
+    ...(sink.worlds?.length ? { worlds: sink.worlds } : {}),
   };
 }
 
@@ -114,6 +120,7 @@ export interface Frame {
   lazy?: Lazy;
   alone?: boolean;
   cost?: boolean;
+  waived?: boolean;
   offset?: number;
 }
 
@@ -150,6 +157,7 @@ export interface Delivery {
   offset?: number;
   lead?: Record<string, unknown>[];
   cost?: boolean;
+  waived?: boolean;
   nth?: number;
 }
 
@@ -180,6 +188,32 @@ interface OfferFound { offer: Offer; picks: Pick[] }
 
 export class Limit extends Error {}
 
+export class Fork {
+  constructor(readonly key: string, readonly outcomes: readonly { id: string; label: string }[]) {}
+}
+
+const stamp = (value: unknown): string => JSON.stringify(value, (_key, one: unknown) => (typeof one === 'symbol' ? '\u0000?' : one)) ?? '';
+
+function blur<T extends Record<string, unknown>>(mine: T, all: readonly Record<string, unknown>[]): T {
+  const out: Record<string, unknown> = { ...mine };
+  for (const key of new Set(all.flatMap(one => Object.keys(one)))) {
+    if (all.some(one => stamp(one[key]) !== stamp(mine[key]))) out[key] = UNKNOWN;
+  }
+  return out as T;
+}
+
+const pour = (into: Sink, from: Sink): void => {
+  into.trace.push(...from.trace);
+  into.changes.push(...from.changes);
+  into.effects.push(...from.effects);
+  into.removed.push(...from.removed);
+  into.spent.push(...from.spent);
+  into.emitted.push(...from.emitted);
+  into.reactions.push(...from.reactions);
+  into.after.push(...from.after);
+  into.would.push(...from.would);
+};
+
 const labelOf = (sub: Sub): string => sub.effect.label || sub.effectId;
 
 interface Asked { question?: string; show?: readonly string[]; to?: string }
@@ -196,6 +230,11 @@ const offerOf = (sub: Sub): Offer => {
 
 const outcomeOf = (out: Delivered): string => JSON.stringify([out.report.changes, out.report.effects, out.report.removed, out.report.stopped, out.returns ?? null]);
 
+const verdictWords = (effect: Effect | undefined, stepId: string): { yes: string; no: string } => {
+  const column = (effect?.returns ?? []).find(one => one.kind === 'boolean' && String((one.expr as { expr?: unknown } | undefined)?.expr ?? '').trim() === `@${stepId}.success`);
+  return { yes: column?.label || outcomeYes(), no: column?.no || outcomeNo() };
+};
+
 const truthy = (value: unknown): boolean =>
   value === true || (typeof value === 'number' && value !== 0) || (typeof value === 'string' && value !== '');
 
@@ -206,7 +245,7 @@ export function namesOf(params: readonly Param[] | undefined, args: Record<strin
   const names: Record<string, Bound> = {};
   for (const key of sheetParams(params)) {
     const value = args[key];
-    names[key] = Array.isArray(value) ? value.map(String) : value === undefined || value === null || value === '' ? null : String(value);
+    names[key] = isUnknown(value) ? UNKNOWN : Array.isArray(value) ? value.map(String) : value === undefined || value === null || value === '' ? null : String(value);
   }
   return names;
 }
@@ -239,6 +278,12 @@ export class Run {
   private readonly insts = new WeakMap<WornEffect, string>();
   private readonly holding = new Map<string, Record<string, StoredValue>>();
   private mark: { sink: Sink; at: number; count: number } | null = null;
+  private readonly lands: { touched: boolean }[] = [];
+  private gathering: string[] | null = null;
+  private unanswered = false;
+  private assumed: Readonly<Record<string, string>> = {};
+  private forking = 0;
+  free = false;
   clock: Clock | null;
 
   constructor(readonly world: World, readonly ext: External) {
@@ -324,14 +369,18 @@ export class Run {
       const flow = runnerOf(step.type).flow;
       const live = blocks.every(block => block.active);
       if (flow === 'open') {
-        const hit = live && ctx.holds(step.if);
+        const truth = live ? ctx.truth(step.if) : false;
+        if (isUnknown(truth)) sink.trace.push({ step: name, type: step.type, unknown: true, ...mark });
+        const hit = truth === true;
         blocks.push({ outer: live, taken: hit, active: hit });
         continue;
       }
       if (flow === 'alt') {
         const block = blocks[blocks.length - 1];
         if (!block) continue;
-        const hit = block.outer && !block.taken && (step.if === undefined || ctx.holds(step.if));
+        const truth = block.outer && !block.taken ? (step.if === undefined ? true : ctx.truth(step.if)) : false;
+        if (isUnknown(truth)) sink.trace.push({ step: name, type: step.type, unknown: true, ...mark });
+        const hit = truth === true;
         block.active = hit;
         block.taken ||= hit;
         continue;
@@ -370,10 +419,21 @@ export class Run {
       let out;
       try {
         out = runnerOf(step.type).finish(step, ctx);
+      } catch (err) {
+        if (!(err instanceof NotKnown)) throw err;
+        out = { value: UNKNOWN, trace: { unknown: true }, break: null };
       } finally {
         this.mark = outer;
       }
-      sink.trace.splice(here.at + here.count, 0, { step: name, type: step.type, ...mark, ...out.trace });
+      const traced: Record<string, unknown> = { step: name, type: step.type, ...mark, ...out.trace };
+      sink.trace.splice(here.at + here.count, 0, traced);
+      if (out.break?.soft) {
+        const stopped = { step: name, type: step.type, reason: out.break.reason, ...(out.break.note ? { note: out.break.note } : {}) };
+        if (this.waive(frame, frame.path.step(name), refusalWords({ stopped, trace: sink.trace }, this.system))) {
+          traced.waived = true;
+          out = { ...out, break: null };
+        }
+      }
       if (step.id != null) results[step.id] = out.value;
       if (step.id != null && out.roll) known[step.id] = out.roll;
       if (out.break) {
@@ -431,6 +491,7 @@ export class Run {
     const sheetOf = (refValue: unknown, what: string): string | null => {
       const value = resolveRef(refValue, ref);
       if (value === null || value === undefined || value === '') return null;
+      if (isAbsent(value)) throw new NotKnown(what);
       if (typeof value !== 'string') throw new EngineError(tr`${frame.owner || tr`правило`}: ${what} — ждали лист, пришло ${JSON.stringify(value)}`);
       if (!this.sheet(value)) throw new EngineError(tr`${frame.owner || tr`правило`}: ${what} — листа «${value}» в комнате нет`);
       return value;
@@ -460,9 +521,27 @@ export class Run {
         }
       },
       optional: (refValue, what) => resolveOptionalNumber(refValue, ref, what),
+      truth: guard => truthNow(guard, ref),
+      absent: refValue => isAbsent(resolveRef(refValue, ref)),
+      land: would => this.land(sink, would),
+      said: stepId => verdictWords(this.system.effects?.[frame.effectId], stepId),
+      fork: outcomes => {
+        const known = this.assumed[path.key];
+        if (known !== undefined) return known;
+        if (!this.forking) return null;
+        throw new Fork(path.key, outcomes);
+      },
+      verdict: (stepId, total) => {
+        const words = verdictWords(this.system.effects?.[frame.effectId], stepId);
+        const asker = this.sheet(frame.home) ? frame.home : DESK_ID;
+        const said = `${frame.label}: ${total}. ${words.yes.charAt(0).toUpperCase()}${words.yes.slice(1)}?`;
+        const chosen = this.question(asker, said, [{ id: ASK_YES, label: words.yes }, { id: ASK_NO, label: words.no }], path.ask('step', asker).nth(asksMade++), rolls);
+        return chosen === null ? UNKNOWN : chosen === ASK_YES;
+      },
       holds: guard => {
         if (guard === null || guard === undefined) return true;
         const value = resolveRef(guard, ref);
+        if (isUnknown(value)) return false;
         if (typeof value !== 'boolean') throw new EngineError(tr`${frame.owner || tr`правило`}: условие шага должно давать да/нет, а дало ${JSON.stringify(value)}`);
         return value;
       },
@@ -523,11 +602,13 @@ export class Run {
       const onSheet = sheetHead(name, ref.sheets);
       if (onSheet?.rest) {
         const id = frame.bound?.[onSheet.head];
+        if (isAbsent(id)) throw new NotKnown(onSheet.rest);
         if (typeof id !== 'string') throw new EngineError(tr`${frame.owner || tr`правило`}: «${onSheet.head}» не задан — поле «${onSheet.rest}» менять не у кого`);
         return { sheet: id, tag: this.cellOf(frame, id, onSheet.rest, ref) };
       }
     }
     const value = resolveRef(refValue, ref);
+    if (isUnknown(value)) throw new NotKnown(expr ?? '');
     if (value && typeof value === 'object' && 'sheet' in value && 'tag' in value) return value as FieldRef;
     throw new EngineError(tr`${frame.owner || tr`правило`}: ${expr ?? JSON.stringify(refValue)} — не поле листа; выберите в списке лист, затем его поле`);
   }
@@ -542,6 +623,7 @@ export class Run {
     if (node.kind === 'Ref') return node.tag;
     if (node.kind !== 'Pick') return null;
     const key = resolveRef({ expr: printFormula(node.key) }, ref);
+    if (isUnknown(key)) throw new NotKnown(expr);
     if (key === null || key === undefined || key === '') {
       throw new EngineError(tr`${frame.owner || tr`правило`}: в «${expr}» строка не задана — какую клетку менять?`);
     }
@@ -563,6 +645,141 @@ export class Run {
       throw new EngineError(tr`${owner}: «${split.head}» не задан — какую строку «${this.system.tables?.[table]?.label || table}» менять?`);
     }
     return reach(this.system, this.view(sheetId), table, key, split.path, owner);
+  }
+
+  split<T>(o: { path: Path; actor: string; label: string; sink: Sink; run: (sink: Sink) => T; outward?: (out: T, all: readonly T[], told: Told[]) => T }): T {
+    if (this.forking) return o.run(o.sink);
+    const attempt = (assumed: Readonly<Record<string, string>>, sink: Sink): { out: T } | { fork: Fork } => {
+      const was = this.assumed;
+      this.assumed = assumed;
+      this.forking++;
+      try {
+        return { out: o.run(sink) };
+      } catch (err) {
+        if (!(err instanceof Fork)) throw err;
+        return { fork: err };
+      } finally {
+        this.assumed = was;
+        this.forking--;
+      }
+    };
+    const plain = newSink();
+    this.state.begin();
+    let first: { out: T } | { fork: Fork };
+    try {
+      first = attempt({}, plain);
+    } catch (err) {
+      if (err instanceof Pause) this.state.commit();
+      else this.state.rollback();
+      throw err;
+    }
+    if ('out' in first) {
+      this.state.commit();
+      pour(o.sink, plain);
+      return first.out;
+    }
+    this.state.rollback();
+    const leaves: { assumed: Readonly<Record<string, string>>; labels: string[]; print: string; sink: Sink; out: T }[] = [];
+    const explore = (assumed: Readonly<Record<string, string>>, labels: readonly string[], fork: Fork): void => {
+      for (const outcome of fork.outcomes) {
+        const next = { ...assumed, [fork.key]: outcome.id };
+        const said = [...labels, outcome.label];
+        const sink = newSink();
+        const got = this.probe(() => {
+          const made = attempt(next, sink);
+          return 'out' in made ? { ...made, print: stamp(this.state.sheets) } : made;
+        });
+        if ('fork' in got) explore(next, said, got.fork);
+        else leaves.push({ assumed: next, labels: said, print: got.print, sink, out: got.out });
+        if (leaves.length > this.limits.probes) throw new EngineError(tr`«${o.label}»: исходов без цели больше ${this.limits.probes} — так не посчитать`);
+      }
+    };
+    explore({}, [], first.fork);
+    const same = leaves.every(leaf => leaf.print === leaves[0]!.print);
+    let chosen = leaves[0]!;
+    if (!same) {
+      const asker = this.sheet(o.actor) ? o.actor : DESK_ID;
+      const picked = this.question(asker, tr`${o.label}: какой исход?`, leaves.map((leaf, at) => ({ id: String(at), label: leaf.labels.join(', ') })), o.path.phase('fork').ask('step', asker), {});
+      if (picked !== null) chosen = leaves[Number(picked)] ?? chosen;
+    }
+    const real = newSink();
+    const made = attempt(chosen.assumed, real);
+    if (!('out' in made)) throw new EngineError(tr`«${o.label}»: исход не сошёлся — развилка появилась заново`);
+    pour(o.sink, real);
+    if (!same) return made.out;
+    const told = leaves.map(leaf => ({ label: leaf.labels.join(', '), trace: leaf.sink.trace, would: leaf.sink.would }));
+    o.sink.worlds = [...(o.sink.worlds ?? []), ...told];
+    return o.outward ? o.outward(made.out, leaves.map(leaf => leaf.out), told) : made.out;
+  }
+
+  private forked(call: Delivery, sink: Sink, tried?: { results: Record<string, unknown>; rolls: Record<string, RollResult>; returns?: Record<string, unknown> }): Delivered {
+    return this.split<Delivered>({
+      path: call.path, actor: call.home, label: call.label, sink,
+      run: own => this.body(call, own, tried),
+      outward: (out, all, told) => ({
+        ...out,
+        results: blur(out.results, all.map(one => one.results)),
+        rolls: Object.fromEntries(Object.entries(out.rolls).filter(([key]) => all.every(one => stamp(one.rolls[key]) === stamp(out.rolls[key])))),
+        ...(out.returns ? { returns: blur(out.returns, all.map(one => one.returns ?? {})) } : {}),
+        report: { ...out.report, worlds: told },
+      }),
+    });
+  }
+
+  lacking<T>(work: () => T): { lacks: string[]; out: T } {
+    const was = this.gathering;
+    const open = this.unanswered;
+    const lacks: string[] = [];
+    this.gathering = lacks;
+    this.unanswered = false;
+    try {
+      const out = this.probe(work);
+      return { lacks: this.unanswered ? [] : lacks, out };
+    } finally {
+      this.gathering = was;
+      this.unanswered = open;
+    }
+  }
+
+  allowed(reasons: readonly string[], label: string, path: Path, actor: string): 'yes' | 'no' | 'none' {
+    const why = reasons.join('; ');
+    if (this.free) {
+      this.state.write({ text: tr`«${label}»: ${why} — без платы, провёл ведущий` });
+      return 'yes';
+    }
+    const mode = this.world.table?.payment;
+    if (mode === 'strict') return 'none';
+    const trust = mode === 'trust' && Boolean(this.sheet(actor));
+    const to = trust ? actor : DESK_ID;
+    const { chosen } = this.choose({
+      key: path.ask('cost', to).key, sheetId: to, window: 'cost', label, text: tr`${why}. Всё равно — «${label}»?`,
+      offers: [{ id: ASK_YES, label: sayYes() }, { id: ASK_NO, label: sayNo() }], results: {}, preview: [], one: true,
+    });
+    if (!chosen.length) return 'none';
+    const yes = chosen[0] === ASK_YES;
+    this.state.write({
+      text: yes
+        ? (trust ? tr`«${label}»: ${why} — на доверии` : tr`«${label}»: ${why} — разрешил ведущий`)
+        : (trust ? tr`«${label}» не состоялось: ${why}` : tr`«${label}» не состоялось: ${why} — ведущий не разрешил`),
+    });
+    return yes ? 'yes' : 'no';
+  }
+
+  private waive(frame: Frame, path: Path, note: string | null): boolean {
+    const why = note ?? softWords();
+    if (this.gathering) {
+      this.gathering.push(why);
+      return true;
+    }
+    if (frame.waived) return true;
+    if (frame.cost) return false;
+    return this.allowed([why], frame.label, path, frame.home) === 'yes';
+  }
+
+  private land(sink: Sink, would: Would): void {
+    const outer = this.lands[0];
+    if (outer) outer.touched = true;
+    else sink.would.push(would);
   }
 
   private rowsOf(frame: Frame, loop: { table: string; as: string }): { key: string; value: unknown; param: Param }[] {
@@ -744,6 +961,7 @@ export class Run {
   }
 
   private write(sheetId: string, tag: string, value: StoredValue, sink: Sink): void {
+    if (isUnknown(value)) throw new NotKnown(tag);
     const from = this.read(sheetId, tag);
     if (sameValue(from, value)) return;
     const holder = this.sheet(this.holder(sheetId, tag))!;
@@ -825,18 +1043,39 @@ export class Run {
     const names = namesOf(callee.params, args);
     const passed = rollsOf(callee.params, args);
     const values = { ...valuesOf(callee.params, args), ...totalsOf(passed), [NAMES.tags]: payload.tags };
-    const home = Object.values(names).find((id): id is string => typeof id === 'string') ?? frame.home;
+    const home = Object.values(names).find((id): id is string => typeof id === 'string' && !isAbsent(id)) ?? frame.home;
     const at = path.call(event);
     const keys = keysOf(this.system, event, false);
     const emitted: EmittedEvent = { ...payload, names, values };
     sink.emitted.push(emitted);
+    const scope = Object.values(names).some(one => isAbsent(one) || (Array.isArray(one) && one.some(isAbsent))) ? { touched: false } : null;
+    if (!scope) return this.called(frame, event, callee, emitted, names, values, passed, home, at, keys, sink);
+    this.lands.push(scope);
+    let out: NestedRun;
+    try {
+      out = this.called(frame, event, callee, emitted, names, values, passed, home, at, keys, sink);
+    } finally {
+      this.lands.pop();
+    }
+    if (!scope.touched || this.lands.length) return out;
+    const main = amountParamOf(callee);
+    const said = Object.entries(values).filter(([key, value]) => key !== NAMES.tags && key !== main?.key
+      && (callee.params ?? []).some(param => param.key === key) && (typeof value === 'number' || typeof value === 'string' || typeof value === 'boolean'));
+    sink.would.push({ effect: event, ...(main ? { amount: emitted.amount } : {}), tags: [...emitted.tags], values: Object.fromEntries(said) as unknown as Record<string, number | string | boolean> });
+    return { ...out, landed: true };
+  }
+
+  private called(frame: Frame, event: string, callee: Effect, emitted: EmittedEvent, names: Record<string, Bound>, values: Record<string, unknown>,
+    passed: Record<string, RollResult>, home: string, at: Path, keys: readonly string[], sink: Sink): NestedRun {
+    const payload = emitted;
     if (frame.inSub) {
       const { entries, delivered } = this.group([{
         effectId: event, label: callee.label || event, steps: callee.steps ?? [], path: at, hop: frame.hop + 1, top: false,
-        home: frame.home, subject: home, bound: names, keys, args: values, paramDefs: callee.params ?? [], seed: { [NAMES.tags]: payload.tags }, rolls: passed,
+        home: frame.home, subject: Object.values(names).find((id): id is string => typeof id === 'string') ?? home, bound: names, keys, args: values, paramDefs: callee.params ?? [], seed: { [NAMES.tags]: payload.tags }, rolls: passed,
         ...(frame.cost ? { cost: true } : {}),
+        ...(frame.waived ? { waived: true } : {}),
       }], at);
-      sink.after.push(...entries);
+      sink.after.push(...entries.filter(entry => !('report' in entry) || !isNobody(entry.toId)));
       const out = delivered[0];
       return { results: out?.results ?? {}, stopped: out?.report.stopped ?? null, ...(out?.returns ? { returns: out.returns } : {}) };
     }
@@ -848,6 +1087,7 @@ export class Run {
         home, bound: names, args: values, paramDefs: callee.params ?? [], props: null, claims: frame.claims, hop: frame.hop, inSub: false,
         ...(frame.inputs ? { inputs: frame.inputs } : {}),
         ...(frame.cost ? { cost: true } : {}),
+        ...(frame.waived ? { waived: true } : {}),
       };
       const before = keys.map(key => `before:${key}`);
       const peek = this.listens(before) ? this.probe(() => {
@@ -877,7 +1117,7 @@ export class Run {
     for (const call of calls) {
       try {
         if (call.hop > 0) this.spend();
-        let tried = this.probeAsking(() => this.body(call, newSink()));
+        let tried = this.probeAsking(() => this.forked(call, newSink()));
         let accepted = 0;
         for (const holder of this.holders()) {
           if (accepted >= this.limits.probes) {
@@ -909,12 +1149,12 @@ export class Run {
             flush(entries);
             if (answered.accepted) {
               accepted++;
-              tried = this.probeAsking(() => this.body(call, newSink()));
+              tried = this.probeAsking(() => this.forked(call, newSink()));
             }
           }
         }
         const sink = newSink();
-        const out = this.body(call, sink, tried);
+        const out = this.forked(call, sink, tried);
         entries.push({ fromId: call.home, toId: call.subject ?? call.home, report: out.report }, ...sink.after);
         delivered?.(out, entries);
         done.push(out);
@@ -933,7 +1173,7 @@ export class Run {
         const found = this.offers(holder.id, out.call.keys.map(key => `after:${key}`), out.call.bound, { ...(out.call.seed ?? {}), ...out.results, ...(out.returns ?? {}) }, out.emitted, qpath, out.rolls);
         for (const one of found) {
           const id = tag ? `${one.offer.id}|${tag}` : one.offer.id;
-          const label = tag ? `${one.offer.label} — ${this.sheet(out.call.subject!)?.name ?? out.call.subject}${again ? ` (${again})` : ''}` : one.offer.label;
+          const label = tag ? `${one.offer.label} — ${this.sheet(out.call.subject!)?.name ?? (isNobody(out.call.subject) ? nobodyWords() : out.call.subject)}${again ? ` (${again})` : ''}` : one.offer.label;
           const known = offers.find(other => other.offer.id === id);
           if (known) known.picks.push(...one.picks);
           else offers.push({ offer: { ...one.offer, id, label }, picks: one.picks });
@@ -992,6 +1232,7 @@ export class Run {
       ...(call.lazy ? { lazy: call.lazy } : {}),
       ...(call.offset ? { offset: call.offset } : {}),
       ...(call.cost ? { cost: true } : {}),
+      ...(call.waived ? { waived: true } : {}),
     };
     const given = call.top
       ? this.argValues(frame)
@@ -1116,22 +1357,48 @@ export class Run {
     };
   }
 
-  private pay(sub: Sub, path: Path, names: Record<string, Bound>, seed: Record<string, unknown>, hop: number, rolls: Record<string, RollResult> = {}): { why: string | null; report: Report; after: Entry[]; changed: boolean } {
+  private pay(sub: Sub, path: Path, names: Record<string, Bound>, seed: Record<string, unknown>, hop: number, rolls: Record<string, RollResult> = {}, waived = false): { why: string | null; report: Report; after: Entry[]; changed: boolean } {
     const own = newSink();
-    const ran = this.exec({ ...this.subFrame(sub, path, hop, tr`плата за «${labelOf(sub)}»`, names), cost: true }, sub.handler.cost ?? [], own, seed, undefined, rolls);
+    const ran = this.exec({ ...this.subFrame(sub, path, hop, tr`плата за «${labelOf(sub)}»`, names), cost: true, ...(waived ? { waived: true } : {}) }, sub.handler.cost ?? [], own, seed, undefined, rolls);
     const report = reportOf('effect', sub.effectId, sub.sheetId, labelOf(sub), own, ran.stopped, false);
     return { why: refusalWords(report, this.system), report, after: own.after, changed: own.changes.length > 0 || own.effects.length > 0 || own.removed.length > 0 || own.after.length > 0 };
   }
 
-  refusal(sub: Sub, path: Path, names: Record<string, Bound>, seed: Record<string, unknown>, hop: number, rolls: Record<string, RollResult> = {}): string | null {
+  refusal(sub: Sub, path: Path, names: Record<string, Bound>, seed: Record<string, unknown>, hop: number, rolls: Record<string, RollResult> = {}, waived = false): string | null {
     if (!sub.handler.cost?.length) return null;
-    return this.probe(() => this.pay(sub, path, names, seed, hop, rolls).why);
+    return this.probe(() => this.pay(sub, path, names, seed, hop, rolls, waived).why);
+  }
+
+  pressed(sub: Sub, root: Path, label: string, costOnly: boolean): void {
+    const heard = heardNames(this.system, listenerOf(sub.handler));
+    const names: Record<string, Bound> = Object.fromEntries(heard.sheets.map(key => [key, UNKNOWN]));
+    const seed: Record<string, unknown> = Object.fromEntries(heard.seeds.map(key => [key, UNKNOWN]));
+    if (!this.holds(sub, names, seed)) throw new ActRefused(label, tr`условие сейчас не выполняется`);
+    const path = root.handler(sub.sheetId, sub.key, sub.inst);
+    let waived = false;
+    if (sub.handler.cost?.length) {
+      const tried = this.lacking(() => this.pay(sub, path.pay(), names, seed, 0));
+      if (tried.out.why) throw new ActRefused(label, tried.out.why);
+      if (tried.lacks.length) {
+        const why = tried.lacks.join('; ');
+        if (costOnly) throw new ActRefused(label, why);
+        const verdict = this.allowed(tried.lacks, label, path.pay(), sub.sheetId);
+        if (verdict === 'no') throw new Declined();
+        if (verdict === 'none') throw new ActRefused(label, why);
+        waived = true;
+      }
+    }
+    if (costOnly) return;
+    const out = this.react(sub, { path, names, seed, hop: 0, chosen: true, owner: tr`«${label}» кнопкой`, waived });
+    this.state.write(...out.lead);
+    if (out.report) this.state.write({ fromId: sub.sheetId, toId: sub.sheetId, report: out.report });
+    this.state.write(...out.entries);
   }
 
   react(found: Sub, o: {
     path: Path; names: Record<string, Bound>; seed: Record<string, unknown> | (() => Record<string, unknown>); hop: number;
     rolls?: Record<string, RollResult>;
-    chosen: boolean; owner: string; roll?: { value: Roll; bonus?: number }; builtin?: boolean; kind?: Report['kind']; label?: string;
+    chosen: boolean; owner: string; roll?: { value: Roll; bonus?: number }; builtin?: boolean; kind?: Report['kind']; label?: string; waived?: boolean;
   }): { lead: Entry[]; report?: Report; entries: Entry[]; spent?: string } {
     const entries: Entry[] = [];
     const lead: Entry[] = [];
@@ -1151,7 +1418,7 @@ export class Run {
     if (this.handlers.filter(one => one === mark).length >= this.limits.handlerDepth) {
       return { lead, entries: [{ text: cutWords() }] };
     }
-    const why = o.builtin ? null : this.refusal(sub, o.path.pay(), o.names, seed, o.hop, rolls);
+    const why = o.builtin ? null : this.refusal(sub, o.path.pay(), o.names, seed, o.hop, rolls, o.waived === true);
     if (why) {
       if (o.chosen) entries.push({ text: tr`«${label}» не состоялось: ${why}` });
       return { lead, entries };
@@ -1162,7 +1429,7 @@ export class Run {
     this.running.push(sub);
     try {
       if (!o.builtin && sub.handler.cost?.length) {
-        const paid = this.pay(sub, o.path.pay(), o.names, seed, o.hop, rolls);
+        const paid = this.pay(sub, o.path.pay(), o.names, seed, o.hop, rolls, o.waived === true);
         if (paid.why) {
           this.state.rollback();
           return { lead, entries: [{ text: tr`«${label}» не состоялось: ${paid.why}` }] };
@@ -1170,7 +1437,10 @@ export class Run {
         if (paid.changed) lead.push({ fromId: sub.sheetId, toId: sub.sheetId, report: paid.report }, ...paid.after);
       }
       const own = newSink();
-      const ran = this.exec(this.subFrame(sub, o.path, o.hop, o.owner, o.names, o.roll), sub.handler.steps ?? [], own, seed, undefined, rolls);
+      const ran = this.split({
+        path: o.path, actor: sub.sheetId, label, sink: own,
+        run: mine => this.exec(this.subFrame(sub, o.path, o.hop, o.owner, o.names, o.roll), sub.handler.steps ?? [], mine, seed, undefined, rolls),
+      });
       const report = reportOf(o.kind ?? 'effect', sub.effectId, sub.sheetId, label, own, ran.stopped, false);
       entries.push(...own.after);
       const spent = !o.builtin && burnsUse(sub.effect);
@@ -1501,10 +1771,12 @@ export class Run {
     return entries;
   }
 
-  private choose(question: Question): { chosen: string[]; skipped: boolean; quiet: boolean } {
-    const live = (question.window === 'seen' || question.window === 'step') && this.seenAsks > 0 && this.probing === 1;
+  choose(question: Question): { chosen: string[]; skipped: boolean; quiet: boolean } {
+    const live = (question.window === 'seen' || question.window === 'step' || question.window === 'cost') && this.seenAsks > 0 && this.probing === 1;
+    const known = this.isProbing && !live ? this.ext.peek(question.key) : null;
+    if (this.gathering && this.isProbing && !live && known === null) this.unanswered = true;
     const answered = this.isProbing && !live
-      ? { chosen: this.ext.peek(question.key) ?? [], byPerson: false }
+      ? { chosen: known ?? [], byPerson: false }
       : this.ext.ask(question);
     const quiet = question.mute === true && answered.chosen.includes(QUIET);
     const { byPerson } = answered;
@@ -1573,7 +1845,7 @@ export class Run {
     const out = new Map<string, OfferFound[]>();
     for (const found of offers) {
       const to = askedOf(found.picks[0]!.sub).to;
-      const answerer = to === 'gm' ? DESK_ID : to === 'actor' ? actor ?? holder : to === 'target' ? target ?? holder : holder;
+      const answerer = to === 'gm' ? DESK_ID : to === 'actor' ? actor ?? holder : to === 'target' ? (target && !isNobody(target) ? target : holder) : holder;
       out.set(answerer, [...(out.get(answerer) ?? []), found]);
     }
     return out;

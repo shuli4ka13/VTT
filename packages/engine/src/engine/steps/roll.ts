@@ -1,3 +1,6 @@
+import { NotKnown } from '../errors.ts';
+import { hasUnknown } from '../../formula/index.ts';
+import type { Would } from '../../core/log.ts';
 import { EngineError } from '../errors.ts';
 import { withKeep, times as timesOf, addendsText } from '../../core/dice.ts';
 import { dieSpec } from '../../core/dice-addend.ts';
@@ -58,9 +61,24 @@ export function tagsOf(raw: unknown, ctx: StepContext): string[] {
   return [...new Set(list.flatMap(tag => {
     if (typeof tag === 'string') return [tag];
     const value = ctx.value(tag);
+    if (hasUnknown(value)) return [];
     if (Array.isArray(value)) return value.map(String);
     return value === null || value === undefined || value === '' ? [] : [String(value)];
   }))];
+}
+
+const fieldName = (ref: unknown): string => {
+  const expr = ref && typeof ref === 'object' && 'expr' in ref ? String((ref as { expr: unknown }).expr) : '';
+  return /^\s*@[\p{L}\p{N}_]+\.([\p{L}\p{N}_.]+)\s*$/u.exec(expr)?.[1] ?? '';
+};
+
+export function aimed<T>(ctx: StepContext, read: () => T, would: () => Would): T {
+  try {
+    return read();
+  } catch (err) {
+    if (err instanceof NotKnown) ctx.land(would());
+    throw err;
+  }
 }
 
 export interface Rolled extends RollResult {
@@ -69,7 +87,7 @@ export interface Rolled extends RollResult {
 }
 
 function fieldFinish(step: StepData, ctx: StepContext) {
-  const at = ctx.field(step.field);
+  const at = aimed(ctx, () => ctx.field(step.field), () => ({ roll: fieldName(step.field), tags: tagsOf(step.tags, ctx) }));
   const other = has(step.second) ? ctx.field(step.second) : null;
   if (other && other.sheet !== at.sheet) throw new EngineError(tr`${who(ctx)}: два поля одного броска — с одного листа`);
   const check = fieldCheck(ctx.system, at.tag, other?.tag);
@@ -114,7 +132,7 @@ function fieldFinish(step: StepData, ctx: StepContext) {
 export function finish(step: StepData, ctx: StepContext) {
   if (has(step.field)) return fieldFinish(step, ctx);
   const tags = tagsOf(step.tags, ctx);
-  const by = ctx.sheet(step.by, tr`кто бросает`);
+  const by = aimed(ctx, () => ctx.sheet(step.by, tr`кто бросает`), () => ({ roll: '', tags }));
   const against = by ? ctx.ahead?.() ?? null : null;
   if (step.die === undefined && step.fixed === undefined) throw new EngineError(tr`${who(ctx)}: броску нужна кость или формула`);
   const bonus = ctx.optional(step.bonus, tr`прибавка броска`) ?? 0;

@@ -6097,6 +6097,16 @@
             }
           },
           {
+            "type": "apply",
+            "target": {
+              "expr": "@list.turn.ataki.left"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "if(@list.turn.deystvie.left >= 1, @list.attacks_per_action, 1)"
+            }
+          },
+          {
             "type": "emit",
             "effect": "cost_action",
             "args": {
@@ -6106,16 +6116,6 @@
               "istochnik": {
                 "expr": "@list"
               }
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@list.turn.ataki.left"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@list.attacks_per_action"
             }
           },
           {
@@ -6710,6 +6710,7 @@
             "confirm": {
               "question": "По тебе попали. Щит?"
             },
+            "manual": true,
             "cost": [
               {
                 "type": "emit",
@@ -6815,6 +6816,7 @@
             "confirm": {
               "question": "Тебя ранили. Адское возмездие?"
             },
+            "manual": true,
             "cost": [
               {
                 "type": "emit",
@@ -9113,7 +9115,8 @@
             "type": "stop",
             "note": {
               "expr": "\"круг ячейки ниже круга заклинания\""
-            }
+            },
+            "refusal": "hard"
           },
           {
             "type": "end"

@@ -59,7 +59,7 @@ export const scenarios: Scenario[] = [
     world: 'cyberpunk',
     sheets: { silver: { values: { luck_left: 1 } } },
     dice: [],
-    steps: [{ ...shot('silver', 'raze', 20, { luck: 3 }), refused: 'удач' }],
+    steps: [{ rules: { payment: 'strict' } }, { ...shot('silver', 'raze', 20, { luck: 3 }), refused: 'удач' }],
     expect: { values: { silver: { luck_left: 1 }, raze: { hp: 40 } } },
   },
   {

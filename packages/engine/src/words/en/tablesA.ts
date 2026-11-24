@@ -70,6 +70,7 @@ export const TABLES_A: Record<string, string> = {
   "откуда берём": "where we take from",
   "да, если значение не задано": "true if the value is not set",
   "что проверяем": "what we check",
+  "да, если значение выяснено: у кнопки висящего эффекта и у цели без листа его может не быть": "yes if the value is known: a hanging effect's button and a target with no sheet may not have it",
   "взять из таблицы строку по значению": "take a table row by value",
   "по чему искать": "what to search by",
   "значение, по которому найти строку": "the value to find the row by",
@@ -205,4 +206,6 @@ export const TABLES_A: Record<string, string> = {
   "Сколько": "How much",
   "сколько применилось": "how much was applied",
   "сколько не влезло": "how much did not fit",
+  "Для каждого из списка": "For each in the list",
+  "Шаги выше выполняются один раз, шаги ниже — для каждого из списка по очереди: для каждой цели из входа-списка (только у действия кнопкой) или для каждой строки таблицы. Вызовы внутри цикла в подписке тратят её запас ответов — больше 32 подряд не пройдут.": "Steps above run once, steps below run for each item in the list in turn: for each target from a list input (button actions only) or for each row of a table. Calls inside the loop in a trigger use up its reserve of replies — more than 32 in a row will not go through.",
 };

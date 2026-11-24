@@ -349,6 +349,7 @@ export const handler = z.object({
   anyTags: z.array(z.string().min(1)).optional(),
   notTags: z.array(z.string().min(1)).optional(),
   confirm: confirm.optional(),
+  manual: z.boolean().optional(),
   cost: z.array(step).optional(),
   steps: z.array(step).optional(),
 }).strict();

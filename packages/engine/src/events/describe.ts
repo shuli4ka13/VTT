@@ -20,6 +20,9 @@ import type { FacedTrace } from '../core/against.ts';
 import { CALL_WORDS } from '../words/calls.ts';
 import { tr } from '../words/tongue.ts';
 import { inSystemTongue } from '../model/localize.ts';
+import { isNobody } from '../engine/owners.ts';
+import { flowOf } from '../model/flow.ts';
+import type { Would } from '../core/log.ts';
 
 const addsOf = (trace: Record<string, unknown>): Addend[] => (Array.isArray(trace.adds) ? trace.adds as Addend[] : []);
 
@@ -90,7 +93,9 @@ export function describeParts(
 ): { head: string; lines: string[] } {
   const nameOf = (id: string) => sheets.find(s => s.id === id)?.name ?? id;
   const label = String(entry.report.label ?? '') || effectLabelOf(system, entry.report.effect);
-  const head = entry.fromId === entry.toId
+  const head = isNobody(entry.toId)
+    ? tr`${nameOf(entry.fromId)} применяет «${label}» без цели`
+    : entry.fromId === entry.toId
     ? tr`${nameOf(entry.fromId)} применяет «${label}»`
     : entry.report.reply
       ? tr`${nameOf(entry.fromId)} отвечает «${label}» по ${nameOf(entry.toId)}`
@@ -194,6 +199,14 @@ export function describeParts(
       const verdict = verdictText({ threshold: trace.threshold, under: trace.under === true, success: trace.success, margin: trace.said, degree: trace.degree });
       return `${title}: ${rolls}${edits}${addendsText(addsOf(trace))}${bonus} = ${trace.total}${parts}${verdict}${gone}`;
     }
+    if (trace.type === 'check' && trace.blind) {
+      const words = outcomeWords(system, (trace.tags as string[] | undefined) ?? []);
+      const tags = (trace.tags as string[] | undefined) ?? [];
+      const title = tags.length ? rollTitle(system, tags, tr`Проверка`) : refLabel(step?.value) ?? tr`Проверка`;
+      const told = trace.success === undefined ? tr`исход не выяснен`
+        : `${trace.success ? words.success : words.fail} ${trace.forced != null ? `(${forcedWords(trace.forced, Boolean(trace.success))})` : tr`(по ответу)`}`;
+      return `${title}: ${trace.total} — ${told}`;
+    }
     if (trace.type === 'check') {
       const versus = typeof trace.versusTag === 'string' ? labelOf(trace.versusTag) : refLabel(step?.versus, trace.within) ?? tr`порог`;
       const degree = trace.degree !== undefined && trace.degree !== null ? tr`, степень ${trace.degree}` : '';
@@ -213,8 +226,15 @@ export function describeParts(
   const idle = (trace: Record<string, unknown>): boolean =>
     (trace.type === 'apply' && trace.from === trace.to) || stepRegistry.get(String(trace.type))?.idle?.(trace, system) === true;
   const secret = (trace: Record<string, unknown>): boolean => typeof trace.target === 'string' && isSecret(fieldOf(system, trace.target));
-  const calculation = (entry.report.trace ?? []).flatMap((trace: Record<string, unknown>) => {
-    if (trace.skipped || idle(trace) || secret(trace)) return [];
+  const linesOf = (traces: Record<string, unknown>[]): string[] => traces.flatMap((trace: Record<string, unknown>) => {
+    if (trace.skipped || trace.landed || idle(trace) || secret(trace)) return [];
+    if (trace.unknown) {
+      if (trace.within) return [];
+      if (flowOf(trace.type)) return [tr`условие не выяснено — ветка пропущена`];
+      const step = stepOf(trace);
+      const said = typeof step?.label === 'string' && step.label ? step.label : null;
+      return [said ? tr`«${said}»: не выяснено — шаг пропущен` : tr`не выяснено — шаг пропущен`];
+    }
     const named = trace.within && !rolled(trace) ? null : namedTrace(trace);
     if (named) return [named];
     const line = stepRegistry.get(String(trace.type))?.traceLine;
@@ -228,6 +248,55 @@ export function describeParts(
     catch { return []; }
   });
 
+  const paramOf = (id: string, key: string) => (system.effects?.[id]?.params ?? []).find(one => one.key === key);
+  const wouldSaid = (one: Would): string => {
+    if ('effect' in one) {
+      const own = new Set(system.effects?.[one.effect]?.tags ?? []);
+      const tags = one.tags.filter(tag => !own.has(tag)).map(tag => tagSaid(system, tag));
+      const more = Object.entries(one.values).flatMap(([key, value]) => {
+        const param = paramOf(one.effect, key);
+        if (param?.kind === 'choice' || param?.kind === 'effect' || value === false || typeof value === 'string') return [];
+        return [value === true ? String(param?.label ?? key) : `${param?.label ?? key} ${value}`];
+      });
+      return [`${eventLabel(one.effect)}${one.amount === undefined ? '' : ` ${one.amount}`}`, ...(tags.length ? [tags.join(', ')] : []), ...more].join(' · ');
+    }
+    if ('field' in one) {
+      const sign = one.direction === 'add' ? '+' : one.direction === 'subtract' ? '−' : '=';
+      return one.amount === undefined ? labelOf(one.field) : `${labelOf(one.field)} ${sign}${one.amount}`;
+    }
+    if ('status' in one) return one.mode === 'remove' ? tr`снять «${effectLabelOf(system, one.status)}»` : `«${effectLabelOf(system, one.status)}»`;
+    return tr`бросает цель: ${one.roll ? labelOf(one.roll) : rollTitle(system, one.tags, tr`бросок`)}`;
+  };
+  const landedOf = (list: readonly string[]): string => (list.length ? tr`на цель легло бы: ${list.join('; ')}` : '');
+  interface Said { text: string; would: boolean }
+  const saidOf = (trace: Record<string, unknown>[], would: Would[]): Said[] =>
+    [...linesOf(trace).map(text => ({ text, would: false })), ...would.map(one => ({ text: wouldSaid(one), would: true }))];
+  const joined = (list: readonly Said[]): string[] =>
+    [...list.filter(one => !one.would).map(one => one.text), landedOf(list.filter(one => one.would).map(one => one.text))].filter(Boolean);
+  const worlds = ((entry.report.worlds ?? []) as { label: string; trace: Record<string, unknown>[]; would: Would[] }[])
+    .map(one => ({ label: one.label, said: saidOf(one.trace, one.would) }));
+  const calc = (list: readonly Said[]): Said[] => list.filter(one => !one.would);
+  const lays = (list: readonly Said[]): Said[] => list.filter(one => one.would);
+  const common = (lists: readonly Said[][]): number => {
+    let at = 0;
+    while (lists.length && lists.every(list => list[at] !== undefined && list[at]!.text === lists[0]![at]!.text)) at++;
+    return at;
+  };
+  const sameCalc = common(worlds.map(one => calc(one.said)));
+  const sameLays = common(worlds.map(one => lays(one.said)));
+  const split = new Map<string, string[]>();
+  for (const one of worlds) {
+    const rest = [...calc(one.said).slice(sameCalc), ...lays(one.said).slice(sameLays)].map(piece => piece.text).join('; ') || '—';
+    split.set(rest, [...(split.get(rest) ?? []), one.label]);
+  }
+  const calculation = worlds.length
+    ? [
+      ...joined([...calc(worlds[0]!.said).slice(0, sameCalc), ...lays(worlds[0]!.said).slice(0, sameLays)]),
+      ...[...split].map(([rest, labels]) => `${labels.join(' / ')}: ${rest}`),
+    ]
+    : linesOf(entry.report.trace ?? []);
+  const landed = worlds.length ? '' : landedOf(((entry.report.would ?? []) as Would[]).map(wouldSaid));
+
   const reactions = (entry.report.reactions ?? []) as {
     label: string; stopped?: { reason?: string } | null; effects?: string[];
   }[];
@@ -235,11 +304,12 @@ export function describeParts(
     .filter(r => !r.stopped)
     .map(r => {
       const hung = (r.effects ?? []).map(id => effectLabelOf(system, id)).join(', ');
-      return hung ? `${r.label}: ${hung}` : r.label;
+      const lay = landedOf(((r as { would?: Would[] }).would ?? []).map(wouldSaid));
+      return [hung ? `${r.label}: ${hung}` : r.label, lay].filter(Boolean).join(' — ');
     });
 
   const stopped = entry.report.stopped as { type: string; reason: string; note?: string } | null;
   const stop = stopped ? (stopped.note || breakReasonWord(stopped.type, stopped.reason)) : '';
 
-  return { head, lines: [...calculation, shown.join(', '), told.join('; '), stop].filter(Boolean) };
+  return { head, lines: [...calculation, landed, shown.join(', '), told.join('; '), stop].filter(Boolean) };
 }

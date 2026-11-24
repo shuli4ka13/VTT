@@ -197,7 +197,7 @@ describe('роли поля: журнал', () => {
 });
 
 describe('роли поля: числа закрытого поля в журнале и отказе', () => {
-  const world = { system, compendium: book, clock: null, sheets, die: () => 12 };
+  const world = { system, compendium: book, clock: null, sheets, die: () => 12, table: { payment: 'strict' as const } };
 
   it('проверка без броска: значение закрытого поля слева не печатается, открытого — печатается', () => {
     const out = perform(world, { op: 'act', intent: { actionId: 'приём:1', fromId: 'арвен', toIds: [] } });

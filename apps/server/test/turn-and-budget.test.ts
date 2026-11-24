@@ -91,6 +91,7 @@ describe('часы и траты хода не портятся', () => {
     const { as, roomId, arven, mirra } = await table();
     await as(http().post(`/rooms/${roomId}/turn`)).send({ roomId, op: 'start', order: [mirra.id, arven.id] }).expect(201);
 
+    await as(http().post(`/rooms/${roomId}/rules`)).send({ payment: 'strict' }).expect(201);
     const spray = { roomId, actionId: 'poison-spray:0', fromId: mirra.id, toIds: [arven.id] };
     const broken = await as(http().post(`/rooms/${roomId}/act`))
       .send({ ...spray, claims: { [arven.id]: ['нет_такой_правки'] } })
@@ -907,6 +908,7 @@ describe('отдых и плата ячейкой', () => {
     const worldId = (await as(http().post('/worlds')).send({ title: 'Мир отдыха', systemId, compendiumIds: [bookId], sheets: [sheet('маг'), sheet('цель')] })).body.id;
     const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол отдыха' })).body.id as string;
     const shot = { roomId, actionId: 'стрела:0', fromId: 'маг', toIds: ['цель'] };
+    await as(http().post(`/rooms/${roomId}/rules`)).send({ payment: 'strict' }).expect(201);
 
     await as(http().post(`/rooms/${roomId}/act`)).send(shot).expect(201);
     const refused = await as(http().post(`/rooms/${roomId}/act`)).send(shot).expect(400);

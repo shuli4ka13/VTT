@@ -1,4 +1,5 @@
-import { EngineError } from '../errors.ts';
+import { EngineError, NotKnown } from '../errors.ts';
+import { isUnknown, hasUnknown } from '../../formula/index.ts';
 import { requireCalled, isPureCall } from '../effects.ts';
 import { amountParamOf } from '../../model/lists.ts';
 import type { EmittedEvent } from '../rule.ts';
@@ -51,7 +52,7 @@ function chosenTags(params: { key: string; kind?: string; from?: string }[], arg
   for (const param of params) {
     if (param.kind !== 'choice' || !param.from) continue;
     const value = args[param.key];
-    if (value === undefined || value === null || value === '') continue;
+    if (value === undefined || value === null || value === '' || hasUnknown(value)) continue;
     if (Array.isArray(value)) out.push(...value.map(String));
     else out.push(String(value));
   }
@@ -71,6 +72,7 @@ const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
   mayBreak: true,
   finish(step, ctx) {
     const chosen = ctx.value(step.effect);
+    if (isUnknown(chosen)) throw new NotKnown(tr`какой эффект звать`);
     if (chosen === null || chosen === undefined || chosen === '') return { value: null, trace: { event: null }, break: null };
     const id = String(chosen);
     const spec = requireCalled(ctx.system, id, who(ctx));
@@ -83,6 +85,7 @@ const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
     }
     const args = given;
     const main = amountParamOf(spec);
+    if (main && isUnknown(args[main.key])) throw new NotKnown(main.label ?? main.key);
     const incoming = main && args[main.key] !== undefined ? Number(args[main.key]) : 0;
     if (!Number.isFinite(incoming)) throw new EngineError(tr`«${main!.label ?? main!.key}» вызова «${spec.label ?? id}»: ждали число, пришло «${String(args[main!.key])}»`);
     const tags = [...new Set([...(spec.tags ?? []), ...chosenTags(params, args), ...tagsOf(step.tags, ctx)])];
@@ -94,7 +97,7 @@ const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
     const note = out.stopped?.note ?? null;
     return {
       value: { ...payload, ...(out.returns ?? {}) },
-      trace: { event: id, incoming, amount: payload.amount, tags: tags.filter(tag => !(spec.tags ?? []).includes(tag)), ...(main ? {} : { bare: true }), ...(received ? { received } : {}) },
+      trace: { event: id, incoming, amount: payload.amount, tags: tags.filter(tag => !(spec.tags ?? []).includes(tag)), ...(main ? {} : { bare: true }), ...(received ? { received } : {}), ...(out.landed ? { landed: true } : {}) },
       break: ctx.inCost && received ? { reason: 'emit-stopped', ...(note ? { note } : {}) } : null,
     };
   },

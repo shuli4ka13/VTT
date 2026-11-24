@@ -152,6 +152,10 @@ export const STEP_WORDS = live({
     hint: 'Дальше не идём. В цене и до «Для каждого из» — действие не состоялось, ничего не изменилось; в теле по цели — стоп для этой цели.',
     slots: [
       { key: 'note', label: 'Что сказать в журнал', kind: 'ref', allow: ['expr', 'empty'] },
+      {
+        key: 'refusal', label: 'Отказ', kind: 'choice', options: ['', 'soft', 'hard'], fallback: '',
+        choice: [['', 'по месту: в плате мягкий, в шагах жёсткий'], ['soft', 'мягкий — можно спросить стол'], ['hard', 'жёсткий — без вопросов']],
+      },
     ],
     outputs: [],
     reasons: { stop: 'стоп' },
@@ -292,6 +296,12 @@ export type StepType = keyof typeof STEP_WORDS;
 
 export const askOneWords = (): string => tr`на вопрос нужен один ответ`;
 export const askRolled = (): string => tr`выпало`;
+export const softWords = (): string => tr`цепочка оборвана`;
+export const nobodyWords = (): string => tr`цель без листа`;
+export const sayYes = (): string => tr`да`;
+export const sayNo = (): string => tr`нет`;
+export const outcomeYes = (): string => tr`успех`;
+export const outcomeNo = (): string => tr`провал`;
 export const ASK_YES = NAMES.yes;
 export const ASK_NO = NAMES.no;
 export const askDesk = (): string => tr`ведущий`;

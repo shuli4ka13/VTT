@@ -4,7 +4,10 @@ import { ITEM_NAME, asItem } from '../model/item-ref.ts';
 import type { ItemRef } from '../model/item-ref.ts';
 import { compile } from '../formula/index.ts';
 import type { Tools, Value } from '../formula/index.ts';
-import { EngineError } from './errors.ts';
+import { EngineError, NotKnown } from './errors.ts';
+import { UNKNOWN, isUnknown } from '../formula/index.ts';
+import type { Unknown } from '../formula/index.ts';
+import { isNobody } from './owners.ts';
 import { dieText } from './lead-die.ts';
 import { readCell } from './cells.ts';
 import type { Scope } from './cells.ts';
@@ -61,7 +64,9 @@ export interface RefContext {
   lazy?: (name: string) => void;
 }
 
-export type Bound = string | readonly string[] | null;
+export type Bound = string | readonly string[] | null | Unknown;
+
+export const isAbsent = (bound: unknown): boolean => isUnknown(bound) || isNobody(bound);
 
 export interface Sheets {
   bound: Readonly<Record<string, Bound>>;
@@ -133,9 +138,20 @@ export function resolveRef(ref: unknown, ctx: RefContext): unknown {
   return unknownForm(r, ctx);
 }
 
+export function truthNow(condition: unknown, ctx: RefContext): boolean | Unknown {
+  if (condition === null || condition === undefined) return true;
+  const value = resolveRef(condition, ctx);
+  if (isUnknown(value)) return UNKNOWN;
+  if (typeof value !== 'boolean') {
+    throw new EngineError(tr`${who(ctx)}: условие должно давать да/нет, а дало ${JSON.stringify(value)}`);
+  }
+  return value;
+}
+
 export function holdsNow(condition: unknown, ctx: RefContext): boolean {
   if (condition === null || condition === undefined) return true;
   const value = resolveRef(condition, ctx);
+  if (isUnknown(value)) return true;
   if (typeof value !== 'boolean') {
     throw new EngineError(tr`${who(ctx)}: условие должно давать да/нет, а дало ${JSON.stringify(value)}`);
   }
@@ -144,6 +160,7 @@ export function holdsNow(condition: unknown, ctx: RefContext): boolean {
 
 export function resolveNumber(ref: unknown, ctx: RefContext, what: string): number {
   const value = resolveRef(ref, ctx);
+  if (isUnknown(value)) throw new NotKnown(what);
   if (typeof value !== 'number') {
     throw new EngineError(
       tr`${who(ctx)}: ${what} — не число (${describe(ref)} даёт ${value === null ? tr`пусто` : typeof value})`);
@@ -155,6 +172,7 @@ export function resolveOptionalNumber(ref: unknown, ctx: RefContext, what: strin
   if (ref === null || ref === undefined) return null;
   const value = resolveRef(ref, ctx);
   if (value === null) return null;
+  if (isUnknown(value)) throw new NotKnown(what);
   if (typeof value !== 'number') {
     throw new EngineError(
       tr`${who(ctx)}: ${what} — не число (${describe(ref)} даёт ${typeof value})`);
@@ -232,11 +250,12 @@ function evaluate(expr: unknown, ctx: RefContext): unknown {
       const bound = ctx.sheets!.bound[onSheet.head] ?? null;
       if (onSheet.rest === null) return bound;
       if (bound === null) throw new EngineError(tr`${who(ctx)}: «${onSheet.head}» не задан — «${onSheet.rest}» прочитать не у кого`);
+      if (isAbsent(bound)) return UNKNOWN;
       const view = ctx.sheets!.view;
       const rest = onSheet.rest;
       const split = splitPath(rest);
       const table = split && !isField(system, rest) ? referencedTable(system, split.head, ctx.paramDefs) : undefined;
-      const read = (id: string): unknown => (split && table
+      const read = (id: string): unknown => (isNobody(id) ? UNKNOWN : split && table
         ? walk(system, view(id), table, (ctx.paramDefs ?? []).some(p => p.key === split.head) ? resolve(split.head) : view(id).resolve(split.head), split.path, who(ctx), scope)
         : view(id).resolve(rest));
       return Array.isArray(bound) ? bound.map(read) : read(bound as string);
@@ -246,6 +265,7 @@ function evaluate(expr: unknown, ctx: RefContext): unknown {
     if (dot > 0) {
       const head = name.slice(0, dot);
       if (head in results && results[head] === null) return null;
+      if (head in results && isUnknown(results[head])) return UNKNOWN;
       for (const held of [known[head], ctx.rolls?.[head]]) {
         if (!held || typeof held !== 'object') continue;
         const keys = name.slice(dot + 1).split('.');

@@ -9,11 +9,13 @@ import { refusalWords } from '../events/refusal.ts';
 import { propsOf, keyOf } from '../model/owned.ts';
 import { entryByKey } from '../model/item-ref.ts';
 import type { Inputs } from '../model/asks.ts';
-import { EngineError, ActRefused, NO_SHEET, isRuleError } from '../engine/errors.ts';
+import { EngineError, ActRefused, Declined, NO_SHEET, isRuleError } from '../engine/errors.ts';
 import { render, renderLines } from './render.ts';
 import { External, Pause, emptyJournal } from './external.ts';
 import { Path } from './path.ts';
 import { Run, newSink, reportOf } from './run.ts';
+import { NOBODY, isNobody } from '../engine/owners.ts';
+import { UNKNOWN } from '../formula/index.ts';
 import { runnerOf, idleTrace } from './steps.ts';
 import { keysOf } from './subs.ts';
 import { cutWords } from './limits.ts';
@@ -39,6 +41,7 @@ export interface ActIntent {
   toIds: string[];
   inputs?: Inputs;
   claims?: Record<string, string[]>;
+  waive?: boolean;
 }
 
 export interface ActWorld {
@@ -76,6 +79,10 @@ function actIn(world: ActWorld, intent: ActIntent): ActOutcome {
     const log = [...state.log];
     return { kind: 'done', sheets: [...state.sheets], log: render(log, system, state.sheets), lines: renderLines(log, system, state.sheets), entries: log, journal: ext.settled(), fresh: ext.fresh };
   } catch (err) {
+    if (err instanceof Declined) {
+      const log = [...state.log];
+      return { kind: 'done', sheets: [...world.sheets], log: render(log, system, world.sheets), lines: renderLines(log, system, world.sheets), entries: log, journal: ext.settled(), fresh: ext.fresh };
+    }
     if (!(err instanceof Pause)) throw err;
     const log = [...state.log];
     return {
@@ -121,18 +128,29 @@ export function aimOf(world: Pick<ActWorld, 'system' | 'compendium' | 'clock' | 
 export function runAct(run: Run, intent: ActIntent, root: Path, upTo?: 'cost' | 'aim'): Aim | void {
   const { system, compendium } = run.world;
   const { state } = run;
+  if (intent.waive) run.free = true;
   const action = actionOf(intent.actionId, { system, compendium });
+  if (action.manual) {
+    const holder = run.sheet(intent.fromId);
+    if (!holder) throw new EngineError(tr`в комнате нет листа «${intent.fromId}»`, NO_SHEET);
+    const sub = run.subs(holder).find(one => one.key === action.manual);
+    if (!sub) throw new EngineError(tr`у «${holder.name}» сейчас не висит «${action.label}»`);
+    if (upTo === 'aim') return { count: null, repeat: false };
+    run.pressed(sub, root, action.label, upTo === 'cost');
+    return;
+  }
   const effect = requireEffect(system, action.effect, tr`действие «${action.label}»`);
   const table = tableOf(effect);
   const aimed = (effect.params ?? []).find(param => param.kind === 'sheet' && table[param.key] === 'targets');
-  const targets = aimed?.repeat ? [...intent.toIds] : [...new Set(intent.toIds)];
+  const blank = intent.toIds.length > 0 && intent.toIds.every(isNobody);
+  let targets = aimed?.repeat ? [...intent.toIds] : [...new Set(intent.toIds)];
   if (!isPipeline(effect)) {
     throw new EngineError(tr`действие «${action.label}» зовёт пассивный эффект «${effect.label || action.effect}» — его вешают, а не применяют`);
   }
   const actor = intent.fromId;
   const actorSheet = run.sheet(actor);
   if (!actorSheet) throw new EngineError(tr`в комнате нет листа «${actor}»`, NO_SHEET);
-  for (const id of targets) if (!run.sheet(id)) throw new EngineError(tr`в комнате нет листа «${id}»`, NO_SHEET);
+  for (const id of targets) if (!isNobody(id) && !run.sheet(id)) throw new EngineError(tr`в комнате нет листа «${id}»`, NO_SHEET);
   const given = intent.inputs && Object.keys(intent.inputs).length ? intent.inputs : undefined;
   const flat = given ? Object.fromEntries(Object.entries(given).filter(([, value]) => value === null || typeof value !== 'object')) as Record<string, number | string> : {};
   const inputs = Object.keys(flat).length ? flat : undefined;
@@ -169,7 +187,7 @@ export function runAct(run: Run, intent: ActIntent, root: Path, upTo?: 'cost' | 
     }
   }
   const bondSheet = effect.bond ? bound[effect.bond.by] : null;
-  let bond: WornEffect['bond'] = effect.bond && typeof bondSheet === 'string' ? { sheet: bondSheet, effect: effect.bond.effect } : undefined;
+  let bond: WornEffect['bond'] = effect.bond && typeof bondSheet === 'string' && !isNobody(bondSheet) ? { sheet: bondSheet, effect: effect.bond.effect } : undefined;
 
   const top = (path: Path, owner: string, extra: Partial<Frame> = {}): Frame => ({
     path, effectId: action.effect, label: action.label, owner, home: actor, bound,
@@ -186,6 +204,10 @@ export function runAct(run: Run, intent: ActIntent, root: Path, upTo?: 'cost' | 
     }
   }
   const limit = counted();
+  if (blank && aimed) {
+    targets = Array.from({ length: Math.max(1, limit ?? 1) }, () => NOBODY);
+    bound[aimed.key] = aimed.many ? targets : NOBODY;
+  }
   if (limit !== null && targets.length > limit) throw new ActRefused(action.label, tr`целей выбрано ${targets.length}, а можно не больше ${limit}`);
 
   if (bond && effect.bond?.if && !run.holdsAt(top(root.phase('bond'), tr`держание «${action.label}»`), effect.bond.if)) bond = undefined;
@@ -201,7 +223,17 @@ export function runAct(run: Run, intent: ActIntent, root: Path, upTo?: 'cost' | 
 
   if (effect.cost?.length) {
     const sink = newSink();
-    const costFrame = top(root.phase('cost'), tr`стоимость действия «${action.label}»`, { alone: true, cost: true });
+    const asked = top(root.phase('cost'), tr`стоимость действия «${action.label}»`, { alone: true, cost: true });
+    const tried = run.lacking(() => run.exec(asked, effect.cost!, newSink(), run.argValues(asked)));
+    let waived = false;
+    if (tried.lacks.length && !tried.out.stopped) {
+      if (upTo === 'cost') throw new ActRefused(action.label, tried.lacks.join('; '));
+      const verdict = run.allowed(tried.lacks, action.label, root.phase('cost'), actor);
+      if (verdict === 'no') throw new Declined();
+      if (verdict === 'none') throw new ActRefused(action.label, tried.lacks.join('; '));
+      waived = true;
+    }
+    const costFrame = waived ? { ...asked, waived: true } : asked;
     const ran = run.exec(costFrame, effect.cost, sink, run.argValues(costFrame));
     const report = reportOf('cost', action.effect, actor, action.label, sink, ran.stopped, false);
     const why = refusalWords(report, system);
@@ -249,7 +281,17 @@ export function runAct(run: Run, intent: ActIntent, root: Path, upTo?: 'cost' | 
     };
     preFrame.lazy = lazy;
     const sink = newSink();
-    const ran = run.exec(preFrame, pre.filter((_, index) => !plan.guards.has(index) && !plan.hidden.has(index)), sink, seeded);
+    const eager = pre.filter((_, index) => !plan.guards.has(index) && !plan.hidden.has(index));
+    const blurred = <T extends Record<string, unknown>>(mine: T, all: readonly Record<string, unknown>[]): T => Object.fromEntries(Object.entries(mine)
+      .map(([key, value]) => [key, all.every(one => JSON.stringify(one[key]) === JSON.stringify(value)) ? value : UNKNOWN])) as T;
+    const ran = run.split({
+      path: root, actor, label: action.label, sink,
+      run: own => run.exec(preFrame, eager, own, seeded),
+      outward: (out, all) => ({
+        ...out, results: blurred(out.results, all.map(one => one.results)),
+        rolls: Object.fromEntries(Object.entries(out.rolls).filter(([key, value]) => all.every(one => JSON.stringify(one.rolls[key]) === JSON.stringify(value)))),
+      }),
+    });
     if (ran.stopped) {
       const why = refusalWords(reportOf('effect', action.effect, actor, action.label, sink, ran.stopped, false), system);
       throw new ActRefused(action.label, why ?? tr`цепочка оборвана`);

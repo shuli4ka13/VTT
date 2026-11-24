@@ -23,6 +23,8 @@ export const stop: StepModule = {
   finish(step: StepData, ctx: StepContext) {
     const raw = step.note ? ctx.value(step.note) : null;
     const note = typeof raw === 'string' && raw.trim() ? raw.trim() : null;
-    return { value: null, trace: { stopped: true, ...(note ? { note } : {}) }, break: { reason: 'stop', ...(note ? { note } : {}) } };
+    const kind = String(step.refusal ?? '');
+    const soft = kind === 'soft' || (kind !== 'hard' && ctx.inCost === true);
+    return { value: null, trace: { stopped: true, ...(note ? { note } : {}) }, break: { reason: 'stop', ...(note ? { note } : {}), ...(soft ? { soft: true } : {}) } };
   },
 };

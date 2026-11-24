@@ -57,7 +57,7 @@ const sheet = (id: string, values: Record<string, number> = {}, effects: string[
 const hp = (out: { sheets: Sheet[] }, id: string) => out.sheets.find(s => s.id === id)!.values.хп;
 
 const play = (system: System, sheets: Sheet[], dice: number[], extra: Record<string, unknown> = {}) =>
-  act({ system, compendium: book, clock: null, sheets, die: queue(...dice), journal: emptyJournal() },
+  act({ system, compendium: book, clock: null, sheets, die: queue(...dice), journal: emptyJournal(), table: { payment: 'strict' } },
     { actionId: 'приём:0', fromId: 'а', toIds: ['б'], ...extra }) as { kind: string; sheets: Sheet[] };
 
 describe('готовый блок отдаёт итоги («Что отдаёт»)', () => {

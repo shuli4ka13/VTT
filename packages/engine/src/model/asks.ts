@@ -21,7 +21,7 @@ export interface AskedParam extends Param {
 export function asksOf(actionId: string, { system, compendium }: { system: System; compendium: Compendium }): AskedParam[] {
   const action = actionOf(actionId, { system, compendium });
   const effect = system.effects[action.effect];
-  if (!effect) return [];
+  if (!effect || action.manual) return [];
   const bound = action.binding.args ?? {};
   const own = (effect.params ?? [])
     .filter((param): param is Param & { ask: Ask } => Boolean(param.ask))

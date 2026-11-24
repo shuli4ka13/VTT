@@ -1,6 +1,6 @@
 import { lex } from './lex.ts';
 
-export type FunctionId = 'floor' | 'ceil' | 'min' | 'max' | 'sum' | 'count' | 'rows' | 'has' | 'first' | 'empty' | 'table' | 'die' | 'dicemax' | 'roll';
+export type FunctionId = 'floor' | 'ceil' | 'min' | 'max' | 'sum' | 'count' | 'rows' | 'has' | 'first' | 'empty' | 'known' | 'table' | 'die' | 'dicemax' | 'roll';
 
 export interface FormulaWords {
   and: string;
@@ -18,7 +18,7 @@ export const NEUTRAL_WORDS: FormulaWords = {
   and: 'and', or: 'or', not: 'not', yes: 'true', no: 'false', if: 'if',
   functions: {
     floor: 'floor', ceil: 'ceil', min: 'min', max: 'max', sum: 'sum', count: 'count', rows: 'rows', has: 'has',
-    first: 'first', empty: 'empty', table: 'table', die: 'die', dicemax: 'dicemax', roll: 'roll',
+    first: 'first', empty: 'empty', known: 'known', table: 'table', die: 'die', dicemax: 'dicemax', roll: 'roll',
   },
   die: 'd', dieLetters: 'd',
 };
@@ -27,7 +27,7 @@ export const RU_WORDS: FormulaWords = {
   and: 'и', or: 'или', not: 'не', yes: 'да', no: 'нет', if: 'если',
   functions: {
     floor: 'округлить вниз', ceil: 'округлить вверх', min: 'меньшее из', max: 'большее из', sum: 'сумма', count: 'сколько',
-    rows: 'строки', has: 'есть', first: 'первый', empty: 'пусто', table: 'таблица', die: 'кость', dicemax: 'максимум костей', roll: 'кинуть',
+    rows: 'строки', has: 'есть', first: 'первый', empty: 'пусто', known: 'известно', table: 'таблица', die: 'кость', dicemax: 'максимум костей', roll: 'кинуть',
   },
   die: 'к', dieLetters: 'dдк',
 };

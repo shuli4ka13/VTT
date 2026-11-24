@@ -99,7 +99,7 @@ export const member = z.object({
 export const pendingState = z.object({
   id: z.string(),
   sheetId: z.string(),
-  stage: z.enum(['target', 'after', 'done', 'seen', 'moment', 'step']),
+  stage: z.enum(['target', 'after', 'done', 'seen', 'moment', 'step', 'cost']),
   question: z.string(),
   options: z.array(z.object({ id: z.string(), label: z.string() })),
   preview: z.array(z.string()),
@@ -133,6 +133,7 @@ export const places = z.record(z.string(), place);
 export const tableRules = z.object({
   reactionRolls: z.boolean().optional(),
   reactionUseful: z.boolean().optional(),
+  payment: z.enum(['trust', 'strict']).optional(),
 }).strict();
 
 export const logEntry = z.object({
@@ -180,6 +181,8 @@ export const actIntent = z.object({
   inputs: z.record(z.string().min(1), z.union([z.number(), z.string(), z.record(z.string().min(1), z.union([z.number(), z.string()]))])).optional(),
 
   hidden: z.boolean().optional(),
+
+  waive: z.boolean().optional(),
 });
 
 export const journalEntry = z.object({

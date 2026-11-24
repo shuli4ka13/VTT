@@ -7,6 +7,7 @@ const saidName = (name: string): string => (RU_WORDS.functions as Record<string,
 import type { Node, BinaryNode, CallNode } from './ast.ts';
 import type { Resolve } from '../model/types.ts';
 import { tr } from '../words/tongue.ts';
+import { UNKNOWN, hasUnknown } from './unknown.ts';
 
 export type Value = number | boolean | string;
 
@@ -63,6 +64,7 @@ const FUNCTIONS: Record<string, Fn> = {
       return (list[0] ?? null) as Value;
     },
   },
+  known: { arity: 1, apply: () => 0, raw: args => !hasUnknown(args[0]) },
   empty: {
     arity: 1,
     apply: () => 0,
@@ -108,6 +110,10 @@ export const FUNCTION_NAMES = Object.keys(FUNCTIONS);
 
 const THROW_NAME = 'roll';
 
+const KNOWN_NAME = 'known';
+
+const LOST = UNKNOWN as unknown as Value;
+
 export function evaluate(ast: Node, resolve: Resolve, tools: Tools = {}): Value {
   return visit(ast);
 
@@ -128,6 +134,7 @@ export function evaluate(ast: Node, resolve: Resolve, tools: Tools = {}): Value 
 
       case 'Pick': {
         const key = visit(node.key);
+        if (hasUnknown(key)) return LOST;
         if (key === null || key === undefined || key === '') return null as unknown as Value;
         if (typeof key === 'boolean' || (typeof key === 'object')) {
           throw new FormulaRuntimeError(tr`«@${node.tag}.[…]»: колонку называет текст или число, получено ${describe(key)}`);
@@ -136,8 +143,10 @@ export function evaluate(ast: Node, resolve: Resolve, tools: Tools = {}): Value 
       }
 
       case 'Unary': {
-        if (node.op === NOT) return !given(visit(node.operand));
-        const value = number(visit(node.operand), tr`операнд «${node.op}»`);
+        const operand = visit(node.operand);
+        if (hasUnknown(operand)) return LOST;
+        if (node.op === NOT) return !given(operand);
+        const value = number(operand, tr`операнд «${node.op}»`);
         return node.op === '-' ? -value : value;
       }
 
@@ -147,11 +156,13 @@ export function evaluate(ast: Node, resolve: Resolve, tools: Tools = {}): Value 
       case 'Call':
         return call(node);
 
-      case 'Conditional':
-
-        return boolean(visit(node.test), tr`условие тернарного оператора`)
+      case 'Conditional': {
+        const test = visit(node.test);
+        if (hasUnknown(test)) return LOST;
+        return boolean(test, tr`условие тернарного оператора`)
           ? visit(node.then)
           : visit(node.otherwise);
+      }
 
       default:
         throw new FormulaRuntimeError(tr`неизвестный узел дерева: ${(node as Node).kind}`);
@@ -160,9 +171,15 @@ export function evaluate(ast: Node, resolve: Resolve, tools: Tools = {}): Value 
 
   function binary(node: BinaryNode): Value {
     const left = visit(node.left);
+    if ((node.op === AND || node.op === OR) && hasUnknown(left)) {
+      const other = visit(node.right);
+      if (hasUnknown(other)) return LOST;
+      return given(other) === (node.op === OR) ? other : LOST;
+    }
     if (node.op === AND) return given(left) ? visit(node.right) : left;
     if (node.op === OR) return given(left) ? left : visit(node.right);
     const right = visit(node.right);
+    if (hasUnknown(left) || hasUnknown(right)) return LOST;
 
     if (node.op === '==') return left === right;
     if (node.op === '!=') return left !== right;
@@ -200,8 +217,10 @@ export function evaluate(ast: Node, resolve: Resolve, tools: Tools = {}): Value 
       throw new FormulaRuntimeError(
         tr`«${saidName(node.name)}» требует аргументов: ${fn.arity}, передано ${node.args.length}`);
     }
-    if (fn.raw) return fn.raw(node.args.map(arg => visit(arg)), tools);
-    const args = node.args.map((arg, n) => number(visit(arg), tr`аргумент ${n + 1} функции «${node.name}»`));
+    const given = node.args.map(arg => visit(arg));
+    if (node.name !== KNOWN_NAME && given.some(hasUnknown)) return LOST;
+    if (fn.raw) return fn.raw(given, tools);
+    const args = given.map((arg, n) => number(arg, tr`аргумент ${n + 1} функции «${node.name}»`));
     return fn.apply(args);
   }
 }

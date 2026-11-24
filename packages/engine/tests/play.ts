@@ -1,6 +1,6 @@
 import { act } from '../src/core/act.ts';
 import { emptyJournal } from '../src/core/external.ts';
-import type { Journal, Question } from '../src/core/external.ts';
+import type { Journal, Question, TableRules } from '../src/core/external.ts';
 import type { Entry, Report } from '../src/core/log.ts';
 import type { Clock } from '../src/engine/clock.ts';
 import type { System, Sheet, Compendium, Die } from '../src/model/types.ts';
@@ -21,6 +21,8 @@ export interface PlayArgs {
   claims?: { source?: string[]; target?: string[] };
   answer?: (question: Question) => string[];
   newId?: () => string;
+  table?: TableRules;
+  waive?: boolean;
 }
 
 export interface Played {
@@ -37,9 +39,10 @@ export function exchange(args: PlayArgs): Played {
   for (let round = 0; round < 64; round++) {
     const out = act({
       system: args.system, compendium: args.compendium, clock: args.clock ?? null, sheets: args.sheets,
-      die: args.die, journal, declineAll: !args.answer, ...(args.newId ? { newId: args.newId } : {}),
+      die: args.die, journal, declineAll: !args.answer, ...(args.newId ? { newId: args.newId } : {}), ...(args.table ? { table: args.table } : {}),
     }, {
       actionId: args.actionId, fromId: args.fromId, toIds,
+      ...(args.waive ? { waive: true } : {}),
       ...(args.inputs ? { inputs: args.inputs } : {}),
       ...(args.claims ? { claims: {
         ...(args.claims.source?.length ? { [args.fromId]: args.claims.source } : {}),
