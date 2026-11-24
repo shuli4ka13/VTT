@@ -113,6 +113,12 @@ export function listenToRoom(): void {
       }));
     }
 
+    if (message.type === 'room:rules') {
+      useRoom.setState(current => ({
+        room: current.room && current.room.id === message.roomId ? { ...current.room, rules: message.rules } : current.room,
+      }));
+    }
+
     if (message.type === 'room:places') {
       useRoom.setState(current => ({
         room: current.room && current.room.id === message.roomId ? { ...current.room, places: message.places } : current.room,

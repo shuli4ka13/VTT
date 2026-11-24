@@ -157,9 +157,9 @@ function slotRefs(value: unknown, slotKind: string | undefined, from: Where, sco
     for (const degree of value) slotRefs((degree as { if?: unknown } | null)?.if, undefined, from, scope, out);
     return;
   }
-  if (slotKind === 'roll') {
+  if (slotKind === 'roll' || slotKind === 'tags') {
     for (const tag of Array.isArray(value) ? value : [value]) {
-      if (typeof tag === 'string') { if (tag) out.push({ kind: 'roll', key: tag, from }); }
+      if (typeof tag === 'string') { if (tag) out.push({ kind: slotKind === 'tags' ? 'tag' : 'roll', key: tag, from }); }
       else slotRefs(tag, undefined, from, scope, out);
     }
     return;
@@ -528,7 +528,7 @@ export function heardNames(system: System, listener: Listener): HeardNames {
     const done = listener.phase === 'done';
     return {
       sheets: [...inputs.filter(i => i.kind === 'sheet').map(i => i.key), ...(done ? [] : contracts.flatMap(contract => (contract.each ? [contract.each] : [])))],
-      seeds: [...inputs.filter(i => i.kind !== 'sheet').map(i => i.key), ...(done ? [] : contracts.flatMap(contract => contract.outputs ?? [])), CALL_TAGS, ...(done ? [TARGETS_SEED] : [])],
+      seeds: [...inputs.filter(i => i.kind !== 'sheet').map(i => i.key), ...(done ? [] : contracts.flatMap(contract => (contract.outputs ?? []).map(output => output.key))), CALL_TAGS, ...(done ? [TARGETS_SEED] : [])],
       listened: null,
     };
   }
@@ -547,7 +547,7 @@ export function heardNames(system: System, listener: Listener): HeardNames {
     seeds: [
       ...params.filter(p => p.kind !== 'sheet').map(p => p.key),
       ...visible.map(step => step.id).filter((id): id is string => Boolean(id)),
-      ...(listener.phase === 'after' ? (effect?.returns ?? []).map(column => column.key) : []),
+      ...(listener.phase !== 'done' ? (effect?.returns ?? []).map(column => column.key) : []),
       CALL_TAGS,
       ...(listener.phase === 'done' ? [TARGETS_SEED] : []),
     ],

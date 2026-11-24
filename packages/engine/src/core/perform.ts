@@ -23,7 +23,7 @@ import { Run } from './run.ts';
 import { runAct } from './act.ts';
 import { render, renderLines } from './render.ts';
 import type { ActIntent } from './act.ts';
-import type { Journal, Mode, Question } from './external.ts';
+import type { Journal, Mode, Question, TableRules } from './external.ts';
 import type { Entry } from './log.ts';
 import type { Clock } from '../engine/clock.ts';
 import type { TurnOp } from '../events/moments.ts';
@@ -53,6 +53,7 @@ export interface PerformWorld {
   newId?: () => string;
   journal?: Partial<Journal>;
   mode?: Mode;
+  table?: TableRules;
 }
 
 export type Performed =
@@ -66,7 +67,7 @@ export function perform(world: PerformWorld, op: Op): Performed {
 function performIn(world: PerformWorld, op: Op): Performed {
   const journal: Journal = { ...emptyJournal(), ...(world.journal ?? {}) } as Journal;
   const ext = new External(journal, { die: world.die, ...(world.newId ? { newId: world.newId } : {}) }, world.mode ?? 'real');
-  const run = new Run({ system: world.system, compendium: world.compendium, clock: world.clock, sheets: world.sheets }, ext);
+  const run = new Run({ system: world.system, compendium: world.compendium, clock: world.clock, sheets: world.sheets, ...(world.table ? { table: world.table } : {}) }, ext);
   const root = Path.op(op.op);
   const before = world.sheets;
   try {

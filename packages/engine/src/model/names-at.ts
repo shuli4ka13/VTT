@@ -3,7 +3,7 @@ import { armsOf, sees } from './flow.ts';
 import { loopOf, loopParam } from '../engine/steps/each.ts';
 import { loopsAt, splitsTargets } from '../engine/steps/index.ts';
 import { flattenSystem } from './inherit.ts';
-import { heardNames, listenerOf, callNamesOf, sourcesOf, CALL_TAGS, HOLDER, TARGETS_SEED, DESK_NAME, COMBAT_NAME } from './references.ts';
+import { heardNames, listenerOf, callNamesOf, sourcesOf, contractsOf, CALL_TAGS, HOLDER, TARGETS_SEED, DESK_NAME, COMBAT_NAME } from './references.ts';
 import { LEFT_NAME } from '../events/durations.ts';
 import { calledOf } from '../engine/effects.ts';
 import { STEP_WORDS } from '../words/steps.ts';
@@ -176,7 +176,9 @@ function heard(system: System, handler: NonNullable<Effect['on']>[number]): Name
   const names = heardNames(system, listener);
   const listened = names.listened;
   const params = new Map((listened?.params ?? []).map(param => [param.key, param]));
-  const returned = new Map((listener.kind === 'call' && listener.phase === 'after' ? listened?.returns ?? [] : []).map(column => [column.key, column]));
+  const returned = new Map((listener.kind === 'call' && listener.phase !== 'done' ? listened?.returns ?? [] : []).map(column => [column.key, column]));
+  const contracts = listener.kind === 'call' ? contractsOf(system, listener.key) : [];
+  const promised = new Map(contracts.flatMap(contract => [...(contract.outputs ?? []), ...(contract.inputs ?? []).filter(input => input.kind !== 'sheet')]).map(one => [one.key, one]));
   const steps = new Map((listener.kind === 'call' ? sourcesOf(system, listener.key) : [])
     .flatMap(source => (source.steps ?? []).filter(step => step.id).map(step => [String(step.id), step] as const)));
   const out: NameAt[] = [];
@@ -197,6 +199,13 @@ function heard(system: System, handler: NonNullable<Effect['on']>[number]): Name
     }
     if (name === TARGETS_SEED) {
       out.push({ name, label: HEARD_LABELS[name]!, kind: 'rows', group: 'heard', children: targetsChildren(listened, system) });
+      continue;
+    }
+    const word = promised.get(name);
+    if (word) {
+      const from = (word as { from?: string }).from;
+      const rows = word.kind === 'choice' && from && !word.many ? rowChildren(system, from) : [];
+      out.push({ name, label: contractSaid(system, name), kind: word.kind, group: 'heard', ...(from ? { from } : {}), ...(rows.length ? { children: rows } : {}) });
       continue;
     }
     out.push({ name, label: HEARD_LABELS[name] ?? contractSaid(system, name), kind: name === CALL_TAGS ? 'tags' : 'result', group: 'heard' });

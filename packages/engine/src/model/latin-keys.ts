@@ -64,7 +64,8 @@ export function keysOf(system: System): string[] {
     tagKeys(contract, out);
     for (const input of contract?.inputs ?? []) if (typeof input?.key === 'string') out.add(input.key);
     if (typeof contract?.each === 'string') out.add(contract.each);
-    for (const output of contract?.outputs ?? []) if (typeof output === 'string') out.add(output);
+    for (const output of contract?.outputs ?? []) if (typeof output?.key === 'string') out.add(output.key);
+    for (const trait of contract?.traits ?? []) if (typeof trait?.key === 'string') out.add(trait.key);
   }
   for (const roll of Object.values(any.rolls ?? {}) as any[]) {
     tagKeys(roll, out);

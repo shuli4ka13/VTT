@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { System } from '@vtt/schema';
-import { Button } from '../../../../ui/primitives.tsx';
+import { Button, Field, Fold } from '../../../../ui/primitives.tsx';
+import { TagsField } from '../../tags-field.tsx';
 import { CallEditor } from '../../call-editor.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
@@ -58,6 +59,19 @@ export function SendBody({ step, at, context, edit, system, onOpenEffect }: {
       >
         {null}
       </CallEditor>
+
+      <Fold title={t('common:more')} summary={t('send.moreSummary')} open={Array.isArray(step.tags) && step.tags.length > 0}>
+        <Field label={t('send.tags')} hint={t('send.tagsHint')}>
+          <TagsField
+            system={system}
+            value={step.tags}
+            computed
+            empty={t('send.tagsEmpty')}
+            {...(context.names ? { names: context.names } : {})}
+            onChange={next => edit(at, draft => { if (next.length) loose(draft).tags = next; else delete loose(draft).tags; })}
+          />
+        </Field>
+      </Fold>
 
       <WhatNext
         open={peek}

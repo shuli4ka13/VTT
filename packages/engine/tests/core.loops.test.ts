@@ -282,7 +282,7 @@ describe('плата подписки, вложенная в несколько 
     удар: { label: 'Удар', activation: 'manual', params: [ACTOR, TARGETS], steps: [{ type: 'each', of: 'цели' }, spend('@цель.хп')] },
     щит: {
       label: 'Щит', activation: 'passive', duration: { kind: 'permanent' },
-      on: [{ on: 'before:удар', if: { expr: '@цель == @holder' }, confirm: true, cost: [{ type: 'emit', effect: 'плата', args: { лист: { expr: '@holder' } } }], steps: [] }],
+      on: [{ on: 'before:удар', if: { expr: '@цель == @holder' }, confirm: {}, cost: [{ type: 'emit', effect: 'плата', args: { лист: { expr: '@holder' } } }], steps: [] }],
     },
   }, [{ label: 'Удар', effect: 'удар', args: {} }]);
 

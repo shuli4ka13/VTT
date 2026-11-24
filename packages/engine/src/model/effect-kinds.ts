@@ -17,14 +17,14 @@ export const LAUNCHES: Record<LaunchKind, { label: string; hint: string }> = liv
 type Launchable = {
   activation?: string | null;
   modifiers?: unknown[] | null;
-  on?: { on?: string; confirm?: boolean }[] | null;
+  on?: { on?: string; confirm?: unknown }[] | null;
 } | null | undefined;
 
 export function launchOf(effect: Launchable): Launch {
   if ((effect?.activation ?? 'manual') !== 'passive') return { kind: 'manual', moment: 'after', confirm: false };
   const first = effect?.on?.[0];
   if (!first || effect?.modifiers?.length) return { kind: 'passive', moment: 'after', confirm: false };
-  return { kind: 'auto', moment: callHappening(first.on)?.phase === 'before' || first.on === 'seen' ? 'before' : 'after', confirm: first.confirm === true };
+  return { kind: 'auto', moment: callHappening(first.on)?.phase === 'before' || first.on === 'seen' ? 'before' : 'after', confirm: Boolean(first.confirm) };
 }
 
 export function activationFor(launch: Launch): 'manual' | 'passive' {

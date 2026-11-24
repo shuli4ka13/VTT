@@ -76,7 +76,7 @@ group('новое ядро: ключи костей у повторов', () => 
 group('новое ядро: пауза и повтор', () => {
   const system = world({
     удар: strike([{ id: 'к', type: 'roll', die: { expr: '1d6' } }, hit('@к')]),
-    ответ: { label: 'Ответ', activation: 'passive', on: [{ ...mine, confirm: true, steps: [{ id: 'к', type: 'roll', die: { expr: '1d4' } }, hit('@к', '@действующий.хп')] }] },
+    ответ: { label: 'Ответ', activation: 'passive', on: [{ ...mine, confirm: {}, steps: [{ id: 'к', type: 'roll', die: { expr: '1d4' } }, hit('@к', '@действующий.хп')] }] },
   });
   const sheets = [sheet('а'), sheet('б', ['ответ'])];
 

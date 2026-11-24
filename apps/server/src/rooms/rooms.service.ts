@@ -10,9 +10,9 @@ import { WorldsService } from '../worlds/worlds.service.ts';
 import { RoomStore, openTable } from './store.ts';
 import type {
   RoomState, RoomSummary, RoomDelta, JournalEntry, ActIntent, TurnIntent, AnswerIntent, CancelIntent, ClockState, PendingState,
-  Sheet, System, Compendium, StoredValue, LogEntry, Place, Places,
+  Sheet, System, Compendium, StoredValue, LogEntry, Place, Places, TableRules,
 } from '@vtt/schema';
-import { flattenSystem, perform, authorize, emptyJournal, deskOf, hasDesk, blankDesk, DESK_ID, idleClock, EngineError, askOneWords, askDeskTitle, knows, findField, NO_SHEET, mainLang, inSystemTongue, inTongue } from '@vtt/engine';
+import { flattenSystem, perform, authorize, emptyJournal, deskOf, hasDesk, blankDesk, DESK_ID, idleClock, EngineError, askOneWords, askDeskTitle, knows, findField, NO_SHEET, mainLang, inSystemTongue, inTongue, QUIET } from '@vtt/engine';
 import type { Op, Performed, Want, Journal, Question } from '@vtt/engine';
 import { say, sayIn, langNow } from '../common/words.ts';
 
@@ -26,6 +26,7 @@ interface PendingRecord {
   hidden: boolean;
   clock: ClockState;
   snapshot: Sheet[];
+  rules: TableRules;
   journal: Journal;
   question: Question;
   logged: number;
@@ -34,8 +35,6 @@ interface PendingRecord {
 type Started = Omit<PendingRecord, 'id' | 'question'>;
 
 type RoomRow = { id: string; system: string; compendium: string };
-
-const targetsOf = (intent: ActIntent): string[] => [...new Set(intent.toIds)];
 
 @Injectable()
 export class RoomsService {
@@ -134,7 +133,7 @@ export class RoomsService {
     const sheets = this.store.sheets(roomId);
     return {
       id: room.id, title: room.title, ...this.worldOf(room), sheets, members: people,
-      log: this.store.log(roomId), clock: this.store.clock(roomId) ?? idleClock(), places: this.store.places(roomId),
+      log: this.store.log(roomId), clock: this.store.clock(roomId) ?? idleClock(), places: this.store.places(roomId), rules: this.store.rules(roomId),
       pending: pending ? this.pendingView(pending, sheets, this.worldOf(room).system) : null,
     };
   }
@@ -166,7 +165,7 @@ export class RoomsService {
     const op: Op = {
       op: 'act',
       intent: {
-        actionId: intent.actionId, fromId: intent.fromId, toIds: targetsOf(intent),
+        actionId: intent.actionId, fromId: intent.fromId, toIds: [...intent.toIds],
         ...(intent.inputs ? { inputs: intent.inputs } : {}),
         ...(intent.claims && Object.keys(intent.claims).length ? { claims: intent.claims } : {}),
       },
@@ -277,6 +276,18 @@ export class RoomsService {
     });
   }
 
+  setRules(userId: string, roomId: string, rules: TableRules): Promise<TableRules> {
+    return this.inTurn(roomId, () => {
+      const room = this.requireRoom(roomId);
+      this.allow(room, userId, { kind: 'rules' });
+      const kept = Object.fromEntries(Object.entries(rules).filter(([, on]) => on === true)) as TableRules;
+      const delta: RoomDelta = { roomId, sheets: [], log: [] };
+      this.store.saveRules(roomId, kept);
+      this.store.commit({ roomId, journal: this.journalRow(userId, 'rules', kept, [], delta) });
+      return kept;
+    });
+  }
+
   placePiece(userId: string, roomId: string, sheetId: string, at: Place | null): Promise<Places> {
     return this.inTurn(roomId, () => {
       const room = this.requireRoom(roomId);
@@ -324,7 +335,7 @@ export class RoomsService {
         throw new BadRequestException(say`стол ждёт ответа: ${who} решает, применить ли реакцию`);
       }
       const started: Started = {
-        roomId, op, userId, hidden, clock: this.store.clock(roomId) ?? idleClock(), snapshot, journal: emptyJournal(), logged: 0,
+        roomId, op, userId, hidden, clock: this.store.clock(roomId) ?? idleClock(), snapshot, rules: this.store.rules(roomId), journal: emptyJournal(), logged: 0,
       };
       return this.play(room, started, userId, name, input, false);
     });
@@ -346,6 +357,7 @@ export class RoomsService {
     try {
       out = perform({
         system, compendium, clock: record.clock, sheets: record.snapshot, journal: record.journal, newId: this.newId,
+        ...(Object.keys(record.rules ?? {}).length ? { table: record.rules } : {}),
         die: sides => { const value = this.die(sides); dice.push(value); return value; },
       }, record.op);
     } catch (err) {
@@ -422,7 +434,9 @@ export class RoomsService {
       id: String(record.id),
       sheetId: question.sheetId,
       stage: question.window,
-      question: question.window === 'step'
+      question: question.text
+        ? `${question.sheetId === DESK_ID ? inSystemTongue(system, askDeskTitle) : name}: ${question.text}`
+        : question.window === 'step'
         ? `${question.sheetId === DESK_ID ? inSystemTongue(system, askDeskTitle) : name}: ${question.label}`
         : question.window === 'moment'
         ? told`${name}: ${question.label} — воспользоваться?`
@@ -431,7 +445,7 @@ export class RoomsService {
         : question.window === 'after'
           ? told`${name}: на вас подействовали${by} — ответить реакцией?`
           : told`${name}: на вас действуют${by} — ответить реакцией?`,
-      options: question.offers.map(o => ({ id: o.id, label: o.label })),
+      options: [...question.offers.map(o => ({ id: o.id, label: o.label })), ...(question.mute ? [{ id: QUIET, label: told`не спрашивать до конца хода` }] : [])],
       preview: question.preview,
       ...(question.one ? { one: true } : {}),
       ...(record.hidden ? { hidden: true } : {}),

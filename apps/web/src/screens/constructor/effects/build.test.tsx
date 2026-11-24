@@ -6,7 +6,7 @@ import { SAMPLE_WORLDS, LITE_WORLDS } from '@vtt/engine/samples';
 import type { System, Effect } from '@vtt/schema';
 import { useWorld } from '../../../store/world.ts';
 import { openAll } from '../../../testing/render-open.tsx';
-import { within, stepCard, callIf, dragParamBefore, blocks, block, headOf, armLabel, addToArm, addArm, stopNote, lastNumber, outcomeIf, wrapIf, forkBy } from '../../../testing/cards.ts';
+import { within, askWith, stepCard, callIf, dragParamBefore, blocks, block, headOf, armLabel, addToArm, addArm, stopNote, lastNumber, outcomeIf, wrapIf, forkBy } from '../../../testing/cards.ts';
 import { EffectsTab } from './effects-tab.tsx';
 import { folded } from '../../../testing/folded.ts';
 
@@ -94,7 +94,7 @@ describe('эффекты пресетов собираются в констру
     within(ui.cell('Блок')).click('+ новый');
     ui.type(ui.cell('Блок'), 'Атака');
     within(ui.cell('Блок')).click('завести');
-    ui.select('Метки', 'ataka');
+    ui.select('Метки', 'ataka_oruzhiem');
     ui.type('Описание', goal!.description!);
     if (ui.has('ещё')) ui.click('ещё');
     const param = (row: number, label: string, kind: string, key: string, from?: string) => {
@@ -112,15 +112,19 @@ describe('эффекты пресетов собираются в констру
     param(7, 'Источник урона', 'choice', 'damage_source', 'damage_source');
     param(8, 'Свойства оружия', 'choice', 'свойства', 'weapon_properties');
     param(9, 'Дальность', 'choice', 'дальность', 'reach');
-    param(10, 'Состояние при попадании', 'effect', 'status');
-    param(11, 'Плата', 'effect', 'цена');
+    param(10, 'Вплотную', 'boolean', 'вплотную');
+    param(11, 'Состояние при попадании', 'effect', 'status');
+    param(12, 'Плата', 'effect', 'цена');
     ui.select(ui.cell('Если не передали', 3), 'value');
     ui.select(ui.cell('Если не передали', 5), 'value');
     ui.type(ui.cell('Если не передали', 5), '1');
-    ui.select(ui.cell('Если не передали', 11), 'value');
-    ui.select(ui.cell('Если не передали', 11).querySelectorAll('[role="combobox"]')[1]!, 'cost_attack');
-    ui.select(ui.cell('Если не передали', 10), 'empty');
-    ui.select(ui.cell('Если не передали', 9), 'empty');
+    ui.select(ui.cell('Если не передали', 12), 'value');
+    ui.select(ui.cell('Если не передали', 12).querySelectorAll('[role="combobox"]')[1]!, 'cost_attack');
+    ui.select(ui.cell('Если не передали', 11), 'empty');
+    ui.select(ui.cell('Если не передали', 10), 'actor');
+    ui.type(ui.cell('Подсказка за столом', 10), goal!.params!.find(one => one.key === 'vplotnuyu')!.ask!.hint!);
+    ui.select(ui.cell('Если не передали', 9), 'value');
+    ui.type(ui.cell('Если не передали', 9), 'blizhniy');
     ui.select(ui.cell('Если не передали', 8), 'empty');
     ui.select(document.querySelector<HTMLElement>('.add-cost [role="combobox"]')!, 'cost_attack');
     let cost = stepCard(/^1 · /);
@@ -136,22 +140,33 @@ describe('эффекты пресетов собираются в констру
     card = stepCard(/^3 · /);
     within(card).select('Какой эффект', 'attack_roll');
     within(card).formula(within(card).arg('Бонус атаки'), '@attack_with');
+    const outcome = () => [...document.querySelectorAll<HTMLElement>('.card')].find(c => /^Что получит тот, кто вызвал/.test((c.textContent ?? '').replace(/\s+/g, ' ').trim()))!;
+    within(card).formula(within(card).arg('Способ атаки'), '@дальность');
+    within(card).formula(within(card).arg('Вплотную'), 'if(empty(@вплотную), @дальность == "blizhniy", @вплотную)');
     nameStep(stepCard(/^3 · /), 'бросок');
+    ([
+      ['попал', 'промах'],
+      ['крит', 'не крит'],
+      ['с преимуществом', 'без преимущества'],
+      ['с помехой', 'без помехи'],
+    ] as const).forEach(([said, no], row) => {
+      if (row > 1) within(outcome()).type(within(outcome()).cell('Название', row), said);
+      within(outcome()).select(within(outcome()).cell('Откуда', row), `Бросок атаки — ${said}`);
+      within(outcome()).type(within(outcome()).cell('Как назвать «нет»', row), no);
+    });
 
-    forkBy(stepCard(/^3 · /), 'исход', 'попал');
-    const hit = blocks().length - 1;
-    expect(armLabel(block(hit))).toBe('попадание · крит:');
+    const hit = callIf(3, 'Бросок атаки', 'попал');
     addToArm(block(hit), 0, 'roll');
     card = stepCard(/^4 · /);
     within(card).select('Кто бросает', '@deystvuyuschiy');
     within(card).select('Что бросает', 'own-die');
     within(card).formula('Своя кость', '@damage_dice');
     within(card).click('+ сколько раз');
-    within(card).formula('Сколько раз', '@dice * @бросок.ishod.dice_mul');
+    within(card).formula('Сколько раз', '@dice');
     within(card).click('+ прибавка');
     within(card).formula('Прибавка', '@damage_with');
     card = stepCard(/^4 · /);
-    marks(card, 'uron', 'oruzhie', '=@dalnost', '=@svoystva');
+    marks(card, 'uron', 'oruzhie', '=@dalnost', '=@svoystva', '=if(@бросок.krit, "krit", "")');
     nameStep(card, 'урон');
 
     addToArm(block(hit), 0, 'change');
@@ -160,6 +175,7 @@ describe('эффекты пресетов собираются в констру
     card = stepCard(/^5 · /);
     within(card).select('Какой эффект', 'damage');
     within(card).formula(within(card).arg('Сколько урона'), '@урон.total');
+    within(card).formula(within(card).arg('От крита'), '@бросок.krit');
 
     addToArm(block(hit), 0, 'change');
     card = stepCard(/^6 · /);
@@ -174,6 +190,7 @@ describe('эффекты пресетов собираются в констру
     const listed = got?.params?.find(one => one.label === 'Свойства оружия');
     if (listed) (listed as { many?: boolean }).many = true;
     dump({ got: got ?? useWorld.getState().system.effects, goal });
+    for (const one of goal!.params ?? []) if (one.optional && (one.default !== undefined || one.ask)) delete one.optional;
     expect(got).toEqual(folded(goal));
   });
 
@@ -189,11 +206,11 @@ describe('эффекты пресетов собираются в констру
     ui.select('Папка', 'reakcii');
     ui.type('Описание', goal!.description!);
 
-    ui.select('Что именно', 'damage');
+    ui.select('Что именно', 'uron');
     ui.select('Когда именно', 'after');
     ui.select('Кого касается', '@list == @holder');
-    ui.when('=не пусто(@источник) и @источник != @holder');
-    ui.select('Решение', 'ask');
+    ui.when('=@нанесено > 0 и не пусто(@источник) и @источник != @holder');
+    askWith(ui, { question: goal!.on![0]!.confirm!.question! });
 
     ui.select(document.querySelector<HTMLElement>('.add-cost [role="combobox"]')!, 'cost_reaction');
     let card = stepCard(/^1 · /);
@@ -321,6 +338,10 @@ describe('эффекты пресетов собираются в констру
     within(card).formula('Что проверяем', '@попадание_бросок');
     within(card).formula('С чем', '@сложность');
     nameStep(stepCard(/^8 · /), 'попадание');
+    const outcome = () => [...document.querySelectorAll<HTMLElement>('.card')].find(c => /^Что получит тот, кто вызвал/.test((c.textContent ?? '').replace(/\s+/g, ' ').trim()))!;
+    within(outcome()).click(/← /);
+    within(outcome()).select(within(outcome()).cell('Откуда', 0), 'Проверка — пройдена');
+    within(outcome()).type(within(outcome()).cell('Как назвать «нет»', 0), 'промах');
 
     const hit = outcomeIf(8, true);
     const send = (at: number, args: [string, string][], when?: string) => {
@@ -351,9 +372,10 @@ describe('эффекты пресетов собираются в констру
     ui.type(document.querySelector<HTMLElement>('.step-name input')!, 'concentration');
     ui.select('Папка', 'zaklinaniya');
     ui.type('Описание', goal!.description!);
-    ui.select('Что именно', 'damage');
+    ui.select('Что именно', 'uron');
     ui.select('Когда именно', 'after');
     ui.select('Кого касается', '@list == @holder');
+    ui.when('=@нанесено > 0');
 
     savingThrow(1, [['Кто спасается', '@holder'], ['Чем спасается', '"teloslozhenie"'], ['Сложность', '(max(10, floor(@amount / 2)))']]);
     let card: HTMLElement;
@@ -423,7 +445,7 @@ describe('эффекты пресетов собираются в констру
     expect(built('spell_buff')).toEqual(folded(goal));
   });
 
-  it('Daggerheart «Двойственность» (duality): подписки «завершено», поле стола, условие на шаге', { timeout: 90000 }, () => {
+  it('Daggerheart «Двойственность» (duality): подписки «бросок окончен» по меткам, поле стола, условие на шаге', { timeout: 90000 }, () => {
     const [goal] = start('daggerheart', ['duality']);
     const ui = within();
     ui.click('+ висит');
@@ -447,21 +469,20 @@ describe('эффекты пресетов собираются в констру
         wrapIf(card, `=${when}`, handlerAt(n));
       }
     };
-    const cases: [string, string, string][] = [
-      ['action_roll', '@brosok.parts.nadezhda > @brosok.parts.strah', 'hope'],
-      ['action_roll', '@brosok.parts.strah > @brosok.parts.nadezhda', 'fear'],
-      ['action_roll', '@brosok.parts.nadezhda == @brosok.parts.strah', 'crit'],
-      ['hero_attack', '@brosok_brosok.parts.nadezhda > @brosok_brosok.parts.strah', 'hope'],
-      ['hero_attack', '@brosok_brosok.parts.strah > @brosok_brosok.parts.nadezhda', 'fear'],
-      ['hero_attack', '@brosok_brosok.parts.nadezhda == @brosok_brosok.parts.strah', 'crit'],
+    const cases: [string, string][] = [
+      ['@roll.parts.nadezhda > @roll.parts.strah', 'hope'],
+      ['@roll.parts.strah > @roll.parts.nadezhda', 'fear'],
+      ['@roll.parts.nadezhda == @roll.parts.strah', 'crit'],
     ];
-    cases.forEach(([listened, rule, gain], index) => {
+    cases.forEach(([rule, gain], index) => {
       const n = index + 1;
       if (n > 1) ui.click('+ когда');
       const head = () => stepCard(new RegExp(`^Когда №${n}`));
-      within(head()).select('Что именно', listened);
-      within(head()).select('Когда именно', 'done');
-      within(head()).select('Кого касается', '@deystvuyuschiy == @holder');
+      within(head()).select('Что случилось', 'rolled');
+      within(head()).select('Кого касается', '@roller == @holder');
+      within(head()).click('+ или / кроме');
+      within(head()).select('Или хотя бы одно из', 'deystvie');
+      within(head()).select('Или хотя бы одно из', 'ataka');
       within(head()).when(`=${rule}`);
       if (gain === 'fear') change(n, 1, 'desk', 'fear', 'add', '1');
       else change(n, 1, 'holder', 'hope', 'add', '1');

@@ -377,10 +377,18 @@
             "max": 20
           },
           {
+            "key": "krit_vplotnuyu",
+            "label": "Крит при попадании вплотную",
+            "expr": {
+              "expr": "0"
+            },
+            "sees": "none"
+          },
+          {
             "key": "sneak_dice",
             "label": "Костей скрытой атаки",
             "expr": {
-              "expr": "ceil(@level / 2)"
+              "expr": "if(@class_name == \"plut\", ceil(@level / 2), 0)"
             }
           },
           {
@@ -438,7 +446,7 @@
             "key": "superiority_die",
             "label": "Кость превосходства",
             "expr": {
-              "expr": "@level.superiority_die"
+              "expr": "if(@class_name == \"voin\", @level.superiority_die, \"\")"
             }
           },
           {
@@ -1537,48 +1545,6 @@
           }
         ]
       },
-      "attack_outcomes": {
-        "label": "Исход атаки",
-        "key": "word",
-        "columns": [
-          {
-            "key": "dice_mul",
-            "label": "множитель костей урона",
-            "kind": "number"
-          },
-          {
-            "key": "hit",
-            "label": "попал",
-            "kind": "boolean"
-          }
-        ],
-        "rows": [
-          {
-            "value": "promah",
-            "label": "промах",
-            "cells": {
-              "dice_mul": 0,
-              "hit": false
-            }
-          },
-          {
-            "value": "popadanie",
-            "label": "попадание",
-            "cells": {
-              "dice_mul": 1,
-              "hit": true
-            }
-          },
-          {
-            "value": "krit",
-            "label": "крит",
-            "cells": {
-              "dice_mul": 2,
-              "hit": true
-            }
-          }
-        ]
-      },
       "damage_source": {
         "label": "Источник урона",
         "key": "word",
@@ -1913,6 +1879,14 @@
           {
             "value": "oruzhie",
             "label": "оружие"
+          },
+          {
+            "value": "vplotnuyu",
+            "label": "вплотную"
+          },
+          {
+            "value": "krit",
+            "label": "крит"
           }
         ]
       },
@@ -2874,6 +2848,18 @@
             }
           }
         ]
+      },
+      "stol": {
+        "label": "Стол",
+        "shape": "single",
+        "owner": "desk",
+        "columns": [
+          {
+            "key": "strely_odnim_broskom",
+            "label": "Волшебная стрела: один бросок на все стрелы",
+            "kind": "boolean"
+          }
+        ]
       }
     },
     "roll_edits": {
@@ -2996,7 +2982,7 @@
       "strike": {
         "label": "Атака",
         "group": "ataka",
-        "description": "Бросок атаки оружием против класса брони, урон костью. На крите кости урона удваиваются. Бонус атаки и прибавку к урону приносит тот, кто зовёт: оружие считает их по листу, существо вписывает числами. Посчитанное уходит в общий эффект «Урон».",
+        "description": "Бросок атаки оружием против класса брони, урон костью. На крите бросок урона несёт метку «крит» — кости удваивает правило «Крит». Бонус атаки и прибавку к урону приносит тот, кто зовёт: оружие считает их по листу, существо вписывает числами. Посчитанное уходит в общий эффект «Урон».",
         "params": [
           {
             "key": "deystvuyuschiy",
@@ -3060,7 +3046,17 @@
             "label": "Дальность",
             "kind": "choice",
             "from": "reach",
-            "optional": true
+            "default": "blizhniy"
+          },
+          {
+            "key": "vplotnuyu",
+            "label": "Вплотную",
+            "kind": "boolean",
+            "optional": true,
+            "ask": {
+              "by": "actor",
+              "hint": "Атакующий в пределах 5 футов от цели. Пусто — по способу: ближняя атака вплотную, дальняя нет."
+            }
           },
           {
             "key": "status",
@@ -3094,13 +3090,19 @@
               },
               "protiv": {
                 "expr": "@cel"
+              },
+              "sposob": {
+                "expr": "@dalnost"
+              },
+              "vplotnuyu": {
+                "expr": "if(empty(@vplotnuyu), @dalnost == \"blizhniy\", @vplotnuyu)"
               }
             }
           },
           {
             "type": "branch",
             "if": {
-              "expr": "@brosok.ishod.hit"
+              "expr": "@brosok.popal"
             }
           },
           {
@@ -3111,7 +3113,7 @@
               "expr": "@damage_dice"
             },
             "times": {
-              "expr": "@dice * @brosok.ishod.dice_mul"
+              "expr": "@dice"
             },
             "bonus": {
               "expr": "@damage_with"
@@ -3127,6 +3129,9 @@
               },
               {
                 "expr": "@svoystva"
+              },
+              {
+                "expr": "if(@brosok.krit, \"krit\", \"\")"
               }
             ]
           },
@@ -3148,6 +3153,9 @@
               },
               "damage_source": {
                 "expr": "@damage_source"
+              },
+              "ot_krita": {
+                "expr": "@brosok.krit"
               }
             }
           },
@@ -3195,7 +3203,45 @@
           }
         ],
         "tags": [
-          "ataka"
+          "ataka_oruzhiem"
+        ],
+        "returns": [
+          {
+            "key": "popal",
+            "label": "попал",
+            "kind": "boolean",
+            "no": "промах",
+            "expr": {
+              "expr": "@brosok.popal"
+            }
+          },
+          {
+            "key": "krit",
+            "label": "крит",
+            "kind": "boolean",
+            "no": "не крит",
+            "expr": {
+              "expr": "@brosok.krit"
+            }
+          },
+          {
+            "key": "preimuschestvo",
+            "label": "с преимуществом",
+            "kind": "boolean",
+            "no": "без преимущества",
+            "expr": {
+              "expr": "@brosok.preimuschestvo"
+            }
+          },
+          {
+            "key": "pomeha",
+            "label": "с помехой",
+            "kind": "boolean",
+            "no": "без помехи",
+            "expr": {
+              "expr": "@brosok.pomeha"
+            }
+          }
         ]
       },
       "spell_heal": {
@@ -3608,28 +3654,15 @@
             "kind": "choice",
             "from": "damage_source",
             "optional": true
+          },
+          {
+            "key": "ot_krita",
+            "label": "От крита",
+            "kind": "boolean",
+            "optional": true
           }
         ],
         "steps": [
-          {
-            "type": "branch",
-            "if": {
-              "expr": "@list.hp_current <= 0"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@list.death_fail"
-            },
-            "direction": "add",
-            "value": {
-              "expr": "1"
-            }
-          },
-          {
-            "type": "end"
-          },
           {
             "id": "po_vremennym",
             "label": "по временным",
@@ -3651,24 +3684,39 @@
             "value": {
               "expr": "@po_vremennym.overkill"
             }
-          },
-          {
-            "type": "branch",
-            "if": {
-              "expr": "@po_hitam.overkill >= @list.hp_max"
-            }
-          },
-          {
-            "type": "status",
-            "effect": "dead",
-            "to": {
-              "expr": "@list"
-            }
-          },
-          {
-            "type": "end"
           }
-        ]
+        ],
+        "tags": [
+          "uron"
+        ],
+        "returns": [
+          {
+            "key": "naneseno",
+            "label": "нанесено",
+            "kind": "number",
+            "expr": {
+              "expr": "@po_hitam.from - @po_hitam.to"
+            }
+          },
+          {
+            "key": "sverh_nulya",
+            "label": "сверх нуля",
+            "kind": "number",
+            "expr": {
+              "expr": "@po_hitam.overkill"
+            }
+          },
+          {
+            "key": "byl_na_nule",
+            "label": "был на нуле",
+            "kind": "boolean",
+            "no": "был на ногах",
+            "expr": {
+              "expr": "@po_hitam.from <= 0"
+            }
+          }
+        ],
+        "description": "Сначала временные хиты, остаток — в хиты. Отдаёт, сколько снято, сколько осталось сверх нуля и был ли лист уже на нуле."
       },
       "heal": {
         "label": "Лечение",
@@ -4203,7 +4251,7 @@
       "attack_roll": {
         "label": "Бросок атаки",
         "group": "broski_i_proverki",
-        "description": "Бросок к20 + бонус против класса брони цели. 1 на кости — всегда промах; крит (с «Крит на костях от») — всегда попадание.",
+        "description": "Бросок к20 + бонус против класса брони цели. 1 на кости — всегда промах; крит (с «Крит на костях от») — всегда попадание. Бросок несёт способ атаки и признак «вплотную»: на них смотрят состояния.",
         "params": [
           {
             "key": "kto",
@@ -4222,16 +4270,56 @@
             "label": "Бонус атаки",
             "kind": "number",
             "default": 0
+          },
+          {
+            "key": "sposob",
+            "label": "Способ атаки",
+            "kind": "choice",
+            "from": "reach",
+            "optional": true
+          },
+          {
+            "key": "vplotnuyu",
+            "label": "Вплотную",
+            "kind": "boolean",
+            "optional": true
           }
         ],
         "returns": [
           {
-            "key": "ishod",
-            "label": "исход",
-            "kind": "choice",
-            "from": "attack_outcomes",
+            "key": "popal",
+            "label": "попал",
+            "kind": "boolean",
+            "no": "промах",
             "expr": {
-              "expr": "if(not @proverka.success, \"promah\", if(@proverka.natural >= @kto.crit_from, \"krit\", \"popadanie\"))"
+              "expr": "@proverka.success"
+            }
+          },
+          {
+            "key": "krit",
+            "label": "крит",
+            "kind": "boolean",
+            "no": "не крит",
+            "expr": {
+              "expr": "@proverka.success and (@proverka.natural >= @kto.crit_from or (@vplotnuyu == true and @protiv.krit_vplotnuyu >= 1))"
+            }
+          },
+          {
+            "key": "preimuschestvo",
+            "label": "с преимуществом",
+            "kind": "boolean",
+            "no": "без преимущества",
+            "expr": {
+              "expr": "has(@brosok.words, \"advantage\")"
+            }
+          },
+          {
+            "key": "pomeha",
+            "label": "с помехой",
+            "kind": "boolean",
+            "no": "без помехи",
+            "expr": {
+              "expr": "has(@brosok.words, \"disadvantage\")"
             }
           },
           {
@@ -4253,7 +4341,13 @@
               "expr": "@bonus"
             },
             "tags": [
-              "ataka"
+              "ataka",
+              {
+                "expr": "@sposob"
+              },
+              {
+                "expr": "if(@vplotnuyu == true, \"vplotnuyu\", \"\")"
+              }
             ],
             "by": {
               "expr": "@kto"
@@ -4277,12 +4371,38 @@
             }
           }
         ]
+      },
+      "crit_double_rule": {
+        "label": "Крит",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Критическое попадание: кости урона бросаются вдвое, прибавки — один раз.",
+        "modifiers": [
+          {
+            "kind": "edit",
+            "call": "roll",
+            "param": "count",
+            "op": "mul",
+            "value": {
+              "expr": "2"
+            },
+            "tags": [
+              "krit"
+            ],
+            "if": {
+              "expr": "@roller == @holder"
+            }
+          }
+        ]
       }
     },
     "grants": [
       "battle_start",
       "turn_refresh",
-      "taken_rule"
+      "taken_rule",
+      "crit_double_rule"
     ],
     "sheets": {
       "personazh": {
@@ -4344,6 +4464,11 @@
             }
           }
         ]
+      },
+      "desk": {
+        "label": "Стол",
+        "icon": "🎲",
+        "hint": "Общий стол комнаты: настройки правил, которые выбирает ведущий."
       }
     },
     "tags": {
@@ -4362,13 +4487,118 @@
         ],
         "each": "cel",
         "outputs": [
-          "brosok"
+          {
+            "key": "popal",
+            "kind": "boolean"
+          },
+          {
+            "key": "krit",
+            "kind": "boolean"
+          },
+          {
+            "key": "preimuschestvo",
+            "kind": "boolean"
+          },
+          {
+            "key": "pomeha",
+            "kind": "boolean"
+          }
         ],
         "said": {
           "deystvuyuschiy": "действующий",
           "celi": "цели",
           "cel": "цель",
-          "brosok": "бросок"
+          "popal": "попал",
+          "sposob": "способ",
+          "vplotnuyu": "вплотную",
+          "krit": "крит",
+          "preimuschestvo": "преимущество",
+          "pomeha": "помеха"
+        },
+        "traits": [
+          {
+            "key": "sposob",
+            "from": "reach"
+          },
+          {
+            "key": "vplotnuyu"
+          }
+        ]
+      },
+      "ataka_oruzhiem": {
+        "label": "Атака оружием",
+        "includes": [
+          "ataka"
+        ],
+        "inputs": [
+          {
+            "key": "svoystva",
+            "kind": "choice",
+            "from": "weapon_properties",
+            "many": true
+          },
+          {
+            "key": "dalnost",
+            "kind": "choice",
+            "from": "reach"
+          },
+          {
+            "key": "damage_type",
+            "kind": "choice",
+            "from": "damage_types"
+          }
+        ],
+        "said": {
+          "svoystva": "свойства",
+          "dalnost": "дальность"
+        }
+      },
+      "uron": {
+        "label": "урон",
+        "inputs": [
+          {
+            "key": "list",
+            "kind": "sheet"
+          },
+          {
+            "key": "istochnik",
+            "kind": "sheet"
+          },
+          {
+            "key": "amount",
+            "kind": "number"
+          },
+          {
+            "key": "damage_type",
+            "kind": "choice",
+            "from": "damage_types"
+          },
+          {
+            "key": "ot_krita",
+            "kind": "boolean"
+          }
+        ],
+        "outputs": [
+          {
+            "key": "naneseno",
+            "kind": "number"
+          },
+          {
+            "key": "sverh_nulya",
+            "kind": "number"
+          },
+          {
+            "key": "byl_na_nule",
+            "kind": "boolean"
+          }
+        ],
+        "said": {
+          "list": "лист",
+          "istochnik": "источник",
+          "ot_krita": "от крита",
+          "naneseno": "нанесено",
+          "sverh_nulya": "сверх нуля",
+          "byl_na_nule": "был на нуле"
         }
       }
     },
@@ -4775,6 +5005,15 @@
         "list": "actions",
         "width": 6,
         "parts": []
+      },
+      {
+        "key": "stol",
+        "label": "Стол",
+        "parts": [
+          {
+            "table": "stol"
+          }
+        ]
       }
     ],
     "pages": [
@@ -5320,6 +5559,14 @@
           "of": "ogre_club"
         }
       ],
+      "effects": []
+    },
+    {
+      "id": "desk",
+      "systemId": "dnd5e",
+      "name": "Стол",
+      "values": {},
+      "has": [],
       "effects": []
     }
   ]

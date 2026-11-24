@@ -19,7 +19,7 @@ export interface Subscriber {
 
 export const handlerKey = (id: string, index: number): string => (index ? `${id}#${index}` : id);
 
-export const asks = (handler: Handler): boolean => handler.confirm === true;
+export const asks = (handler: Handler): boolean => Boolean(handler.confirm);
 
 export const handlersOf = (effect: Effect | null | undefined): Handler[] => effect?.on ?? [];
 

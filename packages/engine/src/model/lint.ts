@@ -15,7 +15,7 @@ import { langsOf, untranslated } from './localize.ts';
 import { langWord } from '../words/langs.ts';
 import { numbersOf, kindOfRule, placesOf, fitsPlace, fitKinds, countUnread, rollsCounting, placesMatching, wordFits, hasRollFilter } from './die-kinds.ts';
 import { ROLL_KIND_WORDS, NUMBER_MISFIT, EDIT_MISFIT, EDIT_SIDES_MISFIT, COUNT_UNREAD, rollNumberWord, WORD_MISFITS_ROLLS, WORD_OUTSIDE_ROLLS, TWO_RULES, TAG_UNREACHED } from '../words/dice-kinds.ts';
-import { rollTagReach, unreachedTags } from './roll-reach.ts';
+import { rollTagReach, stepTagReach, unreachedTags } from './roll-reach.ts';
 import { editPrimitives } from '../engine/roll-edits.ts';
 import { namingProblems } from './naming.ts';
 import type { DieConstant } from './types.ts';
@@ -1118,6 +1118,29 @@ function anchorModeProblems(system: System): Problem[] {
   return out;
 }
 
+function rollerlessProblems(system: System, compendium?: Compendium): Problem[] {
+  const waited = modifierLists(system)
+    .flatMap(list => list.modifiers)
+    .filter(mod => mod.kind === 'edit' && mod.call === ROLL_CALL && mod.param === 'count')
+    .map(mod => (Array.isArray(mod.tags) ? mod.tags.filter((tag): tag is string => typeof tag === 'string') : []))
+    .filter(tags => tags.length > 0);
+  if (!waited.length) return [];
+  const out: Problem[] = [];
+  for (const [id, effect] of Object.entries(system.effects ?? {})) {
+    const look = (steps: readonly Step[], where: (step: number) => Where): void => steps.forEach((step, index) => {
+      const loose = step as { type?: unknown; by?: unknown; field?: unknown; die?: unknown; tags?: unknown };
+      if (loose.type !== 'roll' || loose.die === undefined || loose.die === null) return;
+      if ((loose.by !== undefined && loose.by !== null) || (loose.field !== undefined && loose.field !== null)) return;
+      const reach = stepTagReach(system, effect.params ?? [], loose.tags, compendium);
+      const lost = waited.find(tags => tags.every(tag => reach.tags.has(tag)));
+      if (lost) out.push({ where: where(index), level: 'warn', text: tr`у броска не названо, кто бросает, — правки до него не доходят: правка «кубики» по ${lost.map(tag => `«${tagSaid(system, tag)}»`).join(', ')} его не тронет` });
+    });
+    look(effect.steps ?? [], step => ({ tab: 'effects', effect: id, step }));
+    (effect.on ?? []).forEach((handler, at) => look(handler.steps ?? [], step => ({ tab: 'effects', effect: id, handler: at, step })));
+  }
+  return out;
+}
+
 function tagReachProblems(system: System, compendium?: Compendium): Problem[] {
   const reach = rollTagReach(system, compendium);
   if (reach.open) return [];
@@ -1229,7 +1252,7 @@ function editProblems(system: System, compendium?: Compendium): Problem[] {
         else if (mod.param === 'edits' && !mod.edit) out.push({ where: at, level: 'error', text: tr`правка броска не выбрана` });
         else if (mod.param === 'bonus' && !hasDie(mod as unknown as object) && !(mod.value as { expr?: string } | undefined)?.expr?.trim()) out.push({ where: at, level: 'error', text: tr`у прибавки к броску не задано, на сколько` });
         else if (mod.param === 'count' && !(mod.value as { expr?: string } | undefined)?.expr?.trim()) out.push({ where: at, level: 'error', text: tr`у кубиков к броску не задано, сколько` });
-        else if (mod.param === 'count' && mod.op !== 'add') out.push({ where: at, level: 'error', text: tr`кубики к броску только прибавляются, а здесь «${String(mod.op ?? tr`не задано`)}»` });
+        else if (mod.param === 'count' && mod.op !== 'add' && mod.op !== 'mul') out.push({ where: at, level: 'error', text: tr`кубики к броску прибавляются или умножаются, а здесь «${String(mod.op ?? tr`не задано`)}»` });
         else if (mod.param === 'bonus' && mod.op !== 'add') out.push({ where: at, level: 'error', text: tr`прибавка к броску только прибавляет, а здесь «${String(mod.op ?? tr`не задано`)}»` });
         if (!tiedToHolder(mod.if as Guard | undefined)) out.push({ where: at, level: 'warn', text: anyoneRolls() });
         const two = twoRules(system, mod.tags);
@@ -1640,6 +1663,25 @@ function perTargetProblems(system: System): Problem[] {
   return out;
 }
 
+function aimProblems(system: System): Problem[] {
+  const out: Problem[] = [];
+  for (const [id, effect] of Object.entries(system.effects)) {
+    for (const param of effect.params ?? []) {
+      if (param.count === undefined && param.repeat === undefined) continue;
+      const where = { tab: 'effects' as const, effect: id, key: param.key, part: 'params' as const };
+      const name = param.label ?? param.key;
+      if (param.kind !== 'sheet' || !param.many) {
+        out.push({ where, level: 'error', text: tr`«сколько целей» и «можно повторять» бывают только у входа-списка листов, а «${name}» не такой` });
+        continue;
+      }
+      if (param.repeat && (effect.params ?? []).some(other => other.perTarget)) {
+        out.push({ where, level: 'error', text: tr`у «${name}» цели можно повторять, а среди входов есть «для каждой цели»: его значение ведётся по листу — с повтором листа не сочетается` });
+      }
+    }
+  }
+  return out;
+}
+
 function measureProblems(system: System): Problem[] {
   const out: Problem[] = [];
   for (const [id, effect] of Object.entries(system.effects)) {
@@ -1679,7 +1721,7 @@ export function lintSystem(system: System, compendium?: Compendium, lang?: strin
 
 function lintSystemIn(system: System, compendium?: Compendium): Problem[] {
   const declared = declaredOf(system);
-  const out: Problem[] = [...perTargetProblems(system), ...measureProblems(system), ...langProblems(system)];
+  const out: Problem[] = [...perTargetProblems(system), ...aimProblems(system), ...measureProblems(system), ...langProblems(system)];
 
   for (const [id, effect] of Object.entries(system.effects)) {
     for (const chain of chainsOf(id, effect)) {
@@ -1805,6 +1847,7 @@ function lintSystemIn(system: System, compendium?: Compendium): Problem[] {
   out.push(...rollEditProblems(system));
   out.push(...anchorModeProblems(system));
   out.push(...tagReachProblems(system, compendium));
+  out.push(...rollerlessProblems(system, compendium));
   out.push(...namingProblems(system, compendium));
   out.push(...dieCountProblems(system));
   out.push(...handlerDiceProblems(system));
@@ -2043,7 +2086,7 @@ function shapeProblems(system: System, compendium?: Compendium): Problem[] {
       for (const contract of contractsOf(system, tag)) {
         for (const input of contract.inputs ?? []) {
           const param = (effect.params ?? []).find(p => p.key === input.key);
-          if (!param || param.kind !== input.kind || Boolean(param.many) !== Boolean(input.many)) {
+          if (!param || param.kind !== input.kind || Boolean(param.many) !== Boolean(input.many) || (input.from !== undefined && param.from !== input.from)) {
             out.push({ where, level: 'error', text: tr`метка «${tagSaid(system, tag)}» требует вход «${contract.said?.[input.key] ?? input.key}» (${input.kind}${input.many ? tr`, список` : ''}) — у эффекта его нет или он другого вида` });
           }
         }
@@ -2053,13 +2096,17 @@ function shapeProblems(system: System, compendium?: Compendium): Problem[] {
           out.push({ where, level: 'error', text: tr`метка «${tagSaid(system, tag)}» требует «для каждого» с именем «${contract.said?.[contract.each] ?? contract.each}»` });
         }
         for (const output of contract.outputs ?? []) {
-          const at = steps.findIndex(step => step.id === output);
-          if (at < 0 || (contract.each && at < split)) out.push({ where, level: 'error', text: tr`метка «${tagSaid(system, tag)}» требует шаг «${contract.said?.[output] ?? output}» внутри «для каждого»` });
+          const column = (effect.returns ?? []).find(one => one.key === output.key);
+          const fits = column && (column.kind ?? 'number') === output.kind && Boolean(column.many) === Boolean(output.many) && (!output.from || column.from === output.from);
+          if (!fits) out.push({ where, level: 'error', text: tr`метка «${tagSaid(system, tag)}» требует итог «${contract.said?.[output.key] ?? output.key}» (${KIND_LABEL[output.kind]}${output.many ? tr`, список` : ''}) — у эффекта его нет или он другого вида` });
         }
       }
     }
     (effect.on ?? []).forEach((handler, index) => {
       const heard = listenerOf(handler);
+      if (heard.kind === 'call' && heard.key !== id && system.effects[heard.key]) {
+        out.push({ where: { tab: 'effects', effect: id, part: 'on', handler: index }, level: 'warn', text: tr`подписка слушает эффект «${system.effects[heard.key]?.label ?? heard.key}» по имени — дайте ему метку и слушайте метку: тогда подписку услышит любой эффект с этой меткой` });
+      }
       if (heard.kind !== 'call' || heard.phase !== 'before' || !handler.confirm) return;
       if (called.has(heard.key) && !Object.values(system.tables ?? {}).some(table => (table.bindings ?? []).some(b => b.effect === heard.key))) {
         out.push({ where: { tab: 'effects', effect: id, part: 'on', handler: index }, level: 'error', text: tr`«${system.effects[heard.key]?.label ?? heard.key}» вызывается внутри других эффектов — спросить игрока до него нельзя, только сработать само` });
@@ -2068,6 +2115,30 @@ function shapeProblems(system: System, compendium?: Compendium): Problem[] {
   }
   for (const key of Object.keys(system.tags ?? {})) {
     if (system.effects[key]) out.push({ where: { tab: 'effects', effect: key }, level: 'error', text: tr`«${key}» — и метка с договором, и эффект: подписка «${key}» станет двусмысленной` });
+  }
+  for (const [key, contract] of Object.entries(system.tags ?? {})) {
+    const traits = contract.traits ?? [];
+    if (!traits.length) continue;
+    for (const [id, effect] of Object.entries(system.effects)) {
+      const chains: { steps: readonly Step[]; where: (step: number) => Where }[] = [
+        { steps: effect.steps ?? [], where: step => ({ tab: 'effects', effect: id, step }) },
+        ...(effect.on ?? []).map((handler, index) => ({ steps: handler.steps ?? [], where: (step: number): Where => ({ tab: 'effects', effect: id, handler: index, step }) })),
+      ];
+      for (const chain of chains) {
+        chain.steps.forEach((step, index) => {
+          const raw = (step as { tags?: unknown }).tags;
+          if (step.type !== 'roll' || !Array.isArray(raw) || !raw.includes(key)) return;
+          const reach = stepTagReach(system, effect.params ?? [], raw, compendium);
+          if (reach.open) return;
+          for (const trait of traits) {
+            const carried = trait.from
+              ? (system.tables?.[trait.from]?.rows ?? []).some(row => reach.tags.has(String(row.value)))
+              : reach.tags.has(trait.key);
+            if (!carried) out.push({ where: chain.where(index), level: 'error', text: tr`бросок с меткой «${tagSaid(system, key)}» не несёт признак «${contract.said?.[trait.key] ?? trait.key}» — договор метки его требует: на него смотрят правки броска` });
+          }
+        });
+      }
+    }
   }
   const lists = [
     ...kindsOf(system).flatMap(([kind, spec]) => (spec.bindings ?? []).map((binding, index) => ({ binding, where: { tab: 'records' as const, kind, part: 'bindings', binding: index }, props: propKeysOf(spec) }))),

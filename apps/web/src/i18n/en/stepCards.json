@@ -214,7 +214,11 @@
     "where": "call",
     "open": "how it works →",
     "next": "what happens next →",
-    "nextMeddlers": "what happens next · who can change it →"
+    "nextMeddlers": "what happens next · who can change it →",
+    "moreSummary": "call tags",
+    "tags": "Call tags",
+    "tagsHint": "the receiver and subscriptions see these tags like roll tags",
+    "tagsEmpty": "no tags"
   },
   "extras": {
     "remove": "remove «{{name}}»"

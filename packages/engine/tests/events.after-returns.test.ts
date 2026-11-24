@@ -24,7 +24,7 @@ const strike = {
 
 const reply = (on: string, expr: string, confirm: boolean) => ({
   label: 'Ответ', activation: 'passive',
-  on: [{ on, ...(confirm ? { confirm: true } : {}), if: { expr }, steps: [{ type: 'apply', target: { expr: '@holder.хп' }, direction: 'subtract', value: { expr: '1' } }] }],
+  on: [{ on, ...(confirm ? { confirm: {} } : {}), if: { expr }, steps: [{ type: 'apply', target: { expr: '@holder.хп' }, direction: 'subtract', value: { expr: '1' } }] }],
 });
 
 const system = (handler: ReturnType<typeof reply>): System => ({
@@ -64,6 +64,14 @@ group('подписка «после» читает итоги вызова', ()
       eq(out.hp, 19, `вопрос: ${confirm}`);
       eq(out.questions, confirm ? 1 : 0);
     }
+  });
+
+  test('подписка «до» читает итоги пробы: вопрос задан, только если по пробе «попал»', () => {
+    const handler = reply('before:удар', '@итог == 1', true);
+    eq(hpAfter(handler, 18).questions, 1);
+    eq(hpAfter(reply('before:удар', '@итог == 2', true), 18).questions, 0);
+    eq(hpAfter(reply('before:бросок_атаки', '@попал', false), 18).hp, 19);
+    eq(hpAfter(reply('before:бросок_атаки', '@попал', false), 2).hp, 20);
   });
 
   test('условие, которое ложно по итогу, вопроса не задаёт', () => {

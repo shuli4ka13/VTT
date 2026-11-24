@@ -6,7 +6,7 @@ import { SAMPLE_WORLDS } from '@vtt/engine/samples';
 import type { System, Effect } from '@vtt/schema';
 import { useWorld } from '../../../store/world.ts';
 import { openAll } from '../../../testing/render-open.tsx';
-import { within, stepCard, block, headOf, addToArm, addArm, stopNote, wrapIf } from '../../../testing/cards.ts';
+import { within, askWith, stepCard, block, headOf, addToArm, addArm, stopNote, wrapIf } from '../../../testing/cards.ts';
 import { EffectsTab } from './effects-tab.tsx';
 import { folded } from '../../../testing/folded.ts';
 
@@ -119,7 +119,7 @@ describe('эффекты пресетов собираются руками: Sha
   const seenHead = (ui: ReturnType<typeof within>) => {
     ui.select('Что случилось', 'seen');
     ui.select('Кого касается', '@roller == @holder');
-    ui.select('Решение', 'ask');
+    askWith(ui, { show: ['roll'] });
   };
 
   it('Shadowrun «Перебросить все неуспехи» (reroll_failures): «увидев кости», решает игрок, цена-вызов, переброс', { timeout: 60000 }, () => {

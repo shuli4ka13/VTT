@@ -203,8 +203,8 @@ export function within(root: ParentNode = document) {
   const READY = 'частые условия';
   const labelOf = (option: HTMLElement): string => textOf(option).slice(textOf(option.querySelector('.slot__group') ?? option).length).trim();
 
-  const whenOptions = (): string[] => {
-    const options = menuFor('@').filter(one => textOf(one.querySelector('.slot__group') ?? one) === READY).map(labelOf);
+  const whenOptions = (group: string = READY): string[] => {
+    const options = menuFor('@').filter(one => textOf(one.querySelector('.slot__group') ?? one) === group).map(labelOf);
     const chips = condField().querySelector('.chips');
     if (chips) act(() => { fireEvent.keyDown(chips, { key: 'Escape' }); });
     return options;
@@ -369,4 +369,12 @@ export const dragParamBefore = (from: string, to: string, root: ParentNode = doc
   act(() => { fireEvent.dragOver(target, { dataTransfer }); });
   act(() => { fireEvent.drop(target, { dataTransfer }); });
   openAll();
+};
+
+export const SHOW_WORDS = { actor: 'кто действует', action: 'что делает', roll: 'бросок', versus: 'против чего' } as const;
+
+export const askWith = (ui: ReturnType<typeof within>, more: { question?: string; show?: readonly (keyof typeof SHOW_WORDS)[] }): void => {
+  ui.select('Решение', 'ask');
+  if (more.question) ui.type('Слова вопроса', more.question);
+  for (const key of more.show ?? []) ui.check(SHOW_WORDS[key]);
 };

@@ -38,6 +38,8 @@ export const EN: Readonly<Record<string, string>> = {
   "выбор листа не проходит схему": "the sheet choice does not pass the schema",
   "разрешение не проходит схему": "the permission does not pass the schema",
   "место фишки не проходит схему": "the token place does not pass the schema",
+  "не спрашивать до конца хода": "do not ask until the end of the turn",
+  "правила стола не проходят схему": "the table rules do not pass the schema",
   "бросок с листа не проходит схему": "the roll from the sheet does not pass the schema",
   "тип листа не проходит схему": "the sheet type does not pass the schema",
   "группа листа не проходит схему": "the sheet group does not pass the schema",

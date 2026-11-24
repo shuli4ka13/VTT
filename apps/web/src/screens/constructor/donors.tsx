@@ -54,7 +54,7 @@ export function copyDonorBlock(donor: System, group: string): void {
 
 const partWord = (kind: PartKind): string => tr(`records:donors.part.${kind}`);
 
-const PART_ORDER: PartKind[] = ['field', 'block', 'effect', 'record', 'recordKind', 'table', 'roll', 'rollEdit', 'constant', 'group'];
+const PART_ORDER: PartKind[] = ['field', 'block', 'effect', 'record', 'recordKind', 'table', 'roll', 'rollEdit', 'constant', 'group', 'tag'];
 
 function partLabel(system: System, part: Part): string {
   switch (part.kind) {
@@ -68,6 +68,7 @@ function partLabel(system: System, part: Part): string {
     case 'roll': return system.rolls?.[part.key]?.label ?? part.key;
     case 'group': return blockLabel(system, part.key);
     case 'block': return blockLabel(system, part.key);
+    case 'tag': return system.tags?.[part.key]?.label ?? part.key;
   }
 }
 

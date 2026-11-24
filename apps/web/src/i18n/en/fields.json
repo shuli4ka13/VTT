@@ -23,7 +23,8 @@
     },
     "hint": {
       "sum": "Stacks: each hanging effect and each of its copies adds its own number.",
-      "tag": "The roll gets the tag once, however many effects grant it."
+      "tag": "The roll gets the tag once, however many effects grant it.",
+      "count": "Stacks: each hanging effect and each of its copies adds its own number. Multiplication applies after all additions."
     },
     "stage": "Stage",
     "stagePick": "— pick a stage —",

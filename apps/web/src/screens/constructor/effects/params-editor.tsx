@@ -5,6 +5,7 @@ import { freeId, useWorld } from '../../../store/world.ts';
 import { followKey, paramUsed, keyOf, referenced } from '../keys.ts';
 import { KeyField } from '../../../ui/key-field.tsx';
 import { BoundField } from '../bound-field.tsx';
+import { FormulaInput } from '../../../ui/formula.tsx';
 import { Card, CardHead, Field, Input, Select, Button, LabelInput } from '../../../ui/primitives.tsx';
 import { ColumnList } from './column-list.tsx';
 import type { Effect, Param, System, ValueKind, Stage } from '@vtt/schema';
@@ -166,7 +167,7 @@ function ParamForm({ param, keys, system, effect, locked, change, onLabel, onKey
   const kind = String(param.kind ?? 'number');
   const askable = (ASKABLE as readonly string[]).includes(kind);
   const tables = choiceTables(system).map(([key, list]) => [key, list.label || key] as const);
-  const rare = Boolean(param.ask?.hint) || Boolean(param.ask?.if) || (kind === 'sheet' && Boolean(param.from)) || param.role === 'amount' || param.min !== undefined || param.max !== undefined || Boolean(param.measure);
+  const rare = Boolean(param.ask?.hint) || Boolean(param.ask?.if) || (Boolean(param.ask) && Boolean(param.optional)) || (kind === 'sheet' && Boolean(param.from)) || param.role === 'amount' || param.min !== undefined || param.max !== undefined || Boolean(param.measure) || Boolean(param.count) || Boolean(param.repeat);
   const [more, setMore] = useState(rare);
   const full = more || rare;
   return (
@@ -185,6 +186,7 @@ function ParamForm({ param, keys, system, effect, locked, change, onLabel, onKey
               if (next !== 'choice' && next !== 'record' && next !== 'sheet' && next !== SHEETS) delete t.from;
               if (!(ASKABLE as readonly string[]).includes(next)) delete t.ask;
               if (next !== 'number' && next !== 'choice') delete t.measure;
+              if (next !== SHEETS) { delete t.count; delete t.repeat; }
             })}
           />
         </Field>
@@ -264,6 +266,16 @@ function ParamForm({ param, keys, system, effect, locked, change, onLabel, onKey
             </Field>
           ) : null}
           {param.ask ? (
+            <Field label={t('skip.label')} hint={t('skip.hint')}>
+              <input
+                type="checkbox" className="sheet-grid__check"
+                aria-label={t('skip.aria', { name: param.label ?? param.key })}
+                checked={Boolean(param.optional)}
+                onChange={e => change(t => { if (e.target.checked) t.optional = true; else delete t.optional; })}
+              />
+            </Field>
+          ) : null}
+          {param.ask ? (
             <ConditionField
               value={param.ask.if?.expr}
               onChange={expr => change(t => {
@@ -286,6 +298,28 @@ function ParamForm({ param, keys, system, effect, locked, change, onLabel, onKey
                 onChange={e => change(t => { if (e.target.checked) t.measure = true; else delete t.measure; })}
               />
             </Field>
+          ) : null}
+          {kind === 'sheet' && param.many ? (
+            <>
+              <Field label={t('count.label')} hint={t('count.hint')}>
+                <FormulaInput
+                  system={system}
+                  where={t('count.where', { name: param.label ?? param.key })}
+                  extraNames={new Map((effect.params ?? []).filter(one => one.key !== param.key && one.kind === 'number').map(one => [one.key, one.label ?? one.key] as const))}
+                  placeholder={t('count.placeholder')}
+                  value={param.count?.expr ?? ''}
+                  onChange={expr => change(t => { if (expr.trim()) t.count = { expr }; else delete t.count; })}
+                />
+              </Field>
+              <Field label={t('repeat.label')} hint={t('repeat.hint')}>
+                <input
+                  type="checkbox" className="sheet-grid__check"
+                  aria-label={t('repeat.aria', { name: param.label ?? param.key })}
+                  checked={Boolean(param.repeat)}
+                  onChange={e => change(t => { if (e.target.checked) t.repeat = true; else delete t.repeat; })}
+                />
+              </Field>
+            </>
           ) : null}
           {kind === 'sheet' && Object.keys(system.sheets ?? {}).length ? (
             <Field label={t('sheetType.label')} hint={t('sheetType.hint')}>

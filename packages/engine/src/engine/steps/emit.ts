@@ -6,6 +6,7 @@ import type { System } from '../../model/types.ts';
 import type { StepData, StepContext, StepModule } from './index.ts';
 import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
 import { tr } from '../../words/tongue.ts';
+import { tagsOf } from './roll.ts';
 
 export const type = 'emit';
 const words: StepWords = STEP_WORDS.emit;
@@ -84,7 +85,7 @@ const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
     const main = amountParamOf(spec);
     const incoming = main && args[main.key] !== undefined ? Number(args[main.key]) : 0;
     if (!Number.isFinite(incoming)) throw new EngineError(tr`«${main!.label ?? main!.key}» вызова «${spec.label ?? id}»: ждали число, пришло «${String(args[main!.key])}»`);
-    const tags = [...new Set([...(spec.tags ?? []), ...chosenTags(params, args)])];
+    const tags = [...new Set([...(spec.tags ?? []), ...chosenTags(params, args), ...tagsOf(step.tags, ctx)])];
     const amountNow = main ? Math.floor(ctx.edited(id, main.key, incoming, tags, args)) : incoming;
     if (main) args[main.key] = amountNow;
     const payload: EmittedEvent = { event: id, amount: amountNow, incoming, tags };
@@ -93,7 +94,7 @@ const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
     const note = out.stopped?.note ?? null;
     return {
       value: { ...payload, ...(out.returns ?? {}) },
-      trace: { event: id, incoming, amount: payload.amount, tags, ...(main ? {} : { bare: true }), ...(received ? { received } : {}) },
+      trace: { event: id, incoming, amount: payload.amount, tags: tags.filter(tag => !(spec.tags ?? []).includes(tag)), ...(main ? {} : { bare: true }), ...(received ? { received } : {}) },
       break: ctx.inCost && received ? { reason: 'emit-stopped', ...(note ? { note } : {}) } : null,
     };
   },

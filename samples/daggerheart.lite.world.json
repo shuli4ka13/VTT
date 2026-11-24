@@ -1986,6 +1986,9 @@
               "expr": "if(@amount >= @list.severe, 3, if(@amount >= @list.major, 2, if(@amount >= 1, 1, 0)))"
             }
           }
+        ],
+        "tags": [
+          "uron"
         ]
       },
       "duality": {
@@ -1998,9 +2001,13 @@
         "description": "После броска двойственности: больше выпало на Надежде — Надежда герою; на Страхе — Страх ведущему; дубль — крит: Надежда и минус один Стресс.",
         "on": [
           {
-            "on": "done:action_roll",
+            "on": "rolled",
+            "anyTags": [
+              "deystvie",
+              "ataka"
+            ],
             "if": {
-              "expr": "@deystvuyuschiy == @holder and @brosok.parts.nadezhda > @brosok.parts.strah"
+              "expr": "@roller == @holder and @roll.parts.nadezhda > @roll.parts.strah"
             },
             "steps": [
               {
@@ -2016,9 +2023,13 @@
             ]
           },
           {
-            "on": "done:action_roll",
+            "on": "rolled",
+            "anyTags": [
+              "deystvie",
+              "ataka"
+            ],
             "if": {
-              "expr": "@deystvuyuschiy == @holder and @brosok.parts.strah > @brosok.parts.nadezhda"
+              "expr": "@roller == @holder and @roll.parts.strah > @roll.parts.nadezhda"
             },
             "steps": [
               {
@@ -2034,81 +2045,13 @@
             ]
           },
           {
-            "on": "done:action_roll",
+            "on": "rolled",
+            "anyTags": [
+              "deystvie",
+              "ataka"
+            ],
             "if": {
-              "expr": "@deystvuyuschiy == @holder and @brosok.parts.nadezhda == @brosok.parts.strah"
-            },
-            "steps": [
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@holder.hope"
-                },
-                "direction": "add",
-                "value": {
-                  "expr": "1"
-                }
-              },
-              {
-                "type": "branch",
-                "if": {
-                  "expr": "@holder.stress >= 1"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@holder.stress"
-                },
-                "value": {
-                  "expr": "1"
-                }
-              },
-              {
-                "type": "end"
-              }
-            ]
-          },
-          {
-            "on": "done:hero_attack",
-            "if": {
-              "expr": "@deystvuyuschiy == @holder and @brosok_brosok.parts.nadezhda > @brosok_brosok.parts.strah"
-            },
-            "steps": [
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@holder.hope"
-                },
-                "direction": "add",
-                "value": {
-                  "expr": "1"
-                }
-              }
-            ]
-          },
-          {
-            "on": "done:hero_attack",
-            "if": {
-              "expr": "@deystvuyuschiy == @holder and @brosok_brosok.parts.strah > @brosok_brosok.parts.nadezhda"
-            },
-            "steps": [
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@desk.fear"
-                },
-                "direction": "add",
-                "value": {
-                  "expr": "1"
-                }
-              }
-            ]
-          },
-          {
-            "on": "done:hero_attack",
-            "if": {
-              "expr": "@deystvuyuschiy == @holder and @brosok_brosok.parts.nadezhda == @brosok_brosok.parts.strah"
+              "expr": "@roller == @holder and @roll.parts.nadezhda == @roll.parts.strah"
             },
             "steps": [
               {
@@ -2415,6 +2358,29 @@
             ]
           }
         ]
+      }
+    },
+    "tags": {
+      "uron": {
+        "label": "урон",
+        "inputs": [
+          {
+            "key": "list",
+            "kind": "sheet"
+          },
+          {
+            "key": "istochnik",
+            "kind": "sheet"
+          },
+          {
+            "key": "amount",
+            "kind": "number"
+          }
+        ],
+        "said": {
+          "list": "лист",
+          "istochnik": "источник"
+        }
       }
     }
   },

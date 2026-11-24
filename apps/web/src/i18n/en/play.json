@@ -7,6 +7,7 @@
     "titleGm": "{{label}} · the game master says",
     "byField": "from the field: {{words}}",
     "perTargetFirst": "asks for each target — choose targets first",
+    "aimCount": "chosen {{n}} of {{max}}",
     "pickOption": "— which option —"
   },
   "col": {
@@ -234,6 +235,14 @@
       "toggle": "allow or forbid editing item values",
       "byList": "items edited by: {{names}}",
       "gm": "game master"
+    },
+    "rules": {
+      "title": "Table rules",
+      "reactionRolls": "Show the roll in reaction questions",
+      "reactionUseful": "Offer a reaction only when it changes the outcome"
+    },
+    "aim": {
+      "drop": "remove choice: {{name}}"
     }
   },
   "clock": {

@@ -15,7 +15,7 @@ const system = {
       on: [
         { on: 'moment:turn-start', steps: [hp('subtract', 3)] },
         { on: 'moment:turn-end', steps: [hp('add', 1)] },
-        { on: 'before:удар', if: { expr: '@цель == @holder' }, confirm: true, steps: [] },
+        { on: 'before:удар', if: { expr: '@цель == @holder' }, confirm: {}, steps: [] },
       ],
     },
     удар: { label: 'Удар', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }], steps: [{ type: 'each', of: 'цели' }] },

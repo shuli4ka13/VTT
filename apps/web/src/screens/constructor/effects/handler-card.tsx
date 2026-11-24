@@ -1,6 +1,6 @@
 import { groupSteps } from '../cards.ts';
 import { useState } from 'react';
-import { Card, CardHead, Field, Select, DangerButton, Button } from '../../../ui/primitives.tsx';
+import { Card, CardHead, Field, Select, DangerButton, Button, Fold, Input } from '../../../ui/primitives.tsx';
 import { formulaWords } from '../../../ui/formula-words.ts';
 import { MOMENTS as TIMES, MOMENT_PREFIX, FIELD_PREFIX, GAINED_PREFIX, LOST_PREFIX, PHASES, SEEN, seenLabel, ROLLED, rolledLabel, ANY_ACTION, callHappening, happeningOf, fieldsOf, TARGETS_SEED, HOLDER, compile, printFormula, andParts, namesAt, splitsTargets } from '@vtt/engine';
 import type { Phase, MomentKey, Node } from '@vtt/engine';
@@ -240,12 +240,61 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove, startO
               <Select<string>
                 value={handler.confirm ? 'ask' : ''}
                 options={[['', t('handler.auto')], ['ask', t('handler.asks')]]}
-                onChange={next => edit(draft => { if (next) draft.confirm = true; else delete draft.confirm; })}
+                onChange={next => edit(draft => { if (!next) delete draft.confirm; else if (!draft.confirm) draft.confirm = {}; })}
               />
             </Field>
           )}
         />
+        {handler.confirm ? <ConfirmMore confirm={handler.confirm} edit={edit} /> : null}
       </div>
     </Card>
+  );
+}
+
+const SHOWN = ['actor', 'action', 'roll', 'versus'] as const;
+
+function ConfirmMore({ confirm, edit }: { confirm: NonNullable<Handler['confirm']>; edit: (change: (draft: Handler) => void) => void }) {
+  const t = useT('effects');
+  const change = (fn: (draft: NonNullable<Handler['confirm']>) => void) => edit(draft => { if (draft.confirm) fn(draft.confirm); });
+  const shown = new Set<string>(confirm.show ?? []);
+  return (
+    <Fold title={t('common:more')} summary={t('handler.ask.summary')}>
+      <div className="row">
+        <Field label={t('handler.ask.question')} hint={t('handler.ask.questionHint')}>
+          <Input
+            value={confirm.question ?? ''}
+            placeholder={t('handler.ask.questionPlaceholder')}
+            onChange={next => change(draft => { if (next.trim()) draft.question = next; else delete draft.question; })}
+          />
+        </Field>
+        <Field label={t('handler.ask.to')}>
+          <Select<string>
+            value={confirm.to ?? ''}
+            options={[['', t('handler.ask.toHolder')], ['actor', t('handler.ask.toActor')], ['target', t('handler.ask.toTarget')], ['gm', t('handler.ask.toGm')]]}
+            onChange={next => change(draft => { if (next) draft.to = next as 'actor' | 'target' | 'gm'; else delete draft.to; })}
+          />
+        </Field>
+        <Field label={t('handler.ask.show')} hint={t('handler.ask.showHint')}>
+          <div className="inline inline--tight">
+            {SHOWN.map(key => (
+              <label key={key} className="inline inline--tight">
+                <input
+                  type="checkbox" className="sheet-grid__check"
+                  aria-label={t(`handler.ask.shows.${key}`)}
+                  checked={shown.has(key)}
+                  onChange={e => change(draft => {
+                    const next = new Set<string>(draft.show ?? []);
+                    if (e.target.checked) next.add(key); else next.delete(key);
+                    const list = SHOWN.filter(one => next.has(one));
+                    if (list.length) draft.show = [...list]; else delete draft.show;
+                  })}
+                />
+                <span>{t(`handler.ask.shows.${key}`)}</span>
+              </label>
+            ))}
+          </div>
+        </Field>
+      </div>
+    </Fold>
   );
 }

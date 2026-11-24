@@ -24,10 +24,10 @@ export interface Thrown {
 }
 
 export function throwDice(t: Throw): Thrown {
-  const { edits, addends, canceled } = rollEdits(t.held, t.claims, t.roller, t.tags);
+  const { edits, addends, canceled, words } = rollEdits(t.held, t.claims, t.roller, t.tags);
   const dictionary = t.roller.system.roll_edits ?? {};
   const gone = [...new Set(canceled)].map(key => dictionary[key]?.label || key);
-  const started = start(t.spec, edits, t.die, t.tags);
+  const started = { ...start(t.spec, edits, t.die, t.tags), words: [...new Set(words)] };
   const thrown = addTo(gone.length ? { ...started, canceled: gone } : started, addends, t.die);
   const roll = t.seen ? t.seen(thrown) : thrown;
   return { roll, result: result(roll) };

@@ -130,6 +130,11 @@ export const place = z.object({ x: z.number().int().min(0).max(199), y: z.number
 
 export const places = z.record(z.string(), place);
 
+export const tableRules = z.object({
+  reactionRolls: z.boolean().optional(),
+  reactionUseful: z.boolean().optional(),
+}).strict();
+
 export const logEntry = z.object({
   id: z.string(),
   at: z.string(),
@@ -150,6 +155,7 @@ export const roomState = z.object({
   clock: clockState.optional(),
   pending: pendingState.nullable().optional(),
   places: places.optional(),
+  rules: tableRules.optional(),
 });
 
 const sheetList = z.array(z.string().min(1)).min(1).refine(list => new Set(list).size === list.length, 'лист указан дважды');
@@ -201,6 +207,7 @@ export const serverMessage = z.discriminatedUnion('type', [
   z.object({ type: z.literal('room:delta'), delta: roomDelta }),
   z.object({ type: z.literal('room:members'), members: z.array(member) }),
   z.object({ type: z.literal('room:places'), roomId: z.string(), places }),
+  z.object({ type: z.literal('room:rules'), roomId: z.string(), rules: tableRules }),
   z.object({ type: z.literal('room:closed'), roomId: z.string() }),
   z.object({ type: z.literal('error'), message: z.string() }),
 ]);
@@ -211,6 +218,7 @@ export const clientMessage = z.discriminatedUnion('type', [
   z.object({ type: z.literal('room:turn'), intent: turnIntent }),
   z.object({ type: z.literal('room:answer'), intent: answerIntent }),
   z.object({ type: z.literal('room:cancel'), intent: cancelIntent }),
+  z.object({ type: z.literal('room:rules'), roomId: z.string(), rules: tableRules }),
   z.object({ type: z.literal('sheet:set'), roomId: z.string(), sheetId: z.string(), tag: z.string(), value: storedValue }),
   z.object({ type: z.literal('sheet:shift'), roomId: z.string(), sheetId: z.string(), tag: z.string().min(1), by: z.number().finite() }),
 
@@ -279,6 +287,7 @@ export type RoomDelta = z.infer<typeof roomDelta>;
 export type LogEntry = z.infer<typeof logEntry>;
 export type Place = z.infer<typeof place>;
 export type Places = z.infer<typeof places>;
+export type TableRules = z.infer<typeof tableRules>;
 export type JournalEntry = z.infer<typeof journalEntry>;
 export type ServerMessage = z.infer<typeof serverMessage>;
 export type ClientMessage = z.infer<typeof clientMessage>;

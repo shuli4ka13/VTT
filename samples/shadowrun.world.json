@@ -14787,14 +14787,10 @@
           }
         ],
         "each": "cel",
-        "outputs": [
-          "vred"
-        ],
         "said": {
           "deystvuyuschiy": "действующий",
           "celi": "цели",
-          "cel": "цель",
-          "vred": "вред"
+          "cel": "цель"
         }
       },
       "strelba": {
@@ -14829,14 +14825,10 @@
           }
         ],
         "each": "cel",
-        "outputs": [
-          "otpor_itog"
-        ],
         "said": {
           "deystvuyuschiy": "действующий",
           "celi": "цели",
-          "cel": "цель",
-          "otpor_itog": "отпор_итог"
+          "cel": "цель"
         }
       },
       "led": {
@@ -14896,14 +14888,10 @@
           }
         ],
         "each": "cel",
-        "outputs": [
-          "zaschita"
-        ],
         "said": {
           "deystvuyuschiy": "действующий",
           "celi": "цели",
-          "cel": "цель",
-          "zaschita": "защита"
+          "cel": "цель"
         }
       },
       "visyaschee_zaklinanie": {
@@ -16087,7 +16075,11 @@
               "iniciativa",
               "bez_preimuschestva"
             ],
-            "confirm": true,
+            "confirm": {
+              "show": [
+                "roll"
+              ]
+            },
             "cost": [
               {
                 "type": "emit",
@@ -16134,7 +16126,11 @@
               "iniciativa",
               "bez_preimuschestva"
             ],
-            "confirm": true,
+            "confirm": {
+              "show": [
+                "roll"
+              ]
+            },
             "cost": [
               {
                 "type": "emit",
@@ -18216,7 +18212,11 @@
             "notTags": [
               "bez_preimuschestva"
             ],
-            "confirm": true,
+            "confirm": {
+              "show": [
+                "roll"
+              ]
+            },
             "cost": [
               {
                 "type": "emit",
@@ -18261,7 +18261,11 @@
               "iniciativa",
               "bez_preimuschestva"
             ],
-            "confirm": true,
+            "confirm": {
+              "show": [
+                "roll"
+              ]
+            },
             "cost": [
               {
                 "type": "emit",
@@ -18307,7 +18311,11 @@
             "tags": [
               "iniciativa"
             ],
-            "confirm": true,
+            "confirm": {
+              "show": [
+                "roll"
+              ]
+            },
             "cost": [
               {
                 "type": "emit",
@@ -18354,7 +18362,11 @@
               "iniciativa",
               "bez_preimuschestva"
             ],
-            "confirm": true,
+            "confirm": {
+              "show": [
+                "roll"
+              ]
+            },
             "cost": [
               {
                 "type": "emit",
@@ -21465,7 +21477,7 @@
         ],
         "on": [
           {
-            "on": "before:sprite_power_use",
+            "on": "before:sposobnost_sprayta",
             "if": {
               "expr": "@deystvuyuschiy == @sprayt"
             },
@@ -21513,7 +21525,7 @@
         ],
         "on": [
           {
-            "on": "before:sprite_power_use",
+            "on": "before:sposobnost_sprayta",
             "if": {
               "expr": "@deystvuyuschiy == @sprayt"
             },

@@ -377,10 +377,18 @@
             "max": 20
           },
           {
+            "key": "krit_vplotnuyu",
+            "label": "Крит при попадании вплотную",
+            "expr": {
+              "expr": "0"
+            },
+            "sees": "none"
+          },
+          {
             "key": "sneak_dice",
             "label": "Костей скрытой атаки",
             "expr": {
-              "expr": "ceil(@level / 2)"
+              "expr": "if(@class_name == \"plut\", ceil(@level / 2), 0)"
             }
           },
           {
@@ -438,7 +446,7 @@
             "key": "superiority_die",
             "label": "Кость превосходства",
             "expr": {
-              "expr": "@level.superiority_die"
+              "expr": "if(@class_name == \"voin\", @level.superiority_die, \"\")"
             }
           },
           {
@@ -1537,48 +1545,6 @@
           }
         ]
       },
-      "attack_outcomes": {
-        "label": "Исход атаки",
-        "key": "word",
-        "columns": [
-          {
-            "key": "dice_mul",
-            "label": "множитель костей урона",
-            "kind": "number"
-          },
-          {
-            "key": "hit",
-            "label": "попал",
-            "kind": "boolean"
-          }
-        ],
-        "rows": [
-          {
-            "value": "promah",
-            "label": "промах",
-            "cells": {
-              "dice_mul": 0,
-              "hit": false
-            }
-          },
-          {
-            "value": "popadanie",
-            "label": "попадание",
-            "cells": {
-              "dice_mul": 1,
-              "hit": true
-            }
-          },
-          {
-            "value": "krit",
-            "label": "крит",
-            "cells": {
-              "dice_mul": 2,
-              "hit": true
-            }
-          }
-        ]
-      },
       "damage_source": {
         "label": "Источник урона",
         "key": "word",
@@ -1913,6 +1879,14 @@
           {
             "value": "oruzhie",
             "label": "оружие"
+          },
+          {
+            "value": "vplotnuyu",
+            "label": "вплотную"
+          },
+          {
+            "value": "krit",
+            "label": "крит"
           }
         ]
       },
@@ -3028,9 +3002,9 @@
         ]
       },
       "spell_auto": {
-        "label": "Заклинание без броска",
+        "label": "Заклинание: стрелы без броска",
         "icon": "🎯",
-        "hint": "Волшебная стрела: попадает всегда, к каждой кости своя прибавка.",
+        "hint": "Волшебная стрела: попадает всегда, у каждой стрелы своя цель и свой урон.",
         "shape": "book",
         "use": "action",
         "block": "zaklinaniya",
@@ -3047,17 +3021,17 @@
           },
           {
             "key": "dice_count",
-            "label": "Сколько костей",
+            "label": "Сколько стрел",
             "kind": "number"
           },
           {
             "key": "dice_up",
-            "label": "Костей за круг выше",
+            "label": "Стрел за круг выше",
             "kind": "number"
           },
           {
             "key": "per_die",
-            "label": "Прибавка к каждой кости",
+            "label": "Прибавка к кости стрелы",
             "kind": "number"
           },
           {
@@ -3448,6 +3422,18 @@
             }
           }
         ]
+      },
+      "stol": {
+        "label": "Стол",
+        "shape": "single",
+        "owner": "desk",
+        "columns": [
+          {
+            "key": "strely_odnim_broskom",
+            "label": "Волшебная стрела: один бросок на все стрелы",
+            "kind": "boolean"
+          }
+        ]
       }
     },
     "roll_edits": {
@@ -3570,7 +3556,7 @@
       "strike": {
         "label": "Атака",
         "group": "ataka",
-        "description": "Бросок атаки оружием против класса брони, урон костью. На крите кости урона удваиваются. Бонус атаки и прибавку к урону приносит тот, кто зовёт: оружие считает их по листу, существо вписывает числами. Посчитанное уходит в общий эффект «Урон».",
+        "description": "Бросок атаки оружием против класса брони, урон костью. На крите бросок урона несёт метку «крит» — кости удваивает правило «Крит». Бонус атаки и прибавку к урону приносит тот, кто зовёт: оружие считает их по листу, существо вписывает числами. Посчитанное уходит в общий эффект «Урон».",
         "params": [
           {
             "key": "deystvuyuschiy",
@@ -3634,7 +3620,17 @@
             "label": "Дальность",
             "kind": "choice",
             "from": "reach",
-            "optional": true
+            "default": "blizhniy"
+          },
+          {
+            "key": "vplotnuyu",
+            "label": "Вплотную",
+            "kind": "boolean",
+            "optional": true,
+            "ask": {
+              "by": "actor",
+              "hint": "Атакующий в пределах 5 футов от цели. Пусто — по способу: ближняя атака вплотную, дальняя нет."
+            }
           },
           {
             "key": "status",
@@ -3668,13 +3664,19 @@
               },
               "protiv": {
                 "expr": "@cel"
+              },
+              "sposob": {
+                "expr": "@dalnost"
+              },
+              "vplotnuyu": {
+                "expr": "if(empty(@vplotnuyu), @dalnost == \"blizhniy\", @vplotnuyu)"
               }
             }
           },
           {
             "type": "branch",
             "if": {
-              "expr": "@brosok.ishod.hit"
+              "expr": "@brosok.popal"
             }
           },
           {
@@ -3685,7 +3687,7 @@
               "expr": "@damage_dice"
             },
             "times": {
-              "expr": "@dice * @brosok.ishod.dice_mul"
+              "expr": "@dice"
             },
             "bonus": {
               "expr": "@damage_with"
@@ -3701,6 +3703,9 @@
               },
               {
                 "expr": "@svoystva"
+              },
+              {
+                "expr": "if(@brosok.krit, \"krit\", \"\")"
               }
             ]
           },
@@ -3722,6 +3727,9 @@
               },
               "damage_source": {
                 "expr": "@damage_source"
+              },
+              "ot_krita": {
+                "expr": "@brosok.krit"
               }
             }
           },
@@ -3769,13 +3777,51 @@
           }
         ],
         "tags": [
-          "ataka"
+          "ataka_oruzhiem"
+        ],
+        "returns": [
+          {
+            "key": "popal",
+            "label": "попал",
+            "kind": "boolean",
+            "no": "промах",
+            "expr": {
+              "expr": "@brosok.popal"
+            }
+          },
+          {
+            "key": "krit",
+            "label": "крит",
+            "kind": "boolean",
+            "no": "не крит",
+            "expr": {
+              "expr": "@brosok.krit"
+            }
+          },
+          {
+            "key": "preimuschestvo",
+            "label": "с преимуществом",
+            "kind": "boolean",
+            "no": "без преимущества",
+            "expr": {
+              "expr": "@brosok.preimuschestvo"
+            }
+          },
+          {
+            "key": "pomeha",
+            "label": "с помехой",
+            "kind": "boolean",
+            "no": "без помехи",
+            "expr": {
+              "expr": "@brosok.pomeha"
+            }
+          }
         ]
       },
       "spell_strike": {
         "label": "Атака заклинанием",
         "group": "ataka",
-        "description": "Бросок атаки заклинанием против класса брони, урон костью. На крите кости урона удваиваются. Бонус атаки, кости и плату приносит заклинание: заговор платит действием, заклинание с кругом — ячейкой не ниже своего круга. Посчитанное уходит в общий эффект «Урон».",
+        "description": "Бросок атаки заклинанием против класса брони, урон костью. На крите бросок урона несёт метку «крит» — кости удваивает правило «Крит». Бонус атаки, кости и плату приносит заклинание: заговор платит действием, заклинание с кругом — ячейкой не ниже своего круга. Посчитанное уходит в общий эффект «Урон».",
         "params": [
           {
             "key": "deystvuyuschiy",
@@ -3827,6 +3873,23 @@
             "from": "damage_source"
           },
           {
+            "key": "dalnost",
+            "label": "Дальность",
+            "kind": "choice",
+            "from": "reach",
+            "default": "dalniy"
+          },
+          {
+            "key": "vplotnuyu",
+            "label": "Вплотную",
+            "kind": "boolean",
+            "optional": true,
+            "ask": {
+              "by": "actor",
+              "hint": "Атакующий в пределах 5 футов от цели. Пусто — по способу: ближняя атака вплотную, дальняя нет."
+            }
+          },
+          {
             "key": "status",
             "label": "Состояние при попадании",
             "kind": "effect",
@@ -3864,13 +3927,19 @@
               },
               "protiv": {
                 "expr": "@cel"
+              },
+              "sposob": {
+                "expr": "@dalnost"
+              },
+              "vplotnuyu": {
+                "expr": "if(empty(@vplotnuyu), @dalnost == \"blizhniy\", @vplotnuyu)"
               }
             }
           },
           {
             "type": "branch",
             "if": {
-              "expr": "@brosok.ishod.hit"
+              "expr": "@brosok.popal"
             }
           },
           {
@@ -3881,7 +3950,7 @@
               "expr": "@damage_dice"
             },
             "times": {
-              "expr": "@dice * @brosok.ishod.dice_mul"
+              "expr": "@dice"
             },
             "bonus": {
               "expr": "@damage_with"
@@ -3891,7 +3960,10 @@
             },
             "tags": [
               "uron",
-              "zaklinanie"
+              "zaklinanie",
+              {
+                "expr": "if(@brosok.krit, \"krit\", \"\")"
+              }
             ]
           },
           {
@@ -3912,6 +3984,9 @@
               },
               "damage_source": {
                 "expr": "@damage_source"
+              },
+              "ot_krita": {
+                "expr": "@brosok.krit"
               }
             }
           },
@@ -3963,92 +4038,186 @@
         ],
         "tags": [
           "ataka"
+        ],
+        "returns": [
+          {
+            "key": "popal",
+            "label": "попал",
+            "kind": "boolean",
+            "no": "промах",
+            "expr": {
+              "expr": "@brosok.popal"
+            }
+          },
+          {
+            "key": "krit",
+            "label": "крит",
+            "kind": "boolean",
+            "no": "не крит",
+            "expr": {
+              "expr": "@brosok.krit"
+            }
+          },
+          {
+            "key": "preimuschestvo",
+            "label": "с преимуществом",
+            "kind": "boolean",
+            "no": "без преимущества",
+            "expr": {
+              "expr": "@brosok.preimuschestvo"
+            }
+          },
+          {
+            "key": "pomeha",
+            "label": "с помехой",
+            "kind": "boolean",
+            "no": "без помехи",
+            "expr": {
+              "expr": "@brosok.pomeha"
+            }
+          }
         ]
       },
       "sneak_attack": {
         "label": "Скрытая атака",
         "group": "umeniya_klassa",
-        "description": "Раз за ход, после попадания: дополнительные кости урона — половина уровня, округляя вверх. Условие (преимущество или союзник рядом, фехтовальное или дальнобойное оружие) и удвоение на крите стол не проверяет — решает ведущий.",
-        "params": [
+        "description": "Раз за ход, после попадания фехтовальным или дальнобойным оружием: дополнительные кости урона — половина уровня плута, округляя вверх; тип урона — как у оружия. Нужно преимущество на броске атаки — либо дееспособный союзник в пяти футах от цели и нет помехи: про союзника стол спрашивает. На крите кости удваиваются.",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "on": [
           {
-            "key": "deystvuyuschiy",
-            "label": "Кто действует",
-            "kind": "sheet"
-          },
-          {
-            "key": "celi",
-            "label": "Цели",
-            "kind": "sheet",
-            "many": true,
-            "item": {
-              "key": "cel",
-              "label": "Цель"
-            }
-          },
-          {
-            "key": "damage_type",
-            "label": "Тип урона",
-            "kind": "choice",
-            "from": "damage_types",
-            "ask": {
-              "by": "actor",
-              "hint": "Тип урона оружия, которым попал."
-            }
-          }
-        ],
-        "steps": [
-          {
-            "id": "uron",
-            "label": "урон",
-            "type": "roll",
-            "die": {
-              "expr": "'1d6'"
+            "on": "after:ataka_oruzhiem",
+            "if": {
+              "expr": "@deystvuyuschiy == @holder and @popal and @holder.sneak_dice > 0 and (not empty(@svoystva) and has(@svoystva, \"fehtovalnoe\") or @dalnost == \"dalniy\") and @preimuschestvo and (not @desk.combat or @holder.turn.raz_za_hod.left >= 1)"
             },
-            "times": {
-              "expr": "@deystvuyuschiy.sneak_dice"
+            "confirm": {
+              "question": "Скрытая атака?"
             },
-            "by": {
-              "expr": "@deystvuyuschiy"
-            },
-            "tags": [
-              "uron"
+            "cost": [
+              {
+                "type": "emit",
+                "effect": "cost_once",
+                "args": {
+                  "list": {
+                    "expr": "@holder"
+                  },
+                  "istochnik": {
+                    "expr": "@holder"
+                  }
+                }
+              }
+            ],
+            "steps": [
+              {
+                "id": "uron",
+                "label": "урон",
+                "type": "roll",
+                "die": {
+                  "expr": "'1d6'"
+                },
+                "times": {
+                  "expr": "@holder.sneak_dice"
+                },
+                "by": {
+                  "expr": "@holder"
+                },
+                "tags": [
+                  "uron",
+                  {
+                    "expr": "if(@krit, \"krit\", \"\")"
+                  }
+                ]
+              },
+              {
+                "type": "emit",
+                "effect": "damage",
+                "args": {
+                  "amount": {
+                    "expr": "@uron.total"
+                  },
+                  "list": {
+                    "expr": "@cel"
+                  },
+                  "istochnik": {
+                    "expr": "@holder"
+                  },
+                  "damage_type": {
+                    "expr": "@damage_type"
+                  },
+                  "ot_krita": {
+                    "expr": "@krit"
+                  }
+                }
+              }
             ]
           },
           {
-            "type": "each",
-            "of": "celi"
-          },
-          {
-            "type": "emit",
-            "effect": "damage",
-            "args": {
-              "amount": {
-                "expr": "@uron.total"
-              },
-              "list": {
-                "expr": "@cel"
-              },
-              "istochnik": {
-                "expr": "@deystvuyuschiy"
-              },
-              "damage_type": {
-                "expr": "@damage_type"
+            "on": "after:ataka_oruzhiem",
+            "if": {
+              "expr": "@deystvuyuschiy == @holder and @popal and @holder.sneak_dice > 0 and (not empty(@svoystva) and has(@svoystva, \"fehtovalnoe\") or @dalnost == \"dalniy\") and not @preimuschestvo and not @pomeha and (not @desk.combat or @holder.turn.raz_za_hod.left >= 1)"
+            },
+            "confirm": {
+              "question": "Союзник рядом с целью — скрытая атака?"
+            },
+            "cost": [
+              {
+                "type": "emit",
+                "effect": "cost_once",
+                "args": {
+                  "list": {
+                    "expr": "@holder"
+                  },
+                  "istochnik": {
+                    "expr": "@holder"
+                  }
+                }
               }
-            }
-          }
-        ],
-        "cost": [
-          {
-            "type": "emit",
-            "effect": "cost_once",
-            "args": {
-              "list": {
-                "expr": "@deystvuyuschiy"
+            ],
+            "steps": [
+              {
+                "id": "uron",
+                "label": "урон",
+                "type": "roll",
+                "die": {
+                  "expr": "'1d6'"
+                },
+                "times": {
+                  "expr": "@holder.sneak_dice"
+                },
+                "by": {
+                  "expr": "@holder"
+                },
+                "tags": [
+                  "uron",
+                  {
+                    "expr": "if(@krit, \"krit\", \"\")"
+                  }
+                ]
               },
-              "istochnik": {
-                "expr": "@deystvuyuschiy"
+              {
+                "type": "emit",
+                "effect": "damage",
+                "args": {
+                  "amount": {
+                    "expr": "@uron.total"
+                  },
+                  "list": {
+                    "expr": "@cel"
+                  },
+                  "istochnik": {
+                    "expr": "@holder"
+                  },
+                  "damage_type": {
+                    "expr": "@damage_type"
+                  },
+                  "ot_krita": {
+                    "expr": "@krit"
+                  }
+                }
               }
-            }
+            ]
           }
         ]
       },
@@ -4299,9 +4468,9 @@
         }
       },
       "spell_auto": {
-        "label": "Заклинание: урон без броска",
+        "label": "Заклинание: стрелы без броска",
         "group": "zaklinaniya",
-        "description": "Тратит ячейку. Попадает всегда: волшебная стрела. К каждой кости идёт прибавка, ячейка выше круга добавляет кости.",
+        "description": "Тратит ячейку. Стрелы попадают всегда: каждая — отдельный выбор цели и свой урон, одну цель можно выбрать несколько раз. Ячейка выше круга добавляет стрелы.",
         "params": [
           {
             "key": "deystvuyuschiy",
@@ -4332,7 +4501,11 @@
             "item": {
               "key": "cel",
               "label": "Цель"
-            }
+            },
+            "count": {
+              "expr": "@dice_count + (@slot - @spell_level) * @dice_up"
+            },
+            "repeat": true
           },
           {
             "key": "damage_die",
@@ -4341,17 +4514,17 @@
           },
           {
             "key": "dice_count",
-            "label": "Сколько костей",
+            "label": "Сколько стрел",
             "kind": "number"
           },
           {
             "key": "dice_up",
-            "label": "Костей за каждый круг выше",
+            "label": "Стрел за каждый круг выше",
             "kind": "number"
           },
           {
             "key": "per_die",
-            "label": "Прибавка к каждой кости",
+            "label": "Прибавка к кости стрелы",
             "kind": "number"
           },
           {
@@ -4363,56 +4536,35 @@
         ],
         "steps": [
           {
-            "id": "po_yacheyke",
-            "label": "по ячейке",
-            "type": "emit",
-            "effect": "spell_dice",
-            "args": {
-              "spell_level": {
-                "expr": "@spell_level"
-              },
-              "slot": {
-                "expr": "@slot"
-              },
-              "dice_count": {
-                "expr": "@dice_count"
-              },
-              "dice_up": {
-                "expr": "@dice_up"
-              }
-            }
-          },
-          {
-            "id": "uron",
-            "label": "урон",
+            "id": "obschiy",
+            "label": "общий бросок",
             "type": "roll",
             "die": {
               "expr": "@damage_die"
             },
-            "times": {
-              "expr": "@po_yacheyke.kosti"
-            },
             "bonus": {
-              "expr": "@po_yacheyke.kosti * @per_die"
-            },
-            "by": {
-              "expr": "@deystvuyuschiy"
-            },
-            "tags": [
-              "uron",
-              "zaklinanie"
-            ]
+              "expr": "@per_die"
+            }
           },
           {
             "type": "each",
             "of": "celi"
           },
           {
+            "type": "branch",
+            "if": {
+              "expr": "@desk.strely_odnim_broskom"
+            }
+          },
+          {
             "type": "emit",
             "effect": "damage",
+            "tags": [
+              "volshebnaya_strela"
+            ],
             "args": {
               "amount": {
-                "expr": "@uron.total"
+                "expr": "@obschiy.total"
               },
               "damage_source": {
                 "expr": "\"magicheskiy\""
@@ -4427,6 +4579,54 @@
                 "expr": "@damage_type"
               }
             }
+          },
+          {
+            "type": "orElse"
+          },
+          {
+            "id": "strela",
+            "label": "стрела",
+            "type": "roll",
+            "die": {
+              "expr": "@damage_die"
+            },
+            "bonus": {
+              "expr": "@per_die"
+            },
+            "by": {
+              "expr": "@deystvuyuschiy"
+            },
+            "tags": [
+              "uron",
+              "zaklinanie"
+            ]
+          },
+          {
+            "type": "emit",
+            "effect": "damage",
+            "tags": [
+              "volshebnaya_strela"
+            ],
+            "args": {
+              "amount": {
+                "expr": "@strela.total"
+              },
+              "damage_source": {
+                "expr": "\"magicheskiy\""
+              },
+              "list": {
+                "expr": "@cel"
+              },
+              "istochnik": {
+                "expr": "@deystvuyuschiy"
+              },
+              "damage_type": {
+                "expr": "@damage_type"
+              }
+            }
+          },
+          {
+            "type": "end"
           }
         ],
         "cost": [
@@ -4448,6 +4648,9 @@
               }
             }
           }
+        ],
+        "tags": [
+          "volshebnaya_strela"
         ]
       },
       "spell_buff": {
@@ -6002,28 +6205,15 @@
             "kind": "choice",
             "from": "damage_source",
             "optional": true
+          },
+          {
+            "key": "ot_krita",
+            "label": "От крита",
+            "kind": "boolean",
+            "optional": true
           }
         ],
         "steps": [
-          {
-            "type": "branch",
-            "if": {
-              "expr": "@list.hp_current <= 0"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@list.death_fail"
-            },
-            "direction": "add",
-            "value": {
-              "expr": "1"
-            }
-          },
-          {
-            "type": "end"
-          },
           {
             "id": "po_vremennym",
             "label": "по временным",
@@ -6045,24 +6235,39 @@
             "value": {
               "expr": "@po_vremennym.overkill"
             }
-          },
-          {
-            "type": "branch",
-            "if": {
-              "expr": "@po_hitam.overkill >= @list.hp_max"
-            }
-          },
-          {
-            "type": "status",
-            "effect": "dead",
-            "to": {
-              "expr": "@list"
-            }
-          },
-          {
-            "type": "end"
           }
-        ]
+        ],
+        "tags": [
+          "uron"
+        ],
+        "returns": [
+          {
+            "key": "naneseno",
+            "label": "нанесено",
+            "kind": "number",
+            "expr": {
+              "expr": "@po_hitam.from - @po_hitam.to"
+            }
+          },
+          {
+            "key": "sverh_nulya",
+            "label": "сверх нуля",
+            "kind": "number",
+            "expr": {
+              "expr": "@po_hitam.overkill"
+            }
+          },
+          {
+            "key": "byl_na_nule",
+            "label": "был на нуле",
+            "kind": "boolean",
+            "no": "был на ногах",
+            "expr": {
+              "expr": "@po_hitam.from <= 0"
+            }
+          }
+        ],
+        "description": "Сначала временные хиты, остаток — в хиты. Отдаёт, сколько снято, сколько осталось сверх нуля и был ли лист уже на нуле."
       },
       "heal": {
         "label": "Лечение",
@@ -6286,9 +6491,9 @@
         },
         "on": [
           {
-            "on": "after:strike",
+            "on": "after:ataka_oruzhiem",
             "if": {
-              "expr": "@deystvuyuschiy == @holder and not empty(@cel) and @brosok.ishod.hit"
+              "expr": "@deystvuyuschiy == @holder and not empty(@cel) and @popal"
             },
             "steps": [
               {
@@ -6303,7 +6508,10 @@
                 },
                 "tags": [
                   "uron",
-                  "zaklinanie"
+                  "zaklinanie",
+                  {
+                    "expr": "if(@krit, \"krit\", \"\")"
+                  }
                 ]
               },
               {
@@ -6324,6 +6532,9 @@
                   },
                   "istochnik": {
                     "expr": "@holder"
+                  },
+                  "ot_krita": {
+                    "expr": "@krit"
                   }
                 }
               }
@@ -6485,7 +6696,7 @@
       "shield": {
         "label": "Щит",
         "group": "reakcii",
-        "description": "По тебе попали — тратишь ячейку 1-го круга, +5 к классу брони до начала твоего хода. Атака пересчитывается.",
+        "description": "По тебе попали или в тебя летит волшебная стрела — тратишь ячейку 1-го круга, +5 к классу брони до начала твоего хода. Атака пересчитывается, стрелы урона не наносят.",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -6494,9 +6705,58 @@
           {
             "on": "before:ataka",
             "if": {
-              "expr": "@cel == @holder and @brosok.ishod.hit"
+              "expr": "@cel == @holder and @popal and @holder.shield_up == 0"
             },
-            "confirm": true,
+            "confirm": {
+              "question": "По тебе попали. Щит?"
+            },
+            "cost": [
+              {
+                "type": "emit",
+                "effect": "cost_reaction",
+                "args": {
+                  "list": {
+                    "expr": "@holder"
+                  },
+                  "istochnik": {
+                    "expr": "@holder"
+                  }
+                }
+              },
+              {
+                "type": "emit",
+                "effect": "spell_slot",
+                "args": {
+                  "circle": {
+                    "expr": "1"
+                  },
+                  "list": {
+                    "expr": "@holder"
+                  },
+                  "istochnik": {
+                    "expr": "@holder"
+                  }
+                }
+              }
+            ],
+            "steps": [
+              {
+                "type": "status",
+                "effect": "shield_up",
+                "to": {
+                  "expr": "@holder"
+                }
+              }
+            ]
+          },
+          {
+            "on": "before:volshebnaya_strela",
+            "if": {
+              "expr": "@cel == @holder and @holder.shield_up == 0"
+            },
+            "confirm": {
+              "question": "В тебя летит волшебная стрела. Щит?"
+            },
             "cost": [
               {
                 "type": "emit",
@@ -6548,11 +6808,13 @@
         },
         "on": [
           {
-            "on": "after:damage",
+            "on": "after:uron",
             "if": {
-              "expr": "@list == @holder and not empty(@istochnik) and @istochnik != @holder"
+              "expr": "@list == @holder and @naneseno > 0 and not empty(@istochnik) and @istochnik != @holder"
             },
-            "confirm": true,
+            "confirm": {
+              "question": "Тебя ранили. Адское возмездие?"
+            },
             "cost": [
               {
                 "type": "emit",
@@ -6662,7 +6924,11 @@
             "if": {
               "expr": "@roller == @holder"
             },
-            "confirm": true,
+            "confirm": {
+              "show": [
+                "roll"
+              ]
+            },
             "cost": [
               {
                 "type": "emit",
@@ -6709,7 +6975,11 @@
             "if": {
               "expr": "@roller == @holder and (has(@roll.tags, \"ataka\") or has(@roll.tags, \"spasbrosok\") or has(@roll.tags, \"proverka\"))"
             },
-            "confirm": true,
+            "confirm": {
+              "show": [
+                "roll"
+              ]
+            },
             "cost": [
               {
                 "type": "emit",
@@ -6768,7 +7038,11 @@
             "if": {
               "expr": "@roller == @holder and (has(@roll.tags, \"ataka\") or has(@roll.tags, \"spasbrosok\") or has(@roll.tags, \"proverka\"))"
             },
-            "confirm": true,
+            "confirm": {
+              "show": [
+                "roll"
+              ]
+            },
             "steps": [
               {
                 "type": "roll-plus",
@@ -6795,7 +7069,11 @@
             "if": {
               "expr": "@roller == @holder and has(@roll.tags, \"ataka\")"
             },
-            "confirm": true,
+            "confirm": {
+              "show": [
+                "roll"
+              ]
+            },
             "cost": [
               {
                 "type": "emit",
@@ -6997,7 +7275,7 @@
       "paralyzed": {
         "label": "Парализован",
         "group": "sostoyaniya",
-        "description": "Недееспособен, скорость ноль, спасброски Силы и Ловкости провалены, по тебе бьют с преимуществом. Наложенное заклинанием: в конце хода — спасбросок Мудрости против запомненной сложности.",
+        "description": "Недееспособен, скорость ноль, спасброски Силы и Ловкости провалены, по тебе бьют с преимуществом. Наложенное заклинанием: в конце хода — спасбросок Мудрости против запомненной сложности. Попадание по нему вплотную — крит.",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -7041,6 +7319,16 @@
             "kind": "number",
             "optional": true
           }
+        ],
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "krit_vplotnuyu",
+            "op": "set",
+            "value": {
+              "expr": "1"
+            }
+          }
         ]
       },
       "poisoned": {
@@ -7082,7 +7370,7 @@
       "prone": {
         "label": "Лежит",
         "group": "sostoyaniya",
-        "description": "Твои атаки с помехой, по тебе вблизи бьют с преимуществом. Встать — половина скорости.",
+        "description": "Твои атаки с помехой. По тебе вплотную бьют с преимуществом, издали — с помехой. Встать — половина скорости.",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -7090,12 +7378,28 @@
         "modifiers": [
           {
             "tags": [
-              "ataka"
+              "ataka",
+              "vplotnuyu"
             ],
             "kind": "edit",
             "call": "roll",
             "param": "edits",
             "edit": "advantage",
+            "if": {
+              "expr": "@against == @holder"
+            }
+          },
+          {
+            "tags": [
+              "ataka"
+            ],
+            "notTags": [
+              "vplotnuyu"
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "disadvantage",
             "if": {
               "expr": "@against == @holder"
             }
@@ -7131,7 +7435,7 @@
       "unconscious": {
         "label": "Без сознания",
         "group": "sostoyaniya",
-        "description": "Недееспособен и лежит, роняет всё, что держал. Очнулся — остаётся лежать.",
+        "description": "Недееспособен и лежит, роняет всё, что держал. Попадание по нему вплотную — крит. Очнулся — остаётся лежать.",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -7148,12 +7452,22 @@
             }
           }
         ],
-        "reapply": "refresh"
+        "reapply": "refresh",
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "krit_vplotnuyu",
+            "op": "set",
+            "value": {
+              "expr": "1"
+            }
+          }
+        ]
       },
       "stable": {
         "label": "Стабилен",
         "group": "sostoyaniya",
-        "description": "Ноль хитов, но спасброски от смерти больше не нужны.",
+        "description": "Ноль хитов, но спасброски от смерти больше не нужны. Урон снимает стабильность: снова при смерти, с провалом.",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -7168,7 +7482,52 @@
             }
           }
         ],
-        "reapply": "refresh"
+        "reapply": "refresh",
+        "on": [
+          {
+            "on": "after:uron",
+            "if": {
+              "expr": "@list == @holder"
+            },
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "expr": "@holder.death_ok"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "0"
+                }
+              },
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": "stable",
+                "to": {
+                  "expr": "@holder"
+                }
+              },
+              {
+                "type": "status",
+                "effect": "dying",
+                "to": {
+                  "expr": "@holder"
+                }
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "expr": "@holder.death_fail"
+                },
+                "direction": "add",
+                "value": {
+                  "expr": "if(@ot_krita == true, 2, 1)"
+                }
+              }
+            ]
+          }
+        ]
       },
       "dead": {
         "label": "Мёртв",
@@ -7321,7 +7680,7 @@
       "shield_up": {
         "label": "Под щитом",
         "group": "sostoyaniya",
-        "description": "+5 к классу брони.",
+        "description": "+5 к классу брони; волшебная стрела урона не наносит.",
         "activation": "passive",
         "duration": {
           "kind": "turns",
@@ -7335,6 +7694,22 @@
             "op": "add",
             "value": {
               "expr": "5"
+            }
+          },
+          {
+            "kind": "edit",
+            "call": "damage",
+            "param": "amount",
+            "op": "mul",
+            "value": {
+              "expr": "0"
+            },
+            "stage": "soprotivlenie",
+            "tags": [
+              "volshebnaya_strela"
+            ],
+            "if": {
+              "expr": "@list == @holder"
             }
           }
         ],
@@ -7365,7 +7740,7 @@
         ],
         "on": [
           {
-            "on": "after:damage",
+            "on": "after:uron",
             "if": {
               "expr": "@list == @holder"
             },
@@ -7484,7 +7859,11 @@
             "if": {
               "expr": "@roller == @holder and has(@roll.tags, \"proverka\")"
             },
-            "confirm": true,
+            "confirm": {
+              "show": [
+                "roll"
+              ]
+            },
             "steps": [
               {
                 "type": "roll-plus",
@@ -7584,6 +7963,88 @@
             }
           }
         ],
+        "reapply": "refresh"
+      },
+      "cover_half": {
+        "label": "Укрытие наполовину",
+        "group": "sostoyaniya",
+        "description": "Препятствие закрывает не меньше половины: +2 к классу брони и спасброскам Ловкости. Ставит ведущий; степени не складываются — действует самая сильная.",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "ac",
+            "op": "add",
+            "value": {
+              "expr": "2"
+            }
+          },
+          {
+            "tags": [
+              "spasbrosok",
+              "lovkost"
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "bonus",
+            "op": "add",
+            "value": {
+              "expr": "2"
+            },
+            "if": {
+              "expr": "@roller == @holder"
+            }
+          }
+        ],
+        "reapply": "refresh"
+      },
+      "cover_three_quarters": {
+        "label": "Укрытие на три четверти",
+        "group": "sostoyaniya",
+        "description": "Препятствие закрывает не меньше трёх четвертей: +5 к классу брони и спасброскам Ловкости. Ставит ведущий; степени не складываются — действует самая сильная.",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "ac",
+            "op": "add",
+            "value": {
+              "expr": "5"
+            }
+          },
+          {
+            "tags": [
+              "spasbrosok",
+              "lovkost"
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "bonus",
+            "op": "add",
+            "value": {
+              "expr": "5"
+            },
+            "if": {
+              "expr": "@roller == @holder"
+            }
+          }
+        ],
+        "reapply": "refresh"
+      },
+      "cover_full": {
+        "label": "Полное укрытие",
+        "group": "sostoyaniya",
+        "description": "Целиком за препятствием: выбрать целью напрямую нельзя. Стол не запрещает — решает ведущий.",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
         "reapply": "refresh"
       },
       "mage_armored": {
@@ -7797,7 +8258,11 @@
             "if": {
               "expr": "@roller == @holder and has(@roll.tags, \"uron\") and has(@roll.tags, \"oruzhie\")"
             },
-            "confirm": true,
+            "confirm": {
+              "show": [
+                "roll"
+              ]
+            },
             "cost": [
               {
                 "type": "emit",
@@ -7856,9 +8321,9 @@
         },
         "on": [
           {
-            "on": "after:damage",
+            "on": "after:uron",
             "if": {
-              "expr": "@list == @holder"
+              "expr": "@list == @holder and @naneseno > 0"
             },
             "steps": [
               {
@@ -7902,7 +8367,7 @@
       "dying": {
         "label": "При смерти",
         "group": "sostoyaniya",
-        "description": "На нуле хитов: в начале своего хода к20. Десять и выше — успех, иначе провал; единица — два провала, двадцатка — один хит и на ноги.",
+        "description": "На нуле хитов: в начале своего хода к20. Десять и выше — успех, иначе провал; единица — два провала, двадцатка — один хит и на ноги. Урон на нуле — провал, от крита — два.",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -8008,13 +8473,31 @@
                 "type": "end"
               }
             ]
+          },
+          {
+            "on": "after:uron",
+            "if": {
+              "expr": "@list == @holder and @byl_na_nule"
+            },
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "expr": "@holder.death_fail"
+                },
+                "direction": "add",
+                "value": {
+                  "expr": "if(@ot_krita == true, 2, 1)"
+                }
+              }
+            ]
           }
         ]
       },
       "fall": {
         "label": "Падение",
         "group": "otdyh_i_smert",
-        "description": "Хиты опустились до нуля — «Без сознания» и «При смерти».",
+        "description": "Хиты опустились до нуля — «Без сознания» и «При смерти». Убитого наповал не касается.",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -8023,7 +8506,7 @@
           {
             "on": "field:down",
             "if": {
-              "expr": "@sheet == @holder"
+              "expr": "@sheet == @holder and @holder.dead == 0"
             },
             "steps": [
               {
@@ -8135,7 +8618,7 @@
       "death_now": {
         "label": "Смерть",
         "group": "otdyh_i_smert",
-        "description": "Три провала спасбросков от смерти.",
+        "description": "Три провала спасбросков от смерти или урон, остаток которого сверх нуля не меньше максимума хитов.",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -8145,6 +8628,29 @@
             "on": "field:is_dead",
             "if": {
               "expr": "@sheet == @holder"
+            },
+            "steps": [
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": "dying",
+                "to": {
+                  "expr": "@holder"
+                }
+              },
+              {
+                "type": "status",
+                "effect": "dead",
+                "to": {
+                  "expr": "@holder"
+                }
+              }
+            ]
+          },
+          {
+            "on": "after:uron",
+            "if": {
+              "expr": "@list == @holder and @holder.hp_max > 0 and @sverh_nulya >= @holder.hp_max"
             },
             "steps": [
               {
@@ -8501,7 +9007,7 @@
         "duration": {
           "kind": "permanent"
         },
-        "description": "Шесть ступеней: помеха на проверки, скорость вдвое меньше, помеха на атаки и спасброски, максимум хитов вдвое меньше, скорость ноль. Шестая — смерть, её объявляет ведущий.",
+        "description": "Редакция 2024: каждая ступень отнимает 2 от бросков к20 (проверки, атаки, спасброски) и 5 футов скорости. Шестая — смерть, её объявляет ведущий.",
         "on": [
           {
             "on": "moment:long-rest",
@@ -8520,13 +9026,19 @@
         ],
         "modifiers": [
           {
-            "tags": [
-              "proverka"
+            "anyTags": [
+              "proverka",
+              "ataka",
+              "spasbrosok",
+              "iniciativa"
             ],
             "kind": "edit",
             "call": "roll",
-            "param": "edits",
-            "edit": "disadvantage",
+            "param": "bonus",
+            "op": "add",
+            "value": {
+              "expr": "-2 * @holder.exhaustion"
+            },
             "if": {
               "expr": "@roller == @holder and @holder.exhaustion >= 1"
             }
@@ -8534,58 +9046,12 @@
           {
             "kind": "value",
             "target": "speed",
-            "op": "mul",
+            "op": "add",
             "value": {
-              "expr": "0.5"
+              "expr": "-5 * @exhaustion"
             },
             "if": {
-              "expr": "@exhaustion >= 2"
-            }
-          },
-          {
-            "tags": [
-              "ataka"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "disadvantage",
-            "if": {
-              "expr": "@roller == @holder and @holder.exhaustion >= 3"
-            }
-          },
-          {
-            "tags": [
-              "spasbrosok"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "disadvantage",
-            "if": {
-              "expr": "@roller == @holder and @holder.exhaustion >= 3"
-            }
-          },
-          {
-            "kind": "value",
-            "target": "hp_max",
-            "op": "mul",
-            "value": {
-              "expr": "0.5"
-            },
-            "if": {
-              "expr": "@exhaustion >= 4"
-            }
-          },
-          {
-            "kind": "value",
-            "target": "speed",
-            "op": "set",
-            "value": {
-              "expr": "0"
-            },
-            "if": {
-              "expr": "@exhaustion >= 5"
+              "expr": "@exhaustion >= 1"
             }
           }
         ]
@@ -8709,7 +9175,7 @@
       "attack_roll": {
         "label": "Бросок атаки",
         "group": "broski_i_proverki",
-        "description": "Бросок к20 + бонус против класса брони цели. 1 на кости — всегда промах; крит (с «Крит на костях от») — всегда попадание.",
+        "description": "Бросок к20 + бонус против класса брони цели. 1 на кости — всегда промах; крит (с «Крит на костях от») — всегда попадание. Бросок несёт способ атаки и признак «вплотную»: на них смотрят состояния.",
         "params": [
           {
             "key": "kto",
@@ -8728,16 +9194,56 @@
             "label": "Бонус атаки",
             "kind": "number",
             "default": 0
+          },
+          {
+            "key": "sposob",
+            "label": "Способ атаки",
+            "kind": "choice",
+            "from": "reach",
+            "optional": true
+          },
+          {
+            "key": "vplotnuyu",
+            "label": "Вплотную",
+            "kind": "boolean",
+            "optional": true
           }
         ],
         "returns": [
           {
-            "key": "ishod",
-            "label": "исход",
-            "kind": "choice",
-            "from": "attack_outcomes",
+            "key": "popal",
+            "label": "попал",
+            "kind": "boolean",
+            "no": "промах",
             "expr": {
-              "expr": "if(not @proverka.success, \"promah\", if(@proverka.natural >= @kto.crit_from, \"krit\", \"popadanie\"))"
+              "expr": "@proverka.success"
+            }
+          },
+          {
+            "key": "krit",
+            "label": "крит",
+            "kind": "boolean",
+            "no": "не крит",
+            "expr": {
+              "expr": "@proverka.success and (@proverka.natural >= @kto.crit_from or (@vplotnuyu == true and @protiv.krit_vplotnuyu >= 1))"
+            }
+          },
+          {
+            "key": "preimuschestvo",
+            "label": "с преимуществом",
+            "kind": "boolean",
+            "no": "без преимущества",
+            "expr": {
+              "expr": "has(@brosok.words, \"advantage\")"
+            }
+          },
+          {
+            "key": "pomeha",
+            "label": "с помехой",
+            "kind": "boolean",
+            "no": "без помехи",
+            "expr": {
+              "expr": "has(@brosok.words, \"disadvantage\")"
             }
           },
           {
@@ -8759,7 +9265,13 @@
               "expr": "@bonus"
             },
             "tags": [
-              "ataka"
+              "ataka",
+              {
+                "expr": "@sposob"
+              },
+              {
+                "expr": "if(@vplotnuyu == true, \"vplotnuyu\", \"\")"
+              }
             ],
             "by": {
               "expr": "@kto"
@@ -9196,6 +9708,31 @@
             "type": "end"
           }
         ]
+      },
+      "crit_double_rule": {
+        "label": "Крит",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Критическое попадание: кости урона бросаются вдвое, прибавки — один раз.",
+        "modifiers": [
+          {
+            "kind": "edit",
+            "call": "roll",
+            "param": "count",
+            "op": "mul",
+            "value": {
+              "expr": "2"
+            },
+            "tags": [
+              "krit"
+            ],
+            "if": {
+              "expr": "@roller == @holder"
+            }
+          }
+        ]
       }
     },
     "grants": [
@@ -9205,7 +9742,8 @@
       "exhaustion_rule",
       "long_rest",
       "slots_rest",
-      "resources_rest"
+      "resources_rest",
+      "crit_double_rule"
     ],
     "sheets": {
       "personazh": {
@@ -9283,6 +9821,11 @@
             }
           }
         ]
+      },
+      "desk": {
+        "label": "Стол",
+        "icon": "🎲",
+        "hint": "Общий стол комнаты: настройки правил, которые выбирает ведущий."
       }
     },
     "tags": {
@@ -9301,13 +9844,138 @@
         ],
         "each": "cel",
         "outputs": [
-          "brosok"
+          {
+            "key": "popal",
+            "kind": "boolean"
+          },
+          {
+            "key": "krit",
+            "kind": "boolean"
+          },
+          {
+            "key": "preimuschestvo",
+            "kind": "boolean"
+          },
+          {
+            "key": "pomeha",
+            "kind": "boolean"
+          }
         ],
         "said": {
           "deystvuyuschiy": "действующий",
           "celi": "цели",
           "cel": "цель",
-          "brosok": "бросок"
+          "popal": "попал",
+          "sposob": "способ",
+          "vplotnuyu": "вплотную",
+          "krit": "крит",
+          "preimuschestvo": "преимущество",
+          "pomeha": "помеха"
+        },
+        "traits": [
+          {
+            "key": "sposob",
+            "from": "reach"
+          },
+          {
+            "key": "vplotnuyu"
+          }
+        ]
+      },
+      "ataka_oruzhiem": {
+        "label": "Атака оружием",
+        "includes": [
+          "ataka"
+        ],
+        "inputs": [
+          {
+            "key": "svoystva",
+            "kind": "choice",
+            "from": "weapon_properties",
+            "many": true
+          },
+          {
+            "key": "dalnost",
+            "kind": "choice",
+            "from": "reach"
+          },
+          {
+            "key": "damage_type",
+            "kind": "choice",
+            "from": "damage_types"
+          }
+        ],
+        "said": {
+          "svoystva": "свойства",
+          "dalnost": "дальность"
+        }
+      },
+      "uron": {
+        "label": "урон",
+        "inputs": [
+          {
+            "key": "list",
+            "kind": "sheet"
+          },
+          {
+            "key": "istochnik",
+            "kind": "sheet"
+          },
+          {
+            "key": "amount",
+            "kind": "number"
+          },
+          {
+            "key": "damage_type",
+            "kind": "choice",
+            "from": "damage_types"
+          },
+          {
+            "key": "ot_krita",
+            "kind": "boolean"
+          }
+        ],
+        "outputs": [
+          {
+            "key": "naneseno",
+            "kind": "number"
+          },
+          {
+            "key": "sverh_nulya",
+            "kind": "number"
+          },
+          {
+            "key": "byl_na_nule",
+            "kind": "boolean"
+          }
+        ],
+        "said": {
+          "list": "лист",
+          "istochnik": "источник",
+          "ot_krita": "от крита",
+          "naneseno": "нанесено",
+          "sverh_nulya": "сверх нуля",
+          "byl_na_nule": "был на нуле"
+        }
+      },
+      "volshebnaya_strela": {
+        "label": "волшебная стрела",
+        "inputs": [
+          {
+            "key": "deystvuyuschiy",
+            "kind": "sheet"
+          },
+          {
+            "key": "celi",
+            "kind": "sheet",
+            "many": true
+          }
+        ],
+        "each": "cel",
+        "said": {
+          "deystvuyuschiy": "действующий",
+          "celi": "цели",
+          "cel": "цель"
         }
       }
     },
@@ -9714,6 +10382,15 @@
         "list": "actions",
         "width": 6,
         "parts": []
+      },
+      {
+        "key": "stol",
+        "label": "Стол",
+        "parts": [
+          {
+            "table": "stol"
+          }
+        ]
       }
     ],
     "pages": [
@@ -10086,7 +10763,7 @@
       {
         "id": "magic_missile",
         "label": "Волшебная стрела",
-        "description": "Три стрелы по 1к4+1 силовым уроном, попадают всегда. Круг выше — ещё стрела.",
+        "description": "Три стрелы по 1к4+1 силовым уроном, попадают всегда; у каждой своя цель, можно все в одну. Круг выше — ещё стрела.",
         "table": "spell_auto",
         "cells": {
           "spell_level": 1,
@@ -10287,17 +10964,14 @@
       {
         "id": "feature_sneak",
         "label": "Скрытая атака",
-        "description": "Раз за ход: дополнительные кости урона, половина уровня округляя вверх.",
-        "bindings": [
-          {
-            "label": "Скрытая атака",
-            "effect": "sneak_attack"
-          }
-        ],
+        "description": "Раз за ход после попадания: дополнительные кости урона, половина уровня округляя вверх. Стол предлагает сам.",
         "table": "feature",
         "cells": {
           "source": "Плут, 1 уровень"
-        }
+        },
+        "grants": [
+          "sneak_attack"
+        ]
       },
       {
         "id": "feature_lay_hands",
@@ -10867,6 +11541,14 @@
           "of": "ogre_club"
         }
       ],
+      "effects": []
+    },
+    {
+      "id": "desk",
+      "systemId": "dnd5e",
+      "name": "Стол",
+      "values": {},
+      "has": [],
       "effects": []
     }
   ]

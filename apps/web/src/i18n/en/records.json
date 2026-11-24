@@ -176,7 +176,8 @@
       "rollEdit": "Roll edits",
       "recordKind": "Books",
       "record": "Records",
-      "roll": "Rolls"
+      "roll": "Rolls",
+      "tag": "Tags"
     },
     "added": "<b>{{label}}</b> — added",
     "undo": "undo",

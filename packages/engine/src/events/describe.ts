@@ -48,21 +48,23 @@ const rollsText = (trace: Record<string, unknown>): string => {
 
 const rolled = (one: Record<string, unknown>): boolean => one.type === 'check' || (one.type === 'roll' && Boolean(one.by));
 
-export function previewLines(system: System, effectId: string, trace: Record<string, unknown>[]): string[] {
-  return inSystemTongue(system, () => previewLinesIn(system, effectId, trace));
+export interface PreviewParts { roll: boolean; versus: boolean }
+
+export function previewLines(system: System, effectId: string, trace: Record<string, unknown>[], parts: PreviewParts = { roll: true, versus: true }): string[] {
+  return inSystemTongue(system, () => previewLinesIn(system, effectId, trace, parts));
 }
 
-function previewLinesIn(system: System, effectId: string, trace: Record<string, unknown>[]): string[] {
+function previewLinesIn(system: System, effectId: string, trace: Record<string, unknown>[], parts: PreviewParts): string[] {
   const shown = trace.filter(one => !one.skipped && (!one.within || rolled(one)));
   const lines: string[] = [];
   for (const one of shown) {
-    if (one.type !== 'roll' || !one.by) continue;
+    if (!parts.roll || one.type !== 'roll' || !one.by) continue;
     const tags = (one.tags as string[] | undefined) ?? [];
     const title = titleOf(tr`Бросок`, tags, system);
     lines.push(`${title}: ${rollsText(one)}${addendsText(addsOf(one))}${one.bonus ? ` + ${one.bonus}` : ''} = ${one.total}`);
   }
   for (const one of shown) {
-    if (one.type !== 'check') continue;
+    if (!parts.versus || one.type !== 'check') continue;
     const words = outcomeWords(system, (one.tags as string[] | undefined) ?? []);
     const forced = one.forced != null ? ` (${forcedWords(Number(one.forced), Boolean(one.success))})` : '';
     const named = typeof one.versusTag === 'string' ? `${tagLabel(system, one.versusTag, system.effects?.[effectId]?.params) ?? one.versusTag} ` : '';

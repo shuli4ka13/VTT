@@ -9,7 +9,7 @@ import { refusalWords } from '../events/refusal.ts';
 import { propsOf, keyOf } from '../model/owned.ts';
 import { entryByKey } from '../model/item-ref.ts';
 import type { Inputs } from '../model/asks.ts';
-import { EngineError, ActRefused, NO_SHEET } from '../engine/errors.ts';
+import { EngineError, ActRefused, NO_SHEET, isRuleError } from '../engine/errors.ts';
 import { render, renderLines } from './render.ts';
 import { External, Pause, emptyJournal } from './external.ts';
 import { Path } from './path.ts';
@@ -17,7 +17,7 @@ import { Run, newSink, reportOf } from './run.ts';
 import { runnerOf, idleTrace } from './steps.ts';
 import { keysOf } from './subs.ts';
 import { cutWords } from './limits.ts';
-import type { Journal, Mode, Question } from './external.ts';
+import type { Journal, Mode, Question, TableRules } from './external.ts';
 import type { Frame, Delivery, Delivered, Claims, Lazy } from './run.ts';
 import type { Bound } from '../engine/refs.ts';
 import type { Entry } from './log.ts';
@@ -51,6 +51,7 @@ export interface ActWorld {
   newId?: () => string;
   declineAll?: boolean;
   mode?: Mode;
+  table?: TableRules;
 }
 
 export type ActOutcome =
@@ -66,7 +67,7 @@ function actIn(world: ActWorld, intent: ActIntent): ActOutcome {
   const mode: Mode = world.mode ?? (world.declineAll ? 'trial' : 'real');
   const journal: Journal = { ...emptyJournal(), ...world.journal, ids: world.journal.ids ?? {} };
   const ext = new External(journal, { die: world.die, ...(world.newId ? { newId: world.newId } : {}) }, mode);
-  const run = new Run({ system, compendium, clock, sheets: world.sheets }, ext);
+  const run = new Run({ system, compendium, clock, sheets: world.sheets, ...(world.table ? { table: world.table } : {}) }, ext);
   const { state } = run;
   const root = Path.op('act');
   try {
@@ -107,12 +108,24 @@ function payOnlyIn(world: ActWorld, intent: ActIntent): void {
   runAct(run, intent, Path.op('act'), 'cost');
 }
 
-export function runAct(run: Run, intent: ActIntent, root: Path, upTo?: 'cost'): void {
+export interface Aim { count: number | null; repeat: boolean }
+
+export function aimOf(world: Pick<ActWorld, 'system' | 'compendium' | 'clock' | 'sheets'>, intent: ActIntent): Aim {
+  return inSystemTongue(world.system, () => {
+    const ext = new External(emptyJournal(), { die: sides => sides }, 'preview');
+    const run = new Run({ system: world.system, compendium: world.compendium, clock: world.clock, sheets: world.sheets }, ext);
+    return runAct(run, { ...intent, toIds: [] }, Path.op('act'), 'aim') ?? { count: null, repeat: false };
+  });
+}
+
+export function runAct(run: Run, intent: ActIntent, root: Path, upTo?: 'cost' | 'aim'): Aim | void {
   const { system, compendium } = run.world;
   const { state } = run;
-  const targets = [...new Set(intent.toIds)];
   const action = actionOf(intent.actionId, { system, compendium });
   const effect = requireEffect(system, action.effect, tr`действие «${action.label}»`);
+  const table = tableOf(effect);
+  const aimed = (effect.params ?? []).find(param => param.kind === 'sheet' && table[param.key] === 'targets');
+  const targets = aimed?.repeat ? [...intent.toIds] : [...new Set(intent.toIds)];
   if (!isPipeline(effect)) {
     throw new EngineError(tr`действие «${action.label}» зовёт пассивный эффект «${effect.label || action.effect}» — его вешают, а не применяют`);
   }
@@ -141,7 +154,6 @@ export function runAct(run: Run, intent: ActIntent, root: Path, upTo?: 'cost'): 
   const item = entry ? { sheet: actor, key: keyOf(entry), record: action.record.id } : undefined;
   const paramDefs = effect.params ?? [];
   const claims: Claims = intent.claims ?? {};
-  const table = tableOf(effect);
 
   const bound: Record<string, Bound> = { [NAMES.holder]: actor };
   for (const param of paramDefs) {
@@ -163,6 +175,18 @@ export function runAct(run: Run, intent: ActIntent, root: Path, upTo?: 'cost'): 
     path, effectId: action.effect, label: action.label, owner, home: actor, bound,
     args, paramDefs, props, ...(item ? { item } : {}), ...(inputs ? { inputs } : {}), claims, hop: 0, inSub: false, ...(bond ? { bond } : {}), ...extra,
   });
+
+  const counted = (): number | null => (aimed?.count ? Math.max(0, Math.floor(run.numberAt(top(root.phase('aim'), tr`цели действия «${action.label}»`), aimed.count, tr`сколько целей`))) : null);
+  if (upTo === 'aim') {
+    try {
+      return { count: counted(), repeat: aimed?.repeat === true };
+    } catch (err) {
+      if (!isRuleError(err)) throw err;
+      return { count: null, repeat: aimed?.repeat === true };
+    }
+  }
+  const limit = counted();
+  if (limit !== null && targets.length > limit) throw new ActRefused(action.label, tr`целей выбрано ${targets.length}, а можно не больше ${limit}`);
 
   if (bond && effect.bond?.if && !run.holdsAt(top(root.phase('bond'), tr`держание «${action.label}»`), effect.bond.if)) bond = undefined;
   const many = Boolean(effect.bond?.many) && bond !== undefined;
@@ -241,10 +265,15 @@ export function runAct(run: Run, intent: ActIntent, root: Path, upTo?: 'cost'): 
     const as = loopOf(paramDefs, each as { of?: unknown })?.key ?? '';
     const list = bound[of];
     const ids = Array.isArray(list) ? list : typeof list === 'string' ? [list] : [];
-    calls = ids.map((to): Delivery => ({
-      ...base, ...(perTarget(to) ? { inputs: perTarget(to) } : {}), steps: steps.slice(split + 1), path: root.at(to), subject: to, bound: { ...bound, [as]: to },
-      seed: shared, ...(Object.keys(rolls).length ? { rolls } : {}), lazy: lazy!, offset: split + 1, lead: sink.trace,
-    }));
+    const met = new Map<string, number>();
+    calls = ids.map((to): Delivery => {
+      const nth = met.get(to) ?? 0;
+      met.set(to, nth + 1);
+      return {
+        ...base, ...(perTarget(to) ? { inputs: perTarget(to) } : {}), steps: steps.slice(split + 1), path: root.at(to).nth(nth), subject: to, bound: { ...bound, [as]: to },
+        seed: shared, ...(Object.keys(rolls).length ? { rolls } : {}), lazy: lazy!, offset: split + 1, lead: sink.trace, ...(nth ? { nth } : {}),
+      };
+    });
   } else {
     calls = [{ ...base, steps, path: root, subject: null, bound }];
   }

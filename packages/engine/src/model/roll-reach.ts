@@ -50,9 +50,9 @@ export function claimWords(system: System): [string, string][] {
   return [...words, ...claimMarks(system)];
 }
 
-export function rollTagReach(system: System, compendium?: Compendium): TagReach {
-  const tags = new Set<string>();
-  let open = false;
+interface Finder { valuesOf: (raw: unknown, scope: Scope) => Values; records: CompendiumRecord[]; book: boolean }
+
+function finderOf(system: System, compendium?: Compendium): Finder {
   const library = new Set((system.library ?? []).map(record => record.id));
   const book = recordsOf(compendium).some(record => !library.has(record.id));
   const records = [...(system.library ?? []), ...recordsOf(compendium).filter(record => !library.has(record.id))];
@@ -121,12 +121,33 @@ export function rollTagReach(system: System, compendium?: Compendium): TagReach 
     return null;
   };
 
-  const take = (raw: unknown, scope: Scope): void => {
-    if (typeof raw === 'string') { if (raw) tags.add(raw); return; }
+  const valuesOf = (raw: unknown, scope: Scope): Values => {
+    if (typeof raw === 'string') return raw ? [raw] : [];
     const expr = raw && typeof raw === 'object' && 'expr' in raw ? String((raw as { expr: unknown }).expr ?? '').trim() : '';
-    if (!expr) return;
-    let found: Values;
-    try { found = nodeValues(compile(expr).ast, scope); } catch { found = null; }
+    if (!expr) return [];
+    try { return nodeValues(compile(expr).ast, scope); } catch { return null; }
+  };
+  return { valuesOf, records, book };
+}
+
+export function stepTagReach(system: System, params: readonly Param[], raw: unknown, compendium?: Compendium): { tags: Set<string>; open: boolean } {
+  const { valuesOf } = finderOf(system, compendium);
+  const tags = new Set<string>();
+  let open = false;
+  for (const tag of Array.isArray(raw) ? raw : []) {
+    const found = valuesOf(tag, { params });
+    if (found === null) open = true;
+    else for (const one of found) if (one) tags.add(one);
+  }
+  return { tags, open };
+}
+
+export function rollTagReach(system: System, compendium?: Compendium): TagReach {
+  const tags = new Set<string>();
+  let open = false;
+  const { valuesOf, records, book } = finderOf(system, compendium);
+  const take = (raw: unknown, scope: Scope): void => {
+    const found = valuesOf(raw, scope);
     if (found === null) open = true;
     else for (const one of found) if (one) tags.add(one);
   };

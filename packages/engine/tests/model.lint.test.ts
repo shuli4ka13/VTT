@@ -195,10 +195,10 @@ group('линт: подписки, круги, входы', () => {
     ok(texts({ on: 'before:' }).some(t => t.includes('такого «что случилось» нет')));
     ok(texts({ on: 'moment:когда-нибудь' }).some(t => t.includes('такого момента нет')));
     ok(texts({ on: 'gained:пусто' }).some(t => t.includes('эффекта «пусто» в системе нет')));
-    eq(texts({ on: 'before:strike', confirm: true }).length, 0, 'спросить перед вызовом — законно');
-    eq(texts({ on: 'after:strike', confirm: true }).length, 0, 'и после — законно');
-    eq(texts({ on: 'done:strike', confirm: true }).length, 0, 'и по завершении — законно');
-    eq(texts({ on: 'seen', confirm: true }).length, 0, 'и «кости выпали» — законно');
+    eq(texts({ on: 'before:strike', confirm: {} }).length, 0, 'спросить перед вызовом — законно');
+    eq(texts({ on: 'after:strike', confirm: {} }).length, 0, 'и после — законно');
+    eq(texts({ on: 'done:strike', confirm: {} }).length, 0, 'и по завершении — законно');
+    eq(texts({ on: 'seen', confirm: {} }).length, 0, 'и «кости выпали» — законно');
     eq(texts({ on: 'before:*' }).length, 0, 'любое действие — законно');
     eq(texts({
       on: 'done:strike', if: { expr: 'count(@цели.hit.success, true) >= 1' },
@@ -399,7 +399,7 @@ group('линт: вопрос «до» у вложенного вызова', ()
     const emit = { type: 'emit', effect: 'шип', args: { жертва: { expr: '@holder' } } } as unknown as Step;
     system.effects.удар = { label: 'Удар', activation: 'manual', params: [WHO] as never, steps: from === 'steps' ? [emit] : [] } as Effect;
     system.effects.шипы = { label: 'Шипы', activation: 'passive', on: from === 'handler' ? [{ on: 'after:удар', steps: [emit] }] : [] } as Effect;
-    system.effects.заслон = { label: 'Заслон', activation: 'passive', on: [{ on: 'before:шип', confirm: true, steps: [] }] } as Effect;
+    system.effects.заслон = { label: 'Заслон', activation: 'passive', on: [{ on: 'before:шип', confirm: {}, steps: [] }] } as Effect;
     return system;
   };
 
@@ -556,7 +556,7 @@ group('линт: правка, не привязанная к носителю',
 group('линт: значение выбора — из его вариантов, для любого шага', () => {
   test('«Докинуть» с «Оставить: лучшая» вместо best — ошибка словами', () => {
     const system = bare();
-    system.effects.удача = { label: 'Удача', activation: 'passive', on: [{ on: 'seen', confirm: true, steps: [{ type: 'roll-add', count: { expr: '1' }, keep: 'лучшая' }] }] } as unknown as Effect;
+    system.effects.удача = { label: 'Удача', activation: 'passive', on: [{ on: 'seen', confirm: {}, steps: [{ type: 'roll-add', count: { expr: '1' }, keep: 'лучшая' }] }] } as unknown as Effect;
     ok(errorTexts(system).some(t => t.includes('оставить: нет варианта «лучшая»')), errorTexts(system).join('|'));
   });
 });
@@ -564,7 +564,7 @@ group('линт: значение выбора — из его варианто�
 group('линт: «Перебросить» — два режима', () => {
   const reacting = (step: Record<string, unknown>): System => {
     const system = bare();
-    system.effects.удача = { label: 'Удача', activation: 'passive', on: [{ on: 'seen', confirm: true, steps: [{ type: 'roll-reroll', ...step }] }] } as unknown as Effect;
+    system.effects.удача = { label: 'Удача', activation: 'passive', on: [{ on: 'seen', confirm: {}, steps: [{ type: 'roll-reroll', ...step }] }] } as unknown as Effect;
     return system;
   };
 
@@ -1015,7 +1015,7 @@ group('линт: слова движка у входов и шагов — «н�
   });
 });
 
-group('линт: подписка «после» видит итоги вызова, «до» и «завершено» — нет', () => {
+group('линт: подписки «до» и «после» видят итоги вызова, «завершено» — нет', () => {
   const called = (): System => {
     const system = withEffect('удар', {
       params: [WHO] as never,
@@ -1030,17 +1030,17 @@ group('линт: подписка «после» видит итоги вызо�
   };
   const dangling = (system: System) => errorTexts(system).filter(t => t.includes('нет ни входа, ни шага'));
 
-  test('heardNames: итоги вызываемого — в именах фазы «после» и только в ней', () => {
+  test('heardNames: итоги вызываемого — в именах фаз «до» (по пробе) и «после», в «завершено» их нет', () => {
     const system = called();
     deepEq(heardNames(system, listenerOf({ on: 'after:удар' })).seeds, ['бросок', 'попал', 'урон', 'tags']);
-    deepEq(heardNames(system, listenerOf({ on: 'before:удар' })).seeds, ['бросок', 'tags']);
+    deepEq(heardNames(system, listenerOf({ on: 'before:удар' })).seeds, ['бросок', 'попал', 'урон', 'tags']);
     ok(!heardNames(system, listenerOf({ on: 'done:удар' })).seeds.includes('попал'));
     deepEq(heardNames(system, listenerOf({ on: 'after:*' })).seeds, []);
   });
 
-  test('голое имя итога в «после» — не «нет ни входа, ни шага»; в «до» — ошибка', () => {
+  test('голое имя итога в «после» и «до» — не «нет ни входа, ни шага»; в «завершено» — ошибка', () => {
     eq(dangling(listening('after:удар')).length, 0, errorTexts(listening('after:удар')).join('|'));
-    eq(dangling(listening('before:удар')).join('|'), '«попал» — нет ни входа, ни шага с таким именем');
+    eq(dangling(listening('before:удар')).length, 0, errorTexts(listening('before:удар')).join('|'));
     eq(dangling(listening('done:удар')).length, 1);
   });
 

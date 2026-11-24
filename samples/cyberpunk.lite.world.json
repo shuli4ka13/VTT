@@ -1331,6 +1331,17 @@
         ],
         "tags": [
           "ataka"
+        ],
+        "returns": [
+          {
+            "key": "popal",
+            "label": "попал",
+            "kind": "boolean",
+            "no": "промах",
+            "expr": {
+              "expr": "@popadanie.success"
+            }
+          }
         ]
       },
       "damage": {
@@ -1827,13 +1838,16 @@
         ],
         "each": "cel",
         "outputs": [
-          "popadanie"
+          {
+            "key": "popal",
+            "kind": "boolean"
+          }
         ],
         "said": {
           "deystvuyuschiy": "действующий",
           "celi": "цели",
           "cel": "цель",
-          "popadanie": "попадание"
+          "popal": "попал"
         }
       }
     },

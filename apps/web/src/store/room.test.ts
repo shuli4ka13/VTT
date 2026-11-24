@@ -37,4 +37,14 @@ describe('стор комнаты: слияние дельт', () => {
     expect(useRoom.getState().room?.sheets.map(sheet => sheet.id)).toEqual(['б']);
     expect(useRoom.getState().mySheetId).toBeNull();
   });
+
+  it('правила стола приходят сообщением и ложатся в комнату; чужой стол их не получает', () => {
+    listenToRoom();
+    const room = { id: 'к', title: 'Стол', members: [], system: { id: 'x', name: 'x', tables: {}, effects: {} }, compendium: { records: [] }, sheets: [], log: [] } as unknown as RoomState;
+    deliver({ type: 'room:state', state: room });
+    deliver({ type: 'room:rules', roomId: 'к', rules: { reactionRolls: true } });
+    expect(useRoom.getState().room?.rules).toEqual({ reactionRolls: true });
+    deliver({ type: 'room:rules', roomId: 'другой', rules: { reactionUseful: true } });
+    expect(useRoom.getState().room?.rules).toEqual({ reactionRolls: true });
+  });
 });

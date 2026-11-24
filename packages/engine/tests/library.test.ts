@@ -108,7 +108,7 @@ describe('бросок внутри готового блока остаётся
   it('вопрос «увидев кости» задаётся игроку и для броска внутри вызова', () => {
     const system = world({
       удар: strike(),
-      удача: { label: 'Удача', activation: 'passive', on: [{ on: 'seen', if: { expr: '@roller == @holder' }, confirm: true, steps: [{ type: 'roll-plus', value: { expr: '10' } }] }] },
+      удача: { label: 'Удача', activation: 'passive', on: [{ on: 'seen', if: { expr: '@roller == @holder' }, confirm: {}, steps: [{ type: 'roll-plus', value: { expr: '10' } }] }] },
     });
     const first = act({ system, compendium: book, clock: null, sheets: [sheet('а', {}, ['удача']), sheet('б')], die: queue(3), journal: emptyJournal() },
       { actionId: 'приём:0', fromId: 'а', toIds: ['б'] });

@@ -2,8 +2,8 @@ import { NAMES } from '../words/names.ts';
 import { endOf, isFlow } from './flow.ts';
 import { ROLL_CALL } from '../words/calls.ts';
 import { holderConditionOf } from './references.ts';
-import { factorsOf, bare, tight } from './amounts.ts';
 import { rolesOf } from './buttons.ts';
+import { tagWords } from '../engine/roll-tags.ts';
 import type { System, Step } from './types.ts';
 import { tr, live } from '../words/tongue.ts';
 import { inSystemTongue } from './localize.ts';
@@ -17,7 +17,7 @@ export const CRIT_OPTIONS: ToggleOption<CritChoice>[] = live([
   { key: 'off', label: 'нет', hint: 'Максимум на кости — просто максимум.' },
   {
     key: 'double', label: 'кости урона вдвое',
-    hint: 'Выпал максимум на проверке — кости следующего «числа» кидаются вдвое, ещё до броска. Так в D&D.',
+    hint: 'Правило «Крит» среди выданного всем: бросок с меткой «крит» кидает вдвое больше костей, прибавки — один раз. Метку ставит бросок «числа» после проверки. Так в D&D.',
   },
   {
     key: 'explode', label: 'взрывная кость',
@@ -39,6 +39,8 @@ export const ARMOR_OPTIONS: ToggleOption<ArmorChoice>[] = live([
 
 export const CRIT_EDIT = 'crit_explode';
 export const CRIT_RULE = 'crit_explode_rule';
+export const CRIT_DOUBLE = 'crit_double_rule';
+export const CRIT_TAG = 'krit';
 export const ARMOR_STEP = NAMES.throughArmor;
 
 const owned = (step: Step): boolean => {
@@ -46,23 +48,13 @@ const owned = (step: Step): boolean => {
   return (by !== undefined && by !== null) || (field !== undefined && field !== null);
 };
 
-const timesOf = (step: Step): { expr?: unknown } | undefined => (step as { times?: { expr?: unknown } }).times ?? undefined;
-
-const repeated = (step: Step): boolean => typeof timesOf(step)?.expr === 'string' && (step as { die?: unknown }).die !== undefined;
-
-const CRIT_KEY = 'krit';
+const repeated = (step: Step): boolean => typeof (step as { times?: { expr?: unknown } }).times?.expr === 'string' && (step as { die?: unknown }).die !== undefined;
 
 const critOfCall = (system: System | undefined, step: Step): string | null => {
   const called = (step as { effect?: unknown }).effect;
   if (step.type !== 'emit' || !step.id || typeof called !== 'string') return null;
   const returns = system?.effects?.[called]?.returns ?? [];
-  if (returns.some(column => column.key === CRIT_KEY)) return `if(@${String(step.id)}.${CRIT_KEY}, 2, 1)`;
-  for (const column of returns) {
-    if (column.kind !== 'choice' || !column.from || column.many) continue;
-    const factor = (system?.tables?.[column.from]?.columns ?? []).find(one => (one.kind ?? 'number') === 'number');
-    if (factor) return `@${String(step.id)}.${column.key}.${factor.key}`;
-  }
-  return null;
+  return returns.some(column => column.key === CRIT_TAG) ? `@${String(step.id)}.${CRIT_TAG}` : null;
 };
 
 const amountsAfterCheck = (steps: Step[], system?: System): { check: Step; amount: Step; crit: string }[] => {
@@ -81,7 +73,7 @@ const amountsAfterCheck = (steps: Step[], system?: System): { check: Step; amoun
     if (check && repeated(step)) { out.push({ check, amount: step, crit }); continue; }
     if (owned(step)) {
       check = step.id ? step : null;
-      crit = check ? `if(@${String(step.id)}.atMax >= 1, 2, 1)` : '';
+      crit = check ? `@${String(step.id)}.atMax >= 1` : '';
       continue;
     }
     if (!check) continue;
@@ -90,84 +82,77 @@ const amountsAfterCheck = (steps: Step[], system?: System): { check: Step; amoun
   return out;
 };
 
-const DOUBLER = /^if\(.*,\s*2\s*,\s*1\s*\)$/;
+const critMark = (crit: string): { expr: string } => ({ expr: `if(${crit}, "${CRIT_TAG}", "")` });
 
-const OUTCOME_COLUMN = /^@([\p{L}\p{N}_]+)\.([\p{L}\p{N}_]+)\.[\p{L}\p{N}_]+$/u;
+const MARK_HEAD = 'if(';
+const MARK_TAIL = `, "${CRIT_TAG}", "")`;
 
-type Doubler = (part: string) => boolean;
-
-const doublerIn = (system: System, steps: readonly Step[]): Doubler => part => {
-  if (DOUBLER.test(part)) return true;
-  const found = OUTCOME_COLUMN.exec(part);
-  const step = found ? steps.find(one => one.type === 'emit' && one.id === found[1]) : undefined;
-  const called = step ? system.effects?.[String((step as { effect?: unknown }).effect)] : undefined;
-  return Boolean(called?.returns?.some(column => column.key === found![2] && column.kind === 'choice' && column.from));
+const balanced = (text: string): boolean => {
+  let depth = 0;
+  for (const char of text) {
+    if (char === '(') depth += 1;
+    if (char === ')') depth -= 1;
+    if (depth < 0) return false;
+  }
+  return depth === 0;
 };
+
+const isCritMark = (tag: unknown): boolean => {
+  const expr = typeof tag === 'object' && tag !== null ? (tag as { expr?: unknown }).expr : undefined;
+  if (typeof expr !== 'string' || !expr.startsWith(MARK_HEAD) || !expr.endsWith(MARK_TAIL)) return false;
+  const condition = expr.slice(MARK_HEAD.length, expr.length - MARK_TAIL.length);
+  return condition.trim() !== '' && balanced(condition);
+};
+
+const unmark = (step: Step): void => {
+  const loose = step as Record<string, unknown>;
+  if (step.type !== 'roll' || !Array.isArray(loose.tags) || !loose.tags.some(isCritMark)) return;
+  const left = loose.tags.filter(tag => !isCritMark(tag));
+  if (left.length) loose.tags = left; else delete loose.tags;
+};
+
+const granted = (system: System, rule: string): boolean => (system.grants ?? []).includes(rule) && Boolean(system.effects[rule]);
 
 export function critOf(system: System): CritChoice {
-  if ((system.grants ?? []).includes(CRIT_RULE) && system.effects[CRIT_RULE]) return 'explode';
-  const doubled = Object.values(system.effects).some(effect =>
-    (effect.steps ?? []).some(step => isDoubling(step as Record<string, unknown>, doublerIn(system, effect.steps ?? []))));
-  return doubled ? 'double' : 'off';
+  if (granted(system, CRIT_RULE)) return 'explode';
+  return granted(system, CRIT_DOUBLE) ? 'double' : 'off';
 }
-
-const isDoubling = (step: Record<string, unknown>, doubler: Doubler): boolean => {
-  if (step.type !== 'roll') return false;
-  const times = timesOf(step as Step)?.expr;
-  if (repeated(step as Step) && typeof times === 'string') return factorsOf(bare(times)).some(part => doubler(bare(part)));
-  if (owned(step as Step)) return false;
-  const count = step.count as { expr?: unknown } | undefined;
-  return typeof count?.expr === 'string' && DOUBLER.test(count.expr);
-};
-
-const withoutDoubler = (step: Record<string, unknown>, doubler: Doubler): void => {
-  const repeat = timesOf(step as Step)?.expr;
-  if (repeated(step as Step) && typeof repeat === 'string') {
-    const left = factorsOf(bare(repeat)).filter(part => !doubler(bare(part)));
-    if (left.length) step.times = { expr: left.length === 1 ? bare(left[0]!) : left.map(tight).join(' * ') };
-    else delete step.times;
-  }
-};
-
-const withDoubler = (step: Record<string, unknown>, crit: string): void => {
-  const repeat = timesOf(step as Step)?.expr;
-  step.times = { expr: typeof repeat === 'string' ? `${tight(repeat)} * ${crit}` : crit };
-};
 
 export function setCrit(draft: System, choice: CritChoice): void {
   inSystemTongue(draft, () => setCritIn(draft, choice));
 }
 
 function setCritIn(draft: System, choice: CritChoice): void {
-  const kept = new Set<Step>();
-  for (const effect of Object.values(draft.effects)) {
-    const doubler = doublerIn(draft, effect.steps ?? []);
-    for (const step of effect.steps ?? []) {
-      const loose = step as Record<string, unknown>;
-      if (!isDoubling(loose, doubler)) continue;
-      if (choice === 'double') { kept.add(step); continue; }
-      const count = (loose.count as { expr?: unknown } | undefined)?.expr;
-      if (typeof count === 'string' && DOUBLER.test(count)) delete loose.count;
-      withoutDoubler(loose, doubler);
-    }
-  }
-  delete draft.effects[CRIT_RULE];
-  draft.grants = (draft.grants ?? []).filter(id => id !== CRIT_RULE);
+  for (const rule of [CRIT_RULE, CRIT_DOUBLE]) delete draft.effects[rule];
+  draft.grants = (draft.grants ?? []).filter(id => id !== CRIT_RULE && id !== CRIT_DOUBLE);
   if (draft.roll_edits?.[CRIT_EDIT]) delete draft.roll_edits[CRIT_EDIT];
+  if (draft.tags?.[CRIT_TAG] && Object.keys(draft.tags[CRIT_TAG]!).every(key => key === 'label')) delete draft.tags[CRIT_TAG];
+  if (draft.tags && !Object.keys(draft.tags).length) delete draft.tags;
+  for (const effect of Object.values(draft.effects)) (effect.steps ?? []).forEach(unmark);
+  const holder = holderConditionOf(draft, ROLL_CALL)!;
 
   if (choice === 'double') {
     for (const effect of Object.values(draft.effects)) {
       for (const { amount, crit } of amountsAfterCheck(effect.steps ?? [], draft)) {
-        if (!kept.has(amount)) withDoubler(amount as Record<string, unknown>, crit);
+        const loose = amount as Record<string, unknown>;
+        const tags = Array.isArray(loose.tags) ? loose.tags as unknown[] : [];
+        if (!tags.some(isCritMark)) loose.tags = [...tags, critMark(crit)];
       }
     }
+    if (!draft.tags?.[CRIT_TAG] && !tagWords(draft).has(CRIT_TAG)) (draft.tags ??= {})[CRIT_TAG] = { label: tr`крит` };
+    draft.effects[CRIT_DOUBLE] = {
+      label: tr`Крит`, activation: 'passive', duration: { kind: 'permanent' },
+      description: tr`Критическое попадание: кости урона бросаются вдвое, прибавки — один раз.`,
+      modifiers: [{ kind: 'edit', call: ROLL_CALL, param: 'count', op: 'mul', value: { expr: '2' }, tags: [CRIT_TAG], if: { expr: holder } }],
+    };
+    draft.grants = [...(draft.grants ?? []), CRIT_DOUBLE];
   }
   if (choice === 'explode') {
     (draft.roll_edits ??= {})[CRIT_EDIT] = { label: tr`Взрывная кость`, ops: [{ op: 'explode' }] };
     draft.effects[CRIT_RULE] = {
       label: tr`Взрывная кость`, activation: 'passive', duration: { kind: 'permanent' },
       description: tr`Кость проверки на максимуме кидается ещё раз, результат прибавляется.`,
-      modifiers: [{ kind: 'edit', call: ROLL_CALL, param: 'edits', edit: CRIT_EDIT, if: { expr: holderConditionOf(draft, ROLL_CALL)! } }],
+      modifiers: [{ kind: 'edit', call: ROLL_CALL, param: 'edits', edit: CRIT_EDIT, if: { expr: holder } }],
     };
     draft.grants = [...(draft.grants ?? []), CRIT_RULE];
   }

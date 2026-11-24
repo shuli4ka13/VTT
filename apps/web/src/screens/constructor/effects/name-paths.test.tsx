@@ -50,8 +50,9 @@ describe('имена из справочной движка', () => {
 
   it('подписка на метку предлагает итоги вызова словами', () => {
     open('shield');
-    expect(within(document).whenOptions()).toContain('Бросок атаки — исход — попал');
+    expect(within(document).whenOptions('в этом эффекте')).toContain('попал');
     expect(text()).not.toContain('@попадание.попал');
+    expect(text()).not.toContain('Бросок атаки — исход');
   });
 
   it('после строки цикла через лист подсказки — её колонки, голой формы нет', () => {

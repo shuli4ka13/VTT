@@ -54,6 +54,7 @@ function play(rooms: RoomsService, roomId: string, entry: Pick<JournalEntry, 'op
     case 'act': return rooms.act(entry.userId, input);
     case 'answer': return rooms.answer(entry.userId, input);
     case 'set': return rooms.setValue(entry.userId, roomId, input.sheetId, input.tag, input.value);
+    case 'rules': return rooms.setRules(entry.userId, roomId, input).then(() => ({ roomId, sheets: [], log: [] }));
     case 'roll': return rooms.rollField(entry.userId, roomId, input.sheetId, input.tag, false, input.claims, input.second, input.versus);
     default: throw new Error(`сценарий не знает хода «${entry.op}»`);
   }

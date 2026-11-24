@@ -17,7 +17,7 @@ describe('namesAt: что видно в каждом месте эффекта',
     expect(names(inside)).toContain('cel');
     expect(names(inside)).toContain('brosok');
     expect(inside.find(one => one.name === 'celi')?.many).toBe(true);
-    expect(inside.find(one => one.name === 'brosok')?.children?.map(c => c.path)).toContain('.ishod.hit');
+    expect(inside.find(one => one.name === 'brosok')?.children?.map(c => c.path)).toContain('.popal');
     expect(inside.find(one => one.name === 'brosok')?.label).toBe('Бросок атаки');
   });
 
@@ -41,24 +41,22 @@ describe('namesAt: что видно в каждом месте эффекта',
   it('«завершено» видит таблицу итогов с колонками шагов внутри цикла', () => {
     const system = { ...dnd, effects: { ...dnd.effects, x: { label: 'x', activation: 'passive', on: [{ on: 'done:strike', steps: [] }] } } } as System;
     const rows = namesAt(system, 'x', { part: 'handler', handler: 0, index: 0 }).find(one => one.name === 'results');
-    expect(rows?.children?.map(c => c.path)).toContain('.brosok.ishod.hit');
+    expect(rows?.children?.map(c => c.path)).toContain('.brosok.popal');
   });
 
-  it('услышанный шаг-вызов даёт итоги вызываемого эффекта: у «Щита» @бросок.исход.hit — фишка, а не сырой текст', () => {
+  it('подписка на метку слышит выходы договора с видом: у «Щита» «попал» — да/нет со словом договора, шагов чужого эффекта нет', () => {
     const inIf = namesAt(dnd, 'shield', { part: 'handler-if', handler: 0 });
-    const hit = inIf.find(one => one.name === 'brosok');
-    expect(hit?.group).toBe('heard');
-    expect(hit?.children?.map(c => c.path)).toEqual(expect.arrayContaining(['.ishod', '.ishod.hit', '.na_kostyah']));
-    expect(hit?.children?.find(c => c.path === '.ishod.hit')).toMatchObject({ label: 'исход — попал', kind: 'boolean' });
+    expect(inIf.find(one => one.name === 'popal')).toMatchObject({ label: 'попал', kind: 'boolean', group: 'heard' });
+    expect(names(inIf)).not.toContain('brosok');
   });
 
   it('то же при подписке прямо на эффект, а не на метку', () => {
     const system = { ...dnd, effects: { ...dnd.effects, x: { label: 'x', activation: 'passive', on: [{ on: 'after:strike', steps: [] }] } } } as System;
     const hit = namesAt(system, 'x', { part: 'handler', handler: 0, index: 0 }).find(one => one.name === 'brosok');
-    expect(hit?.children?.map(c => c.path)).toContain('.ishod.hit');
+    expect(hit?.children?.map(c => c.path)).toContain('.popal');
   });
 
-  it('итоги вызова видны подписке «после» отдельными именами с подписью и видом, в «до» их нет', () => {
+  it('итоги вызова видны подпискам «после» и «до» отдельными именами с подписью и видом', () => {
     const system = {
       ...dnd,
       effects: {
@@ -70,7 +68,7 @@ describe('namesAt: что видно в каждом месте эффекта',
     } as unknown as System;
     const after = namesAt(system, 'после', { part: 'handler-if', handler: 0 }).find(one => one.name === 'урон');
     expect(after).toMatchObject({ name: 'урон', label: 'Урон', kind: 'number', group: 'heard' });
-    expect(names(namesAt(system, 'до', { part: 'handler-if', handler: 0 }))).not.toContain('урон');
+    expect(namesAt(system, 'до', { part: 'handler-if', handler: 0 }).find(one => one.name === 'урон')).toMatchObject({ kind: 'number', group: 'heard' });
   });
 });
 

@@ -37,7 +37,7 @@ const system = {
         { type: 'apply', target: { expr: '@цель.тайна' }, direction: 'add', value: { expr: '1' } },
       ],
     },
-    щит: { label: 'Щит', activation: 'passive', on: [{ on: 'before:удар', if: { expr: '@цель == @holder' }, confirm: true, steps: [] }] },
+    щит: { label: 'Щит', activation: 'passive', on: [{ on: 'before:удар', if: { expr: '@цель == @holder' }, confirm: {}, steps: [] }] },
   },
 };
 

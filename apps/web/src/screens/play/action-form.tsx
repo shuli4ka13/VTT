@@ -3,6 +3,7 @@ import { Button, Field, Input, Select, Verdict } from '../../ui/primitives.tsx';
 import { asksOf, askKindOf, checkInputs, choicesOf, isPerTarget, normalizeInputs, YES_NO, newPass, distanceOf, distanceWords, measuredValue } from '@vtt/engine';
 import type { AskedParam, Inputs } from '@vtt/engine';
 import type { System, Compendium, Sheet, Places } from '@vtt/schema';
+import type { aimOf } from '@vtt/engine';
 import { useT } from '../../i18n/play.ts';
 
 export interface ActionRequest {
@@ -12,7 +13,7 @@ export interface ActionRequest {
 
 type Answer = string | Record<string, string>;
 
-export function ActionForm({ system, compendium, actor, targets = [], actionId, label, disabled, blocked, refuse, onAct, expect, places }: {
+export function ActionForm({ system, compendium, actor, targets = [], actionId, label, disabled, blocked, refuse, onAct, expect, places, aim, picked = 0 }: {
   system: System;
   compendium: Compendium;
   actor?: Sheet;
@@ -25,6 +26,8 @@ export function ActionForm({ system, compendium, actor, targets = [], actionId, 
   onAct: (request: ActionRequest) => void;
   expect?: (request: ActionRequest) => string | null;
   places?: Places;
+  aim?: (request: ActionRequest) => ReturnType<typeof aimOf>;
+  picked?: number;
 }) {
   const t = useT('play');
   const asked = useMemo<AskedParam[]>(() => {
@@ -104,19 +107,36 @@ export function ActionForm({ system, compendium, actor, targets = [], actionId, 
     setTip(text ? t('form.expect', { text }) : null);
   };
 
+  const max = (() => {
+    if (!aim) return null;
+    try { return aim({ actionId, ...(asked.length ? { inputs: normalizeInputs(asked, collect()) } : {}) }).count; } catch { return null; }
+  })();
+  const over = max !== null && picked > max;
+  const count = max === null ? null : (
+    <span className={over ? 'aim-count aim-count--over' : 'aim-count faint'}>
+      {t('form.aimCount', { n: picked, max })}
+    </span>
+  );
+
   if (!asked.length) {
-    return <Button variant="primary" disabled={disabled || Boolean(blocked)} onClick={send} onMouseEnter={guess} title={blocked ?? tip ?? undefined}>{label}</Button>;
+    return <>
+      <Button variant="primary" disabled={disabled || Boolean(blocked) || over} onClick={send} onMouseEnter={guess} title={blocked ?? tip ?? undefined}>{label}</Button>
+      {count}
+    </>;
   }
 
   if (!open) {
     return (
-      <Button
-        variant="primary" disabled={disabled || Boolean(blocked)}
-        title={blocked ?? t('form.willAsk', { list: asked.map(p => p.label ?? p.key).join(', ') })}
-        onClick={() => setOpen(true)}
-      >
-        {label}…
-      </Button>
+      <>
+        <Button
+          variant="primary" disabled={disabled || Boolean(blocked) || over}
+          title={blocked ?? t('form.willAsk', { list: asked.map(p => p.label ?? p.key).join(', ') })}
+          onClick={() => setOpen(true)}
+        >
+          {label}…
+        </Button>
+        {count}
+      </>
     );
   }
 
@@ -157,7 +177,8 @@ export function ActionForm({ system, compendium, actor, targets = [], actionId, 
       })}
       {trouble ? <Verdict tone="bad">{trouble}</Verdict> : null}
       {unpaid ? <Verdict tone="bad">{unpaid}</Verdict> : null}
-      <Button variant="primary" disabled={disabled || Boolean(unpaid)} onClick={send} onMouseEnter={guess} title={unpaid ?? tip ?? undefined}>{label}</Button>
+      {count}
+      <Button variant="primary" disabled={disabled || Boolean(unpaid) || over} onClick={send} onMouseEnter={guess} title={unpaid ?? tip ?? undefined}>{label}</Button>
     </div>
   );
 }

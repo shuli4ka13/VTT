@@ -123,9 +123,13 @@ group('«Свирепый атакующий»', () => {
     deepEq(damage(second).rolls, [2, 3]);
   });
 
-  test('«Скрытая атака» — не кости оружия, вопроса «Свирепого» нет', () => {
-    const r = strike(sheetsWith(['feature_sneak', 'feat_savage']), 'feature_sneak:0', [3, 4, 5], decline, true, { damage_type: 'kolyuschiy' });
-    eq(seen(r).filter(o => o.includes('savage_attacker')).length, 0);
+  test('«Скрытая атака» — не кости оружия: «Свирепого» предлагают один раз, на кости оружия', () => {
+    const sheets = sheetsWith(['rapier', 'feature_sneak', 'feat_savage']);
+    const arven = sheets.find(s => s.id === 'arven')!;
+    arven.values = { ...arven.values, class_name: 'plut' };
+    const r = strike(sheets, 'rapier:0', [15, 1, 4, 5, 6], q => (q.window === 'seen' ? [] : offers(q)), true);
+    ok(r.questions.some(q => offers(q).some(id => id.startsWith('sneak_attack'))), 'скрытая атака предложена');
+    eq(seen(r).filter(o => o.includes('savage_attacker')).length, 1);
   });
 });
 
@@ -136,15 +140,15 @@ group('D&D: слово правки, заявленное к удару, лож�
 
   test('«Преимущество» — две кости у атаки, урон одной костью', () => {
     const log = swing(['advantage'], [15, 1, 1]);
-    ok(/Бросок \(Атака\): \[15, 1\] → 15 \(Преимущество\)/.test(log), log);
+    ok(/Бросок \(Атака[^)]*\): \[15, 1\] → 15 \(Преимущество\)/.test(log), log);
     ok(/урон[^\]]*\): \[1\] \+/.test(log), log);
   });
 
   test('«Бой большим оружием» — 1 на кости урона становится 3, кость атаки не трогает', () => {
     const log = swing(['great_weapon'], [15, 1]);
-    ok(/Бросок \(Атака\): \[15\] \+/.test(log), log);
+    ok(/Бросок \(Атака[^)]*\): \[15\] \+/.test(log), log);
     ok(/\[3\] \(Бой большим оружием\)/.test(log), log);
-    ok(/Бросок \(Атака\): \[2\] \+/.test(swing(['great_weapon'], [2, 1])));
+    ok(/Бросок \(Атака[^)]*\): \[2\] \+/.test(swing(['great_weapon'], [2, 1])));
   });
 
   test('«Надёжный талант» — проверка навыка 3 → 10, удар не трогает: кость урона к8 остаётся 1', () => {

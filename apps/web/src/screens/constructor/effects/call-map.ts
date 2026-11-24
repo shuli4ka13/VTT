@@ -1,4 +1,4 @@
-import { chainsOfEffect, emittedChoices, listenerOf } from '@vtt/engine';
+import { chainsOfEffect, emittedChoices, listenerOf, effectTags } from '@vtt/engine';
 import type { System, Effect } from '@vtt/schema';
 
 export interface CallMap {
@@ -29,7 +29,7 @@ const listens = (effect: Effect, keys: string[]): boolean =>
 export function callMap(system: System, id: string): CallMap {
   const usedBy: CallMap['usedBy'] = [];
   const heardBy: string[] = [];
-  const keys = [id, ...(system.effects?.[id]?.tags ?? [])];
+  const keys = [id, ...effectTags(system, id)];
   for (const [other, effect] of Object.entries(system.effects ?? {})) {
     if (other === id) continue;
     if (callsOf(system, other).includes(id)) usedBy.push({ id: other, book: false });

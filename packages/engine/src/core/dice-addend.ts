@@ -1,7 +1,7 @@
 import { EngineError } from '../engine/errors.ts';
 import { dieConstant } from '../engine/lead-die.ts';
 import { DICE_TEXT } from '../words/glossary.ts';
-import { parse, withCount, start, result } from './dice.ts';
+import { parse, withCount, start, result, times } from './dice.ts';
 import type { Spec, PendingAddend } from './dice.ts';
 import type { System } from '../model/types.ts';
 import { tr } from '../words/tongue.ts';
@@ -39,8 +39,9 @@ export function dieSpec(system: System, die: unknown, count: unknown, read: DieR
 export function dieAddend(label: string, system: System, source: DieSource, read: DieReader): PendingAddend {
   return {
     label,
-    value: die => {
-      const total = result(start(dieSpec(system, source.die, source.count, read, label), [], die)).total;
+    value: (die, factor) => {
+      const spec = dieSpec(system, source.die, source.count, read, label);
+      const total = result(start(factor === undefined || factor === 1 ? spec : times(spec, factor), [], die)).total;
       return source.minus === true ? -total : total;
     },
   };

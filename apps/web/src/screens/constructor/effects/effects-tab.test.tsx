@@ -304,11 +304,11 @@ describe('три вида создания, два вида запуска', () 
     expect(last().on?.[0]).toMatchObject({ on: 'seen' });
 
     pickCombo(screen.getByDisplayValue('срабатывает само'), 'ask');
-    expect(last().on?.[0]).toMatchObject({ on: 'seen', confirm: true });
+    expect(last().on?.[0]).toMatchObject({ on: 'seen', confirm: {} });
 
     pickCombo(kinds, 'call');
     expect(last().on![0]!.on).toBe('before:*');
-    expect(last().on![0]!.confirm).toBe(true);
+    expect(last().on![0]!.confirm).toEqual({});
 
     const phase = screen.getByDisplayValue('до');
     expect(comboOptions(phase).map(o => o.value)).toEqual(['before', 'after', 'done']);

@@ -536,3 +536,130 @@ describe('стол: отказ действия виден у действия',
     expect(actionsCard().textContent).not.toContain('бой не идёт');
   });
 });
+
+describe('стол: цели по счёту и повторы', () => {
+  const sent: unknown[] = [];
+  const original = tableSocket.act.bind(tableSocket);
+  const volley = (repeat: boolean): RoomState => ({
+    ...room(null),
+    system: {
+      id: 'x', name: 'x',
+      tables: {
+        лист: { shape: 'single', owner: 'sheet', columns: [] },
+        стрелы: { shape: 'book', use: 'action', label: 'Стрелы', columns: [], bindings: [{ label: 'Залп', effect: 'залп', args: {} }] },
+      },
+      effects: {
+        залп: {
+          label: 'Залп', activation: 'manual',
+          params: [
+            { key: 'действующий', label: 'Кто действует', kind: 'sheet' },
+            { key: 'круг', label: 'Круг', kind: 'number', min: 1, max: 9, ask: { by: 'actor' } },
+            { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель', label: 'Цель' }, count: { expr: '2 + @круг' }, ...(repeat ? { repeat: true } : {}) },
+          ],
+          steps: [],
+        },
+      },
+    },
+    compendium: { records: [{ id: 'стрелы', table: 'стрелы', label: 'Стрелы', cells: {} }] },
+    sheets: [
+      { id: 'а', systemId: 'x', name: 'Арвен', values: {}, has: [{ of: 'стрелы' }], effects: [] },
+      { id: 'б', systemId: 'x', name: 'Мирра', values: {}, has: [], effects: [] },
+    ],
+  } as unknown as RoomState);
+  const token = (name: string) => screen.getAllByText(name)[0]!.closest('button')!;
+  const aimAt = (name: string, times: number) => { for (let i = 0; i < times; i++) fireEvent.click(token(name)); };
+  beforeEach(() => {
+    sent.length = 0;
+    tableSocket.act = (intent: unknown) => { sent.push(intent); };
+    useSession.setState(state => ({ ...state, userId: 'u' }));
+  });
+  afterEach(() => { cleanup(); tableSocket.act = original; useSession.setState(state => ({ ...state, userId: '' })); });
+
+  it('с повтором щелчок по выбранной цели добавляет ещё выбор, крестик снимает один, в намерении повторы', () => {
+    useRoom.setState(state => ({ ...state, room: volley(true), log: [], error: null }));
+    renderOpen(<TableScreen />);
+    fireEvent.click(token('Арвен'));
+    aimAt('Мирра', 3);
+    expect(screen.getAllByText('по Мирра')).toHaveLength(3);
+    fireEvent.click(screen.getAllByLabelText('убрать')[0]!);
+    expect(screen.getAllByText('по Мирра')).toHaveLength(2);
+    aimAt('Мирра', 1);
+    fireEvent.click(screen.getByText('Стрелы…'));
+    fireEvent.change(screen.getByLabelText('Круг'), { target: { value: '1' } });
+    expect(screen.getByText('выбрано 3 из 3')).toBeTruthy();
+    fireEvent.click(screen.getByText('Стрелы'));
+    expect(sent).toEqual([expect.objectContaining({ actionId: 'стрелы:0', toIds: ['б', 'б', 'б'], inputs: { круг: 1 } })]);
+  });
+
+  it('счёт зависит от ответа формы, сверх счёта кнопка неактивна и сказано почему', () => {
+    useRoom.setState(state => ({ ...state, room: volley(true), log: [], error: null }));
+    renderOpen(<TableScreen />);
+    fireEvent.click(token('Арвен'));
+    aimAt('Мирра', 4);
+    fireEvent.click(screen.getByText('Стрелы…'));
+    const circle = screen.getByLabelText('Круг');
+    fireEvent.change(circle, { target: { value: '1' } });
+    expect(screen.getByText('выбрано 4 из 3').className).toContain('aim-count--over');
+    expect(screen.getByText('целей выбрано 4, а можно не больше 3')).toBeTruthy();
+    expect((screen.getByText('Стрелы').closest('button') as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.change(circle, { target: { value: '2' } });
+    expect(screen.getByText('выбрано 4 из 4')).toBeTruthy();
+    expect((screen.getByText('Стрелы').closest('button') as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it('без повтора щелчок по выбранной цели снимает её, как раньше', () => {
+    useRoom.setState(state => ({ ...state, room: volley(false), log: [], error: null }));
+    renderOpen(<TableScreen />);
+    fireEvent.click(token('Арвен'));
+    aimAt('Мирра', 2);
+    expect(token('Мирра').className).not.toContain('token--to');
+    expect(screen.queryByLabelText('убрать')).toBeNull();
+  });
+});
+
+describe('стол: правила стола', () => {
+  const sent: unknown[] = [];
+  const original = tableSocket.setRules.bind(tableSocket);
+  const as = (role: 'gm' | 'player', rules?: object): RoomState => ({
+    ...room(null), members: [{ userId: 'u', name: 'Я', role }], ...(rules ? { rules } : {}),
+  } as unknown as RoomState);
+  beforeEach(() => {
+    sent.length = 0;
+    tableSocket.setRules = (roomId: string, rules: object) => { sent.push({ roomId, rules }); };
+    useSession.setState(state => ({ ...state, userId: 'u' }));
+  });
+  afterEach(() => { cleanup(); tableSocket.setRules = original; useSession.setState(state => ({ ...state, userId: '' })); });
+
+  it('ведущему виден блок с двумя выключенными переключателями, щелчок шлёт правила', () => {
+    useRoom.setState(state => ({ ...state, room: as('gm', { reactionUseful: true }), log: [], error: null }));
+    renderOpen(<TableScreen />);
+    expect(screen.getByText('Правила стола')).toBeTruthy();
+    const rolls = screen.getByLabelText('Показывать бросок в вопросах реакций') as HTMLInputElement;
+    expect(rolls.checked).toBe(false);
+    expect((screen.getByLabelText('Предлагать реакцию, только когда она меняет исход') as HTMLInputElement).checked).toBe(true);
+    fireEvent.click(rolls);
+    expect(sent).toEqual([{ roomId: 'к', rules: { reactionUseful: true, reactionRolls: true } }]);
+  });
+
+  it('игроку блока нет', () => {
+    useRoom.setState(state => ({ ...state, room: as('player'), log: [], error: null }));
+    renderOpen(<TableScreen />);
+    expect(screen.queryByText('Правила стола')).toBeNull();
+  });
+
+});
+
+describe('стол: вопрос без предпросмотра', () => {
+  beforeEach(() => { useSession.setState(state => ({ ...state, userId: 'u' })); });
+  afterEach(() => { cleanup(); useSession.setState(state => ({ ...state, userId: '' })); });
+  it('рисуется заголовок и кнопки, без пустых строк', () => {
+    useRoom.setState(state => ({
+      ...state, log: [], error: null,
+      room: { ...room(null), pending: { id: 'q', sheetId: 'а', stage: 'step', one: true, question: 'По тебе попали. Щит?', preview: [], options: [{ id: 'да', label: 'Щит' }] } } as unknown as RoomState,
+    }));
+    renderOpen(<TableScreen />);
+    const card = screen.getByText('По тебе попали. Щит?').closest('.card') as HTMLElement;
+    expect(card.querySelectorAll('.faint')).toHaveLength(0);
+    expect(screen.getByText('Щит')).toBeTruthy();
+  });
+});

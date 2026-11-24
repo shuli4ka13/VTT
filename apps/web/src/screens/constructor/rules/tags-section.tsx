@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { System, TagContract } from '@vtt/schema';
-import { tagWords } from '@vtt/engine';
+import { tagWords, rowTables, onSheet } from '@vtt/engine';
 import { Card, CardHead, Field, Fold, Select, Button, DangerButton, Chip, LabelInput } from '../../../ui/primitives.tsx';
 import { freeId, slugOf } from '../../../store/world.ts';
 import { KEYS } from '../factory.ts';
@@ -62,7 +62,7 @@ export function TagsSection({ system, editSystem }: { system: System; editSystem
   );
 }
 
-const namesOf = (tag: TagContract): string[] => [...(tag.inputs ?? []).map(input => input.key), ...(tag.each ? [tag.each] : []), ...(tag.outputs ?? [])];
+const namesOf = (tag: TagContract): string[] => [...(tag.inputs ?? []).map(input => input.key), ...(tag.each ? [tag.each] : []), ...(tag.outputs ?? []).map(output => output.key), ...(tag.traits ?? []).map(trait => trait.key)];
 
 function keyed(draft: TagContract, typed: string, fixed?: string): string {
   const text = typed.trim().replace(/\s+/g, ' ');
@@ -87,6 +87,7 @@ function Contract({ id, tag, system, edit, onDelete }: {
   const t = useT('tables');
   const td = dataT(system);
   const inputs = tag.inputs ?? [];
+  const tables: [string, string][] = rowTables(system).filter(([, table]) => !onSheet(table)).map(([key, table]) => [key, table.label || key]);
   return (
     <Card>
       <CardHead
@@ -104,15 +105,23 @@ function Contract({ id, tag, system, edit, onDelete }: {
                 tidySaid(draft);
               })} />
               <Select<string>
-                value={input.kind === 'sheet' ? (input.many ? 'sheets' : 'sheet') : String(input.kind)}
-                options={[['sheet', t('tag.sheet')], ['sheets', t('tag.sheets')], ['number', t('tag.number')], ['choice', t('tag.choice')]]}
+                value={input.kind === 'sheet' ? (input.many ? 'sheets' : 'sheet') : input.kind === 'choice' && input.many ? 'choices' : String(input.kind)}
+                options={[['sheet', t('tag.sheet')], ['sheets', t('tag.sheets')], ['number', t('tag.number')], ['boolean', t('tag.yesNo')], ['choice', t('tag.choice')], ['choices', t('tag.choices')]]}
                 onChange={next => edit(draft => {
                   const one = draft.inputs?.[index];
                   if (!one) return;
-                  one.kind = next === 'sheets' ? 'sheet' : next as never;
-                  if (next === 'sheets') one.many = true; else delete one.many;
+                  one.kind = next === 'sheets' ? 'sheet' : next === 'choices' ? 'choice' : next as never;
+                  if (next === 'sheets' || next === 'choices') one.many = true; else delete one.many;
+                  if (next === 'choice' || next === 'choices') { if (tables[0]) one.from = one.from ?? tables[0][0]; } else delete one.from;
                 })}
               />
+              {input.kind === 'choice' ? (
+                <Select<string>
+                  value={input.from ?? ''}
+                  options={[...(input.from ? [] : [['', t('tag.pickTable')] as const]), ...tables]}
+                  onChange={next => edit(draft => { const one = draft.inputs?.[index]; if (!one) return; if (next) one.from = next; else delete one.from; })}
+                />
+              ) : null}
               <Button size="sm" variant="ghost" title={t('tag.removeInput')} onClick={() => edit(draft => {
                 draft.inputs = (draft.inputs ?? []).filter((_, at) => at !== index);
                 if (!draft.inputs.length) delete draft.inputs;
@@ -135,12 +144,85 @@ function Contract({ id, tag, system, edit, onDelete }: {
             })} />
           </Field>
           <Field label={t('tag.outputs')} hint={t('tag.outputsHint')}>
-            <LabelInput value={(tag.outputs ?? []).map(one => saidOf(tag, one)).join(', ')} placeholder={t('tag.outputsPlaceholder')}
-              onCommit={next => edit(draft => {
-                const list = next.split(',').map(one => one.trim()).filter(Boolean).map(one => keyed(draft, one));
-                if (list.length) draft.outputs = list; else delete draft.outputs;
-                tidySaid(draft);
-              })} />
+            <div className="stack stack--tight">
+              {(tag.outputs ?? []).map((output, index) => (
+                <div key={index} className="inline inline--tight">
+                  <LabelInput value={saidOf(tag, output.key)} placeholder={t('tag.outputName')} onCommit={next => edit(draft => {
+                    const one = draft.outputs?.[index];
+                    if (!one || !next.trim()) return;
+                    one.key = keyed(draft, next);
+                    tidySaid(draft);
+                  })} />
+                  <Select<string>
+                    value={String(output.kind)}
+                    options={[['boolean', t('tag.yesNo')], ['number', t('tag.number')], ['choice', t('tag.choice')]]}
+                    onChange={next => edit(draft => {
+                      const one = draft.outputs?.[index];
+                      if (!one) return;
+                      one.kind = next as never;
+                      if (next === 'choice') one.from = one.from ?? tables[0]?.[0];
+                      else delete one.from;
+                      if (next === 'choice' && !one.from) delete one.from;
+                    })}
+                  />
+                  {output.kind === 'choice' ? (
+                    <Select<string>
+                      value={output.from ?? ''}
+                      options={tables}
+                      onChange={next => edit(draft => { const one = draft.outputs?.[index]; if (one) one.from = next; })}
+                    />
+                  ) : null}
+                  <Button size="sm" variant="ghost" title={t('tag.removeOutput')} onClick={() => edit(draft => {
+                    draft.outputs = (draft.outputs ?? []).filter((_, at) => at !== index);
+                    if (!draft.outputs.length) delete draft.outputs;
+                    tidySaid(draft);
+                  })}>×</Button>
+                </div>
+              ))}
+              <Button size="sm" onClick={() => edit(draft => {
+                const n = (draft.outputs ?? []).length + 1;
+                (draft.outputs ??= []).push({ key: keyed(draft, td('tables:tag.output', { n }), `itog_${n}`), kind: 'boolean' });
+              })}>{t('tag.addOutput')}</Button>
+            </div>
+          </Field>
+          <Field label={t('tag.traits')} hint={t('tag.traitsHint')}>
+            <div className="stack stack--tight">
+              {(tag.traits ?? []).map((trait, index) => (
+                <div key={index} className="inline inline--tight">
+                  <LabelInput value={saidOf(tag, trait.key)} placeholder={t('tag.traitName')} onCommit={next => edit(draft => {
+                    const one = draft.traits?.[index];
+                    if (!one || !next.trim()) return;
+                    one.key = keyed(draft, next);
+                    tidySaid(draft);
+                  })} />
+                  <Select<string>
+                    value={trait.from === undefined ? 'mark' : 'table'}
+                    options={[['mark', t('tag.traitMark')], ['table', t('tag.traitTable')]]}
+                    onChange={next => edit(draft => {
+                      const one = draft.traits?.[index];
+                      if (!one) return;
+                      if (next === 'table') { if (tables[0]) one.from = tables[0][0]; } else delete one.from;
+                    })}
+                  />
+                  {trait.from !== undefined ? (
+                    <Select<string>
+                      value={trait.from}
+                      options={tables}
+                      onChange={next => edit(draft => { const one = draft.traits?.[index]; if (one) one.from = next; })}
+                    />
+                  ) : null}
+                  <Button size="sm" variant="ghost" title={t('tag.removeTrait')} onClick={() => edit(draft => {
+                    draft.traits = (draft.traits ?? []).filter((_, at) => at !== index);
+                    if (!draft.traits.length) delete draft.traits;
+                    tidySaid(draft);
+                  })}>×</Button>
+                </div>
+              ))}
+              <Button size="sm" onClick={() => edit(draft => {
+                const n = (draft.traits ?? []).length + 1;
+                (draft.traits ??= []).push({ key: keyed(draft, td('tables:tag.trait', { n }), `priznak_${n}`) });
+              })}>{t('tag.addTrait')}</Button>
+            </div>
           </Field>
           <Field label={t('tag.includes')} hint={t('tag.includesHint')}>
             <TagsField

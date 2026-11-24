@@ -92,6 +92,8 @@ describe('вызываемые блоки D&D собираются руками'
     param(ui, 'attack_roll', 0, 'Кто бросает', 'sheet', 'kto', { role: 'actor' });
     param(ui, 'attack_roll', 1, 'Против кого', 'sheet', 'protiv', { role: 'target' });
     param(ui, 'attack_roll', 2, 'Бонус атаки', 'number', 'bonus', { value: '0' });
+    param(ui, 'attack_roll', 3, 'Способ атаки', 'choice', 'sposob', { from: 'reach', optional: true });
+    param(ui, 'attack_roll', 4, 'Вплотную', 'boolean', 'vplotnuyu', { optional: true });
     const at = (k: number) => () => stepCard(new RegExp(`^${k} · `));
     ui.click('+ бросок');
     within(at(1)()).select('Кто бросает', '@kto');
@@ -99,6 +101,11 @@ describe('вызываемые блоки D&D собираются руками'
     within(at(1)()).click('+ прибавка');
     within(at(1)()).formula('Прибавка', '@bonus');
     within(at(1)()).select('Метки', 'ataka');
+    for (const tag of ['@sposob', 'if(@vplotnuyu == true, "vplotnuyu", "")']) {
+      within(at(1)()).select('Метки', ':formula');
+      within(at(1)()).type('Метки', tag);
+      within(at(1)()).click('добавить');
+    }
     nameStep(at(1)(), 'бросок');
     ui.click('+ проверка');
     within(at(2)()).formula('Что проверяем', '@бросок');
@@ -107,7 +114,10 @@ describe('вызываемые блоки D&D собираются руками'
     within(at(2)()).formula('Провал, если на кости не больше', '1');
     nameStep(at(2)(), 'проверка');
     returns([
-      ['исход', 'choice', 'ishod', '=если(не @проверка.success, "promah", если(@проверка.natural >= @kto.crit_from, "krit", "popadanie"))', undefined, 'attack_outcomes'],
+      ['попал', 'boolean', 'popal', 'Проверка — пройдена', 'промах'],
+      ['крит', 'boolean', 'krit', '=@проверка.success и (@проверка.natural >= @kto.crit_from или (@вплотную == true и @protiv.krit_vplotnuyu >= 1))', 'не крит'],
+      ['с преимуществом', 'boolean', 'preimuschestvo', '=есть(@бросок.words, "advantage")', 'без преимущества'],
+      ['с помехой', 'boolean', 'pomeha', '=есть(@бросок.words, "disadvantage")', 'без помехи'],
       ['на костях', 'number', 'na_kostyah', 'Проверка — что выпало на костях, без прибавок'],
     ]);
     dump({ got: built('attack_roll'), goal });

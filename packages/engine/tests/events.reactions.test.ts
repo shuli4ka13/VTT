@@ -18,7 +18,7 @@ const shieldWorld: any = {
     ...system.effects,
     shield: {
       label: 'Щит', activation: 'passive',
-      on: [{ on: 'before:ataka', confirm: true, if: { expr: '@cel == @holder and @hit.success' }, steps: [{ type: 'status', mode: 'apply', effect: 'shield_up', to: { expr: '@holder' } }] }],
+      on: [{ on: 'before:ataka', confirm: {}, if: { expr: '@cel == @holder and @hit.success' }, steps: [{ type: 'status', mode: 'apply', effect: 'shield_up', to: { expr: '@holder' } }] }],
     },
     shield_up: {
       label: 'Под щитом', activation: 'passive', duration: { kind: 'turns', max: 1 },
@@ -82,7 +82,7 @@ group('увидев кости: решил докинуть', () => {
       ...system.effects,
       inspire: {
         label: 'Вдохновение: перебросить', activation: 'passive',
-        on: [{ on: 'seen', confirm: true, if: { expr: '@roller == @holder and @holder.inspiration > 0' }, steps: [{ type: 'apply', target: { expr: '@holder.inspiration' }, direction: 'subtract', value: { expr: '1' } }, { type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
+        on: [{ on: 'seen', confirm: {}, if: { expr: '@roller == @holder and @holder.inspiration > 0' }, steps: [{ type: 'apply', target: { expr: '@holder.inspiration' }, direction: 'subtract', value: { expr: '1' } }, { type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
       },
     },
   };
@@ -161,7 +161,7 @@ group('вопрос «увидев кости» видит факты собст
       ...system.effects,
       inspire: {
         label: 'Вдохновение: перебросить', activation: 'passive',
-        on: [{ on: 'seen', confirm: true, if: { expr: '@roller == @holder' }, steps: [{ type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
+        on: [{ on: 'seen', confirm: {}, if: { expr: '@roller == @holder' }, steps: [{ type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
       },
     },
   };
@@ -200,7 +200,7 @@ group('реакция после разрешения: «на меня поде�
       ...system.effects,
       rebuke: {
         label: 'Возмездие', activation: 'passive',
-        on: [{ on: 'after:strike', confirm: true, if: { expr: '@cel == @holder and @hit.success' }, steps: [{ type: 'apply', target: { expr: '@deystvuyuschiy.hp_current' }, direction: 'subtract', value: { expr: '3' } }] }],
+        on: [{ on: 'after:strike', confirm: {}, if: { expr: '@cel == @holder and @hit.success' }, steps: [{ type: 'apply', target: { expr: '@deystvuyuschiy.hp_current' }, direction: 'subtract', value: { expr: '3' } }] }],
       },
     },
   };

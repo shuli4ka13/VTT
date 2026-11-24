@@ -201,6 +201,14 @@
           {
             "value": "ataka",
             "label": "атака"
+          },
+          {
+            "value": "uron",
+            "label": "урон"
+          },
+          {
+            "value": "krit",
+            "label": "крит"
           }
         ]
       },
@@ -334,48 +342,6 @@
         "shape": "book",
         "use": "action",
         "block": "priemy"
-      },
-      "attack_outcomes": {
-        "label": "Исход атаки",
-        "key": "word",
-        "columns": [
-          {
-            "key": "dice_mul",
-            "label": "множитель костей урона",
-            "kind": "number"
-          },
-          {
-            "key": "hit",
-            "label": "попал",
-            "kind": "boolean"
-          }
-        ],
-        "rows": [
-          {
-            "value": "promah",
-            "label": "промах",
-            "cells": {
-              "dice_mul": 0,
-              "hit": false
-            }
-          },
-          {
-            "value": "popadanie",
-            "label": "попадание",
-            "cells": {
-              "dice_mul": 1,
-              "hit": true
-            }
-          },
-          {
-            "value": "krit",
-            "label": "крит",
-            "cells": {
-              "dice_mul": 2,
-              "hit": true
-            }
-          }
-        ]
       }
     },
     "initiative": {
@@ -482,7 +448,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@brosok.ishod.hit"
+              "expr": "@brosok.popal"
             }
           },
           {
@@ -493,11 +459,20 @@
               "expr": "@weapon_die"
             },
             "times": {
-              "expr": "@deystvuyuschiy.level * @brosok.ishod.dice_mul"
+              "expr": "@deystvuyuschiy.level"
             },
             "bonus": {
               "expr": "@damage_with"
-            }
+            },
+            "by": {
+              "expr": "@deystvuyuschiy"
+            },
+            "tags": [
+              "uron",
+              {
+                "expr": "if(@brosok.krit, \"krit\", \"\")"
+              }
+            ]
           },
           {
             "type": "emit",
@@ -552,6 +527,26 @@
         ],
         "tags": [
           "ataka"
+        ],
+        "returns": [
+          {
+            "key": "popal",
+            "label": "попал",
+            "kind": "boolean",
+            "no": "промах",
+            "expr": {
+              "expr": "@brosok.popal"
+            }
+          },
+          {
+            "key": "krit",
+            "label": "крит",
+            "kind": "boolean",
+            "no": "не крит",
+            "expr": {
+              "expr": "@brosok.krit"
+            }
+          }
         ]
       },
       "monster_attack": {
@@ -610,7 +605,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@brosok.ishod.hit"
+              "expr": "@brosok.popal"
             }
           },
           {
@@ -648,6 +643,26 @@
         ],
         "tags": [
           "ataka"
+        ],
+        "returns": [
+          {
+            "key": "popal",
+            "label": "попал",
+            "kind": "boolean",
+            "no": "промах",
+            "expr": {
+              "expr": "@brosok.popal"
+            }
+          },
+          {
+            "key": "krit",
+            "label": "крит",
+            "kind": "boolean",
+            "no": "не крит",
+            "expr": {
+              "expr": "@brosok.krit"
+            }
+          }
         ]
       },
       "new_round": {
@@ -928,12 +943,21 @@
         ],
         "returns": [
           {
-            "key": "ishod",
-            "label": "исход",
-            "kind": "choice",
-            "from": "attack_outcomes",
+            "key": "popal",
+            "label": "попал",
+            "kind": "boolean",
+            "no": "промах",
             "expr": {
-              "expr": "if(not @proverka.success, \"promah\", if(@proverka.natural >= 20, \"krit\", \"popadanie\"))"
+              "expr": "@proverka.success"
+            }
+          },
+          {
+            "key": "krit",
+            "label": "крит",
+            "kind": "boolean",
+            "no": "не крит",
+            "expr": {
+              "expr": "@proverka.success and @proverka.natural >= 20"
             }
           },
           {
@@ -973,11 +997,37 @@
             }
           }
         ]
+      },
+      "crit_double_rule": {
+        "label": "Крит",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Критическое попадание: кости урона бросаются вдвое, прибавки — один раз.",
+        "modifiers": [
+          {
+            "kind": "edit",
+            "call": "roll",
+            "param": "count",
+            "op": "mul",
+            "value": {
+              "expr": "2"
+            },
+            "tags": [
+              "krit"
+            ],
+            "if": {
+              "expr": "@roller == @holder"
+            }
+          }
+        ]
       }
     },
     "grants": [
       "battle_start",
-      "turn_refresh"
+      "turn_refresh",
+      "crit_double_rule"
     ],
     "sheets": {
       "personazh": {
@@ -1015,13 +1065,21 @@
         ],
         "each": "cel",
         "outputs": [
-          "brosok"
+          {
+            "key": "popal",
+            "kind": "boolean"
+          },
+          {
+            "key": "krit",
+            "kind": "boolean"
+          }
         ],
         "said": {
           "deystvuyuschiy": "действующий",
           "celi": "цели",
           "cel": "цель",
-          "brosok": "бросок"
+          "popal": "попал",
+          "krit": "крит"
         }
       }
     },

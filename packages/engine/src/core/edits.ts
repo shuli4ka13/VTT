@@ -2,7 +2,7 @@ import { NAMES } from '../words/names.ts';
 import { EngineError, isRuleError } from '../engine/errors.ts';
 import { resolveRef, toolsOf } from '../engine/refs.ts';
 import { compile } from '../formula/index.ts';
-import { PLUS_OP } from './dice.ts';
+import { PLUS_OP, MUL_OP } from './dice.ts';
 import type { PendingAddend } from './dice.ts';
 import { hasDie, dieAddend } from './dice-addend.ts';
 import type { System } from '../model/types.ts';
@@ -206,10 +206,18 @@ export function rollEdits(held: Held[], claims: readonly string[], roller: Pass,
   })));
   const dice = held.filter(mod => !mod.edit && (mod as { param?: string }).param === COUNT_PARAM).map(mod => {
     const op = (mod as { op?: unknown }).op;
-    if (op !== 'add') throw new EngineError(tr`правка «${who(mod)}»: кубики к броску только прибавляются, а здесь «${String(op ?? tr`не задано`)}»`);
-    const count = Math.trunc(amountOf(mod));
+    if (op !== 'add' && op !== 'mul') throw new EngineError(tr`правка «${who(mod)}»: кубики к броску прибавляются или умножаются, а здесь «${String(op ?? tr`не задано`)}»`);
+    const amount = amountOf(mod);
+    const count = Math.trunc(amount);
+    if (op === 'mul') {
+      if (count < 0 || count !== amount) throw new EngineError(tr`правка «${who(mod)}»: число костей умножают на целое не меньше нуля, а вышло ${amount}`);
+      return { label: who(mod), ops: [{ op: MUL_OP, by: count }] } as RollEdit & { label: string };
+    }
     return { label: who(mod), ops: [{ op: 'addDie', count }] } as RollEdit & { label: string };
-  }).filter(edit => Number((edit.ops![0] as unknown as { count: number }).count) !== 0);
+  }).filter(edit => {
+    const made = edit.ops![0] as unknown as { op: string; count?: number; by?: number };
+    return made.op === MUL_OP ? made.by !== 1 : Number(made.count) !== 0;
+  });
   const bonuses = held.filter(mod => !mod.edit && (mod as { param?: string }).param !== COUNT_PARAM);
   return {
     edits: [...dice, ...words.map(word => word.edit)],

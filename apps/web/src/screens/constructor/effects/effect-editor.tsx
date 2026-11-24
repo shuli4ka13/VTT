@@ -7,7 +7,7 @@ import { ConditionField } from '../condition-field.tsx';
 import { CallEditor } from '../call-editor.tsx';
 import { TagsField } from '../tags-field.tsx';
 import { useWorld } from '../../../store/world.ts';
-import { newHandler, payStep } from '../factory.ts';
+import { newHandler, payStep, giveContractReturns } from '../factory.ts';
 import { Card, CardHead, Field, Input, Select, DangerButton, LabelInput, Button, TextArea } from '../../../ui/primitives.tsx';
 import { useOpened } from '../../../store/opened.ts';
 import { useModifierRows, AddModifiers } from '../modifiers.tsx';
@@ -131,7 +131,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
                   system={system}
                   value={effect.tags}
                   empty={t('editor.tagsEmpty')}
-                  onChange={next => edit(draft => { const list = next.filter((tag): tag is string => typeof tag === 'string'); if (list.length) draft.tags = list; else delete draft.tags; })}
+                  onChange={next => edit(draft => { const list = next.filter((tag): tag is string => typeof tag === 'string'); if (list.length) draft.tags = list; else delete draft.tags; giveContractReturns(system, draft); })}
                 />
               </span>
               <span data-field={t('editor.iconField')} title={t('editor.iconTitle')}>

@@ -123,7 +123,7 @@ export function finish(step: StepData, ctx: StepContext) {
   const fixed = step.fixed !== undefined && step.fixed !== null ? ctx.optional(step.fixed, tr`формула броска`) ?? 0 : 0;
   const base: RollResult = thrown ? thrown.result : {
     total: 0, natural: 0, rolled: 0, atMax: 0, atMin: 0,
-    edited: false, dice: { rolls: [], kept: null }, parts: {}, tags,
+    edited: false, dice: { rolls: [], kept: null }, parts: {}, tags, words: [],
   };
   const total = (thrown ? thrown.result.total : 0) + fixed + bonus;
   const roll: Rolled = {

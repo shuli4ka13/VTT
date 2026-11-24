@@ -100,17 +100,18 @@ group('кусок доводит до игры', () => {
   });
 });
 
-group('подписка на эффект — слабая ссылка', () => {
+group('подписка куска не тащит чужое', () => {
   const take = (...ids: string[]) => ids.reduce((system, id) => bringPiece(system, PIECES.find(p => p.id === id)!).system, empty());
 
-  test('«Кости двойственности» слушают атаку, но не тащат её за собой', () => {
-    ok(!take('dh-duality').effects.hero_attack);
+  test('«Кости двойственности» слушают бросок по метке и атаку за собой не тащат', () => {
+    const system = take('dh-duality');
+    ok(!system.effects.hero_attack);
+    ok((system.effects.duality!.on ?? []).every(h => h.on === 'rolled'));
   });
 
-  test('атака, пришедшая другим куском, подхватывается подпиской сама', () => {
+  test('атака, пришедшая другим куском, слышна той же подпиской — «Проблемы» чистые', () => {
     const system = take('dh-duality', 'dh-weapons');
     ok(system.effects.hero_attack);
-    ok((system.effects.duality!.on ?? []).some(h => h.on === 'done:hero_attack'));
     deepEq(errorsOf(lintSystem(system)).map(e => e.text), []);
   });
 });

@@ -149,7 +149,7 @@ describe('«когда»: фраза называет итог вызова сл
         удар: { ...system.effects.удар, steps: [...(system.effects.удар as { steps: unknown[] }).steps, { id: 'попадание', type: 'emit', effect: 'бросок' }] },
       },
     } as unknown as System;
-    const handler = { on: 'before:удар', if: { expr: '@попадание.попал' }, confirm: true, steps: [] } as Handler;
+    const handler = { on: 'before:удар', if: { expr: '@попадание.попал' }, confirm: {}, steps: [] } as Handler;
     const withHandler = { ...called, effects: { ...called.effects, r: { ...called.effects.r, on: [handler] } } } as System;
     render(<HandlerCard id="r" index={0} handler={handler} system={withHandler} onRemove={() => {}} edit={() => {}} />);
     openAll();

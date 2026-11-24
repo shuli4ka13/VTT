@@ -48,6 +48,7 @@ export const STEP_WORDS = live({
       { path: '.atMin', label: 'сколько костей легло единицей', kind: 'number' },
       { path: '.dice.rolls', label: 'что выпало на каждой кости', kind: 'list' },
       { path: '.edited', label: 'да или нет: правили', kind: 'boolean' },
+      { path: '.words', label: 'какие слова правок сработали', kind: 'list' },
       { path: '.success', label: 'да или нет: пройден', kind: 'boolean', onlyWith: 'field' },
       { path: '.margin', label: 'степени успеха числом', kind: 'number', onlyWith: 'field' },
       { path: '.degree', label: 'какая ступень успеха', kind: 'text', onlyWith: 'field' },
@@ -276,6 +277,7 @@ export const STEP_WORDS = live({
     slots: [
       { key: 'effect', label: 'Кого зовём', kind: 'event', main: true, required: true, allow: [] },
       { key: 'args', label: 'Что передаётся', kind: 'args', main: true, allow: [] },
+      { key: 'tags', label: 'Метки вызова', kind: 'tags', allow: [] },
     ],
     outputs: [
       { path: '.incoming', label: 'сколько передали', kind: 'number' },

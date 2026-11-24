@@ -13,17 +13,23 @@ export const emptyJournal = (): Journal => ({ dice: {}, answers: {}, ids: {} });
 
 export type Mode = 'real' | 'trial' | 'preview';
 
-export interface Offer { id: string; label: string }
+export interface Offer { id: string; label: string; text?: string }
+
+export const QUIET = '~quiet';
+
+export interface TableRules { reactionRolls?: boolean; reactionUseful?: boolean }
 
 export interface Question {
   key: string;
   sheetId: string;
   window: Window;
   label: string;
+  text?: string;
   offers: Offer[];
   results: Record<string, unknown>;
   preview: string[];
   one?: boolean;
+  mute?: boolean;
 }
 
 export class Pause {

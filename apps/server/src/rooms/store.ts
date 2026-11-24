@@ -1,5 +1,5 @@
 import type { DatabaseSync } from 'node:sqlite';
-import type { Sheet, ClockState, LogEntry, Places } from '@vtt/schema';
+import type { Sheet, ClockState, LogEntry, Places, TableRules } from '@vtt/schema';
 import type { Member } from '@vtt/engine';
 
 export interface RoomRow { id: string; title: string; worldId: string; system: string; compendium: string }
@@ -45,6 +45,16 @@ export class RoomStore {
     if (Object.keys(places).length) this.raw.prepare('INSERT INTO room_places (room_id, data) VALUES (?, ?)').run(roomId, JSON.stringify(places));
   }
 
+  rules(roomId: string): TableRules {
+    const row = this.raw.prepare('SELECT data FROM room_rules WHERE room_id = ?').get(roomId) as { data: string } | undefined;
+    return row ? JSON.parse(row.data) as TableRules : {};
+  }
+
+  saveRules(roomId: string, rules: TableRules): void {
+    this.raw.prepare('DELETE FROM room_rules WHERE room_id = ?').run(roomId);
+    if (Object.keys(rules).length) this.raw.prepare('INSERT INTO room_rules (room_id, data) VALUES (?, ?)').run(roomId, JSON.stringify(rules));
+  }
+
   pending<T>(roomId: string): (T & { id: string }) | null {
     const row = this.raw.prepare('SELECT id, data FROM room_pending WHERE room_id = ?').get(roomId) as { id: string; data: string } | undefined;
     return row ? { ...(JSON.parse(row.data) as T), id: row.id } : null;
@@ -63,7 +73,7 @@ export class RoomStore {
   close(roomId: string): void {
     this.raw.exec('BEGIN');
     try {
-      for (const table of ['room_sheets', 'room_clocks', 'room_places', 'room_pending', 'room_journal', 'members', 'log_entries']) {
+      for (const table of ['room_sheets', 'room_clocks', 'room_places', 'room_rules', 'room_pending', 'room_journal', 'members', 'log_entries']) {
         this.raw.prepare(`DELETE FROM ${table} WHERE room_id = ?`).run(roomId);
       }
       this.raw.prepare('DELETE FROM rooms WHERE id = ?').run(roomId);

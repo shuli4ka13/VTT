@@ -68,6 +68,11 @@ export const roomPlaces = sqliteTable('room_places', {
   data: text('data').notNull(),
 });
 
+export const roomRules = sqliteTable('room_rules', {
+  roomId: text('room_id').primaryKey(),
+  data: text('data').notNull(),
+});
+
 export const roomPending = sqliteTable('room_pending', {
   id: text('id').primaryKey(),
   roomId: text('room_id').notNull(),

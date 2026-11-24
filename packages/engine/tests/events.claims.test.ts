@@ -160,7 +160,7 @@ group('правка после того, как бросок увиден: вы�
     вдохновение: {
       label: 'Вдохновение: перебросить', activation: 'passive',
       on: [{
-        on: 'seen', confirm: true, if: { expr: '@roller == @holder and @holder.вдохновение > 0' },
+        on: 'seen', confirm: {}, if: { expr: '@roller == @holder and @holder.вдохновение > 0' },
         steps: [
           { type: 'apply', target: { expr: '@holder.вдохновение' }, direction: 'subtract', value: { expr: '1' } },
           { type: 'roll-add', count: { expr: '1' }, keep: 'best' },

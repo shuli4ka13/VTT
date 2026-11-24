@@ -9,7 +9,7 @@ import type { SheetPart } from '@vtt/schema';
 import { basedOn } from './inherit.ts';
 import { cancels } from './cancels.ts';
 
-export type PartKind = 'field' | 'group' | 'block' | 'effect' | 'table' | 'constant' | 'rollEdit' | 'recordKind' | 'record' | 'roll';
+export type PartKind = 'field' | 'group' | 'block' | 'effect' | 'table' | 'constant' | 'rollEdit' | 'recordKind' | 'record' | 'roll' | 'tag';
 
 export interface Part { kind: PartKind; key: string }
 
@@ -99,7 +99,8 @@ export function dependencies(donor: System): (part: Part) => Part[] {
     const toTable = (pathed || (ref.kind === 'step' && !dotted)) && Boolean(donor.tables?.[head]);
     const toField = pathed && !toTable && has(head);
     const counter = ref.kind === 'field' && !has(ref.key) && Boolean(donor.effects?.[ref.key]);
-    const kind = ref.kind === 'roll' || toTable ? 'table' : dotted || toField ? 'field' : counter ? 'effect' : REF_PARTS[ref.kind];
+    const word = ref.kind === 'tag' && !rows.has(ref.key) && Boolean(donor.tags?.[ref.key]);
+    const kind = ref.kind === 'roll' || toTable ? 'table' : dotted || toField ? 'field' : counter ? 'effect' : word ? 'tag' : REF_PARTS[ref.kind];
     const key = ref.kind === 'roll' ? rows.get(ref.key) : toTable || toField ? head : ref.key;
     if (!kind || !key) continue;
     const list = byOwner.get(partKey(owner)) ?? [];
@@ -136,6 +137,16 @@ export function dependencies(donor: System): (part: Part) => Part[] {
         if (field.cell?.table === part.key) out.push(...byOwner.get(partKey({ kind: 'field', key: field.tag })) ?? []);
       }
     }
+    if (part.kind === 'effect') {
+      for (const tag of donor.effects?.[part.key]?.tags ?? []) if (donor.tags?.[tag]) out.push({ kind: 'tag', key: tag });
+    }
+    if (part.kind === 'tag') {
+      const contract = donor.tags?.[part.key];
+      for (const included of contract?.includes ?? []) if (donor.tags?.[included]) out.push({ kind: 'tag', key: included });
+      for (const one of [...(contract?.inputs ?? []), ...(contract?.outputs ?? []), ...(contract?.traits ?? [])]) {
+        if (one.from && donor.tables?.[one.from]) out.push({ kind: 'table', key: one.from });
+      }
+    }
     if (part.kind === 'rollEdit') {
       for (const other of Object.keys(donor.roll_edits ?? {})) {
         if (cancels(donor.roll_edits ?? {}, part.key, other)) out.push({ kind: 'rollEdit', key: other });
@@ -168,6 +179,7 @@ const exists = (system: System, part: Part): boolean => {
     case 'constant': return Boolean(system.constants?.[part.key]);
     case 'rollEdit': return Boolean(system.roll_edits?.[part.key]);
     case 'roll': return Boolean(system.rolls?.[part.key]);
+    case 'tag': return Boolean(system.tags?.[part.key]);
     case 'recordKind': return Boolean(kindOf(system, part.key));
     case 'record': return (system.library ?? []).some(record => record.id === part.key);
   }
@@ -218,6 +230,7 @@ function copyPart(target: System, donor: System, part: Part): void {
       return;
     case 'record': (target.library ??= []).push(clone(donor.library!.find(record => record.id === part.key)!)); return;
     case 'roll': return;
+    case 'tag': (target.tags ??= {})[part.key] = clone(donor.tags![part.key]!); return;
   }
 }
 

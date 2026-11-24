@@ -15,7 +15,7 @@ export type Scope = { part: string } | 'unnamed' | 'main';
 
 export interface Keep { n: number; from: 'best' | 'worst'; scope: Scope }
 
-export interface Claim { terms: Term[]; read: ReadSpec; keeps: Keep[]; versusShift: number; degreeShift: number }
+export interface Claim { terms: Term[]; read: ReadSpec; keeps: Keep[]; versusShift: number; degreeShift: number; factor?: number }
 
 export interface Rolled {
   id: number;
@@ -36,10 +36,11 @@ export interface Addend {
 
 export interface PendingAddend {
   label: string;
-  value: (die: Die) => number;
+  value: (die: Die, factor?: number) => number;
 }
 
 export const PLUS_OP = 'plus';
+export const MUL_OP = 'mulDice';
 
 export interface Roll {
   claim: Claim;
@@ -49,6 +50,7 @@ export interface Roll {
   canceled?: string[];
   addends: Addend[];
   tags: string[];
+  words?: string[];
   exploded: boolean;
 }
 
@@ -62,6 +64,7 @@ export interface RollResult {
   dice: { rolls: number[]; kept: number | null };
   parts: Record<string, number>;
   tags: string[];
+  words: string[];
 }
 
 
@@ -254,7 +257,7 @@ const RESULT: Record<string, ResultOp> = {
 const stageOf = (op: RollEditOp): 'claim' | 'result' | 'plus' => {
   const name = String(op.op);
   if (name === PLUS_OP) return 'plus';
-  if (name in CLAIM) return 'claim';
+  if (name === MUL_OP || name in CLAIM) return 'claim';
   if (name in RESULT) return 'result';
   throw new EngineError(tr`неизвестная правка броска «${op.op}»; есть: ${[...Object.keys(CLAIM), ...Object.keys(RESULT), PLUS_OP].join(', ')}`);
 };
@@ -289,11 +292,14 @@ export const nextId = (dice: readonly Rolled[]): (() => number) => {
 
 export function claimOf(spec: Spec, edits: readonly RollEdit[]): Claim {
   let claim: Claim = { terms: spec.terms, read: spec.read, keeps: [...(spec.keeps ?? [])], versusShift: 0, degreeShift: 0 };
+  let factor = 1;
   for (const edit of edits) {
     for (const op of edit.ops ?? []) {
-      if (stageOf(op) === 'claim') claim = CLAIM[String(op.op)]!(claim, op);
+      if (op.op === MUL_OP) factor *= Math.max(0, Math.floor(num(op.by, 1)));
+      else if (stageOf(op) === 'claim') claim = CLAIM[String(op.op)]!(claim, op);
     }
   }
+  if (factor !== 1) claim = { ...claim, terms: claim.terms.map(term => ({ ...term, count: term.count * factor })), factor };
   return spec.zero ? zeroed(claim, spec.zero) : claim;
 }
 
@@ -347,7 +353,7 @@ export function addTo(roll: Roll, pending: readonly PendingAddend[], die: Die): 
       const face = die(sides);
       dice.push({ sides, value: face });
       return face;
-    });
+    }, roll.claim.factor);
     if (!Number.isFinite(value)) throw new EngineError(tr`прибавка «${one.label}» дала не число`);
     return { label: one.label, value, dice };
   }));
@@ -435,6 +441,7 @@ export function result(roll: Roll): RollResult {
     dice: { rolls: roll.dice.map(d => d.value), kept: single },
     parts,
     tags: [...roll.tags],
+    words: [...(roll.words ?? [])],
   };
 }
 

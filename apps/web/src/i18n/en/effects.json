@@ -234,6 +234,25 @@
     "holderTip": "The holder is the sheet this trigger hangs on.",
     "decision": "Decision",
     "auto": "automatic",
-    "asks": "the holder's player decides"
+    "asks": "the holder's player decides",
+    "ask": {
+      "summary": "question words, what to show, who is asked",
+      "question": "Question words",
+      "questionHint": "empty: ask in the words of the event",
+      "questionPlaceholder": "for example: Shield?",
+      "to": "Who is asked",
+      "toHolder": "the holder",
+      "toActor": "the actor",
+      "toTarget": "the target",
+      "toGm": "the GM",
+      "show": "What to show",
+      "showHint": "none ticked: nothing but the words in the question",
+      "shows": {
+        "actor": "who acts",
+        "action": "what they do",
+        "roll": "the roll",
+        "versus": "against what"
+      }
+    }
   }
 }

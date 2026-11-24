@@ -63,7 +63,7 @@ group('увидев кости', () => {
       вдохновение: {
         label: 'Вдохновение', activation: 'passive',
         on: [{
-          on: 'seen', confirm: true, if: { expr: mine },
+          on: 'seen', confirm: { show: ['roll'] }, if: { expr: mine },
           cost: [{ type: 'apply', target: { expr: '@holder.удача' }, direction: 'subtract', value: { expr: '1' } }],
           steps: [{ type: 'roll-add', count: { expr: '1' }, keep: 'best' }],
         }],
@@ -87,7 +87,7 @@ group('увидев кости', () => {
       вдохновение: {
         label: 'Героическое вдохновение', activation: 'passive',
         on: [{
-          on: 'seen', confirm: true, if: { expr: mine },
+          on: 'seen', confirm: { show: ['roll'] }, if: { expr: mine },
           cost: [{ type: 'apply', target: { expr: '@holder.удача' }, direction: 'subtract', value: { expr: '1' } }],
           steps: [{ type: 'roll-reroll', which: 'lowest' }],
         }],
@@ -119,7 +119,7 @@ group('увидев кости', () => {
     const system = world({
       точная: {
         label: 'Точная', activation: 'passive',
-        on: [{ on: 'seen', confirm: true, if: { expr: `${mine} and @roll.total < 13` }, steps: [{ type: 'roll-plus', die: { expr: '1d6' } }] }],
+        on: [{ on: 'seen', confirm: { show: ['roll'] }, if: { expr: `${mine} and @roll.total < 13` }, steps: [{ type: 'roll-plus', die: { expr: '1d6' } }] }],
       },
     });
     (system.effects.удар!.steps as unknown[])[1] = roll({ bonus: { expr: '8' } });
@@ -179,7 +179,7 @@ group('увидев кости на броске по полю листа', () =
     const { perform } = await import('../src/core/perform.ts');
     const system = world({
       везунчик: { label: 'Везунчик', activation: 'passive', on: [{ on: 'seen', if: { expr: mine }, steps: [{ type: 'roll-reroll', upTo: { expr: '1' } }] }] },
-      вдохновение: { label: 'Вдохновение', activation: 'passive', on: [{ on: 'seen', confirm: true, if: { expr: mine }, steps: [{ type: 'roll-plus', value: { expr: '10' } }] }] },
+      вдохновение: { label: 'Вдохновение', activation: 'passive', on: [{ on: 'seen', confirm: { show: ['roll'] }, if: { expr: mine }, steps: [{ type: 'roll-plus', value: { expr: '10' } }] }] },
     });
     const field = { ...system, tables: { ...system.tables, лист: { ...(system.tables as never as Record<string, { columns: unknown[] }>).лист, columns: [...(system.tables as never as Record<string, { columns: unknown[] }>).лист.columns, { key: 'ловкость', label: 'Ловкость', kind: 'number', default: 0 }] } }, rolls: { атака: { die: 'к20', fields: [{ table: 'лист', column: 'ловкость' }] } } } as never;
     const sheets = [sheet('а', ['везунчик', 'вдохновение'])];
@@ -197,7 +197,7 @@ group('увидев кости на броске по полю листа', () =
 group('наблюдатели: реакции третьих лиц', () => {
   test('бард видит бросок врага по союзнику и режет его — вопрос задают барду', () => {
     const system = world({
-      насмешка: { label: 'Язвительная насмешка', activation: 'passive', on: [{ on: 'seen', confirm: true, if: { expr: '@roller != @holder' }, steps: [{ type: 'roll-plus', value: { expr: '-5' } }] }] },
+      насмешка: { label: 'Язвительная насмешка', activation: 'passive', on: [{ on: 'seen', confirm: { show: ['roll'] }, if: { expr: '@roller != @holder' }, steps: [{ type: 'roll-plus', value: { expr: '-5' } }] }] },
     });
     const sheets = [sheet('а'), sheet('б'), sheet('бард', ['насмешка'])];
     const first = play(system, sheets, [12]);
@@ -233,7 +233,7 @@ group('ожидание для кнопки', () => {
   test('кости по среднему, на вопросы «нет», листы не тронуты', async () => {
     const { expectAction } = await import('../src/events/trial.ts');
     const system = world({
-      вдохновение: { label: 'Вдохновение', activation: 'passive', on: [{ on: 'seen', confirm: true, if: { expr: mine }, steps: [{ type: 'roll-plus', value: { expr: '-20' } }] }] },
+      вдохновение: { label: 'Вдохновение', activation: 'passive', on: [{ on: 'seen', confirm: { show: ['roll'] }, if: { expr: mine }, steps: [{ type: 'roll-plus', value: { expr: '-20' } }] }] },
     });
     const sheets = [sheet('а', ['вдохновение']), sheet('б')];
     const out = expectAction({ system, compendium: book, clock: null }, sheets, { actionId: 'приём:0', fromId: 'а', toIds: ['б'] });
@@ -284,7 +284,7 @@ group('ядро: по ревью', () => {
   test('две выбранные реакции на один ресурс: вторая пропускается с причиной, действие не падает', () => {
     const shield = (label: string) => ({
       label, activation: 'passive',
-      on: [{ on: 'before:удар', confirm: true, if: { expr: '@цель == @holder' }, cost: [
+      on: [{ on: 'before:удар', confirm: { show: ['roll'] }, if: { expr: '@цель == @holder' }, cost: [
         { id: 'есть', type: 'check', value: { expr: '@holder.удача' }, versus: { expr: '1' } },
         { type: 'branch', if: { expr: 'not @есть.success' } }, { type: 'stop', note: { expr: '"нет удачи"' } }, { type: 'end' },
         { type: 'apply', target: { expr: '@holder.удача' }, direction: 'subtract', value: { expr: '1' } }], steps: [] }],
@@ -344,7 +344,7 @@ group('ядро: по ревью Fable', () => {
   });
 
   test('повтор id в ответе выполняет реакцию один раз', () => {
-    const system = world({ вд: { label: 'Вд', activation: 'passive', on: [{ on: 'seen', confirm: true, if: { expr: mine }, steps: [{ type: 'roll-plus', value: { expr: '3' } }] }] } });
+    const system = world({ вд: { label: 'Вд', activation: 'passive', on: [{ on: 'seen', confirm: { show: ['roll'] }, if: { expr: mine }, steps: [{ type: 'roll-plus', value: { expr: '3' } }] }] } });
     const sheets = [sheet('а', ['вд']), sheet('б')];
     const first = play(system, sheets, [5]);
     if (first.kind !== 'paused') { ok(false, 'ждали вопрос'); return; }

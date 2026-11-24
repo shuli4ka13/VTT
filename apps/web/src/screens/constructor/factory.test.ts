@@ -6,7 +6,7 @@ import { SAMPLE_SYSTEMS } from '@vtt/engine/samples';
 import { emptySystem } from '../../store/world.ts';
 import {
   newEffect, newColumn, newRecordKind, newBinding, newProp, newDie, newRollEdit, newTable, newCost, namedStep,
-  BRICKS, SEEN_BRICKS,
+  BRICKS, SEEN_BRICKS, giveContractReturns,
 } from './factory.ts';
 import { newGroup } from './groups.ts';
 import { useLocale } from '../../store/locale.ts';
@@ -105,9 +105,11 @@ describe('новый эффект подходит под договор мет�
     effect.steps = [...brick('each').make(dnd, taken(), effect, [])];
     effect.steps.push(...brick('roll').make(dnd, taken(), effect, []));
     effect.tags = ['ataka'];
+    giveContractReturns(dnd, effect);
     dnd.effects[made.key] = effect;
     const told = lintSystem(dnd).filter(problem => problem.where.tab === 'effects' && problem.where.effect === made.key).map(problem => problem.text);
     expect(told.filter(text => text.startsWith('метка «Атака» требует'))).toEqual([]);
+    expect(lintSystem(dnd).filter(problem => problem.where.tab === 'effects' && problem.where.effect === made.key && (problem.where as { part?: string }).part === 'returns')).toEqual([]);
   });
 });
 

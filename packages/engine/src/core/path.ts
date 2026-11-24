@@ -32,6 +32,8 @@ export class Path {
 
   pick(id: string): Path { return this.add('pick', id); }
 
+  to(sheetId: string): Path { return this.add('to', sheetId); }
+
   pay(): Path { return this.add('pay'); }
 
   nth(n: number): Path { return n ? this.add('n', n) : this; }

@@ -63,7 +63,8 @@ function wordOptions(system: System, edits: [string, { label?: string; ops?: unk
 }
 
 const rollParamHint = (key: string): string | undefined => {
-  if (key === 'count' || key === 'bonus' || key === 'threshold') return t('fields:mod.hint.sum');
+  if (key === 'count') return t('fields:mod.hint.count');
+  if (key === 'bonus' || key === 'threshold') return t('fields:mod.hint.sum');
   if (key === 'tags') return t('fields:mod.hint.tag');
   return undefined;
 };
@@ -314,9 +315,9 @@ function EditBody({ system, modifier, calls, edits, recipes, names, onChange, on
   });
   const number = (
     <>
-      {isRoll ? null : (
+      {isRoll && m.param !== 'count' ? null : (
         <Field label={t('mod.how')}>
-          <Select value={String(m.op ?? 'add')} options={ops()} onChange={op => onChange(d => { d.op = op; })} />
+          <Select value={String(m.op ?? 'add')} options={isRoll ? ops().slice(0, 2) : ops()} onChange={op => onChange(d => { d.op = op; })} />
         </Field>
       )}
       {isRoll && m.param === 'bonus' ? (

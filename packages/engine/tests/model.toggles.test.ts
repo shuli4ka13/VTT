@@ -1,5 +1,5 @@
 import { group, test, eq, ok, deepEq } from './harness.ts';
-import { critOf, setCrit, armorOf, setArmor, armorTail, CRIT_RULE, CRIT_EDIT } from '../src/model/toggles.ts';
+import { critOf, setCrit, armorOf, setArmor, armorTail, CRIT_RULE, CRIT_EDIT, CRIT_DOUBLE } from '../src/model/toggles.ts';
 import { lintSystem, errorsOf } from '../src/model/lint.ts';
 import { PLAYABLE_WORLDS as SAMPLE_WORLDS } from '../src/model/systems.ts';
 import { exchange } from './play.ts';
@@ -36,40 +36,68 @@ group('тогл крита пишет данные, а не код', () => {
 
   const damageOf = (system: System, effect: string): Record<string, unknown> =>
     system.effects[effect]!.steps!.find(s => s.id === 'uron' || s.id === 'uron_vsego') as Record<string, unknown>;
-  const timesIn = (system: System, effect: string): string => String((damageOf(system, effect).times as { expr?: unknown } | undefined)?.expr ?? '');
+  const marksOf = (system: System, effect: string): string[] => ((damageOf(system, effect).tags as unknown[] | undefined) ?? [])
+    .filter((tag): tag is { expr: string } => typeof tag === 'object' && tag !== null).map(tag => tag.expr).filter(expr => expr.includes('"krit"'));
 
-  test('«кости вдвое» вешает удвоение на каждое число после проверки действующего', () => {
+  test('«кости вдвое» — правило среди выданного всем и метка «крит» на каждом числе после проверки действующего', () => {
     const system = dnd();
     setCrit(system, 'off');
+    eq(critOf(system), 'off');
+    deepEq(marksOf(system, 'strike'), []);
     setCrit(system, 'double');
-    eq(timesIn(system, 'strike'), '@dice * @brosok.ishod.dice_mul');
-    ok(!JSON.stringify(system.effects.spell_save!.steps).includes('atMax'),
-      'урон Огненного шара бросается до спасбросков — удвоения нет, это не атака');
+    eq(critOf(system), 'double');
+    ok((system.grants ?? []).includes(CRIT_DOUBLE));
+    deepEq(system.effects[CRIT_DOUBLE]!.modifiers!.map(mod => [(mod as { param?: string }).param, (mod as { op?: string }).op, (mod as { tags?: string[] }).tags]), [['count', 'mul', ['krit']]]);
+    deepEq(marksOf(system, 'strike'), ['if(@brosok.krit, "krit", "")']);
+    ok(!JSON.stringify(system.effects.spell_save!.steps).includes('"krit"'),
+      'урон Огненного шара бросается до спасбросков — метки нет, это не атака');
     eq(errorsOf(lintSystem(system)).length, 0);
   });
 
-  test('«кости вдвое» поверх множителя из таблицы исходов не удваивает ещё раз', () => {
+  test('образец уже собран переключателем: «кости вдвое» поверх ничего не меняет, формулы шагов не трогаются', () => {
     const system = dnd();
-    const before = timesIn(system, 'strike');
-    ok(before.includes('@brosok.ishod.dice_mul'));
-    eq(critOf(system), 'double');
+    const before = JSON.stringify(system);
     setCrit(system, 'double');
-    eq(timesIn(system, 'strike'), before);
+    eq(JSON.stringify(system), before);
     setCrit(system, 'explode');
-    eq(timesIn(system, 'strike'), '@dice');
+    eq((damageOf(system, 'strike').times as { expr: string }).expr, '@dice');
+    deepEq(marksOf(system, 'strike'), []);
   });
 
-  test('удвоение снимается из того же слота, не оставляя мусора', () => {
+  test('туда и обратно ничего не копит: «нет» снимает правило и метки, число костей и кость не трогаются', () => {
     const system = dnd();
     setCrit(system, 'off');
-    const голые = timesIn(system, 'strike');
-    eq(голые, '@dice');
+    const bare = JSON.stringify(system);
     setCrit(system, 'double');
     setCrit(system, 'off');
-    eq(timesIn(system, 'strike'), голые, 'круг туда-обратно ничего не копит');
+    eq(JSON.stringify(system), bare);
+    ok(!system.effects[CRIT_DOUBLE] && !(system.grants ?? []).includes(CRIT_DOUBLE));
     const step = damageOf(system, 'strike');
     eq((step.die as { expr: string }).expr, '@damage_dice');
     ok(step.count === undefined, 'число костей не трогается — у «2к6» их две');
+  });
+
+  test('«нет» не трогает чужую формулу метки, в которой «крит» — только часть', () => {
+    const system = dnd();
+    const own = { expr: 'if(@brosok.popal, "ognennyy", "") + if(@brosok.krit, "krit", "")' };
+    (damageOf(system, 'strike').tags as unknown[]).push(own);
+    setCrit(system, 'off');
+    ok((damageOf(system, 'strike').tags as unknown[]).some(tag => JSON.stringify(tag) === JSON.stringify(own)));
+  });
+
+  test('крит удваивает кости за столом: с правилом — вдвое, без правила — как обычно', () => {
+    const world = clone(SAMPLE_WORLDS[0]!);
+    const hit = (system: System): number => {
+      const sheets = (clone(world.sheets) as Sheet[]).map(sheet => (sheet.id === 'orc' ? { ...sheet, values: { ...sheet.values, hp_block: 500, hp_current: 500 } } : sheet));
+      const out = exchange({ system, compendium: world.compendium as Compendium, die: () => 8, sheets, actionId: 'longsword:0', fromId: 'arven', toId: 'orc', claims: {} });
+      return Number(sheets.find(s => s.id === 'orc')!.values.hp_current) - Number(out.sheets.find(s => s.id === 'orc')!.values.hp_current);
+    };
+    const on = world.system as System;
+    const off = clone(on);
+    setCrit(off, 'off');
+    eq(hit(on) - hit(off), 0, 'восьмёрка — не крит: правило молчит');
+    const crit = (system: System): System => { const next = clone(system); (next.effects.attack_roll!.returns!.find(column => column.key === 'krit') as { expr: { expr: string } }).expr = { expr: '@proverka.success' }; return next; };
+    eq(hit(crit(on)) - hit(crit(off)), 8, 'крит: кость оружия брошена дважды — на восемь больше');
   });
 });
 
@@ -138,13 +166,14 @@ group('крит вдвое не ломает бросок урона с «ост
     .filter(step => (step as { type?: string; die?: unknown }).type === 'roll' && (step as { die?: unknown }).die !== undefined)
     .map(step => JSON.stringify(step)));
 
-  test('после «вдвое» число костей и «оставить» урона героя на месте, удвоение — в «сколько раз»', () => {
+  test('после «вдвое» число костей и «оставить» урона героя на месте, бросок получил метку «крит»', () => {
     const system = dh();
     setCrit(system, 'double');
     const hero = formulas(system).find(text => text.includes('@damage_die'))!;
     ok(hero.includes('"keep":{"expr":"@deystvuyuschiy.proficiency"}'), hero);
     ok(hero.includes('"count":{"expr":"@deystvuyuschiy.proficiency + @extra_die"}'), hero);
-    ok(/"times":/.test(hero), hero);
+    ok(hero.includes('\\"krit\\"') && !/"times":/.test(hero), hero);
+    ok(lintSystem(system).some(problem => problem.level === 'warn' && problem.text.includes('кто бросает')), 'бросок урона героя без бросающего — «Проблемы» говорят, что правило до него не дойдёт');
   });
 
   test('туда и обратно — формулы прежние', () => {

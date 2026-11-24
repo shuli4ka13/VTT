@@ -43,9 +43,9 @@ import type { Clock } from '../engine/clock.ts';
 import type { Pass } from '../engine/calc.ts';
 import type { EmittedEvent, NestedRun } from '../engine/rule.ts';
 import type { System, Sheet, Compendium, Step, Param, StoredValue, WornEffect, Die, Effect } from '../model/types.ts';
-import { Pause } from './external.ts';
+import { Pause, QUIET } from './external.ts';
 import { askOneWords, askRolled } from '../words/steps.ts';
-import type { External, Question, Offer } from './external.ts';
+import type { External, Question, Offer, TableRules } from './external.ts';
 import type { Path, Window } from './path.ts';
 import type { Report, Entry, Stop, Change } from './log.ts';
 import type { Roll, RollResult, Spec } from './dice.ts';
@@ -62,6 +62,7 @@ export interface World {
   compendium: Compendium;
   clock: Clock | null;
   sheets: readonly Sheet[];
+  table?: TableRules;
 }
 
 export interface Sink {
@@ -149,6 +150,7 @@ export interface Delivery {
   offset?: number;
   lead?: Record<string, unknown>[];
   cost?: boolean;
+  nth?: number;
 }
 
 export interface Delivered {
@@ -179,6 +181,20 @@ interface OfferFound { offer: Offer; picks: Pick[] }
 export class Limit extends Error {}
 
 const labelOf = (sub: Sub): string => sub.effect.label || sub.effectId;
+
+interface Asked { question?: string; show?: readonly string[]; to?: string }
+
+const askedOf = (sub: Sub): Asked => {
+  const confirm: unknown = sub.handler.confirm;
+  return confirm && typeof confirm === 'object' ? confirm as Asked : {};
+};
+
+const offerOf = (sub: Sub): Offer => {
+  const text = askedOf(sub).question;
+  return { id: sub.key, label: labelOf(sub), ...(text ? { text } : {}) };
+};
+
+const outcomeOf = (out: Delivered): string => JSON.stringify([out.report.changes, out.report.effects, out.report.removed, out.report.stopped, out.returns ?? null]);
 
 const truthy = (value: unknown): boolean =>
   value === true || (typeof value === 'number' && value !== 0) || (typeof value === 'string' && value !== '');
@@ -834,8 +850,11 @@ export class Run {
         ...(frame.cost ? { cost: true } : {}),
       };
       const before = keys.map(key => `before:${key}`);
-      const peek = this.listens(before) ? this.probe(() => this.exec(inner, callee.steps ?? [], newSink(), { [NAMES.tags]: payload.tags }, event, passed)) : null;
-      this.hear({ keys: before, names, seed: { ...values, ...(peek?.results ?? {}) }, rolls: peek?.rolls ?? {}, path: at.phase('before'), hop: frame.hop, owner: sub => tr`«${labelOf(sub)}» — до «${callee.label || event}»` }, sink);
+      const peek = this.listens(before) ? this.probe(() => {
+        const tried = this.exec(inner, callee.steps ?? [], newSink(), { [NAMES.tags]: payload.tags }, event, passed);
+        return { ...tried, returns: this.returnsOf(callee, inner, tried) };
+      }) : null;
+      this.hear({ keys: before, names, seed: { ...values, ...(peek?.results ?? {}), ...(peek?.returns ?? {}) }, rolls: peek?.rolls ?? {}, path: at.phase('before'), hop: frame.hop, owner: sub => tr`«${labelOf(sub)}» — до «${callee.label || event}»` }, sink);
       const ran = this.exec(inner, callee.steps ?? [], sink, { [NAMES.tags]: payload.tags }, event, passed);
       const returns = this.returnsOf(callee, inner, ran);
       if (returns) emitted.values = { ...values, ...returns };
@@ -865,19 +884,33 @@ export class Run {
             entries.push({ text: probesWords() });
             break;
           }
-          const qpath = call.path.ask('target', holder.id);
-          const offers = this.offers(holder.id, call.keys.map(key => `before:${key}`), call.bound, { ...(call.seed ?? {}), ...tried.results }, [], qpath, tried.rolls);
-          if (!offers.length) continue;
-          const asked = this.ask({
-            key: qpath.key, sheetId: holder.id, window: 'target', label: call.top ? '' : call.label,
-            offers: offers.map(found => found.offer), results: tried.results,
-            preview: call.top ? previewLines(this.system, call.effectId, [...(call.lead ?? []), ...tried.report.trace]) : [],
-          }, offers, call.hop, qpath);
-          entries.push(...asked.entries);
-          flush(entries);
-          if (asked.accepted) {
-            accepted++;
-            tried = this.probeAsking(() => this.body(call, newSink()));
+          const base = call.path.ask('target', holder.id);
+          const pathFor = (answerer: string): Path => (answerer === holder.id ? base : base.to(answerer));
+          const asked = new Set<string>();
+          for (;;) {
+            if (accepted >= this.limits.probes) break;
+            const found = this.offers(holder.id, call.keys.map(key => `before:${key}`), call.bound, { ...(call.seed ?? {}), ...tried.results, ...(tried.returns ?? {}) }, [], base, tried.rolls);
+            const next = [...this.byAnswerer(found, holder.id, call.home, call.subject)].find(([answerer]) => !asked.has(answerer));
+            if (!next) break;
+            const [answerer] = next;
+            asked.add(answerer);
+            const qpath = pathFor(answerer);
+            const offers = this.world.table?.reactionUseful ? next[1].filter(one => this.changes(one, call, tried, qpath)) : next[1];
+            if (!offers.length) continue;
+            const shows = this.showsOf(offers);
+            const who = [shows.has('actor') ? this.sheet(call.home)?.name ?? call.home : '', shows.has('action') ? call.label : ''].filter(Boolean).join(' — ');
+            const lines = call.top ? previewLines(this.system, call.effectId, [...(call.lead ?? []), ...tried.report.trace], { roll: shows.has('roll'), versus: shows.has('versus') }) : [];
+            const answered = this.ask({
+              key: qpath.key, sheetId: answerer, window: 'target', label: call.top ? '' : call.label, ...this.textOf(offers), ...this.muting,
+              offers: offers.map(one => one.offer), results: tried.results,
+              preview: [...(who ? [who] : []), ...lines],
+            }, offers, call.hop, qpath);
+            entries.push(...answered.entries);
+            flush(entries);
+            if (answered.accepted) {
+              accepted++;
+              tried = this.probeAsking(() => this.body(call, newSink()));
+            }
           }
         }
         const sink = newSink();
@@ -895,23 +928,29 @@ export class Run {
       const offers: OfferFound[] = [];
       const qpath = path.ask('after', holder.id);
       for (const out of done) {
-        const tag = done.length > 1 && out.call.subject ? out.call.subject : null;
+        const again = out.call.nth ? out.call.nth + 1 : 0;
+        const tag = done.length > 1 && out.call.subject ? [out.call.subject, ...(again ? [String(again)] : [])].join('|') : null;
         const found = this.offers(holder.id, out.call.keys.map(key => `after:${key}`), out.call.bound, { ...(out.call.seed ?? {}), ...out.results, ...(out.returns ?? {}) }, out.emitted, qpath, out.rolls);
         for (const one of found) {
           const id = tag ? `${one.offer.id}|${tag}` : one.offer.id;
-          const label = tag ? `${one.offer.label} — ${this.sheet(tag)?.name ?? tag}` : one.offer.label;
+          const label = tag ? `${one.offer.label} — ${this.sheet(out.call.subject!)?.name ?? out.call.subject}${again ? ` (${again})` : ''}` : one.offer.label;
           const known = offers.find(other => other.offer.id === id);
           if (known) known.picks.push(...one.picks);
-          else offers.push({ offer: { id, label }, picks: one.picks });
+          else offers.push({ offer: { ...one.offer, id, label }, picks: one.picks });
         }
       }
       if (!offers.length) continue;
       const only = done.length === 1 ? done[0]! : null;
-      entries.push(...this.ask({
-        key: qpath.key, sheetId: holder.id, window: 'after', label: only && !only.call.top ? only.call.label : '',
-        offers: offers.map(found => found.offer), results: only?.results ?? {}, preview: [],
-      }, offers, done[0]!.call.hop, qpath).entries);
-      flush(entries);
+      for (const [answerer, mine] of this.byAnswerer(offers, holder.id, done[0]!.call.home, only?.call.subject ?? null)) {
+        const shows = this.showsOf(mine);
+        const who = [shows.has('actor') ? this.sheet(done[0]!.call.home)?.name ?? done[0]!.call.home : '', shows.has('action') ? done[0]!.call.label : ''].filter(Boolean).join(' — ');
+        const apath = answerer === holder.id ? qpath : qpath.to(answerer);
+        entries.push(...this.ask({
+          key: apath.key, sheetId: answerer, window: 'after', label: only && !only.call.top ? only.call.label : '', ...this.textOf(mine), ...this.muting,
+          offers: mine.map(found => found.offer), results: only?.results ?? {}, preview: who ? [who] : [],
+        }, mine, done[0]!.call.hop, apath).entries);
+        flush(entries);
+      }
     }
     return { entries: collected, delivered: done };
   }
@@ -937,7 +976,7 @@ export class Run {
     return out;
   }
 
-  body(call: Delivery, sink: Sink, tried?: { results: Record<string, unknown>; rolls: Record<string, RollResult> }): Delivered {
+  body(call: Delivery, sink: Sink, tried?: { results: Record<string, unknown>; rolls: Record<string, RollResult>; returns?: Record<string, unknown> }): Delivered {
     const frame: Frame = {
       path: call.path, effectId: call.effectId, label: call.label, owner: tr`эффект «${call.label}»`,
       home: call.home, bound: call.bound,
@@ -954,13 +993,17 @@ export class Run {
       ? this.argValues(frame)
       : Object.fromEntries(Object.entries(call.args ?? {}).filter(([, value]) => value === null || typeof value !== 'object'));
     const seed = { ...given, ...(call.seed ?? {}) };
-    this.hear({ keys: call.keys.map(key => `before:${key}`), names: call.bound, seed: { ...seed, ...(tried?.results ?? {}) }, rolls: { ...(call.rolls ?? {}), ...(tried?.rolls ?? {}) }, path: call.path.phase('before'), hop: call.hop, owner: sub => tr`«${labelOf(sub)}» — до «${call.label}»` }, sink);
+    this.hear({ keys: call.keys.map(key => `before:${key}`), names: call.bound, seed: { ...seed, ...(tried?.results ?? {}), ...(tried?.returns ?? {}) }, rolls: { ...(call.rolls ?? {}), ...(tried?.rolls ?? {}) }, path: call.path.phase('before'), hop: call.hop, owner: sub => tr`«${labelOf(sub)}» — до «${call.label}»` }, sink);
     const ran = this.exec(frame, call.steps, sink, seed, undefined, call.rolls ?? {});
     const callee = this.system.effects?.[call.effectId];
     const returns = callee ? this.returnsOf(callee, frame, ran) : null;
     this.hear({ keys: call.keys.map(key => `after:${key}`), names: call.bound, seed: { ...given, ...ran.results, ...(returns ?? {}) }, rolls: ran.rolls, path: call.path.phase('after'), hop: call.hop, owner: sub => tr`«${labelOf(sub)}» — после «${call.label}»` }, sink);
     const report = reportOf('effect', call.effectId, call.home, call.label, sink, ran.stopped, call.hop > 0);
     return { call, results: ran.results, rolls: ran.rolls, emitted: sink.emitted, report, ...(returns ? { returns } : {}) };
+  }
+
+  numberAt(frame: Frame, ref: unknown, what: string): number {
+    return this.ctx(frame, {}, {}, frame.path, newSink(), new Set()).number(ref, what);
   }
 
   holdsAt(frame: Frame, guard: unknown): boolean {
@@ -1176,6 +1219,13 @@ export class Run {
 
   moment(moment: MomentKey, subjects: readonly string[], path: Path): { sheetId: string; effectId: string }[] {
     const expired: { sheetId: string; effectId: string }[] = [];
+    if (moment === 'turn-end' || moment === 'combat-end') {
+      for (const sheet of [...this.state.sheets]) {
+        if (!sheet.quiet?.length) continue;
+        const { quiet: _quiet, ...rest } = sheet;
+        this.state.put(rest);
+      }
+    }
     for (const sheetId of subjects) {
       const lapsed = lapse({ moment, sheetId }, [...this.state.sheets], this.system, this.clock);
       this.state.replace(lapsed.sheets);
@@ -1431,15 +1481,35 @@ export class Run {
     }
   }
 
-  private choose(question: Question): { chosen: string[]; skipped: boolean } {
+  private get muting(): { mute?: true } {
+    return (this.clock?.round ?? 0) > 0 ? { mute: true } : {};
+  }
+
+  private hush(subs: readonly Sub[]): Entry[] {
+    const entries: Entry[] = [];
+    for (const sheetId of new Set(subs.map(sub => sub.sheetId))) {
+      const sheet = this.sheet(sheetId);
+      if (!sheet) continue;
+      const mine = subs.filter(sub => sub.sheetId === sheetId);
+      this.state.put({ ...sheet, quiet: [...new Set([...(sheet.quiet ?? []), ...mine.map(sub => sub.key)])] });
+      entries.push({ text: tr`${sheet.name}: до конца хода не спрашивать — ${[...new Set(mine.map(labelOf))].join(', ')}` });
+    }
+    return entries;
+  }
+
+  private choose(question: Question): { chosen: string[]; skipped: boolean; quiet: boolean } {
     const live = (question.window === 'seen' || question.window === 'step') && this.seenAsks > 0 && this.probing === 1;
-    const { chosen, byPerson } = this.isProbing && !live
+    const answered = this.isProbing && !live
       ? { chosen: this.ext.peek(question.key) ?? [], byPerson: false }
       : this.ext.ask(question);
+    const quiet = question.mute === true && answered.chosen.includes(QUIET);
+    const { byPerson } = answered;
+    const chosen = quiet ? [] : answered.chosen;
+    if (quiet) return { chosen: [], skipped: false, quiet };
     const unique = [...new Set(chosen)];
     const stray = unique.find(id => !question.offers.some(offer => offer.id === id));
     if (stray) throw new EngineError(tr`реакция «${stray}» сейчас не предлагается; можно: ${question.offers.map(o => o.label ?? o.id).join(', ') || tr`(ничего)`}`);
-    return { chosen: unique, skipped: byPerson && !unique.length };
+    return { chosen: unique, skipped: byPerson && !unique.length, quiet: false };
   }
 
   private question(sheetId: string, label: string, offers: readonly Offer[], path: Path, rolls: Record<string, RollResult>): string | null {
@@ -1462,13 +1532,13 @@ export class Run {
       const pick: Pick = { sub, names: subNames, seed: subSeed, rolls: subRolls };
       const known = byKey.get(sub.key);
       if (known) known.picks.push(pick);
-      else byKey.set(sub.key, { offer: { id: sub.key, label: labelOf(sub) }, picks: [pick] });
+      else byKey.set(sub.key, { offer: offerOf(sub), picks: [pick] });
     };
     const lastOf = new Map<string, EmittedEvent>();
     for (const one of nested) lastOf.set(one.event, one);
     const wanted = new Set(keys);
     for (const sub of this.subs(sheet)) {
-      if (!sub.handler.confirm) continue;
+      if (!sub.handler.confirm || (sheet.quiet ?? []).includes(sub.key)) continue;
       const on = sub.handler.on;
       const pay = qpath.pick(sub.key).pay();
       if (wanted.has(on)) {
@@ -1484,9 +1554,39 @@ export class Run {
     return [...byKey.values()];
   }
 
+  private showsOf(offers: readonly OfferFound[]): Set<string> {
+    const shows = new Set(offers.flatMap(found => found.picks.flatMap(pick => askedOf(pick.sub).show ?? [])));
+    if (this.world.table?.reactionRolls) shows.add('roll');
+    return shows;
+  }
+
+  private textOf(offers: readonly OfferFound[]): { text?: string } {
+    const text = offers.length === 1 ? offers[0]!.offer.text : undefined;
+    return text ? { text } : {};
+  }
+
+  private byAnswerer(offers: readonly OfferFound[], holder: string, actor: string | null, target: string | null): Map<string, OfferFound[]> {
+    const out = new Map<string, OfferFound[]>();
+    for (const found of offers) {
+      const to = askedOf(found.picks[0]!.sub).to;
+      const answerer = to === 'gm' ? DESK_ID : to === 'actor' ? actor ?? holder : to === 'target' ? target ?? holder : holder;
+      out.set(answerer, [...(out.get(answerer) ?? []), found]);
+    }
+    return out;
+  }
+
+  private changes(found: OfferFound, call: Delivery, tried: Delivered, path: Path): boolean {
+    const pick = found.picks[0]!;
+    const withIt = this.probe(() => {
+      this.react(pick.sub, { path: path.pick(found.offer.id), names: pick.names, seed: pick.seed, rolls: pick.rolls, hop: call.hop, chosen: true, owner: tr`реакция «${labelOf(pick.sub)}»` });
+      return this.body(call, newSink());
+    });
+    return outcomeOf(withIt) !== outcomeOf(tried);
+  }
+
   private ask(question: Question, offers: OfferFound[], hop: number, path: Path): { entries: Entry[]; accepted: boolean } {
-    const { chosen, skipped } = this.choose(question);
-    const entries: Entry[] = [];
+    const { chosen, skipped, quiet } = this.choose(question);
+    const entries: Entry[] = quiet ? this.hush(offers.flatMap(found => found.picks.map(pick => pick.sub))) : [];
     let accepted = false;
     for (const id of chosen) {
       const found = offers.find(offer => offer.offer.id === id)!;
@@ -1515,10 +1615,12 @@ export class Run {
     for (const holder of this.holders()) {
       const qpath = path.ask(window, holder.id);
       const offers = this.offers(holder.id, keys, names, seed, [], qpath, rolls);
-      if (!offers.length) continue;
-      entries.push(...this.ask({
-        key: qpath.key, sheetId: holder.id, window, label, offers: offers.map(found => found.offer), results: seed, preview: [],
-      }, offers, 0, qpath).entries);
+      for (const [answerer, mine] of this.byAnswerer(offers, holder.id, null, null)) {
+        const apath = answerer === holder.id ? qpath : qpath.to(answerer);
+        entries.push(...this.ask({
+          key: apath.key, sheetId: answerer, window, label, ...this.textOf(mine), ...this.muting, offers: mine.map(found => found.offer), results: seed, preview: [],
+        }, mine, 0, apath).entries);
+      }
     }
     return entries;
   }
@@ -1543,7 +1645,7 @@ export class Run {
         const listening = (confirm: boolean): Sub[] => {
           const sheet = this.sheet(sheetId);
           if (!sheet) return [];
-          return this.subs(sheet).filter(sub => sub.handler.on === 'seen' && Boolean(sub.handler.confirm) === confirm && tagsFit(sub.handler, tags));
+          return this.subs(sheet).filter(sub => sub.handler.on === 'seen' && Boolean(sub.handler.confirm) === confirm && tagsFit(sub.handler, tags) && !(confirm && (sheet.quiet ?? []).includes(sub.key)));
         };
         for (const sub of listening(false)) {
           const out = this.react(sub, {
@@ -1561,15 +1663,19 @@ export class Run {
           if (!this.holds(sub, names, full) || this.refusal(sub, qpath.pick(sub.key).pay(), names, full, hop)) continue;
           const known = byKey.get(sub.key);
           if (known) known.subs.push(sub);
-          else byKey.set(sub.key, { offer: { id: sub.key, label: labelOf(sub) }, subs: [sub] });
+          else byKey.set(sub.key, { offer: offerOf(sub), subs: [sub] });
         }
         if (!byKey.size) continue;
         const now = result(cell.value);
+        const shows = new Set([...byKey.values()].flatMap(one => one.subs.flatMap(sub => askedOf(sub).show ?? [])));
+        if (this.world.table?.reactionRolls) shows.add('roll');
+        const only = byKey.size === 1 ? [...byKey.values()][0]!.offer.text : undefined;
         const question: Question = {
-          key: qpath.key, sheetId, window: 'seen', label: '', offers: [...byKey.values()].map(one => one.offer), results: seed(),
-          preview: [`${rollTitle(tr`Бросок`, [...tags], this.system)}: [${now.dice.rolls.join(', ')}]${addendsText(cell.value.addends)}${shown ? ` + ${shown.label ? `${shown.label}: ` : ''}${shown.value}` : ''} → ${now.total + cell.bonus}${CALL_WORDS.roll.canceled(cell.value.canceled ?? [])}`],
+          key: qpath.key, sheetId, window: 'seen', label: '', ...(only ? { text: only } : {}), ...this.muting, offers: [...byKey.values()].map(one => one.offer), results: seed(),
+          preview: !shows.has('roll') ? [] : [`${rollTitle(tr`Бросок`, [...tags], this.system)}: [${now.dice.rolls.join(', ')}]${addendsText(cell.value.addends)}${shown ? ` + ${shown.label ? `${shown.label}: ` : ''}${shown.value}` : ''} → ${now.total + cell.bonus}${CALL_WORDS.roll.canceled(cell.value.canceled ?? [])}`],
         };
-        const { chosen, skipped } = this.choose(question);
+        const { chosen, skipped, quiet } = this.choose(question);
+        if (quiet) sink.after.push(...this.hush([...byKey.values()].flatMap(one => one.subs)));
         for (const id of chosen) {
           const found = byKey.get(id)!;
           const pick = found.subs.find(sub => this.live(sub)) ?? found.subs[0]!;

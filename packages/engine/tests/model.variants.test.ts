@@ -12,15 +12,21 @@ const words = (system: System, id: string): string[] =>
 const swap = (system: System, from: string, to: string): System => JSON.parse(JSON.stringify(system).replace(from, to)) as System;
 
 describe('слово не из вариантов — ошибка «Проблем»', () => {
-  it('условие по итогу «исход»', () => {
+  const withOutcome = (expr: string): System => {
     const system = copy('dnd5e');
-    system.effects.strike!.steps!.splice(2, 0, { type: 'branch', if: { expr: '@brosok.ishod == "критт"' } } as never, { type: 'end' } as never);
-    expect(words(system, 'dnd5e')).toEqual([expect.stringContaining('«критт» — в таблице «Исход атаки» такого варианта нет')]);
+    system.effects.attack_roll!.returns!.push({ key: 'kak', label: 'как', kind: 'choice', from: 'reach', expr: { expr } } as never);
+    return system;
+  };
+
+  it('условие по итогу-выбору', () => {
+    const system = withOutcome('if(@proverka.success, "blizhniy", "dalniy")');
+    system.effects.strike!.steps!.splice(2, 0, { type: 'branch', if: { expr: '@brosok.kak == "ближний"' } } as never, { type: 'end' } as never);
+    expect(words(system, 'dnd5e')).toEqual([expect.stringContaining('«ближний» — в таблице «Дальность атаки» такого варианта нет')]);
   });
 
   it('слово в формуле самого итога', () => {
-    const system = swap(copy('dnd5e'), '"krit\\", \\"popadanie\\"', '"критт\\", \\"popadanie\\"');
-    expect(words(system, 'dnd5e')).toEqual([expect.stringContaining('итог «исход»: «критт»')]);
+    const system = withOutcome('if(@proverka.success, "ближний", "dalniy")');
+    expect(words(system, 'dnd5e')).toEqual([expect.stringContaining('итог «как»: «ближний»')]);
   });
 
   it('ступень проверки', () => {

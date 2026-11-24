@@ -130,7 +130,7 @@ describe('новое ядро: сознательные изменения', () 
   it('копия реакции в стопке: выбрана одна — платит и тратит заряд одна', () => {
     const system = world({
       удар: button([hit('1')]),
-      парир: { label: 'Парирование', activation: 'passive', reapply: 'stack', duration: { kind: 'uses', max: 1 }, on: [{ on: 'before:удар', if: { expr: '@цель == @holder' }, confirm: true, steps: [heal('1')] }] },
+      парир: { label: 'Парирование', activation: 'passive', reapply: 'stack', duration: { kind: 'uses', max: 1 }, on: [{ on: 'before:удар', if: { expr: '@цель == @holder' }, confirm: {}, steps: [heal('1')] }] },
     });
     const sheets = [sheet('а'), sheet('б', {}, [{ effectId: 'парир', usesLeft: 1 }, { effectId: 'парир', usesLeft: 1 }])];
     const first = act({ system, compendium: book, clock: null, sheets, die: queue(), journal: emptyJournal() }, { actionId: 'приём:0', fromId: 'а', toIds: ['б'] });
@@ -193,7 +193,7 @@ describe('новое ядро: сознательные изменения', () 
   it('подписка на момент с вопросом спрашивает; с ложным условием не платит и не тратит заряд', () => {
     const system = world({
       удар: button([hit('1')]),
-      вдох: { label: 'Второе дыхание', activation: 'passive', on: [{ on: 'moment:turn-start', confirm: true, steps: [heal('3')] }] },
+      вдох: { label: 'Второе дыхание', activation: 'passive', on: [{ on: 'moment:turn-start', confirm: {}, steps: [heal('3')] }] },
       шип: { label: 'Шип', activation: 'passive', duration: { kind: 'uses', max: 2 }, on: [{ on: 'moment:turn-start', if: { expr: '@mover != @holder' }, cost: [hit('1', '@holder.ки')], steps: [hit('1', '@holder.хп')] }] },
     });
     const sheets = [sheet('а', { ки: 5 }, [{ effectId: 'вдох' }, { effectId: 'шип', usesLeft: 2 }]), sheet('б')];

@@ -1,4 +1,4 @@
-import { expectAction, costRefusal, availableActions, isDesk, isGroup, fieldsFor, sheetKinds, distanceOf, distanceWords, fieldsOf, claimWords, baseValue, isService, isSecret, circleOf, isNoteField } from '@vtt/engine';
+import { aimOf, expectAction, costRefusal, availableActions, isDesk, isGroup, fieldsFor, sheetKinds, distanceOf, distanceWords, fieldsOf, claimWords, baseValue, isService, isSecret, circleOf, isNoteField } from '@vtt/engine';
 import { mayAnswer, mayAllowItems, mayField, seesField } from '../../engine/rights.ts';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRoom } from '../../store/room.ts';
@@ -43,6 +43,13 @@ function RoomTable({ room }: { room: RoomState }) {
 
   const sender = room.sheets.find(s => s.id === from) ?? null;
   const targets = room.sheets.filter(s => to.includes(s.id));
+  const repeating = useMemo(() => {
+    if (!sender) return false;
+    try {
+      return availableActions(sender, { system: room.system, compendium: room.compendium })
+        .some(action => (room.system.effects?.[action.effect]?.params ?? []).some(param => param.kind === 'sheet' && param.repeat));
+    } catch { return false; }
+  }, [sender, room.system, room.compendium]);
   const people = room.sheets.filter(s => !isDesk(s));
   const party = new Set(room.members.map(member => member.sheetId).filter((id): id is string => Boolean(id)));
   const desk = room.sheets.find(isDesk) ?? null;
@@ -58,7 +65,7 @@ function RoomTable({ room }: { room: RoomState }) {
     onPick: id => {
       if (id === from) { setFrom(null); setMoving(false); return; }
       if (!from) { setFrom(id); setTo(ids => ids.filter(one => one !== id)); return; }
-      setTo(ids => (ids.includes(id) ? ids.filter(one => one !== id) : [...ids, id]));
+      setTo(ids => (ids.includes(id) && !repeating ? ids.filter(one => one !== id) : [...ids, id]));
     },
   };
 
@@ -78,6 +85,7 @@ function RoomTable({ room }: { room: RoomState }) {
                 {room.members.map(member => <Chip key={member.userId}>{member.name}</Chip>)}
               </div>
               <ItemRights room={room} />
+              {gm ? <TableRules room={room} /> : null}
             </div>
           ),
         }}
@@ -140,10 +148,13 @@ function RoomTable({ room }: { room: RoomState }) {
               {desk && deskFields.length ? <DeskPanel room={room} desk={desk} /> : null}
 
               {people.length ? <Actions
-                key={`${sender?.id ?? ''}|${targets.map(sheet => sheet.id).join(',')}`}
+                key={`${sender?.id ?? ''}|${to.join(',')}`}
                 room={room}
                 sender={sender}
                 targets={targets}
+                to={to}
+                repeating={repeating}
+                onDrop={index => setTo(ids => ids.filter((_, at) => at !== index))}
                 places={room.places}
                 refused={acted ? error : null}
                 onError={message => { setActed(true); setError(message); }}
@@ -421,8 +432,11 @@ function ClaimRow({ label, words, picked, onToggle }: {
   );
 }
 
-function Actions({ room, sender, targets, places, refused, onError, onClear, onSelf }: {
+function Actions({ room, sender, targets, to, repeating, onDrop, places, refused, onError, onClear, onSelf }: {
   room: RoomState;
+  to: string[];
+  repeating: boolean;
+  onDrop: (index: number) => void;
   places?: RoomState['places'];
   sender: Sheet | null;
   targets: Sheet[];
@@ -436,7 +450,7 @@ function Actions({ room, sender, targets, places, refused, onError, onClear, onS
   const [theirs, setTheirs] = useState<string[]>([]);
   const said = useRef<HTMLDivElement>(null);
   useEffect(() => { if (refused) said.current?.scrollIntoView?.({ block: 'nearest' }); }, [refused]);
-  const aimed = JSON.stringify(targets.map(sheet => sheet.id));
+  const aimed = JSON.stringify(to);
   const myId = useSession(s => s.userId);
   const leading = room.members.some(m => m.userId === myId && m.role === 'gm');
   const blind = useMemo(() => !leading && fieldsOf(room.system as System).some(field => circleOf(field) === 'gm' && !isNoteField(field)), [leading, room.system]);
@@ -477,14 +491,18 @@ function Actions({ room, sender, targets, places, refused, onError, onClear, onS
       actor={sender}
       targets={targets}
       places={places}
+      picked={to.length}
+      aim={request => aimOf(
+        { system: room.system as System, compendium: room.compendium, clock: room.clock ?? null, sheets: room.sheets },
+        { actionId: request.actionId, fromId: sender.id, toIds: [], ...(request.inputs ? { inputs: request.inputs } : {}) })}
       actionId={action.id}
       label={action.label}
       disabled={Boolean(room.pending)}
       blocked={unpaid.get(action.id) ?? null}
-      refuse={request => (blind ? null : unpaidWhy(room, sender.id, targets.map(sheet => sheet.id), request.actionId, request.inputs))}
+      refuse={request => (blind ? null : unpaidWhy(room, sender.id, to, request.actionId, request.inputs))}
       expect={request => {
         if (!sender || blind) return null;
-        const chosen = targets.map(sheet => sheet.id);
+        const chosen = to;
         const found = expectAction(
           { system: room.system as never, compendium: room.compendium as never, clock: room.clock ?? null },
           room.sheets as never,
@@ -499,7 +517,7 @@ function Actions({ room, sender, targets, places, refused, onError, onClear, onS
         onError(null);
         tableSocket.act({
           roomId: room.id, actionId: request.actionId,
-          fromId: sender.id, toIds: targets.map(sheet => sheet.id),
+          fromId: sender.id, toIds: to,
           ...(request.inputs ? { inputs: request.inputs } : {}),
           ...claimsOf(sender.id, targets, mine, theirs),
           ...(secret ? { hidden: true } : {}),
@@ -515,7 +533,12 @@ function Actions({ room, sender, targets, places, refused, onError, onClear, onS
       <CardHead
         title={t('table.actions.acts', { name: sender.name })}
         badge={targets.length
-          ? <span className="inline inline--tight">{targets.map(sheet => <Chip key={sheet.id}>{t('table.actions.at', { name: sheet.name })}</Chip>)}</span>
+          ? <span className="inline inline--tight aim-chips">{to.map((id, index) => {
+            const name = room.sheets.find(sheet => sheet.id === id)?.name ?? id;
+            return repeating
+              ? <Chip key={`${id}|${index}`} onRemove={() => onDrop(index)}>{t('table.actions.at', { name })}</Chip>
+              : <Chip key={id}>{t('table.actions.at', { name })}</Chip>;
+          })}</span>
           : <span className="faint">{t('table.actions.noTargets')}</span>}
         actions={<>
           {targets.some(sheet => sheet.id === sender.id) ? null : <Button size="sm" variant="ghost" onClick={onSelf}>{t('table.actions.self')}</Button>}
@@ -588,4 +611,21 @@ function ItemRights({ room }: { room: RoomState }) {
   }
   const names = [t('table.items.gm'), ...players.filter(member => member.editsItems).map(member => member.name)];
   return <span className="faint">{t('table.items.byList', { names: names.join(', ') })}</span>;
+}
+
+function TableRules({ room }: { room: RoomState }) {
+  const t = useT('play');
+  const rules = room.rules ?? {};
+  const flip = (key: 'reactionRolls' | 'reactionUseful') => tableSocket.setRules(room.id, { ...rules, [key]: !rules[key] });
+  return (
+    <div className="stack stack--tight table-rules">
+      <span className="faint">{t('table.rules.title')}</span>
+      {(['reactionRolls', 'reactionUseful'] as const).map(key => (
+        <label key={key} className="table-rules__row">
+          <input type="checkbox" checked={Boolean(rules[key])} onChange={() => flip(key)} />
+          <span>{t(`table.rules.${key}`)}</span>
+        </label>
+      ))}
+    </div>
+  );
 }

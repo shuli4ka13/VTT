@@ -183,3 +183,9 @@
   .fight__out, .hang__x { min-width: 32px; min-height: 32px; }
   .pick-list__row { min-height: 44px; }
 }
+
+.table-rules__row { display: flex; align-items: center; gap: var(--s-3); min-height: 44px; cursor: pointer; }
+.table-rules__row input { width: 20px; height: 20px; flex: none; }
+.aim-count { align-self: center; }
+.aim-count--over { color: var(--bad, #b3261e); }
+.aim-chips .chip__x { min-width: 44px; min-height: 44px; }

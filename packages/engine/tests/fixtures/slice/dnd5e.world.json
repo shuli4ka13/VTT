@@ -1001,6 +1001,17 @@
         ],
         "tags": [
           "ataka"
+        ],
+        "returns": [
+          {
+            "key": "popal",
+            "label": "попал",
+            "kind": "boolean",
+            "no": "промах",
+            "expr": {
+              "expr": "@hit.success"
+            }
+          }
         ]
       },
       "save": {
@@ -1448,6 +1459,17 @@
         ],
         "tags": [
           "ataka"
+        ],
+        "returns": [
+          {
+            "key": "popal",
+            "label": "попал",
+            "kind": "boolean",
+            "no": "промах",
+            "expr": {
+              "expr": "@hit.success"
+            }
+          }
         ]
       },
       "bless": {
@@ -1921,9 +1943,9 @@
           {
             "on": "before:ataka",
             "if": {
-              "expr": "@cel == @holder and @hit.success"
+              "expr": "@cel == @holder and @popal"
             },
-            "confirm": true,
+            "confirm": {},
             "cost": [
               {
                 "type": "branch",
@@ -2021,7 +2043,11 @@
             "if": {
               "expr": "@roller == @holder and @holder.inspiration > 0"
             },
-            "confirm": true,
+            "confirm": {
+              "show": [
+                "roll"
+              ]
+            },
             "steps": [
               {
                 "type": "apply",
@@ -2399,7 +2425,7 @@
             "if": {
               "expr": "@list == @holder and not empty(@istochnik)"
             },
-            "confirm": true,
+            "confirm": {},
             "cost": [
               {
                 "type": "branch",
@@ -2756,12 +2782,16 @@
         ],
         "each": "cel",
         "outputs": [
-          "hit"
+          {
+            "key": "popal",
+            "kind": "boolean"
+          }
         ],
         "said": {
           "deystvuyuschiy": "действующий",
           "celi": "цели",
-          "cel": "цель"
+          "cel": "цель",
+          "popal": "попал"
         }
       }
     },

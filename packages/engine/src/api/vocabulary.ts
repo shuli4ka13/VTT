@@ -30,6 +30,7 @@ export type { ColumnChoice } from '../model/paths.ts';
 export { emittedChoices, paymentsOf } from '../model/payments.ts';
 export { CALL_TAGS, callNamesOf, HOLDER, holderConditionOf, listenerOf, referencesOf, TARGETS_SEED, tiedToHolder } from '../model/references.ts';
 export type { RefKind, Where } from '../model/references.ts';
+export { tagsOf as effectTags } from '../core/subs.ts';
 export { rollGroupsOf, ruleLabelOf } from '../model/roll-groups.ts';
 export { claimWords } from '../model/roll-reach.ts';
 export { givesOf } from '../model/rolled.ts';

@@ -20,7 +20,8 @@ export type Step =
     refused?: string;
   }
   | { turn: 'start' | 'next' | 'stop'; order?: string[]; answers?: Answer[] }
-  | { set: [sheetId: string, tag: string, value: number | string | boolean | null] };
+  | { set: [sheetId: string, tag: string, value: number | string | boolean | null] }
+  | { rules: { reactionRolls?: boolean; reactionUseful?: boolean } };
 
 export interface Scenario {
   name: string;
@@ -35,6 +36,8 @@ export interface Scenario {
     effects?: Record<string, { has?: string[]; not?: string[] }>;
     log?: string[];
     notLog?: string[];
+    asked?: string[];
+    notAsked?: string[];
   };
 }
 
@@ -68,6 +71,7 @@ const queue = (dice: number[]) => {
 export interface Played {
   sheets: Sheet[];
   log: string[];
+  asked: string[];
   system: System;
   compendium: unknown;
   diceLeft: number;
@@ -106,6 +110,7 @@ export async function playScenario(scenario: Scenario): Promise<Played> {
     const roomId = (await ok(http().post('/rooms').send({ worldId, title: 'Стол' }))).id as string;
     const rooms = app.get(RoomsService);
     const log: string[] = [];
+    const asked: string[] = [];
 
     const settle = async (first: Promise<RoomDelta>, answers: Answer[] = [], refused?: string) => {
       let delta: RoomDelta;
@@ -120,6 +125,7 @@ export async function playScenario(scenario: Scenario): Promise<Played> {
       log.push(...delta.log.map(entry => entry.text));
       const left = [...answers];
       while (delta.pending) {
+        asked.push([delta.pending.question, ...delta.pending.preview].join(' | '));
         if (!left.length && !scenario.declineRest) throw new Error(`сценарий: неожиданный вопрос — ${delta.pending.question} (${delta.pending.options.map(o => o.id).join(', ')})`);
         const chosen = left.length ? left.shift()! : [];
         delta = await rooms.answer(userId, { roomId, pendingId: delta.pending.id, chosen });
@@ -138,6 +144,8 @@ export async function playScenario(scenario: Scenario): Promise<Played> {
         }), step.answers, step.refused);
       } else if ('turn' in step) {
         await settle(rooms.turn(userId, { roomId, op: step.turn, ...(step.order ? { order: step.order } : {}) }), step.answers);
+      } else if ('rules' in step) {
+        await rooms.setRules(userId, roomId, step.rules);
       } else {
         const [sheetId, tag, value] = step.set;
         await settle(rooms.setValue(userId, roomId, sheetId, tag, value));
@@ -145,7 +153,7 @@ export async function playScenario(scenario: Scenario): Promise<Played> {
     }
 
     const final = (await ok(http().get(`/rooms/${roomId}`))).sheets as Sheet[];
-    return { sheets: final, log, system, compendium, diceLeft: dice.length };
+    return { sheets: final, log, asked, system, compendium, diceLeft: dice.length };
   } finally {
     await app.close();
     db.close();
@@ -176,6 +184,9 @@ export function check(scenario: Scenario, played: Played): string[] {
   const text = played.log.join('\n');
   for (const part of scenario.expect.log ?? []) if (!text.includes(part)) problems.push(`в журнале нет «${part}»`);
   for (const part of scenario.expect.notLog ?? []) if (text.includes(part)) problems.push(`в журнале лишнее «${part}»`);
+  const questions = played.asked.join('\n');
+  for (const part of scenario.expect.asked ?? []) if (!questions.includes(part)) problems.push(`среди вопросов стола нет «${part}» (были: ${played.asked.join(' ; ') || 'никаких'})`);
+  for (const part of scenario.expect.notAsked ?? []) if (questions.includes(part)) problems.push(`в вопросе стола лишнее «${part}»`);
   if (played.diceLeft) problems.push(`не все кости использованы: осталось ${played.diceLeft}`);
   return problems;
 }

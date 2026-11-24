@@ -231,6 +231,24 @@ export class TableGateway {
     }
   }
 
+  @SubscribeMessage('room:rules')
+  async setRules(@MessageBody() raw: unknown, @ConnectedSocket() socket: WebSocket) {
+    const guest = this.guestOf(socket);
+    if (!guest) return this.fail(socket, say`сначала войдите в комнату`);
+
+    const parsed = api.clientMessage.safeParse({ type: 'room:rules', ...(raw as object) });
+    if (!parsed.success || parsed.data.type !== 'room:rules') {
+      return this.fail(socket, say`правила стола не проходят схему`);
+    }
+    const { roomId } = parsed.data;
+    try {
+      const rules = await this.roomsService.setRules(guest.userId, roomId, parsed.data.rules);
+      this.broadcast(roomId, { type: 'room:rules', roomId, rules });
+    } catch (err) {
+      this.fail(socket, (err as Error).message);
+    }
+  }
+
   @SubscribeMessage('piece:place')
   async placePiece(@MessageBody() raw: unknown, @ConnectedSocket() socket: WebSocket) {
     const guest = this.guestOf(socket);

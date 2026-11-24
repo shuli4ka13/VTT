@@ -130,5 +130,21 @@
       "text": "text",
       "choice": "choice"
     }
+  },
+  "count": {
+    "label": "How many picks",
+    "hint": "at most this many picks, a number or a formula",
+    "where": "How many picks for the input \"{{name}}\"",
+    "placeholder": "for example: 3"
+  },
+  "repeat": {
+    "label": "May repeat",
+    "hint": "one sheet may be picked several times",
+    "aria": "\"{{name}}\": may repeat"
+  },
+  "skip": {
+    "label": "May be left blank",
+    "hint": "the player may leave it empty — then the input counts as not given",
+    "aria": "\"{{name}}\": may be left blank"
   }
 }

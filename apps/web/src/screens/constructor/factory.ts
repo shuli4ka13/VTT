@@ -39,6 +39,26 @@ export const namedStep = (system: System | null | undefined, taken: string[], ki
   saidId(taken, stepWord(system, kind), STEP_KEYS[kind]);
 
 
+export function giveContractReturns(system: System, effect: Effect): void {
+  const seen = new Set<string>();
+  const visit = (tag: string): void => {
+    if (seen.has(tag)) return;
+    seen.add(tag);
+    const contract = system.tags?.[tag];
+    if (!contract) return;
+    for (const output of contract.outputs ?? []) {
+      const list = (effect.returns ??= []);
+      if (list.some(column => column.key === output.key)) continue;
+      list.push({
+        key: output.key, label: contract.said?.[output.key] ?? output.key, kind: output.kind,
+        ...(output.from ? { from: output.from } : {}), ...(output.many ? { many: true } : {}),
+      } as NonNullable<Effect['returns']>[number]);
+    }
+    for (const included of contract.includes ?? []) visit(included);
+  };
+  for (const tag of effect.tags ?? []) visit(tag);
+}
+
 export const newHandler = (): Handler => ({ on: 'before:*', steps: [] });
 
 export const newEffect = (system: System, kind: LaunchKind): Made<Effect> => {

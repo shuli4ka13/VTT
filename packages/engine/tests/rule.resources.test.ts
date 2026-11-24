@@ -261,7 +261,7 @@ group('наложенное помнит число, штрафная кость
       },
       парирование: {
         label: 'Парирование', activation: 'passive',
-        on: [{ on: 'before:удар', if: { expr: '@цель == @holder' }, confirm: true, cost: [
+        on: [{ on: 'before:удар', if: { expr: '@цель == @holder' }, confirm: {}, cost: [
           { id: 'есть_заряд', type: 'check', value: { expr: '@holder.заряды' }, versus: { expr: '1' } },
           { type: 'branch', if: { expr: 'not @есть_заряд.success' } }, { type: 'stop' }, { type: 'end' },
           { type: 'apply', target: { expr: '@holder.заряды' }, direction: 'subtract', value: { expr: '1' } },

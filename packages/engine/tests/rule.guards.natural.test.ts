@@ -66,7 +66,7 @@ group('три вида запуска', () => {
     eq(launchOf({ activation: 'passive' }).kind, 'passive');
     const triggered = launchOf({ activation: 'passive' , on: [{ on: 'after:удар', steps: [] }] });
     eq(triggered.kind, 'auto'); eq(triggered.confirm, false); eq(triggered.moment, 'after');
-    const reaction = launchOf({ activation: 'passive' , on: [{ on: 'before:удар', confirm: true, steps: [] }] });
+    const reaction = launchOf({ activation: 'passive' , on: [{ on: 'before:удар', confirm: {}, steps: [] }] });
     eq(reaction.kind, 'auto'); eq(reaction.confirm, true); eq(reaction.moment, 'before');
     eq(activationFor(triggered), 'passive');
     eq(activationFor(reaction), 'passive');

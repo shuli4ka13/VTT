@@ -70,11 +70,11 @@ group('имена места знают колонки строк', () => {
     ok(choice?.children?.some(child => child.path === '.left'));
   });
 
-  test('затравка по метке подписана вызванным эффектом', () => {
+  test('затравка по метке — выход договора: подписана словом договора и несёт его вид', () => {
     const { system } = dnd();
-    const heard = namesAt(system as System, 'shield', { part: 'handler-if', handler: 0 }).find(one => one.name === 'brosok');
-    eq(heard?.label, 'Бросок атаки');
-    ok(heard?.children?.some(child => child.path === '.ishod.hit' && child.kind === 'boolean'));
+    const heard = namesAt(system as System, 'shield', { part: 'handler-if', handler: 0 }).find(one => one.name === 'popal');
+    eq(heard?.label, 'попал');
+    eq(heard?.kind, 'boolean');
   });
 });
 

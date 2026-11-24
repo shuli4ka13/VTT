@@ -54,7 +54,7 @@ const strike = (system: System, sheets: Sheet[], to: string, dice: number[], ext
 describe('режимы операции', () => {
   const system = world({
     удар: button([{ id: 'к', type: 'roll', die: { expr: '1d6' } }, sub('@к')]),
-    щит: { label: 'Щит', activation: 'passive', on: [{ on: 'before:удар', if: { expr: '@цель == @holder' }, confirm: true, steps: [] }] },
+    щит: { label: 'Щит', activation: 'passive', on: [{ on: 'before:удар', if: { expr: '@цель == @holder' }, confirm: {}, steps: [] }] },
   });
   const sheets = [sheet('а'), sheet('б', {}, ['щит'])];
 
@@ -82,8 +82,8 @@ describe('проба внутри прогона', () => {
         { id: 'б_бросок', type: 'roll', die: 'к20', by: { expr: '@цель' } },
         { id: 'б', type: 'check', value: { expr: '@б_бросок' }, versus: { expr: '10' } },
       ]),
-      щит: { label: 'Щит', activation: 'passive', on: [{ on: 'before:удар', if: { expr: '@цель == @holder' }, confirm: true, steps: [] }] },
-      удача: { label: 'Удача', activation: 'passive', on: [{ on: 'seen', if: { expr: '@roller == @holder' }, confirm: true, steps: [{ type: 'roll-plus', value: { expr: '1' } }] }] },
+      щит: { label: 'Щит', activation: 'passive', on: [{ on: 'before:удар', if: { expr: '@цель == @holder' }, confirm: {}, steps: [] }] },
+      удача: { label: 'Удача', activation: 'passive', on: [{ on: 'seen', if: { expr: '@roller == @holder' }, confirm: {}, steps: [{ type: 'roll-plus', value: { expr: '1' } }] }] },
     });
     const sheets = [sheet('а'), sheet('б', {}, ['щит', 'удача'])];
     const first = act({ system, compendium: book, clock: null, sheets, die: queue(7, 7), journal: emptyJournal() }, { actionId: 'приём:0', fromId: 'а', toIds: ['б'] });

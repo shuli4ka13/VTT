@@ -173,6 +173,7 @@ export const TABLES_A: Record<string, string> = {
   "сколько костей легло единицей": "how many dice landed on one",
   "что выпало на каждой кости": "what came up on each die",
   "да или нет: правили": "yes or no: modified",
+  "какие слова правок сработали": "which edit words took effect",
   "да или нет: пройден": "yes or no: passed",
   "степени успеха числом": "margin as a number",
   "какая ступень успеха": "which tier of success",

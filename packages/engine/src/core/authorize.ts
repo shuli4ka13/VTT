@@ -22,6 +22,7 @@ export type Want =
   | { kind: 'claim'; sheetId: string | null }
   | { kind: 'place'; sheetId: string }
   | { kind: 'items'; userId: string }
+  | { kind: 'rules' }
   | { kind: 'close' };
 
 export interface Room {
@@ -100,6 +101,7 @@ export function authorize(room: Room, userId: string, want: Want): string | null
     if (me.role === 'gm' || me.sheetId === want.sheetId) return null;
     return me.sheetId ? tr`это чужая фишка — двигает её владелец или ведущий` : tr`сначала выберите своего персонажа — двигать можно только его`;
   }
+  if (want.kind === 'rules') return me.role === 'gm' ? null : tr`правила стола меняет ведущий`;
   if (want.kind === 'items') {
     if (me.role !== 'gm') return tr`разрешает ведущий`;
     const who = room.members.find(member => member.userId === want.userId);

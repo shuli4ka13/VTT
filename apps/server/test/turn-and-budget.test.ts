@@ -117,7 +117,7 @@ describe('пробный расчёт и итог бросают одни кос
       ...dnd,
       effects: {
         ...dnd.effects,
-        watch: { label: 'Настороже', activation: 'passive', duration: { kind: 'permanent' }, params: [], on: [{ on: 'before:save', if: { expr: '@cel == @holder' }, confirm: true, steps: [] }] },
+        watch: { label: 'Настороже', activation: 'passive', duration: { kind: 'permanent' }, params: [], on: [{ on: 'before:save', if: { expr: '@cel == @holder' }, confirm: { show: ['roll', 'versus'] }, steps: [] }] },
       },
     };
     const token = (await http().post('/auth/login').send({ name: 'Страж' })).body.token as string;
@@ -402,7 +402,7 @@ describe('вопросы к человеку не теряют названно�
         }),
         вдохновение: {
           label: 'Вдохновение', activation: 'passive',
-          on: [{ on: 'seen', if: { expr: '@roller == @holder' }, confirm: true, steps: [{ type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
+          on: [{ on: 'seen', if: { expr: '@roller == @holder' }, confirm: {}, steps: [{ type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
         },
       },
       
@@ -457,7 +457,7 @@ describe('цель правит свой бросок, увидев его', () 
         ]),
         везение: {
           label: 'Везение', activation: 'passive',
-          on: [{ on: 'seen', if: { expr: '@roller == @holder' }, confirm: true, steps: [{ type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
+          on: [{ on: 'seen', if: { expr: '@roller == @holder' }, confirm: {}, steps: [{ type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
         },
       },
       
@@ -647,7 +647,7 @@ describe('отмена действия ведущим', () => {
       tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] }, приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
       effects: {
         удар: button('Удар', [sub('@цель.хиты', '5')]),
-        ответ: { label: 'Ответ', activation: 'passive', on: [{ on: 'after:удар', if: { expr: '@цель == @holder' }, confirm: true, steps: [sub('@действующий.хиты', '1')] }] },
+        ответ: { label: 'Ответ', activation: 'passive', on: [{ on: 'after:удар', if: { expr: '@цель == @holder' }, confirm: {}, steps: [sub('@действующий.хиты', '1')] }] },
       },
     };
     const book = { records: [{ id: 'приём', table: 'приём', label: 'Удар', cells: {} }] };
@@ -711,7 +711,7 @@ describe('вопросы на ответках', () => {
         удар: button('Удар', [{ type: 'emit', effect: 'урон', args: { раненый: { expr: '@цель' }, обидчик: { expr: '@действующий' }, сколько: { expr: '5' } } }]),
         возмездие: {
           label: 'Возмездие', activation: 'passive',
-          on: [{ on: 'after:урон', if: { expr: '@раненый == @holder' }, confirm: true, steps: [{ type: 'emit', effect: 'урон', args: { раненый: { expr: '@обидчик' }, обидчик: { expr: '@раненый' }, сколько: { expr: '2' } } }] }],
+          on: [{ on: 'after:урон', if: { expr: '@раненый == @holder' }, confirm: {}, steps: [{ type: 'emit', effect: 'урон', args: { раненый: { expr: '@обидчик' }, обидчик: { expr: '@раненый' }, сколько: { expr: '2' } } }] }],
         },
       },
     };
@@ -761,7 +761,7 @@ describe('вопросы на ответках', () => {
         шип: { label: 'Шип', params: [{ key: 'жертва', label: 'жертва', kind: 'sheet' }], steps: [sub('@жертва.хиты', '2')] },
         заслон: {
           label: 'Заслон', activation: 'passive',
-          on: [{ on: 'before:шип', if: { expr: '@жертва == @holder' }, confirm: true, steps: [sub('@holder.хиты', '3', 'add')] }],
+          on: [{ on: 'before:шип', if: { expr: '@жертва == @holder' }, confirm: {}, steps: [sub('@holder.хиты', '3', 'add')] }],
         },
       },
     };
@@ -817,7 +817,7 @@ describe('реакция после разрешения', () => {
         ]),
         возмездие: {
           label: 'Возмездие', activation: 'passive',
-          on: [{ on: 'after:удар', if: { expr: '@цель == @holder' }, confirm: true, steps: [sub('@действующий.хиты', '2')] }],
+          on: [{ on: 'after:удар', if: { expr: '@цель == @holder' }, confirm: {}, steps: [sub('@действующий.хиты', '2')] }],
         },
       },
       

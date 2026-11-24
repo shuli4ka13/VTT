@@ -190,3 +190,29 @@ describe('форма действия: плата', () => {
     expect((screen.getByRole('button', { name: 'Выстрел' }) as HTMLButtonElement).disabled).toBe(false);
   });
 });
+
+describe('форма действия: счёт целей', () => {
+  afterEach(() => { cleanup(); });
+
+  it('считает по ответам формы: сверх счёта кнопка неактивна, счёт виден', () => {
+    const sent: unknown[] = [];
+    const aim = (request: { inputs?: Record<string, unknown> }) => {
+      if (request.inputs?.дистанция === undefined) throw new Error('нет ответа');
+      return { count: Number(request.inputs.дистанция), repeat: true };
+    };
+    render(<ActionForm system={system} compendium={compendium} actionId="ствол:0" label="Выстрел" picked={3} aim={aim as never} onAct={r => sent.push(r)} />);
+    fireEvent.click(screen.getByText('Выстрел…'));
+    expect(screen.queryByText(/выбрано/)).toBeNull();
+    fireEvent.change(screen.getByLabelText('Дистанция'), { target: { value: '2' } });
+    expect(screen.getByText('выбрано 3 из 2')).toBeTruthy();
+    expect((screen.getByText('Выстрел').closest('button') as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.change(screen.getByLabelText('Дистанция'), { target: { value: '3' } });
+    expect((screen.getByText('Выстрел').closest('button') as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it('действие без вопросов и без счёта — как раньше, без подписи', () => {
+    render(<ActionForm system={system} compendium={compendium} actionId="меч:0" label="Удар" picked={5} aim={() => ({ count: null, repeat: false })} onAct={() => {}} />);
+    expect(screen.queryByText(/выбрано/)).toBeNull();
+    expect((screen.getByText('Удар').closest('button') as HTMLButtonElement).disabled).toBe(false);
+  });
+});

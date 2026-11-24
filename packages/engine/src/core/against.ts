@@ -2,7 +2,7 @@ import { compile } from '../formula/index.ts';
 import { rollEdits, rollHeld } from './edits.ts';
 import { cancels } from '../model/cancels.ts';
 import type { Held, Holder, RollEdits } from './edits.ts';
-import { claimOf, applyResults, nextId, onlyPlus, changesFaces, result } from './dice.ts';
+import { claimOf, applyResults, nextId, onlyPlus, changesFaces, result, MUL_OP } from './dice.ts';
 import type { Roll, RollResult, Rolled, Spec, Term } from './dice.ts';
 import type { Pass } from '../engine/calc.ts';
 import type { Die, System } from '../model/types.ts';
@@ -130,7 +130,12 @@ const who = (held: Held): string => held.source.label || held.source.id;
 
 const diceWord = (n: number): string => plural(n, tr`кость`, tr`кости`, tr`костей`);
 
-const countOf = (edit: { ops?: readonly unknown[] }): number => Number((edit.ops?.[0] as { count?: unknown } | undefined)?.count ?? 0);
+const sameCount = (a: { ops?: readonly unknown[] }, b: { ops?: readonly unknown[] }): boolean => JSON.stringify(a.ops?.[0] ?? null) === JSON.stringify(b.ops?.[0] ?? null);
+
+const countSaid = (edit: { ops?: readonly unknown[] }, sign: 1 | -1): string => {
+  const op = (edit.ops?.[0] ?? {}) as { op?: unknown; count?: unknown; by?: unknown };
+  return op.op === MUL_OP ? `×${Number(op.by ?? 1)}` : signedDice(sign * Number(op.count ?? 0));
+};
 
 const facedOf = (roll: Roll, add: number, trace: FacedTrace): Faced => {
   const made = result(roll);
@@ -162,14 +167,14 @@ export function retarget(record: RollRecord, opponent: string, name: string, die
       explained.add(partner);
       return tr`${head} гасит «${wordLabel(partner)}»`;
     }),
-    ...after.counts.filter(edit => !before.counts.some(one => one.label === edit.label && countOf(one) === countOf(edit)))
-      .map(edit => `${edit.label}: ${signedDice(countOf(edit))}`),
+    ...after.counts.filter(edit => !before.counts.some(one => one.label === edit.label && sameCount(one, edit)))
+      .map(edit => `${edit.label}: ${countSaid(edit, 1)}`),
     ...minus(after.bonuses, before.bonuses),
   ];
   const dropped = [
     ...minus(before.words, after.words).filter(key => !explained.has(key)).map(wordLabel),
-    ...before.counts.filter(edit => !after.counts.some(one => one.label === edit.label && countOf(one) === countOf(edit)))
-      .map(edit => `${edit.label} ${signedDice(countOf(edit))}`),
+    ...before.counts.filter(edit => !after.counts.some(one => one.label === edit.label && sameCount(one, edit)))
+      .map(edit => `${edit.label} ${countSaid(edit, 1)}`),
     ...minus(before.bonuses, after.bonuses),
   ];
   const claimWas = claimOf(record.spec, before.edits);
@@ -243,7 +248,7 @@ export function retarget(record: RollRecord, opponent: string, name: string, die
       const face = roll(sides);
       faces.push({ sides, value: face });
       return face;
-    });
+    }, claimNow.factor);
     thrownDice.push(...faces.map(face => face.value));
     left.push({ label: one.label, value, dice: faces });
   }

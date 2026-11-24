@@ -317,6 +317,8 @@ export const param = column.extend({
   ask: ask.optional(),
   perTarget: z.boolean().optional(),
   measure: z.boolean().optional(),
+  count: formula.optional(),
+  repeat: z.boolean().optional(),
   item: z.object({ key: tag, label: z.string().optional(), i18n }).strict().optional(),
 
   role: z.enum(['amount', 'target', 'actor']).optional(),
@@ -332,6 +334,13 @@ export const step = z.object({
   if: formula.optional(),
 }).passthrough();
 
+export const confirm = z.object({
+  i18n,
+  question: z.string().min(1).optional(),
+  show: z.array(z.enum(['actor', 'action', 'roll', 'versus'])).min(1).optional(),
+  to: z.enum(['actor', 'target', 'gm']).optional(),
+}).strict();
+
 export const handler = z.object({
   i18n,
   on: z.string().min(1),
@@ -339,7 +348,7 @@ export const handler = z.object({
   tags: z.array(z.string().min(1)).optional(),
   anyTags: z.array(z.string().min(1)).optional(),
   notTags: z.array(z.string().min(1)).optional(),
-  confirm: z.boolean().optional(),
+  confirm: confirm.optional(),
   cost: z.array(step).optional(),
   steps: z.array(step).optional(),
 }).strict();
@@ -348,9 +357,10 @@ export const tagContract = z.object({
   i18n,
   label: z.string().optional(),
   includes: z.array(z.string().min(1)).optional(),
-  inputs: z.array(z.object({ key: z.string().min(1), kind: valueKind, many: z.boolean().optional() }).strict()).optional(),
+  inputs: z.array(z.object({ key: z.string().min(1), kind: valueKind, from: z.string().min(1).optional(), many: z.boolean().optional() }).strict()).optional(),
   each: z.string().min(1).optional(),
-  outputs: z.array(z.string().min(1)).optional(),
+  outputs: z.array(z.object({ key: z.string().min(1), kind: valueKind, from: z.string().min(1).optional(), many: z.boolean().optional() }).strict()).optional(),
+  traits: z.array(z.object({ key: z.string().min(1), from: z.string().min(1).optional() }).strict()).optional(),
   said: z.record(z.string(), z.string().min(1)).optional(),
 }).strict();
 
@@ -508,6 +518,7 @@ export const sheet = z.object({
 
   has: z.array(owned),
   effects: z.array(wornEffect),
+  quiet: z.array(z.string().min(1)).optional(),
 }).strict();
 
 export const compendiumRecord = z.object({
@@ -579,6 +590,7 @@ export type Handler = z.infer<typeof handler>;
 export type Effect = z.infer<typeof effect>;
 export type Binding = z.infer<typeof binding>;
 export type TagContract = z.infer<typeof tagContract>;
+export type Confirm = z.infer<typeof confirm>;
 export type BindingArg = z.infer<typeof bindingArg>;
 export type SheetKind = z.infer<typeof sheetKind>;
 export type TableUse = z.infer<typeof tableUse>;

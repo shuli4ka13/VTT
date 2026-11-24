@@ -1,13 +1,14 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { render, cleanup } from '@testing-library/react';
+import { render, cleanup, fireEvent, act } from '@testing-library/react';
 import { writeFileSync } from 'node:fs';
 import { SAMPLE_WORLDS } from '@vtt/engine/samples';
 import type { System, Effect } from '@vtt/schema';
 import { useWorld } from '../../../store/world.ts';
 import { openAll } from '../../../testing/render-open.tsx';
-import { within, stepCard, block, blocks, headOf, addArm, addToArm, callIf, outcomeIf, armWord, dragParamBefore } from '../../../testing/cards.ts';
+import { within, askWith, stepCard, block, blocks, headOf, addArm, addToArm, callIf, outcomeIf, armWord, dragParamBefore } from '../../../testing/cards.ts';
 import { EffectsTab } from './effects-tab.tsx';
+import { compile, printFormula } from '@vtt/engine';
 import { folded } from '../../../testing/folded.ts';
 
 const worldOf = (id: string) => SAMPLE_WORLDS.find(w => w.system.id === id)!;
@@ -57,18 +58,20 @@ const marks = (card: HTMLElement, ...tags: string[]): void => {
 
 const built = (id: string): Effect | undefined => folded(useWorld.getState().system.effects[id]);
 
+const printed = (effect: Effect | undefined): unknown => JSON.parse(JSON.stringify(effect), (key, value) => (key === 'expr' && typeof value === 'string' ? printFormula(compile(value).ast) : value));
+
 const dump = (what: unknown) => {
   if (process.env.BUILD_DUMP) writeFileSync(process.env.BUILD_DUMP, JSON.stringify(what, null, 1));
 };
 
-const fresh = (button: string, label: string, key: string, block: string, description: string, note?: string) => {
+const fresh = (button: string | string[], label: string, key: string, block: string | undefined, description: string, note?: string) => {
   const ui = within();
-  ui.click(button);
+  for (const one of [button].flat()) ui.click(one);
   ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, label);
   if (!ui.has('имя в формулах…') && ui.has('свойства')) ui.click('свойства');
   ui.click('имя в формулах…');
   ui.type(document.querySelector<HTMLElement>('.step-name input')!, key);
-  ui.select('Папка', block);
+  if (block) ui.select('Папка', block);
   ui.type('Описание', description);
   if (note) ui.type('Заметка автора', note);
   return ui;
@@ -163,6 +166,158 @@ describe('эффекты D&D собираются в конструкторе р
     expect(built('taken_rule')).toEqual(folded(goal));
   });
 
+  it('D&D «Крит» (crit_double_rule): правка «кубики — умножить» по метке «крит», бросает носитель', { timeout: 60000 }, () => {
+    const [goal] = start('dnd5e', ['crit_double_rule']);
+    fresh('+ висит', goal!.label!, 'crit_double_rule', undefined, goal!.description!);
+    lifetime('permanent');
+    within().click('+ правка вызова');
+    const card = lastModifier;
+    within(card()).select('Чей вызов', 'roll');
+    within(card()).select('Что правим', 'count');
+    within(card()).select('Как', 'mul');
+    within(card()).formula('На сколько', '2');
+    within(card()).select('Какие броски', 'krit');
+    within(card()).select('Кого касается', '@roller == @holder');
+    dump({ got: built('crit_double_rule'), goal });
+    expect(built('crit_double_rule')).toEqual(folded(goal));
+  });
+
+  it('D&D «Лежит» (prone): три правки броска — по нему вплотную с преимуществом, издали с помехой, свои атаки с помехой', { timeout: 90000 }, () => {
+    const [goal] = start('dnd5e', ['prone']);
+    fresh('+ висит', goal!.label!, 'prone', 'sostoyaniya', goal!.description!);
+    lifetime('permanent', 'refresh');
+    for (const m of goal!.modifiers ?? []) {
+      const one = m as { tags?: string[]; notTags?: string[]; edit: string; if: { expr: string } };
+      within().click('+ правка вызова');
+      const card = lastModifier;
+      for (const tag of one.tags ?? []) within(card()).select('Какие броски', tag);
+      for (const tag of one.notTags ?? []) {
+        within(card()).click('+ или / кроме');
+        within(card()).select('Кроме', tag);
+      }
+      within(card()).select('Какое слово', one.edit);
+      within(card()).when(`=${one.if.expr}`);
+    }
+    dump({ got: built('prone'), goal });
+    expect(built('prone')).toEqual(folded(goal));
+  });
+
+  it('D&D «Скрытая атака» (sneak_attack): две подписки «после» атаки оружием, у каждой свой вопрос и плата «раз за ход», бросок урона с меткой крита', { timeout: 120000 }, () => {
+    const [goal] = start('dnd5e', ['sneak_attack']);
+    fresh('+ висит', goal!.label!, 'sneak_attack', 'umeniya_klassa', goal!.description!);
+    lifetime('permanent');
+    const rules = [
+      '@попал и @holder.sneak_dice > 0 и ((не пусто(@свойства) и есть(@свойства, "fehtovalnoe")) или @дальность == "dalniy") и @преимущество и (не @desk.combat или @holder.turn.raz_za_hod.left >= 1)',
+      '@попал и @holder.sneak_dice > 0 и ((не пусто(@свойства) и есть(@свойства, "fehtovalnoe")) или @дальность == "dalniy") и не @преимущество и не @помеха и (не @desk.combat или @holder.turn.raz_za_hod.left >= 1)',
+    ];
+    rules.forEach((rule, index) => {
+      const n = index + 1;
+      const at = () => handlerAt(n);
+      within().click('+ когда');
+      within(handlerHead(n)).select('Что именно', 'ataka_oruzhiem');
+      within(handlerHead(n)).select('Когда именно', 'after');
+      within(handlerHead(n)).select('Кого касается', '@deystvuyuschiy == @holder');
+      within(handlerHead(n)).when(`=${rule}`);
+      askWith(within(handlerHead(n)), { question: goal!.on![index]!.confirm!.question! });
+
+      within().select(at().querySelector<HTMLElement>('.add-cost [role="combobox"]')!, 'cost_once');
+      let card = stepCard(/^1 · /, at());
+      within(card).formula(within(card).arg('Лист'), '@holder');
+      within(card).formula(within(card).arg('Источник'), '@holder');
+
+      within(at()).click('+ бросок');
+      card = stepCard(/^2 · /, at());
+      within(card).select('Кто бросает', '@holder');
+      within(card).select('Что бросает', 'own-die');
+      within(card).formula('Своя кость', "'1d6'");
+      within(card).click('+ сколько раз');
+      within(card).formula('Сколько раз', '@holder.sneak_dice');
+      card = stepCard(/^2 · /, at());
+      marks(card, 'uron', '=if(@krit, "krit", "")');
+      nameStep(card, 'урон');
+
+      within(at()).click('+ изменение');
+      card = stepCard(/^3 · /, at());
+      within(card).click('вызов');
+      card = stepCard(/^3 · /, at());
+      within(card).select('Какой эффект', 'damage');
+      for (const [name, text] of [['Сколько урона', '@урон.total'], ['Лист', '@цель'], ['Источник', '@holder'], ['Тип урона', '@damage_type'], ['От крита', '@крит']] as const) {
+        within(card).formula(within(card).arg(name), text);
+      }
+    });
+    dump({ got: built('sneak_attack'), goal });
+    expect(printed(built('sneak_attack'))).toEqual(printed(folded(goal)));
+  });
+
+  it('D&D «Магические стрелы» (spell_auto): цели по счёту с повторами, метка вызова «Урона», ветка по настройке стола', { timeout: 180000 }, () => {
+    const [goal] = start('dnd5e', ['spell_auto']);
+    const ui = fresh(['+ кнопкой', '+ для каждого из списка'], goal!.label!, 'spell_auto', 'zaklinaniya', goal!.description!);
+    ui.select('Метки', 'volshebnaya_strela');
+    const param = (row: number, label: string, kind: string, from?: string) => {
+      if (row >= (built('spell_auto')!.params ?? []).length) ui.click('+ ещё одно');
+      ui.type(ui.cell('Название', row), label);
+      ui.select(ui.cell('Вид', row), kind);
+      if (from) ui.select(ui.cell('Таблица', row), from);
+    };
+    param(2, 'Круг заклинания', 'number');
+    param(3, 'Каким кругом', 'number');
+    ui.select(ui.cell('Если не передали', 3), 'actor');
+    ui.type(ui.cell('Подсказка за столом', 3), goal!.params![2]!.ask!.hint!);
+    const bounds = ui.cell('Границы', 3).querySelectorAll<HTMLInputElement>('input');
+    act(() => { fireEvent.change(bounds[0]!, { target: { value: '1' } }); });
+    act(() => { fireEvent.change(ui.cell('Границы', 3).querySelectorAll<HTMLInputElement>('input')[1]!, { target: { value: '9' } }); });
+    param(4, 'Кость урона', 'dice');
+    param(5, 'Сколько стрел', 'number');
+    param(6, 'Стрел за каждый круг выше', 'number');
+    param(7, 'Прибавка к кости стрелы', 'number');
+    param(8, 'Тип урона', 'choice', 'damage_types');
+    dragParamBefore('Цели', 'Кость урона');
+    ui.formula(ui.cell('Сколько целей', 3), '@сколько_стрел + (@каким_кругом - @круг_заклинания) * @стрел_за_каждый_круг_выше');
+    ui.check('«Цели» — можно повторять');
+    const damage = (card: () => HTMLElement, amount: string) => {
+      within(card()).click('вызов');
+      within(card()).select('Какой эффект', 'damage');
+      for (const [name, text] of [['Сколько урона', amount], ['Источник урона', '"magicheskiy"'], ['Лист', '@цель'], ['Источник', '@кто_действует'], ['Тип урона', '@тип_урона']] as const) {
+        within(card()).formula(within(card()).arg(name), text);
+      }
+      within(card()).select('Метки вызова', 'volshebnaya_strela');
+    };
+    ui.click('+ бросок');
+    let card = stepCard(/^2 · /);
+    within(card).select('Кто бросает', '');
+    within(card).select('Что бросает', 'own-die');
+    within(card).formula('Своя кость', '@кость_урона');
+    within(card).click('+ прибавка');
+    within(card).formula('Прибавка', '@прибавка_к_кости_стрелы');
+    nameStep(stepCard(/^2 · /), 'общий бросок');
+    within(stepCard(/^2 · /)).click('↑');
+
+    ui.click('+ если');
+    const flow = blocks().length - 1;
+    within(headOf(block(flow))).when('=@desk.strely_odnim_broskom');
+    addToArm(block(flow), 0, 'change');
+    damage(() => stepCard(/^3 · /), '@общий_бросок.total');
+    addArm(block(flow), '+ иначе');
+    addToArm(block(flow), 1, 'roll');
+    card = stepCard(/^4 · /);
+    within(card).select('Кто бросает', '@deystvuyuschiy');
+    within(card).select('Что бросает', 'own-die');
+    within(card).formula('Своя кость', '@кость_урона');
+    within(card).click('+ прибавка');
+    within(card).formula('Прибавка', '@прибавка_к_кости_стрелы');
+    marks(stepCard(/^4 · /), 'uron', 'zaklinanie');
+    nameStep(stepCard(/^4 · /), 'стрела');
+    addToArm(block(flow), 1, 'change');
+    damage(() => stepCard(/^5 · /), '@стрела.total');
+    ui.select(document.querySelector<HTMLElement>('.add-cost [role="combobox"]')!, 'cost_spell');
+    card = stepCard(/^1 · /);
+    for (const [name, text] of [['Лист', '@кто_действует'], ['Источник', '@кто_действует'], ['Круг заклинания', '@круг_заклинания'], ['Каким кругом', '@каким_кругом']] as const) {
+      within(card).formula(within(card).arg(name), text);
+    }
+    dump({ got: built('spell_auto'), goal });
+    expect(built('spell_auto')).toEqual(folded(goal));
+  });
+
   it('D&D «Недееспособен» (incapacitated): при наложении снимает концентрацию; обход: пустые modifiers снимаются только добавлением и удалением правки', { timeout: 60000 }, () => {
     const [goal] = start('dnd5e', ['incapacitated']);
     const ui = fresh('+ висит', goal!.label!, 'incapacitated', 'sostoyaniya', goal!.description!);
@@ -191,6 +346,7 @@ describe('эффекты D&D собираются в конструкторе р
     within(lastModifier()).click('точно убрать');
     ui.click('+ что даёт');
     within(ui.field('Что даёт')).select(ui.field('Что даёт'), 'helpless');
+    valueModifier('krit_vplotnuyu', 'set', '1');
 
     ui.click('+ вход');
     ui.type(ui.cell('Название', 0), 'Запомненное число');
@@ -232,7 +388,7 @@ describe('эффекты D&D собираются в конструкторе р
     within(handlerHead(1)).select('Что случилось', 'seen');
     within(handlerHead(1)).select('Кого касается', '@roller == @holder');
     within(handlerHead(1)).when('=@roller == @holder и (есть(@roll.tags, "ataka") или есть(@roll.tags, "spasbrosok") или есть(@roll.tags, "proverka"))');
-    within(handlerHead(1)).select('Решение', 'ask');
+    askWith(within(handlerHead(1)), { show: ['roll'] });
     within(handlerAt(1)).click('+ прибавить');
     const card = stepCard(/^1 · /, handlerAt(1));
     within(card).select('Сколько', 'expr:@kost');
@@ -246,7 +402,7 @@ describe('эффекты D&D собираются в конструкторе р
     within().click('+ когда');
     within(handlerHead(1)).select('Что случилось', 'seen');
     within(handlerHead(1)).select('Кого касается', '@roller == @holder');
-    within(handlerHead(1)).select('Решение', 'ask');
+    askWith(within(handlerHead(1)), { show: ['roll'] });
 
     within(handlerAt(1)).click('+ изменение');
     let card = stepCard(/^1 · /, handlerAt(1));
@@ -287,36 +443,44 @@ describe('эффекты D&D собираются в конструкторе р
     expect(step.upTo).toEqual({ expr: '1' });
   });
 
-  it('D&D «Щит» (shield): «до» всего с меткой «атака», цена реакцией и ячейкой, вешает состояние на себя', { timeout: 60000 }, () => {
+  it('D&D «Щит» (shield): две подписки с вопросом — «до» атаки и «до» волшебной стрелы, цена реакцией и ячейкой, вешает состояние на себя', { timeout: 90000 }, () => {
     const [goal] = start('dnd5e', ['shield']);
     const ui = fresh('+ висит', goal!.label!, 'shield', 'reakcii', goal!.description!);
-    within().click('+ когда');
-    within(handlerHead(1)).select('Что именно', 'ataka');
-    within(handlerHead(1)).select('Когда именно', 'before');
-    within(handlerHead(1)).select('Кого касается', '@cel == @holder');
-    within(handlerHead(1)).when('=@brosok.ishod.hit');
-    within(handlerHead(1)).select('Решение', 'ask');
+    const heard = [
+      ['ataka', '@popal и @holder.shield_up == 0'],
+      ['volshebnaya_strela', '@holder.shield_up == 0'],
+    ] as const;
+    heard.forEach(([listened, when], index) => {
+      const n = index + 1;
+      const at = () => handlerAt(n);
+      within().click('+ когда');
+      within(handlerHead(n)).select('Что именно', listened);
+      within(handlerHead(n)).select('Когда именно', 'before');
+      within(handlerHead(n)).select('Кого касается', '@cel == @holder');
+      within(handlerHead(n)).when(`=${when}`);
+      askWith(within(handlerHead(n)), { question: goal!.on![index]!.confirm!.question! });
 
-    ui.select(handlerAt(1).querySelector<HTMLElement>('.add-cost [role="combobox"]')!, 'cost_reaction');
-    let card = stepCard(/^1 · /, handlerAt(1));
-    within(card).formula(within(card).arg('Лист'), '@holder');
-    within(card).formula(within(card).arg('Источник'), '@holder');
-    within(handlerAt(1)).click('+ изменение');
-    card = stepCard(/^2 · /, handlerAt(1));
-    within(card).click('вызов');
-    card = stepCard(/^2 · /, handlerAt(1));
-    within(card).select('Какой эффект', 'spell_slot');
-    for (const name of within(card).args()) {
-      within(card).formula(within(card).arg(name), name === 'Лист' || name === 'Источник' ? '@holder' : '1');
-    }
-    within(stepCard(/^2 · /, handlerAt(1))).click('↑');
+      ui.select(at().querySelector<HTMLElement>('.add-cost [role="combobox"]')!, 'cost_reaction');
+      let card = stepCard(/^1 · /, at());
+      within(card).formula(within(card).arg('Лист'), '@holder');
+      within(card).formula(within(card).arg('Источник'), '@holder');
+      within(at()).click('+ изменение');
+      card = stepCard(/^2 · /, at());
+      within(card).click('вызов');
+      card = stepCard(/^2 · /, at());
+      within(card).select('Какой эффект', 'spell_slot');
+      for (const name of within(card).args()) {
+        within(card).formula(within(card).arg(name), name === 'Лист' || name === 'Источник' ? '@holder' : '1');
+      }
+      within(stepCard(/^2 · /, at())).click('↑');
 
-    within(handlerAt(1)).click('+ изменение');
-    card = stepCard(/^3 · /, handlerAt(1));
-    within(card).click('состояние');
-    card = stepCard(/^3 · /, handlerAt(1));
-    within(card).select('Какое', 'shield_up');
-    within(card).formula('На кого', '@holder');
+      within(at()).click('+ изменение');
+      card = stepCard(/^3 · /, at());
+      within(card).click('состояние');
+      card = stepCard(/^3 · /, at());
+      within(card).select('Какое', 'shield_up');
+      within(card).formula('На кого', '@holder');
+    });
     dump({ got: built('shield'), goal });
     expect(built('shield')).toEqual(folded(goal));
   });
