@@ -19,6 +19,7 @@ export function reasonWord(reason: string): string | null {
 }
 
 export const icon = '➤';
+export const stage = (): string => 'deliver';
 
 export const idle = (trace: Record<string, unknown>, system: System): boolean => isPureCall(system, trace.event);
 

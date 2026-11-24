@@ -227,7 +227,6 @@ export const LINT: Record<string, string> = {
   "{0} «{1}» назван как вход «{2}» — «{3}» всегда читает {4}, результат {5} так не прочесть; лучше переименовать {6}": "{0} “{1}” is named like the input “{2}” — “{3}” always reads {4}, the result of {5} cannot be read that way; better rename {6}",
   "{0} «{1}» назван как вход «{2}» — до {3} «{4}» читает вход, после — результат {5}; лучше переименовать {6}": "{0} “{1}” is named like the input “{2}” — before {3} “{4}” reads the input, after — the result of {5}; better rename {6}",
   "«{0}» в условиях ступеней проверки значит её {1} — {2} с этим именем там не прочесть; лучше переименовать": "“{0}” in check tier conditions means its {1} — {2} with this name cannot be read there; better rename",
-  "вход": "input",
   "{0} не может зваться «{1}» — это слово движка: {2}": "{0} cannot be named “{1}” — this is an engine word: {2}",
   "язык «{0}» в списке языков дважды": "the language “{0}” is in the language list twice",
   "перевод на {0}: без перевода подписей — {1} (например {2}{3})": "translation into {0}: labels without translation — {1} (for example {2}{3})",

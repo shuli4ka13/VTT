@@ -24,6 +24,8 @@ const DIRECTIONS: Record<string, (from: number, x: number) => number> = {
 export const mayBreak = false;
 
 export const icon = '✎';
+export const stage = (): string => 'deliver';
+export const writes = 'target';
 
 export function lint(step: StepData) {
   if (!step.target) return tr`изменению нужно поле листа, например «Цель · Хиты»`;

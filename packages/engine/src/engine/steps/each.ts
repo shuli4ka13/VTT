@@ -18,6 +18,7 @@ export const rows = (step: LoopStep): { table: string; as: string } | null =>
 export const mayBreak = false;
 
 export const icon = '⟳';
+export const stage = (): string => 'target';
 
 export const traceLine = (t: { table?: unknown }, h?: { tableLabel?: (id: string) => string }): string =>
   (typeof t.table === 'string' ? tr`для каждой строки «${h?.tableLabel?.(t.table) ?? t.table}»` : tr`для каждого`);

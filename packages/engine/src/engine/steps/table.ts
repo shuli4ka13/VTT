@@ -14,6 +14,7 @@ export const { slots, outputs } = words;
 export const mayBreak = false;
 
 export const icon = '▦';
+export const stage = (): string => 'amount';
 
 export function traceLine(t: any, h: any) {
   const rolls = t.rolls?.length ? `[${t.rolls.join(', ')}] = ` : '';

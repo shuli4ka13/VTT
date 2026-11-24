@@ -16,6 +16,7 @@ export const { slots, outputs } = words;
 export const mayBreak = false;
 
 export const icon = '⌖';
+export const stage = (): string => 'check';
 
 export const slotNames = (step: StepData, slot: string): readonly string[] =>
   (slot === 'degrees' && Array.isArray(step.degrees) ? [SUCCESS_NAME, MARGIN_NAME] : []);

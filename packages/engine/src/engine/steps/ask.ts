@@ -13,6 +13,7 @@ export const mayBreak = false;
 export const asks = true;
 
 export const icon = '?';
+export const stage = (): string => 'check';
 
 const text = (value: unknown, fallback: string): string => (typeof value === 'string' && value.trim() ? value.trim() : fallback);
 

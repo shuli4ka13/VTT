@@ -6,6 +6,7 @@ const marker = (type: 'branch' | 'orElse' | 'end', flow: 'open' | 'alt' | 'close
   return {
     type, slots: words.slots, outputs: words.outputs,
     flow, icon, mayBreak: false,
+    stage: () => 'check',
     finish: () => ({ value: null, trace: {}, break: null }),
   };
 };
@@ -19,6 +20,7 @@ const stopWords: StepWords = STEP_WORDS.stop;
 export const stop: StepModule = {
   type: 'stop', slots: stopWords.slots, outputs: stopWords.outputs,
   icon: '■', mayBreak: true,
+  halts: (step: StepData, inCost: boolean) => ({ kind: step.refusal === 'soft' || (step.refusal !== 'hard' && inCost) ? 'ask' : 'stop', note: step.note }),
   reasonWord: (reason: string) => stopWords.reasons[reason] ?? null,
   finish(step: StepData, ctx: StepContext) {
     const raw = step.note ? ctx.value(step.note) : null;

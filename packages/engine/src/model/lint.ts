@@ -1555,7 +1555,7 @@ function exprsIn(value: unknown, out: string[] = []): string[] {
 const namesUsedIn = (...parts: unknown[]): Set<string> =>
   new Set(parts.flatMap(part => exprsIn(part)).flatMap(expr => formulaDeps(expr) ?? []).map(dep => dep.split('.')[0]!));
 
-function heardLabel(system: System, heard: Listener): string {
+export function heardLabel(system: System, heard: Listener): string {
   switch (heard.kind) {
     case 'seen': return seenLabel();
     case 'rolled': return rolledLabel();

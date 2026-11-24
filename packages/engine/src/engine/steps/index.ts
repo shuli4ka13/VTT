@@ -114,6 +114,10 @@ export interface StepModule {
   slotRefers?: (step: StepData, slot: string) => string | null;
 
   thrownBy?: (step: StepData) => unknown;
+
+  stage?: (step: StepData) => string;
+  halts?: (step: StepData, inCost: boolean) => { kind: 'ask' | 'stop'; note: unknown };
+  writes?: string;
   dice?: (step: StepData) => boolean;
 
   flow?: 'open' | 'alt' | 'close';

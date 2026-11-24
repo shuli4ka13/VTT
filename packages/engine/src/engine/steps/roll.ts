@@ -34,6 +34,7 @@ const passed = (field: unknown): boolean =>
 
 export const thrownBy = (step: StepData): unknown => (has(step.field) ? headOf(step.field) : step.by);
 export const dice = (step: StepData): boolean => has(step.die) || has(step.field);
+export const stage = (step: StepData): string => (dice(step) ? 'roll' : 'amount');
 
 export const icon = '⚄';
 

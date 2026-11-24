@@ -25,6 +25,7 @@ export const slotRefers = (step: StepData, slot: string): string | null =>
   (slot === 'effect' && step.mode === 'remove' && step.by === 'tag' ? 'tag' : null);
 
 export const icon = '☄';
+export const stage = (): string => 'deliver';
 
 export function traceLine(t: any, h: any) {
   if (t.effect === null) return tr`состояние: не задано — шаг пропущен`;
