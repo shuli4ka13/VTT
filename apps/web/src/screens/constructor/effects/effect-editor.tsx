@@ -13,6 +13,7 @@ import { useOpened } from '../../../store/opened.ts';
 import { useModifierRows, AddModifiers } from '../modifiers.tsx';
 import { LAUNCH_KINDS, launchHint } from './words.ts';
 import { HandlerCard } from './handler-card.tsx';
+import { HOOKS, carrierOf, editCarrier, placeOf, costCarrier, editCost } from './carrier.ts';
 import { WhileWhenRow, WhileWhenEmpty } from './while-when.tsx';
 import { followKey, effectUsed } from '../keys.ts';
 import { KeyField } from '../../../ui/key-field.tsx';
@@ -35,18 +36,11 @@ const COUNTED = new Set(['uses', 'rounds', 'turns', 'minutes', 'hours', 'days'])
 const reapplyOptions = () => (Object.keys(REAPPLY) as (keyof typeof REAPPLY)[]).map(key => [key, REAPPLY[key].label] as const);
 
 export function EffectEditor({ id, effect, system }: { id: string; effect: Effect; system: System }) {
-  const t = useT('effects');
-  const editSystem = useWorld(s => s.editSystem);
   const editEffect = useWorld(s => s.editEffect);
-  const pick = useWorld(s => s.pick);
 
   const edit = (change: (draft: Effect) => void) => editEffect(id, change);
 
   const launch = launchOf(effect);
-  const role = roleOf(system, useWorld.getState().compendium, id);
-  const props = `effect-props|${id}`;
-  const more = useOpened(s => Boolean(s.opened[props]));
-  const setMore = (open: boolean) => useOpened.getState().setOpen([props], open);
   const pipeline = launch.kind === 'manual';
 
   const moveLane = (indices: number[], to: Lane) => {
@@ -58,6 +52,46 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
   };
 
   const shiftLane = (indices: number[], to: Lane) => edit(draft => { shiftBetween(draft, indices, to); });
+
+  return (
+    <>
+      <EffectHead id={id} effect={effect} system={system} edit={edit} />
+
+      <ParamsEditor id={id} effect={effect} system={system} onEdit={edit} />
+      {effect.returns?.length || launch.kind === 'manual' ? <ReturnsEditor id={id} effect={effect} system={system} onEdit={edit} /> : null}
+
+      {pipeline ? (
+        <>
+          <Chain
+            id={id} placeAt={placeOf({ part: 'steps' })}
+            effect={effect} system={system} edit={edit}
+            empty={idleWords(effect)}
+            onEdgeUp={indices => moveLane(indices, 'cost')}
+            startAt={groupSteps(effect.cost ?? []).filter(card => card.kind !== 'flow').length}
+            lead={<SelfTrack id={id} at={placeOf({ part: 'cost' })} effect={effect} system={system} edit={edit} onMoveLane={moveLane} onAddCost={cost => edit(draft => { (draft.cost ??= []).push(payStep(system, draft, cost)); })} />}
+            {...(effect.cost?.length ? {} : { onAddCost: (cost: string) => edit(draft => { (draft.cost ??= []).push(payStep(system, draft, cost)); }) })}
+          />
+        </>
+      ) : (
+        <WhileWhen id={id} effect={effect} system={system} edit={edit} />
+      )}
+    </>
+  );
+}
+
+export function EffectHead({ id, effect, system, edit }: {
+  id: string; effect: Effect; system: System; edit: (change: (draft: Effect) => void) => void;
+}) {
+  const t = useT('effects');
+  const editSystem = useWorld(s => s.editSystem);
+  const pick = useWorld(s => s.pick);
+
+  const launch = launchOf(effect);
+  const role = roleOf(system, useWorld.getState().compendium, id);
+  const props = `effect-props|${id}`;
+  const more = useOpened(s => Boolean(s.opened[props]));
+  const setMore = (open: boolean) => useOpened.getState().setOpen([props], open);
+  const pipeline = launch.kind === 'manual';
 
   const rekey = (next: string) => {
     if (next === id || system.effects[next]) return;
@@ -74,7 +108,6 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
   };
 
   return (
-    <>
       <Card className="effect-head">
         <div className="effect-head__top">
           <span className="effect-head__name">
@@ -193,35 +226,10 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
           />
         )}
       </Card>
-
-      <ParamsEditor id={id} effect={effect} system={system} onEdit={edit} />
-      {effect.returns?.length || launch.kind === 'manual' ? <ReturnsEditor id={id} effect={effect} system={system} onEdit={edit} /> : null}
-
-      {pipeline ? (
-        <>
-          <Chain
-            id={id} placeAt={index => ({ part: 'steps', index })}
-            effect={effect} system={system} edit={edit}
-            empty={idleWords(effect)}
-            onEdgeUp={indices => moveLane(indices, 'cost')}
-            startAt={groupSteps(effect.cost ?? []).filter(card => card.kind !== 'flow').length}
-            lead={<SelfTrack id={id} at={index => ({ part: 'cost', index })} effect={effect} system={system} edit={edit} onMoveLane={moveLane} onAddCost={cost => edit(draft => { (draft.cost ??= []).push(payStep(system, draft, cost)); })} />}
-            {...(effect.cost?.length ? {} : { onAddCost: (cost: string) => edit(draft => { (draft.cost ??= []).push(payStep(system, draft, cost)); }) })}
-          />
-        </>
-      ) : (
-        <WhileWhen id={id} effect={effect} system={system} edit={edit} />
-      )}
-    </>
   );
 }
 
-const HOOKS = [
-  { turn: 'attach', get title() { return tt('effects:hooks.attach.title'); }, get word() { return tt('effects:hooks.attach.word'); }, get hint() { return tt('effects:hooks.attach.hint'); } },
-  { turn: 'detach', get title() { return tt('effects:hooks.detach.title'); }, get word() { return tt('effects:hooks.detach.word'); }, get hint() { return tt('effects:hooks.detach.hint'); } },
-] as const;
-
-function WhileWhen({ id, effect, system, edit }: {
+export function WhileWhen({ id, effect, system, edit }: {
   id: string; effect: Effect; system: System; edit: (change: (draft: Effect) => void) => void;
 }) {
   const t = useT('effects');
@@ -263,19 +271,15 @@ function Hooks({ id, effect, system, edit }: {
   return (
     <>
       {HOOKS.filter(({ turn }) => effect[turn] !== undefined).map(({ turn, title, word, hint }) => {
-        const carrier = { ...effect, label: `${effect.label ?? ''} · ${title}`, steps: effect[turn] ?? [] } as Effect;
-        const editCarrier = (change: (draft: Effect) => void) => edit(draft => {
-          const view = { ...draft, steps: draft[turn] ?? [] } as Effect;
-          change(view);
-          draft[turn] = view.steps ?? [];
-        });
+        const at = { part: turn } as const;
+        const carrier = carrierOf(effect, at);
         return (
           <div key={turn} className="mod-item">
             <WhileWhenRow when title={hint} removeTitle={t('whileWhen.removeHook', { name: title.toLowerCase() })} onRemove={() => edit(draft => { delete draft[turn]; })}>
               {word}
             </WhileWhenRow>
             <div className="stack when-body">
-              <Chain id={id} placeAt={index => ({ part: turn, index })} effect={carrier} foldName={`${effect.label ?? ''} · ${turn}`} system={system} edit={editCarrier} title={t('whileWhen.does')} lined empty={t('whileWhen.hookEmpty')} />
+              <Chain id={id} placeAt={placeOf(at)} effect={carrier} foldName={`${effect.label ?? ''} · ${turn}`} system={system} edit={editCarrier(edit, at)} title={t('whileWhen.does')} lined empty={t('whileWhen.hookEmpty')} />
             </div>
           </div>
         );
@@ -306,15 +310,9 @@ function Handlers({ id, effect, system, edit }: {
   return (
     <>
       {(effect.on ?? []).map((handler, index) => {
-        const carrier = { ...effect, label: `${effect.label ?? ''} · ${t('whileWhen.whenNo', { n: index + 1 })}`, steps: handler.steps ?? [], cost: handler.cost } as Effect;
-        const editCarrier = (change: (draft: Effect) => void) => edit(draft => {
-          const own = draft.on?.[index];
-          if (!own) return;
-          const view = { ...draft, steps: own.steps ?? [], cost: own.cost } as Effect;
-          change(view);
-          own.steps = view.steps ?? [];
-          if (view.cost?.length) own.cost = view.cost; else delete own.cost;
-        });
+        const at = { part: 'handler', handler: index } as const;
+        const carrier = carrierOf(effect, at);
+        const editHandler = editCarrier(edit, at);
         const moveLane = (indices: number[], to: Lane) => edit(draft => {
           const own = draft.on?.[index];
           if (own) shiftBetween(own, indices, to);
@@ -332,16 +330,16 @@ function Handlers({ id, effect, system, edit }: {
             />
             <div className="stack when-body">
               <Chain
-                id={id} placeAt={step => ({ part: 'handler', handler: index, index: step })}
-                effect={carrier} foldName={`${effect.label ?? ''} · on ${index + 1}`} system={system} edit={editCarrier}
+                id={id} placeAt={placeOf(at)}
+                effect={carrier} foldName={`${effect.label ?? ''} · on ${index + 1}`} system={system} edit={editHandler}
                 title={t('whileWhen.does')}
                 lined
                 empty={t('whileWhen.handlerEmpty')}
                 onEdgeUp={indices => moveLane(indices, 'cost')}
                 onRoll={handler.on === 'seen'}
                 startAt={groupSteps(carrier.cost ?? []).filter(card => card.kind !== 'flow').length}
-                lead={<SelfTrack id={id} at={step => ({ part: 'handler-cost', handler: index, index: step })} effect={carrier} foldName={`${effect.label ?? ''} · on ${index + 1}`} system={system} edit={editCarrier} onMoveLane={moveLane} {...(handler.confirm ? { onAddCost: (cost: string) => editCarrier(draft => { (draft.cost ??= []).push(payStep(system, draft, cost)); }) } : {})} />}
-                {...(handler.confirm && !handler.cost?.length ? { onAddCost: (cost: string) => editCarrier(draft => { (draft.cost ??= []).push(payStep(system, draft, cost)); }) } : {})}
+                lead={<SelfTrack id={id} at={placeOf({ part: 'handler-cost', handler: index })} effect={carrier} foldName={`${effect.label ?? ''} · on ${index + 1}`} system={system} edit={editHandler} onMoveLane={moveLane} {...(handler.confirm ? { onAddCost: (cost: string) => editHandler(draft => { (draft.cost ??= []).push(payStep(system, draft, cost)); }) } : {})} />}
+                {...(handler.confirm && !handler.cost?.length ? { onAddCost: (cost: string) => editHandler(draft => { (draft.cost ??= []).push(payStep(system, draft, cost)); }) } : {})}
               />
             </div>
           </div>
@@ -360,7 +358,7 @@ const idleWords = (effect: Effect): string => {
   return tt('effects:idle.only', { what: cost && mods ? tt('effects:idle.both') : cost ? tt('effects:idle.cost') : tt('effects:idle.mods') });
 };
 
-function Lifetime({ effect, system, edit }: {
+export function Lifetime({ effect, system, edit }: {
   effect: Effect; system: System; edit: (change: (draft: Effect) => void) => void;
 }) {
   const t = useT('effects');
@@ -439,16 +437,9 @@ function SelfTrack({ id, at, effect, system, edit, onMoveLane, onAddCost, foldNa
   onAddCost?: (id: string) => void;
   foldName?: string;
 }) {
-  const track = effect.cost ?? [];
-  if (!track.length) return null;
-  const carrier = { ...effect, steps: track } as Effect;
-
-  const editTrack = (change: (draft: Effect) => void) => edit(draft => {
-    const own = { ...draft, steps: draft.cost ?? [] } as Effect;
-    change(own);
-    const steps = own.steps ?? [];
-    if (steps.length) draft.cost = steps; else delete draft.cost;
-  });
+  if (!(effect.cost ?? []).length) return null;
+  const carrier = costCarrier(effect);
+  const editTrack = editCost(edit);
 
   return (
     <>

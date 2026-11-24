@@ -1,0 +1,63 @@
+{
+  "head": {
+    "undo": "Undo",
+    "redo": "Redo",
+    "undoTitle": "Undo the last edit made in bubbles",
+    "redoTitle": "Bring back the undone edit",
+    "removed": "Step removed. Links to it in other steps were cleared",
+    "restore": "Restore"
+  },
+  "panel": {
+    "label": "Effect editing",
+    "step": "{{n}} · {{label}}",
+    "about": "About the step",
+    "aboutTitle": "Read what the step does, reads and who steps in",
+    "up": "↑",
+    "upTitle": "Move the step up",
+    "down": "↓",
+    "downTitle": "Move the step down",
+    "remove": "Delete step",
+    "insertWhere": "Insert",
+    "inside": "inside",
+    "afterBlock": "after the block",
+    "insideTitle": "The new step goes inside this branch, at the end",
+    "afterTitle": "The new step goes after the whole \"If\" block",
+    "removeHandler": "Remove the subscription",
+    "around": "Around the step",
+    "cost": "Cost",
+    "empty": "Nothing here yet"
+  },
+  "palette": {
+    "label": "Palette",
+    "title": "Palette",
+    "search": "Search the palette",
+    "searchHolder": "roll, damage...",
+    "hide": "Collapse",
+    "hideTitle": "Collapse the palette",
+    "show": "Palette",
+    "showTitle": "Show the palette",
+    "core": "Engine core",
+    "mine": "My system",
+    "steps": "Steps",
+    "seen": "On a roll",
+    "happened": "What happened",
+    "effects": "Effects",
+    "states": "States",
+    "costs": "Costs",
+    "nothing": "Nothing found",
+    "chipTitle": "Insert: {{name}}",
+    "handlerTitle": "Add a subscription: {{name}}"
+  },
+  "reason": {
+    "noPlace": "Nowhere to insert: the effect has no subscription",
+    "costOnly": "Only costs go into the cost",
+    "payHere": "A cost goes only into the cost",
+    "payConfirm": "A subscription has a cost only when it decides",
+    "seen": "These steps work only in a subscription to \"dice rolled\"",
+    "callSelf": "An effect does not call itself",
+    "noEffect": "No such effect",
+    "callPassive": "A hanging effect is not called, it is applied",
+    "statusManual": "Only hanging effects can be applied",
+    "eachInside": "\"For each of\" cannot go inside \"If\""
+  }
+}

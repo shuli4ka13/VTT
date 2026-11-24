@@ -46,7 +46,7 @@ function negationOf(text: string): { negated: boolean; inner: string } {
   } catch { return { negated: false, inner: text.trim() }; }
 }
 
-export function Chain({ id, placeAt, effect, system, edit, title: titleProp, empty: emptyProp, lane = 'steps', foldName, onEdgeUp, onEdgeDown, bare = false, lined = false, startAt = 0, lead, onAddCost, onRoll = false }: {
+export function Chain({ id, placeAt, effect, system, edit, title: titleProp, empty: emptyProp, lane = 'steps', foldName, onEdgeUp, onEdgeDown, bare = false, lined = false, startAt = 0, lead, onAddCost, onRoll = false, only, numberAs }: {
   id: string;
   placeAt: (index: number) => Place;
   effect: Effect;
@@ -64,6 +64,8 @@ export function Chain({ id, placeAt, effect, system, edit, title: titleProp, emp
   lead?: ReactNode;
   onAddCost?: (id: string) => void;
   onRoll?: boolean;
+  only?: { from: number; to: number };
+  numberAs?: number;
 }) {
   const t = useT('effects');
   const title = titleProp ?? t('chain.title');
@@ -284,7 +286,7 @@ export function Chain({ id, placeAt, effect, system, edit, title: titleProp, emp
         {...(ifBy.length ? { ifBy } : {})}
         {...(Object.keys(byOutput).length ? { byOutput } : {})}
         {...(activeOutput ? { activeOutput } : {})}
-        position={startAt + at + 1}
+        position={numberAs !== undefined && only && group.indices.includes(only.from) ? numberAs : startAt + at + 1}
         system={system}
         effect={effect}
         earlier={[
@@ -296,7 +298,7 @@ export function Chain({ id, placeAt, effect, system, edit, title: titleProp, emp
         tables={placeTablesAt(system, id, placeAt(group.indices[0]!))}
         scope={namesAt(system, id, placeAt(group.indices[0]!))}
         lane={lane}
-        folded={!opened[foldKey(group)]}
+        folded={only ? false : !opened[foldKey(group)]}
         onFold={() => toggleFold(foldKey(group))}
         problemAction={donorFix ? (
           <Button size="sm" onClick={() => copyDonorBlock(donorFix.donor, donorFix.group)}>
@@ -419,19 +421,40 @@ export function Chain({ id, placeAt, effect, system, edit, title: titleProp, emp
     />
   );
 
-  const block = (open: number, fused?: { group: (typeof cards)[number]; g: number; yes: string; no: string; negated: boolean }, cases?: Cases): { node: ReactNode; next: number } => {
+  const dropArm = (head: number) => () => edit(draft => { const list = draft.steps ?? []; draft.steps = removeSteps(list, span(head, armEnd(list, head) - 1)).steps; });
+
+  const controlsOf = (open: number) => {
     const end = endOf(steps, open);
     const heads = headsOf(open);
+    const inside = cards.filter(card => card.indices[0]! > open && card.indices[0]! < end);
+    const unwrap = heads.length === 1 && inside.length ? () => edit(draft => { draft.steps = unwrapBlock(draft.steps ?? [], open); }) : undefined;
+    const actions = (
+      <FlowActions
+        onUp={open === 0
+          ? (onEdgeUp ? () => onEdgeUp(span(open, end)) : undefined)
+          : () => edit(draft => { draft.steps = moveSpan(draft.steps ?? [], blockSpan(draft.steps ?? [], open), -1, true); })}
+        onDown={end === steps.length - 1
+          ? (onEdgeDown ? () => onEdgeDown(span(open, end)) : undefined)
+          : () => edit(draft => { draft.steps = moveSpan(draft.steps ?? [], blockSpan(draft.steps ?? [], open), 1, true); })}
+        upTitle={open === 0 && onEdgeUp ? ABOVE_PAY : undefined}
+        downTitle={end === steps.length - 1 && onEdgeDown ? BELOW_PAY : undefined}
+        onKeep={unwrap}
+        onDelete={() => edit(draft => { const list = draft.steps ?? []; draft.steps = removeSteps(list, span(open, endOf(list, open))).steps; })}
+      />
+    );
+    return { end, heads, inside, unwrap, actions };
+  };
+
+  const block = (open: number, fused?: { group: (typeof cards)[number]; g: number; yes: string; no: string; negated: boolean }, cases?: Cases): { node: ReactNode; next: number } => {
+    const { end, heads, inside, unwrap, actions: headActions } = controlsOf(open);
     const caseOf = (head: number): string => {
       const found = caseAt(steps[head]);
       return cases?.options.find(option => same(option.value, found?.value))?.label ?? String(found?.value ?? t('chain.else'));
     };
     const bareElse = heads.slice(1).some(head => (steps[head] as { if?: unknown }).if === undefined);
     const problem = (index: number) => problems[index]?.text ?? null;
-    const inside = cards.filter(card => card.indices[0]! > open && card.indices[0]! < end);
     const guard = !fused && heads.length === 1 && inside.length === 1 && inside[0]!.kind === 'stop';
     const outcomes = fused ? { first: fused.negated ? fused.no : fused.yes, other: fused.negated ? fused.yes : fused.no } : null;
-    const dropArm = (head: number) => () => edit(draft => { const list = draft.steps ?? []; draft.steps = removeSteps(list, span(head, armEnd(list, head) - 1)).steps; });
     const callPick = fused && fused.group.step.type === 'emit' ? (() => {
       const called = String((fused.group.step as { effect?: unknown }).effect ?? '');
       const callee = system.effects?.[called];
@@ -457,21 +480,6 @@ export function Chain({ id, placeAt, effect, system, edit, title: titleProp, emp
         />
       );
     })() : undefined;
-    const unwrap = heads.length === 1 && inside.length ? () => edit(draft => { draft.steps = unwrapBlock(draft.steps ?? [], open); }) : undefined;
-    const headActions = (
-      <FlowActions
-        onUp={open === 0
-          ? (onEdgeUp ? () => onEdgeUp(span(open, end)) : undefined)
-          : () => edit(draft => { draft.steps = moveSpan(draft.steps ?? [], blockSpan(draft.steps ?? [], open), -1, true); })}
-        onDown={end === steps.length - 1
-          ? (onEdgeDown ? () => onEdgeDown(span(open, end)) : undefined)
-          : () => edit(draft => { draft.steps = moveSpan(draft.steps ?? [], blockSpan(draft.steps ?? [], open), 1, true); })}
-        upTitle={open === 0 && onEdgeUp ? ABOVE_PAY : undefined}
-        downTitle={end === steps.length - 1 && onEdgeDown ? BELOW_PAY : undefined}
-        onKeep={unwrap}
-        onDelete={() => edit(draft => { const list = draft.steps ?? []; draft.steps = removeSteps(list, span(open, endOf(list, open))).steps; })}
-      />
-    );
     const node = (
       <div className={`flow-block${guard ? ' flow-block--guard' : ''}${fused ? ' flow-block--check' : ''}`} key={`block:${open}`}>
         {heads.map((head, k) => {
@@ -553,7 +561,75 @@ export function Chain({ id, placeAt, effect, system, edit, title: titleProp, emp
     return out;
   }
 
-  const list = <>{render(0, cards.length)}</>;
+  const headOnly = (head: number): ReactNode => {
+    const arm = steps[head]!;
+    const open = arm.type === 'branch' ? head : arms[head]?.[arms[head]!.length - 1]?.open ?? head;
+    const { heads, inside, actions } = controlsOf(open);
+    const first = head === open;
+    const conditioned = first || (arm as { if?: unknown }).if !== undefined;
+    const bareElse = heads.slice(1).some(h => (steps[h] as { if?: unknown }).if === undefined);
+    const guard = heads.length === 1 && inside.length === 1 && inside[0]!.kind === 'stop';
+    const armActions = <FlowActions onDelete={dropArm(head)} deleteLabel={t('chain.dropArm')} />;
+    return (
+      <div className="flow-block" key={`head:${head}`}>
+        <div className="flow-block__part">
+          {conditioned ? (
+            <FlowHead
+              word={first ? t('chain.if') : t('chain.elseIf')} step={arm} context={contextAt(head)} earlier={earlierOf(head)}
+              required problem={problems[head]?.text ?? null} {...(guard && first ? { tail: t('chain.stop') } : {})}
+              edit={change => edit(draft => { change(draft.steps![head]!); })}
+              actions={first ? actions : armActions}
+            />
+          ) : <ArmLabel word={t('chain.elseColon')} actions={armActions} />}
+        </div>
+        <div className="flow-block__foot">
+          <Button size="sm" variant="ghost" onClick={() => edit(draft => { draft.steps = addArm(draft.steps ?? [], open, true); })}>{t('chain.addElseIf')}</Button>
+          {bareElse ? null : <Button size="sm" variant="ghost" onClick={() => edit(draft => { draft.steps = addArm(draft.steps ?? [], open, false); })}>{t('chain.addElse')}</Button>}
+        </div>
+      </div>
+    );
+  };
+
+  const renderOnly = (range: { from: number; to: number }): ReactNode[] => {
+    const out: ReactNode[] = [];
+    const hit = (g: number) => cards[g]!.indices.some(i => i >= range.from && i <= range.to);
+    const covers = (open: number) => range.from <= open && range.to >= endOf(steps, open);
+    for (let g = 0; g < cards.length;) {
+      if (!hit(g)) { g++; continue; }
+      const group = cards[g]!;
+      const index = group.indices[0]!;
+      if (group.kind === 'flow') {
+        if (group.step.type === 'branch' && covers(index)) {
+          const made = block(index, undefined, casesAt(index) ?? undefined);
+          out.push(made.node);
+          g = made.next > g ? made.next : g + 1;
+          continue;
+        }
+        if (group.step.type === 'branch' || group.step.type === 'orElse') out.push(headOnly(index));
+        g++;
+        continue;
+      }
+      const next = cards[g + 1];
+      const open = next?.kind === 'flow' && next.step.type === 'branch' ? next.indices[0]! : -1;
+      if (group.kind !== 'split' && group.step.id && open >= 0 && hit(g + 1) && covers(open)) {
+        const cases = casesOf(group, open);
+        const verdict = cases ? null : outcomeOf(group, next!.step);
+        if (cases || verdict) {
+          const made = cases ? block(open, undefined, { group, g, ...cases }) : block(open, { group, g, ...verdict! });
+          out.push(made.node);
+          g = made.next > g ? made.next : g + 2;
+          continue;
+        }
+      }
+      out.push(cardOf(group, g));
+      g++;
+    }
+    return out;
+  };
+
+  const list = <>{only ? renderOnly(only) : render(0, cards.length)}</>;
+
+  if (only) return list;
 
   const summary = (
     <>

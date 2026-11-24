@@ -11,10 +11,12 @@ export interface SunHeadProps {
   sun: Sun;
   effectId: string;
   onBack: () => void;
+  undo?: { canUndo: boolean; canRedo: boolean; onUndo: () => void; onRedo: () => void };
 }
 
-export function SunHead({ system, sun, effectId, onBack }: SunHeadProps): ReactElement {
+export function SunHead({ system, sun, effectId, onBack, undo }: SunHeadProps): ReactElement {
   const t = useT('sun');
+  const e = useT('sunEdit');
   const trail = useEffectView(s => s.trail);
   const problems = useProblems().filter(one => one.where.effect === effectId).length;
   const effect = system.effects[effectId];
@@ -34,6 +36,12 @@ export function SunHead({ system, sun, effectId, onBack }: SunHeadProps): ReactE
       {problems === 0
         ? <span className="sun-state sun-state--ok">{t('head.noProblems', { rays: t('head.rays', { count: sun.rays.length }) })}</span>
         : <span className="sun-state sun-state--bad" title={t('head.problemsTitle')}>{t('head.problems', { n: problems })}</span>}
+      {undo ? (
+        <>
+          <Button size="sm" title={e('head.undoTitle')} disabled={!undo.canUndo} onClick={undo.onUndo}>{e('head.undo')}</Button>
+          <Button size="sm" title={e('head.redoTitle')} disabled={!undo.canRedo} onClick={undo.onRedo}>{e('head.redo')}</Button>
+        </>
+      ) : null}
       <ViewSwitch />
     </div>
   );
