@@ -26,7 +26,7 @@ const addsOf = (trace: Record<string, unknown>): Addend[] => (Array.isArray(trac
 const addedOf = (trace: Record<string, unknown>): number => addsOf(trace).reduce((sum, one) => sum + one.value, 0);
 
 const tagsOfStep = (step: Record<string, any> | undefined, trace?: Record<string, any>): string[] =>
-  (trace?.tags ?? step?.tags ?? (step?.roll?.tags ?? []).filter((t: unknown) => typeof t === 'string')) as string[];
+  (trace?.tags ?? (step?.tags ?? step?.roll?.tags ?? []).filter((t: unknown) => typeof t === 'string')) as string[];
 
 const rollTitle = (system: System, tags: string[], fallback: string): string => titleOf(fallback, tags, system);
 

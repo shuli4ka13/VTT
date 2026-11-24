@@ -77,6 +77,42 @@ group('тогл крита пишет данные, а не код', () => {
     ok(step.count === undefined, 'число костей не трогается — у «2к6» их две');
   });
 
+  test('система, собранная в конструкторе: проверка и урон с бросающим — «кости вдвое» удваивает урон на максимуме проверки', () => {
+    const made = {
+      id: 'своя', name: 'Своя',
+      constants: { к6: { label: 'к6', kind: 'die', dice: [{ count: 1, sides: 6 }] } },
+      tables: {
+        лист: { shape: 'single', owner: 'sheet', columns: [{ key: 'хп', label: 'Хиты', kind: 'number', default: 50 }] },
+        приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] },
+      },
+      effects: {
+        удар: {
+          label: 'Удар', activation: 'manual',
+          params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }, { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель' } }],
+          steps: [
+            { type: 'each', of: 'цели' },
+            { id: 'бросок', type: 'roll', die: 'к6', by: { expr: '@действующий' } },
+            { id: 'проверка', type: 'check', value: { expr: '@бросок' }, versus: { expr: '2' } },
+            { id: 'урон', type: 'roll', die: 'к6', count: { expr: '2' }, by: { expr: '@действующий' } },
+            { type: 'apply', target: { expr: '@цель.хп' }, value: { expr: '@урон.total' } },
+          ],
+        },
+      },
+    } as unknown as System;
+    const book = { records: [{ id: 'приём', table: 'приём', label: 'Удар', cells: {} }] } as unknown as Compendium;
+    const sheets = ['а', 'б'].map(id => ({ id, systemId: 'своя', name: id, values: { хп: 50 }, has: [{ of: 'приём' }], effects: [] })) as unknown as Sheet[];
+    const lost = (system: System, die: number): number =>
+      50 - Number(exchange({ system, compendium: book, die: () => die, sheets, actionId: 'приём:0', fromId: 'а', toId: 'б' }).sheets.find(s => s.id === 'б')!.values.хп);
+    eq(lost(made, 6), 12);
+    setCrit(made, 'double');
+    eq(errorsOf(lintSystem(made, book)).map(problem => problem.text).join(" | "), "");
+    eq(lintSystem(made, book).filter(problem => problem.text.includes('кто бросает')).length, 0);
+    eq(lost(made, 6), 24, 'максимум на проверке — костей урона вдвое');
+    eq(lost(made, 3), 6, 'без максимума — как обычно');
+    setCrit(made, 'off');
+    eq(lost(made, 6), 12);
+  });
+
   test('«нет» не трогает чужую формулу метки, в которой «крит» — только часть', () => {
     const system = dnd();
     const own = { expr: 'if(@brosok.popal, "ognennyy", "") + if(@brosok.krit, "krit", "")' };

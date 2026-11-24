@@ -43,12 +43,18 @@ export const CRIT_DOUBLE = 'crit_double_rule';
 export const CRIT_TAG = 'krit';
 export const ARMOR_STEP = NAMES.throughArmor;
 
-const owned = (step: Step): boolean => {
-  const { by, field } = step as { by?: unknown; field?: unknown };
-  return (by !== undefined && by !== null) || (field !== undefined && field !== null);
+const present = (value: unknown): boolean => value !== undefined && value !== null;
+
+const bareName = (ref: unknown): string | null => {
+  const expr = ref && typeof ref === 'object' && 'expr' in ref ? String((ref as { expr: unknown }).expr) : '';
+  return /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(expr)?.[1] ?? null;
 };
 
-const repeated = (step: Step): boolean => typeof (step as { times?: { expr?: unknown } }).times?.expr === 'string' && (step as { die?: unknown }).die !== undefined;
+const isCheck = (step: Step, steps: readonly Step[]): boolean => {
+  if (step.type !== 'roll') return false;
+  if (present((step as { field?: unknown }).field)) return true;
+  return Boolean(step.id) && steps.some(other => other.type === 'check' && bareName((other as { value?: unknown }).value) === step.id);
+};
 
 const critOfCall = (system: System | undefined, step: Step): string | null => {
   const called = (step as { effect?: unknown }).effect;
@@ -69,15 +75,12 @@ const amountsAfterCheck = (steps: Step[], system?: System): { check: Step; amoun
       continue;
     }
     if (step.type !== 'roll') continue;
-    const s = step as Record<string, unknown>;
-    if (check && repeated(step)) { out.push({ check, amount: step, crit }); continue; }
-    if (owned(step)) {
+    if (isCheck(step, steps)) {
       check = step.id ? step : null;
       crit = check ? `@${String(step.id)}.atMax >= 1` : '';
       continue;
     }
-    if (!check) continue;
-    if (s.die !== undefined) out.push({ check, amount: step, crit });
+    if (check && present((step as { die?: unknown }).die)) out.push({ check, amount: step, crit });
   }
   return out;
 };

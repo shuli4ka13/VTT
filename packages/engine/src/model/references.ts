@@ -92,7 +92,7 @@ export function declaredOf(system: System): Declared {
     table: new Set(Object.keys(system.tables ?? {})),
     rollEdit: new Set(Object.keys(system.roll_edits ?? {})),
     event: new Set(Object.keys(system.effects ?? {})),
-    roll: new Set(tagWords(system).keys()),
+    roll: new Set([...tagWords(system).keys(), ...Object.keys(system.tags ?? {})]),
     tag: new Set([
       ...tagWords(system).keys(),
       ...Object.values(system.tables ?? {}).flatMap(table => (table.rows ?? []).map(row => String(row.value))),

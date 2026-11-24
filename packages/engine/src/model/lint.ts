@@ -2107,6 +2107,10 @@ function shapeProblems(system: System, compendium?: Compendium): Problem[] {
       if (heard.kind === 'call' && heard.key !== id && system.effects[heard.key]) {
         out.push({ where: { tab: 'effects', effect: id, part: 'on', handler: index }, level: 'warn', text: tr`подписка слушает эффект «${system.effects[heard.key]?.label ?? heard.key}» по имени — дайте ему метку и слушайте метку: тогда подписку услышит любой эффект с этой меткой` });
       }
+      const shown = (handler.confirm?.show ?? []).filter(one => one === 'roll' || one === 'versus');
+      if (shown.length && !(heard.kind === 'seen' || (heard.kind === 'call' && heard.phase !== 'done'))) {
+        out.push({ where: { tab: 'effects', effect: id, part: 'on', handler: index }, level: 'warn', text: tr`вопрос просит показать бросок, а в этот момент броска перед глазами нет — показать его можно в вопросах «до», «после» и «увидев кости»` });
+      }
       if (heard.kind !== 'call' || heard.phase !== 'before' || !handler.confirm) return;
       if (called.has(heard.key) && !Object.values(system.tables ?? {}).some(table => (table.bindings ?? []).some(b => b.effect === heard.key))) {
         out.push({ where: { tab: 'effects', effect: id, part: 'on', handler: index }, level: 'error', text: tr`«${system.effects[heard.key]?.label ?? heard.key}» вызывается внутри других эффектов — спросить игрока до него нельзя, только сработать само` });

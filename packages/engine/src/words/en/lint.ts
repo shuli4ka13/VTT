@@ -273,6 +273,7 @@ export const LINT: Record<string, string> = {
   "метка «{0}» требует «для каждого» с именем «{1}»": "the tag “{0}” requires “for each” named “{1}”",
   "метка «{0}» требует итог «{1}» ({2}{3}) — у эффекта его нет или он другого вида": "tag “{0}” requires the result “{1}” ({2}{3}) — the effect has none or it is of another kind",
   "подписка слушает эффект «{0}» по имени — дайте ему метку и слушайте метку: тогда подписку услышит любой эффект с этой меткой": "the subscription listens to the effect “{0}” by name — give it a tag and listen to the tag: then any effect with this tag is heard",
+  "вопрос просит показать бросок, а в этот момент броска перед глазами нет — показать его можно в вопросах «до», «после» и «увидев кости»": "the question asks to show the roll, but there is no roll in view at this moment — it can be shown in “before”, “after” and “on seeing the dice” questions",
   "«{0}» вызывается внутри других эффектов — спросить игрока до него нельзя, только сработать само": "“{0}” is called inside other effects — the player cannot be asked before it, it can only fire on its own",
   "«{0}» — и метка с договором, и эффект: подписка «{1}» станет двусмысленной": "“{0}” is both a tag with a contract and an effect: the trigger “{1}” will become ambiguous",
   "бросок с меткой «{0}» не несёт признак «{1}» — договор метки его требует: на него смотрят правки броска": "a roll tagged “{0}” does not carry the trait “{1}” — the tag contract requires it: roll edits look at it",

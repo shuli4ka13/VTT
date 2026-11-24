@@ -945,9 +945,13 @@ export class Run {
         const shows = this.showsOf(mine);
         const who = [shows.has('actor') ? this.sheet(done[0]!.call.home)?.name ?? done[0]!.call.home : '', shows.has('action') ? done[0]!.call.label : ''].filter(Boolean).join(' — ');
         const apath = answerer === holder.id ? qpath : qpath.to(answerer);
+        const parts = { roll: shows.has('roll'), versus: shows.has('versus') };
+        const lines = parts.roll || parts.versus
+          ? done.filter(out => out.call.top).flatMap(out => previewLines(this.system, out.call.effectId, [...(out.call.lead ?? []), ...out.report.trace], parts))
+          : [];
         entries.push(...this.ask({
           key: apath.key, sheetId: answerer, window: 'after', label: only && !only.call.top ? only.call.label : '', ...this.textOf(mine), ...this.muting,
-          offers: mine.map(found => found.offer), results: only?.results ?? {}, preview: who ? [who] : [],
+          offers: mine.map(found => found.offer), results: only?.results ?? {}, preview: [...(who ? [who] : []), ...new Set(lines)],
         }, mine, done[0]!.call.hop, apath).entries);
         flush(entries);
       }

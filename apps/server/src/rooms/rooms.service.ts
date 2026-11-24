@@ -229,7 +229,7 @@ export class RoomsService {
       const record = this.store.pending<PendingRecord>(intent.roomId);
       if (!record || record.id !== intent.pendingId) throw new BadRequestException(say`стол никого не ждёт — этот вопрос уже закрыт`);
       this.allow(room, userId, { kind: 'answer', sheetId: record.question.sheetId });
-      const offered = new Set(record.question.offers.map(o => o.id));
+      const offered = new Set([...record.question.offers.map(o => o.id), ...(record.question.mute ? [QUIET] : [])]);
       const stray = intent.chosen.find(id => !offered.has(id));
       if (stray) throw new BadRequestException(say`реакция «${stray}» сейчас не предлагается; можно: ${[...offered].join(', ') || say`(ничего)`}`);
       if (record.question.one && intent.chosen.length !== 1) throw new BadRequestException(`${inTongue(langNow(), askOneWords)}: ${record.question.offers.map(o => o.label).join(' / ')}`);

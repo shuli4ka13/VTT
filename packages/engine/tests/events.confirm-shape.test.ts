@@ -111,6 +111,25 @@ group('вопрос реакции — данные', () => {
   });
 });
 
+group('вопрос «после» тоже показывает бросок', () => {
+  const answerBack = (confirm: Record<string, unknown>) => ({
+    label: 'Ответ', activation: 'passive', duration: { kind: 'permanent' },
+    on: [{ on: 'after:удар', if: { expr: '@цель == @holder' }, confirm, steps: [{ type: 'apply', target: { expr: '@holder.кд' }, direction: 'add', value: { expr: '1' } }] }],
+  });
+
+  test('«что показать: бросок» у подписки «после» — строка броска в вопросе; без неё — пусто', () => {
+    deepEq(play({ щит: answerBack({}) }, 14, yes).questions[0]!.preview, []);
+    const shown = play({ щит: answerBack({ show: ['roll'] }) }, 14, yes).questions[0]!.preview;
+    eq(shown.length, 1);
+    ok(shown[0]!.includes('[14]'), shown[0]);
+  });
+
+  test('настройка стола «показывать бросок» доходит и до вопроса «после»', () => {
+    const preview = play({ щит: answerBack({}) }, 14, yes, { reactionRolls: true }).questions[0]!.preview;
+    ok(preview.some(line => line.includes('[14]')), preview.join(' | '));
+  });
+});
+
 group('ответ «не спрашивать до конца хода»', () => {
   const battle = fight('а', 'б');
   const once = (sheets: Sheet[], clock: Clock | null, answer: string[] | null) => {
