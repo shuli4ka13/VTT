@@ -13,7 +13,7 @@ describe('namesAt: что видно в каждом месте эффекта',
     expect(before).toContain('deystvuyuschiy');
     expect(before).not.toContain('brosok');
     expect(before).not.toContain('cel');
-    const inside = namesAt(dnd, 'strike', { part: 'steps', index: 4 });
+    const inside = namesAt(dnd, 'strike', { part: 'steps', index: 13 });
     expect(names(inside)).toContain('cel');
     expect(names(inside)).toContain('brosok');
     expect(inside.find(one => one.name === 'celi')?.many).toBe(true);
@@ -79,7 +79,7 @@ describe('подпись шага и имени цикла', () => {
     const system = structuredClone(dnd) as System;
     const step = (system.effects.strike!.steps ?? []).find(one => one.id === 'brosok')! as { label?: string };
     step.label = 'Удар мечом';
-    const seen = namesAt(system, 'strike', { part: 'steps', index: 4 }).find(one => one.name === 'brosok');
+    const seen = namesAt(system, 'strike', { part: 'steps', index: 13 }).find(one => one.name === 'brosok');
     expect(seen?.said).toBe('Удар мечом');
   });
 

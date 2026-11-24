@@ -56,7 +56,7 @@ group('проверка ловит опечатки в путях', () => {
   });
 
   test('опечатка в имени строки цикла называет настоящее имя', () => {
-    const found = fresh(s => { (s.effects.resources_rest!.on![0]!.steps![1] as { if: unknown }).if = { expr: '@holder.ресурсы.short' }; });
+    const found = fresh(s => { (s.effects.restore_resources!.steps![1] as { if: unknown }).if = { expr: '@list.ресурсы.short' }; });
     ok(found.some(text => text.startsWith('у листа нет поля «ресурсы»; здесь есть «ресурс»')), found.join('\n'));
   });
 });
@@ -64,7 +64,7 @@ group('проверка ловит опечатки в путях', () => {
 group('имена места знают колонки строк', () => {
   test('строка цикла и вход-выбор — с колонками таблицы', () => {
     const { system } = dnd();
-    const loop = namesAt(system as System, 'resources_rest', { part: 'handler', handler: 0, index: 2 }).find(one => one.name === 'resurs');
+    const loop = namesAt(system as System, 'restore_resources', { part: 'steps', index: 2 }).find(one => one.name === 'resurs');
     ok(loop?.children?.some(child => child.path === '.left' && child.label === 'Осталось'));
     const choice = namesAt(system as System, 'turn_spend', { part: 'steps', index: 1 }).find(one => one.name === 'chto');
     ok(choice?.children?.some(child => child.path === '.left'));
@@ -106,7 +106,7 @@ group('расчёт не молчит об опечатке в адресе', ()
 
 group('неизвестная функция — ошибка проверки, а не расчёта', () => {
   test('«все(…)» больше нет — проверка говорит, какой функции нет', () => {
-    const found = fresh(s => { (s.effects.resources_rest!.on![0]!.steps![1] as { if: unknown }).if = { expr: 'все(@holder.ресурс.short, true)' }; });
+    const found = fresh(s => { (s.effects.restore_resources!.steps![1] as { if: unknown }).if = { expr: 'все(@list.ресурс.short, true)' }; });
     ok(found.some(text => text.includes('нет функции «все»')), found.join('\n'));
   });
 });

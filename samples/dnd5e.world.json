@@ -3432,6 +3432,11 @@
             "key": "strely_odnim_broskom",
             "label": "Волшебная стрела: один бросок на все стрелы",
             "kind": "boolean"
+          },
+          {
+            "key": "sprashivat_dalnost",
+            "label": "Спрашивать про дальность дальнобойной атаки",
+            "kind": "boolean"
           }
         ]
       }
@@ -3649,6 +3654,56 @@
           {
             "type": "each",
             "of": "celi"
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@cel.cover_full >= 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"цель за полным укрытием\""
+            },
+            "refusal": "soft"
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@desk.sprashivat_dalnost and @dalnost == \"dalniy\""
+            }
+          },
+          {
+            "id": "v_dalnosti",
+            "label": "в дальности",
+            "type": "ask",
+            "question": "Цель в пределах дальности?",
+            "to": {
+              "expr": "@deystvuyuschiy"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "not @v_dalnosti"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"цель вне дальности\""
+            },
+            "refusal": "soft"
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "end"
           },
           {
             "id": "brosok",
@@ -3912,6 +3967,56 @@
           {
             "type": "each",
             "of": "celi"
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@cel.cover_full >= 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"цель за полным укрытием\""
+            },
+            "refusal": "soft"
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@desk.sprashivat_dalnost and @dalnost == \"dalniy\""
+            }
+          },
+          {
+            "id": "v_dalnosti",
+            "label": "в дальности",
+            "type": "ask",
+            "question": "Цель в пределах дальности?",
+            "to": {
+              "expr": "@deystvuyuschiy"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "not @v_dalnosti"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"цель вне дальности\""
+            },
+            "refusal": "soft"
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "end"
           },
           {
             "id": "brosok",
@@ -5916,6 +6021,447 @@
                 "expr": "@deystvuyuschiy"
               },
               "istochnik": {
+                "expr": "@deystvuyuschiy"
+              }
+            }
+          }
+        ]
+      },
+      "ability_check": {
+        "label": "Проверка характеристики",
+        "group": "broski_i_proverki",
+        "description": "Бросок к20 + модификатор выбранной характеристики. Кость и метки берёт правило броска по полю.",
+        "params": [
+          {
+            "key": "deystvuyuschiy",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "harakteristika",
+            "label": "Какой характеристики",
+            "kind": "choice",
+            "from": "abilities",
+            "ask": {
+              "by": "actor"
+            }
+          }
+        ],
+        "steps": [
+          {
+            "id": "brosok",
+            "label": "бросок",
+            "type": "roll",
+            "field": {
+              "expr": "@deystvuyuschiy.harakteristika.mod"
+            }
+          }
+        ]
+      },
+      "skill_check": {
+        "label": "Проверка навыка",
+        "group": "broski_i_proverki",
+        "description": "Бросок к20 + итог выбранного навыка.",
+        "params": [
+          {
+            "key": "deystvuyuschiy",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "navyk",
+            "label": "Какого навыка",
+            "kind": "choice",
+            "from": "skills",
+            "ask": {
+              "by": "actor"
+            }
+          }
+        ],
+        "steps": [
+          {
+            "id": "brosok",
+            "label": "бросок",
+            "type": "roll",
+            "field": {
+              "expr": "@deystvuyuschiy.navyk.total"
+            }
+          }
+        ]
+      },
+      "own_save": {
+        "label": "Спасбросок",
+        "group": "broski_i_proverki",
+        "description": "Бросок к20 + спасбросок выбранной характеристики. Сложность называет ведущий.",
+        "params": [
+          {
+            "key": "deystvuyuschiy",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "harakteristika",
+            "label": "Чем спасается",
+            "kind": "choice",
+            "from": "abilities",
+            "ask": {
+              "by": "actor"
+            }
+          }
+        ],
+        "steps": [
+          {
+            "id": "brosok",
+            "label": "бросок",
+            "type": "roll",
+            "field": {
+              "expr": "@deystvuyuschiy.harakteristika.save"
+            }
+          }
+        ]
+      },
+      "initiative_roll": {
+        "label": "Инициатива",
+        "group": "broski_i_proverki",
+        "description": "Бросок к20 + инициатива листа.",
+        "params": [
+          {
+            "key": "deystvuyuschiy",
+            "label": "Кто действует",
+            "kind": "sheet"
+          }
+        ],
+        "steps": [
+          {
+            "id": "brosok",
+            "label": "бросок",
+            "type": "roll",
+            "field": {
+              "expr": "@deystvuyuschiy.initiative"
+            }
+          }
+        ]
+      },
+      "restore_health": {
+        "label": "Вернуть хиты и кости хитов",
+        "group": "otdyh_i_smert",
+        "description": "Хиты полные, временные хиты уходят, все потраченные кости хитов возвращаются.",
+        "params": [
+          {
+            "key": "list",
+            "label": "Лист",
+            "kind": "sheet",
+            "role": "target"
+          }
+        ],
+        "steps": [
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@list.hp_current"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "@list.hp_max"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@list.hp_temp"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "0"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@list.hit_dice_left"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "@list.level"
+            }
+          }
+        ]
+      },
+      "restore_slots": {
+        "label": "Вернуть ячейки",
+        "group": "otdyh_i_smert",
+        "description": "Все ячейки заклинаний снова полные.",
+        "params": [
+          {
+            "key": "list",
+            "label": "Лист",
+            "kind": "sheet",
+            "role": "target"
+          }
+        ],
+        "steps": [
+          {
+            "type": "each",
+            "rows": "slots",
+            "as": "krug",
+            "asLabel": "круг"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@list.krug.left"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "@list.krug.max"
+            }
+          }
+        ]
+      },
+      "restore_resources": {
+        "label": "Вернуть ресурсы класса",
+        "group": "otdyh_i_smert",
+        "description": "Ресурсы классов снова полные: все или только те, что возвращает короткий отдых.",
+        "params": [
+          {
+            "key": "list",
+            "label": "Лист",
+            "kind": "sheet",
+            "role": "target"
+          },
+          {
+            "key": "short_only",
+            "label": "Только короткого отдыха",
+            "kind": "boolean",
+            "optional": true
+          }
+        ],
+        "steps": [
+          {
+            "type": "each",
+            "rows": "resources",
+            "as": "resurs",
+            "asLabel": "ресурс"
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "not @short_only or @list.resurs.short"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@list.resurs.left"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "@list.resurs.max"
+            }
+          },
+          {
+            "type": "end"
+          }
+        ]
+      },
+      "restore_death_saves": {
+        "label": "Сбросить спасброски от смерти",
+        "group": "otdyh_i_smert",
+        "description": "Успехи и провалы спасбросков от смерти обнуляются.",
+        "params": [
+          {
+            "key": "list",
+            "label": "Лист",
+            "kind": "sheet",
+            "role": "target"
+          }
+        ],
+        "steps": [
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@list.death_ok"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "0"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@list.death_fail"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "0"
+            }
+          }
+        ]
+      },
+      "restore_exhaustion": {
+        "label": "Снять ступень истощения",
+        "group": "otdyh_i_smert",
+        "description": "Истощение меньше на одну ступень.",
+        "params": [
+          {
+            "key": "list",
+            "label": "Лист",
+            "kind": "sheet",
+            "role": "target"
+          }
+        ],
+        "steps": [
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@list.exhaustion"
+            },
+            "value": {
+              "expr": "1"
+            }
+          }
+        ]
+      },
+      "rest_short": {
+        "label": "Короткий отдых",
+        "group": "otdyh_i_smert",
+        "description": "Отдых вне боя: возвращает ресурсы класса, которые восстанавливает короткий отдых. Кости хитов тратит кнопка «Потратить кость хитов».",
+        "params": [
+          {
+            "key": "deystvuyuschiy",
+            "label": "Кто действует",
+            "kind": "sheet"
+          }
+        ],
+        "steps": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@desk.combat"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"в бою не отдыхают\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@deystvuyuschiy.hp_current <= 0"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"на нуле хитов не отдыхают\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "emit",
+            "effect": "restore_resources",
+            "args": {
+              "list": {
+                "expr": "@deystvuyuschiy"
+              },
+              "short_only": {
+                "expr": "true"
+              }
+            }
+          }
+        ]
+      },
+      "rest_long": {
+        "label": "Долгий отдых",
+        "group": "otdyh_i_smert",
+        "description": "Отдых вне боя: полные хиты, все кости хитов, все ячейки и ресурсы класса, спасброски от смерти сброшены, истощение меньше на ступень.",
+        "params": [
+          {
+            "key": "deystvuyuschiy",
+            "label": "Кто действует",
+            "kind": "sheet"
+          }
+        ],
+        "steps": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@desk.combat"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"в бою не отдыхают\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@deystvuyuschiy.hp_current <= 0"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"на нуле хитов не отдыхают\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "emit",
+            "effect": "restore_health",
+            "args": {
+              "list": {
+                "expr": "@deystvuyuschiy"
+              }
+            }
+          },
+          {
+            "type": "emit",
+            "effect": "restore_slots",
+            "args": {
+              "list": {
+                "expr": "@deystvuyuschiy"
+              }
+            }
+          },
+          {
+            "type": "emit",
+            "effect": "restore_resources",
+            "args": {
+              "list": {
+                "expr": "@deystvuyuschiy"
+              }
+            }
+          },
+          {
+            "type": "emit",
+            "effect": "restore_death_saves",
+            "args": {
+              "list": {
+                "expr": "@deystvuyuschiy"
+              }
+            }
+          },
+          {
+            "type": "emit",
+            "effect": "restore_exhaustion",
+            "args": {
+              "list": {
                 "expr": "@deystvuyuschiy"
               }
             }
@@ -8042,7 +8588,7 @@
       "cover_full": {
         "label": "Полное укрытие",
         "group": "sostoyaniya",
-        "description": "Целиком за препятствием: выбрать целью напрямую нельзя. Стол не запрещает — решает ведущий.",
+        "description": "Целиком за препятствием: выбрать целью напрямую нельзя. Стол не запрещает, а спрашивает ведущего: «Всё равно?» — «да» атака идёт, «нет» — для этой цели не состоялась.",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -8569,23 +9115,12 @@
                 }
               },
               {
-                "type": "apply",
-                "target": {
-                  "expr": "@holder.death_ok"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "0"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@holder.death_fail"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "0"
+                "type": "emit",
+                "effect": "restore_death_saves",
+                "args": {
+                  "list": {
+                    "expr": "@holder"
+                  }
                 }
               }
             ]
@@ -8594,23 +9129,12 @@
             "on": "moment:long-rest",
             "steps": [
               {
-                "type": "apply",
-                "target": {
-                  "expr": "@holder.death_ok"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "0"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@holder.death_fail"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "0"
+                "type": "emit",
+                "effect": "restore_death_saves",
+                "args": {
+                  "list": {
+                    "expr": "@holder"
+                  }
                 }
               }
             ]
@@ -8759,9 +9283,9 @@
         ]
       },
       "long_rest": {
-        "label": "Долгий отдых",
+        "label": "Хиты после отдыха",
         "group": "otdyh_i_smert",
-        "description": "Хиты полные, половина костей хитов обратно. Остальное каждое правило возвращает само: ячейки, ресурсы, истощение, спасброски от смерти.",
+        "description": "Хиты полные, временные хиты уходят, все потраченные кости хитов обратно. Остальное каждое правило возвращает само: ячейки, ресурсы, истощение, спасброски от смерти.",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -8771,33 +9295,12 @@
             "on": "moment:long-rest",
             "steps": [
               {
-                "type": "apply",
-                "target": {
-                  "expr": "@holder.hp_current"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "@holder.hp_max"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@holder.hp_temp"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "0"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@holder.hit_dice_left"
-                },
-                "direction": "add",
-                "value": {
-                  "expr": "max(1, floor(@holder.level / 2))"
+                "type": "emit",
+                "effect": "restore_health",
+                "args": {
+                  "list": {
+                    "expr": "@holder"
+                  }
                 }
               }
             ]
@@ -8817,19 +9320,12 @@
             "on": "moment:long-rest",
             "steps": [
               {
-                "type": "each",
-                "rows": "slots",
-                "as": "krug",
-                "asLabel": "круг"
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@holder.krug.left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "@holder.krug.max"
+                "type": "emit",
+                "effect": "restore_slots",
+                "args": {
+                  "list": {
+                    "expr": "@holder"
+                  }
                 }
               }
             ]
@@ -8849,29 +9345,16 @@
             "on": "moment:short-rest",
             "steps": [
               {
-                "type": "each",
-                "rows": "resources",
-                "as": "resurs",
-                "asLabel": "ресурс"
-              },
-              {
-                "type": "branch",
-                "if": {
-                  "expr": "@holder.resurs.short"
+                "type": "emit",
+                "effect": "restore_resources",
+                "args": {
+                  "list": {
+                    "expr": "@holder"
+                  },
+                  "short_only": {
+                    "expr": "true"
+                  }
                 }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@holder.resurs.left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "@holder.resurs.max"
-                }
-              },
-              {
-                "type": "end"
               }
             ]
           },
@@ -8879,19 +9362,12 @@
             "on": "moment:long-rest",
             "steps": [
               {
-                "type": "each",
-                "rows": "resources",
-                "as": "resurs",
-                "asLabel": "ресурс"
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@holder.resurs.left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "@holder.resurs.max"
+                "type": "emit",
+                "effect": "restore_resources",
+                "args": {
+                  "list": {
+                    "expr": "@holder"
+                  }
                 }
               }
             ]
@@ -9015,12 +9491,12 @@
             "on": "moment:long-rest",
             "steps": [
               {
-                "type": "apply",
-                "target": {
-                  "expr": "@holder.exhaustion"
-                },
-                "value": {
-                  "expr": "1"
+                "type": "emit",
+                "effect": "restore_exhaustion",
+                "args": {
+                  "list": {
+                    "expr": "@holder"
+                  }
                 }
               }
             ]
@@ -9762,7 +10238,13 @@
           "dash",
           "disengage",
           "hide",
-          "help"
+          "help",
+          "ability_check",
+          "skill_check",
+          "own_save",
+          "initiative_roll",
+          "rest_short",
+          "rest_long"
         ],
         "blocks": [
           "lichnoe_delo",
@@ -9796,7 +10278,11 @@
           "dash",
           "disengage",
           "hide",
-          "help"
+          "help",
+          "ability_check",
+          "skill_check",
+          "own_save",
+          "initiative_roll"
         ],
         "blocks": [
           "harakteristiki",

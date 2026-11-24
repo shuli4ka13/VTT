@@ -2858,6 +2858,11 @@
             "key": "strely_odnim_broskom",
             "label": "Волшебная стрела: один бросок на все стрелы",
             "kind": "boolean"
+          },
+          {
+            "key": "sprashivat_dalnost",
+            "label": "Спрашивать про дальность дальнобойной атаки",
+            "kind": "boolean"
           }
         ]
       }
@@ -3075,6 +3080,56 @@
           {
             "type": "each",
             "of": "celi"
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@cel.cover_full >= 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"цель за полным укрытием\""
+            },
+            "refusal": "soft"
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@desk.sprashivat_dalnost and @dalnost == \"dalniy\""
+            }
+          },
+          {
+            "id": "v_dalnosti",
+            "label": "в дальности",
+            "type": "ask",
+            "question": "Цель в пределах дальности?",
+            "to": {
+              "expr": "@deystvuyuschiy"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "not @v_dalnosti"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"цель вне дальности\""
+            },
+            "refusal": "soft"
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "end"
           },
           {
             "id": "brosok",
@@ -4397,6 +4452,16 @@
             }
           }
         ]
+      },
+      "cover_full": {
+        "label": "Полное укрытие",
+        "group": "sostoyaniya",
+        "description": "Целиком за препятствием: выбрать целью напрямую нельзя. Стол не запрещает, а спрашивает ведущего: «Всё равно?» — «да» атака идёт, «нет» — для этой цели не состоялась.",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "reapply": "refresh"
       }
     },
     "grants": [

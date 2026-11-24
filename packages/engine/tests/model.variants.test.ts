@@ -20,7 +20,7 @@ describe('слово не из вариантов — ошибка «Пробл�
 
   it('условие по итогу-выбору', () => {
     const system = withOutcome('if(@proverka.success, "blizhniy", "dalniy")');
-    system.effects.strike!.steps!.splice(2, 0, { type: 'branch', if: { expr: '@brosok.kak == "ближний"' } } as never, { type: 'end' } as never);
+    system.effects.strike!.steps!.splice(11, 0, { type: 'branch', if: { expr: '@brosok.kak == "ближний"' } } as never, { type: 'end' } as never);
     expect(words(system, 'dnd5e')).toEqual([expect.stringContaining('«ближний» — в таблице «Дальность атаки» такого варианта нет')]);
   });
 
