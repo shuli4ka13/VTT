@@ -1,6 +1,6 @@
 import type { Inputs } from '../model/asks.ts';
 import { deskOf, hasDesk, blankDesk } from './desk.ts';
-import { act, payOnly } from '../core/act.ts';
+import { act, payOnly, stage } from '../core/act.ts';
 import { emptyJournal } from '../core/external.ts';
 import type { Report } from '../core/log.ts';
 import { isPipeline } from '../engine/effects.ts';
@@ -13,6 +13,10 @@ import { freshSheet } from '../model/fresh.ts';
 import type { System, Compendium, Sheet, Die, Effect } from '../model/types.ts';
 import type { Clock } from '../engine/clock.ts';
 import { tr, live } from '../words/tongue.ts';
+import { compile } from '../formula/index.ts';
+import type { Node } from '../formula/index.ts';
+import { contractsOf, heardNames, listenerOf, HOLDER } from '../model/references.ts';
+import { namesAt } from '../model/names-at.ts';
 import { inSystemTongue } from '../model/localize.ts';
 
 export type DiceMode = 'min' | 'avg' | 'max' | 'random';
@@ -76,6 +80,8 @@ export interface TrialArgs {
   args?: Record<string, unknown>;
   dice?: DiceMode;
   random?: () => number;
+  handler?: number;
+  heard?: Record<string, unknown>;
 }
 
 export interface TrialResult {
@@ -91,12 +97,10 @@ export function trial(given: TrialArgs): TrialResult {
   return inSystemTongue(given.system, () => trialIn(given));
 }
 
-function trialIn({ system, compendium, effectId, from, to, args, dice = 'avg', random }: TrialArgs): TrialResult {
+function trialIn({ system, compendium, effectId, from, to, args, dice = 'avg', random, handler, heard }: TrialArgs): TrialResult {
   const effect: Effect | undefined = system.effects[effectId];
   if (!effect) throw new EngineError(tr`пробный прогон: система не объявляет эффекта «${effectId}»`);
-  if (!isPipeline(effect)) {
-    throw new EngineError(tr`пробный прогон: эффект «${effect.label ?? effectId}» висит на листе — его не запускают кнопкой, запустите то, на что он отзывается`);
-  }
+  if (!isPipeline(effect)) return trialHandler({ system, compendium, effectId, from, to, dice, random, ...(handler === undefined ? {} : { handler }), ...(heard ? { heard } : {}) }, effect);
   const filled: Record<string, unknown> = {};
   for (const param of effect.params ?? []) {
     if (args?.[param.key] === undefined && (param.default !== undefined || (param.optional && param.kind === 'effect'))) continue;
@@ -123,6 +127,67 @@ function trialIn({ system, compendium, effectId, from, to, args, dice = 'avg', r
   const result = act({
     system: probe, compendium: book, clock: null, sheets, die: dieOf(dice, random), journal: emptyJournal(), mode: 'trial',
   }, { actionId: `${TRIAL_RECORD}:0`, fromId: sender.id, toIds: [to.id] });
+  const reports = result.entries.filter((entry): entry is TrialResult['reports'][number] => !('text' in entry));
+  return { sheets: result.sheets, reports, lines: result.log };
+}
+
+const tiedToHolder = (source: string | undefined): Set<string> => {
+  const out = new Set<string>();
+  if (!source) return out;
+  let ast: Node;
+  try { ast = compile(source).ast; } catch { return out; }
+  const visit = (node: Node): void => {
+    if (node.kind === 'Binary') {
+      if (node.op === '==' && node.left.kind === 'Ref' && node.right.kind === 'Ref') {
+        if (node.left.tag === HOLDER) out.add(node.right.tag);
+        if (node.right.tag === HOLDER) out.add(node.left.tag);
+      }
+      visit(node.left);
+      visit(node.right);
+    } else if (node.kind === 'Unary') visit(node.operand);
+    else if (node.kind === 'Call') node.args.forEach(visit);
+    else if (node.kind === 'Conditional') { visit(node.test); visit(node.then); visit(node.otherwise); }
+  };
+  visit(ast);
+  return out;
+};
+
+export function sampleHeard(system: System, effectId: string, handler: number, holderId: string, otherId: string): Record<string, unknown> {
+  const subscribed = system.effects[effectId]?.on?.[handler];
+  if (!subscribed) return {};
+  const heard = heardNames(system, listenerOf(subscribed));
+  const known = new Map(namesAt(system, effectId, { part: 'handler-if', handler }).map(one => [one.name, one] as const));
+  const tied = tiedToHolder(subscribed.if?.expr);
+  const listener = listenerOf(subscribed);
+  const lists = new Set(listener.kind === 'call'
+    ? [
+      ...contractsOf(system, listener.key).flatMap(contract => (contract.inputs ?? []).filter(input => input.many).map(input => input.key)),
+      ...(system.effects[listener.key]?.params ?? []).filter(param => param.many).map(param => param.key),
+    ]
+    : []);
+  const out: Record<string, unknown> = {};
+  const listed = (key: string): boolean => lists.has(key) || Boolean(known.get(key)?.many);
+  for (const key of heard.sheets) if (!listed(key)) out[key] = tied.has(key) || !tied.size ? holderId : otherId;
+  const each = listener.kind === 'call' ? contractsOf(system, listener.key).find(contract => contract.each)?.each : undefined;
+  for (const key of heard.sheets) if (listed(key)) out[key] = [each && typeof out[each] === 'string' ? out[each] : otherId];
+  for (const key of heard.seeds) {
+    const kind = known.get(key)?.kind;
+    if (kind === 'boolean') out[key] = true;
+    else if (kind === 'number') out[key] = 1;
+  }
+  return out;
+}
+
+function trialHandler({ system, compendium, effectId, from, to, dice = 'avg', random, handler = 0, heard }: TrialArgs, effect: Effect): TrialResult {
+  if (!effect.on?.[handler]) {
+    throw new EngineError(tr`пробный прогон: у «${effect.label ?? effectId}» нет подписки — он только правит цифры, пока висит, прогонять нечего`);
+  }
+  const holder: Sheet = { ...from, effects: [...(from.effects ?? []), { effectId }] };
+  const people = from.id === to.id ? [holder] : [holder, to];
+  const sheets = hasDesk(system) && !deskOf(people) ? [...people, blankDesk(system)] : people;
+  const result = stage({
+    system, compendium: compendium ?? {}, clock: null, sheets, die: dieOf(dice, random), journal: emptyJournal(), mode: 'trial',
+  }, { holderId: holder.id, effectId, handler, heard: heard ?? sampleHeard(system, effectId, handler, holder.id, to.id) });
   const reports = result.entries.filter((entry): entry is TrialResult['reports'][number] => !('text' in entry));
   return { sheets: result.sheets, reports, lines: result.log };
 }

@@ -27,8 +27,7 @@ export const EVENTS: Record<string, string> = {
   "не хватает «{0}»": "not enough “{0}”",
   "не хватает «{0}» (сейчас {1})": "not enough “{0}” (now {1})",
   "проба «случайно»: источник случайности не передан — движок сам костей не выдумывает": "“random” trial: no source of randomness was passed — the engine does not invent dice itself",
-  "проба": "trial",
   "пробный прогон: система не объявляет эффекта «{0}»": "trial run: the system does not declare effect “{0}”",
-  "пробный прогон: эффект «{0}» висит на листе — его не запускают кнопкой, запустите то, на что он отзывается": "trial run: effect “{0}” hangs on the sheet — it is not launched by a button, launch what it responds to",
   "Проба": "Trial",
+  "пробный прогон: у «{0}» нет подписки — он только правит цифры, пока висит, прогонять нечего": "trial run: “{0}” has no subscription — it only edits numbers while it hangs, there is nothing to run",
 };

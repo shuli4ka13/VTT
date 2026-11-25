@@ -19,7 +19,7 @@ export type { Phase } from '../events/bus.ts';
 export { blankDesk, deskOf, hasDesk, isGroup, sharedOf } from '../events/desk.ts';
 export { heardMoments, MOMENTS } from '../events/moments.ts';
 export type { MomentKey, TurnOp } from '../events/moments.ts';
-export { costRefusal, DICE_MODES, expectAction, mannequin, trial } from '../events/trial.ts';
+export { costRefusal, DICE_MODES, expectAction, mannequin, sampleHeard, trial } from '../events/trial.ts';
 export type { DiceMode } from '../events/trial.ts';
 export { ASKABLE, askKindOf, asksOf, checkInputs, choicesOf, isPerTarget, normalizeInputs, YES_NO } from '../model/asks.ts';
 export type { AskedParam, Inputs } from '../model/asks.ts';

@@ -65,7 +65,13 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
   return inSystemTongue(world.system, () => actIn(world, intent));
 }
 
-function actIn(world: ActWorld, intent: ActIntent): ActOutcome {
+export interface Staged { holderId: string; effectId: string; handler: number; heard: Record<string, unknown> }
+
+export function stage(world: ActWorld, staged: Staged): ActOutcome {
+  return inSystemTongue(world.system, () => actIn(world, null, staged));
+}
+
+function actIn(world: ActWorld, intent: ActIntent | null, staged?: Staged): ActOutcome {
   const { system, compendium, clock } = world;
   const mode: Mode = world.mode ?? (world.declineAll ? 'trial' : 'real');
   const journal: Journal = { ...emptyJournal(), ...world.journal, ids: world.journal.ids ?? {} };
@@ -74,7 +80,8 @@ function actIn(world: ActWorld, intent: ActIntent): ActOutcome {
   const { state } = run;
   const root = Path.op('act');
   try {
-    runAct(run, intent, root);
+    if (staged) runStaged(run, staged, root);
+    else if (intent) runAct(run, intent, root);
     run.settle(world.sheets, root);
     const log = [...state.log];
     return { kind: 'done', sheets: [...state.sheets], log: render(log, system, state.sheets), lines: renderLines(log, system, state.sheets), entries: log, journal: ext.settled(), fresh: ext.fresh };
@@ -123,6 +130,15 @@ export function aimOf(world: Pick<ActWorld, 'system' | 'compendium' | 'clock' | 
     const run = new Run({ system: world.system, compendium: world.compendium, clock: world.clock, sheets: world.sheets }, ext);
     return runAct(run, { ...intent, toIds: [] }, Path.op('act'), 'aim') ?? { count: null, repeat: false };
   });
+}
+
+function runStaged(run: Run, staged: Staged, root: Path): void {
+  const holder = run.sheet(staged.holderId);
+  if (!holder) throw new EngineError(tr`в комнате нет листа «${staged.holderId}»`, NO_SHEET);
+  const effect = requireEffect(run.world.system, staged.effectId, tr`проба`);
+  const sub = run.subs(holder).find(one => one.effectId === staged.effectId && one.handler === effect.on?.[staged.handler]);
+  if (!sub) throw new EngineError(tr`у «${holder.name}» сейчас не висит «${effect.label ?? staged.effectId}»`);
+  run.pressed(sub, root, effect.label ?? staged.effectId, false, staged.heard);
 }
 
 export function runAct(run: Run, intent: ActIntent, root: Path, upTo?: 'cost' | 'aim'): Aim | void {

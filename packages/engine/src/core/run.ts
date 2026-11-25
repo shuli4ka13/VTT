@@ -1369,10 +1369,11 @@ export class Run {
     return this.probe(() => this.pay(sub, path, names, seed, hop, rolls, waived).why);
   }
 
-  pressed(sub: Sub, root: Path, label: string, costOnly: boolean): void {
+  pressed(sub: Sub, root: Path, label: string, costOnly: boolean, given?: Record<string, unknown>): void {
     const heard = heardNames(this.system, listenerOf(sub.handler));
-    const names: Record<string, Bound> = Object.fromEntries(heard.sheets.map(key => [key, UNKNOWN]));
-    const seed: Record<string, unknown> = Object.fromEntries(heard.seeds.map(key => [key, UNKNOWN]));
+    const told = (key: string): unknown => (given && key in given ? given[key] : UNKNOWN);
+    const names: Record<string, Bound> = Object.fromEntries(heard.sheets.map(key => [key, told(key) as Bound]));
+    const seed: Record<string, unknown> = Object.fromEntries(heard.seeds.map(key => [key, told(key)]));
     if (!this.holds(sub, names, seed)) throw new ActRefused(label, tr`условие сейчас не выполняется`);
     const path = root.handler(sub.sheetId, sub.key, sub.inst);
     let waived = false;
@@ -1389,7 +1390,7 @@ export class Run {
       }
     }
     if (costOnly) return;
-    const out = this.react(sub, { path, names, seed, hop: 0, chosen: true, owner: tr`«${label}» кнопкой`, waived });
+    const out = this.react(sub, { path, names, seed, hop: 0, chosen: true, owner: given ? tr`«${label}» — проба` : tr`«${label}» кнопкой`, waived });
     this.state.write(...out.lead);
     if (out.report) this.state.write({ fromId: sub.sheetId, toId: sub.sheetId, report: out.report });
     this.state.write(...out.entries);

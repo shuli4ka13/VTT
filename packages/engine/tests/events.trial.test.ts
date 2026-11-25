@@ -49,11 +49,10 @@ group('пробный прогон эффекта на манекенах', () =
     ok(!('__проба' in (system.tables ?? {})), 'исходная система не тронута');
   });
 
-  test('висящий на листе — отказ словами', () => {
+  test('висящий без подписки — отказ словами', () => {
     const system = SAMPLE_WORLDS[0]!.system as System;
     const a = mannequin(system, 'а', 'А');
-    throws(() => trial({ system, effectId: 'blessed', from: a, to: a }), 'висит на листе');
-    throws(() => trial({ system, effectId: 'dying', from: a, to: a }), 'висит на листе');
+    throws(() => trial({ system, effectId: 'blessed', from: a, to: a }), 'нет подписки');
     throws(() => trial({ system, effectId: 'нету', from: a, to: a }), 'нету');
   });
 

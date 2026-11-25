@@ -52,8 +52,8 @@ export { dropLang, hasLang, inSystemTongue, langsOf, localized, localizedBook, m
 export type { TextEntry, TextField, TextPath } from '../model/localize.ts';
 export { LANG_WORDS, langWord, MAIN_LANG } from '../words/langs.ts';
 export { partSaid, rowSaid, tagSaid } from '../engine/roll-tags.ts';
-export { rollMeddle, seamsOf, standsOf, sunOf } from '../model/sun.ts';
-export type { Meddle, MeddleAsk, MeddleEdit, Seam, Stand, Sun, SunBubble, SunKind, SunPart, SunRay, SunRef, SunRole, SunSpan, SunStage } from '../model/sun.ts';
+export { litOf, rollMeddle, seamsOf, standsOf, sunOf } from '../model/sun.ts';
+export type { Lit, Meddle, MeddleAsk, MeddleEdit, Seam, Stand, Sun, SunBubble, SunKind, SunPart, SunRay, SunRef, SunRole, SunSpan, SunStage } from '../model/sun.ts';
 export { SUN_KINDS, SUN_STAGES } from '../words/sun.ts';
 export { chainOf, mapOf, tagLinks } from '../model/sun-map.ts';
 export type { ChainButton, ChainFill, ChainNode, ChainVia, MapEffect, MapLayer, MapLeak, MapLink, MapLinkKind, MapTag, RecordChain, SunMap, TagLinks } from '../model/sun-map.ts';
