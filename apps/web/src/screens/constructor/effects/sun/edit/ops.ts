@@ -133,9 +133,12 @@ export function canInsert(effect: Effect, system: System, id: string, spot: Spot
     if (!applied) return 'reason.noEffect';
     return (applied.activation ?? 'manual') === 'passive' ? true : 'reason.statusManual';
   }
-  if (template.key === 'each') {
-    const list = [...stepsOf(effect, spot)];
-    list.splice(Math.min(spot.index, list.length), 0, { type: 'each' } as Step);
+  const view = structuredClone(effect);
+  const list = [...stepsOf(view, spot)];
+  const at = Math.min(spot.index, list.length);
+  const fresh = made(system, id, { ...view, steps: list }, spot, at, template);
+  if (fresh.some(step => loopsAt(step))) {
+    list.splice(at, 0, ...fresh);
     if (!validFlow(list)) return 'reason.eachInside';
   }
   return true;

@@ -785,3 +785,50 @@ export function sunOf(raw: System, effectId: string, compendium?: Compendium): S
     inputs: (ctx.effect.params ?? []).length, rays: frame.rays, seams, stands,
   };
 }
+
+export interface Lit { rays: string[]; skipped: string[]; stopped: string | null; seams: string[] }
+
+interface RanReport { kind: string; effect: string; trace: Record<string, unknown>[]; stopped: { step?: unknown } | null; reactions?: RanReport[] }
+
+export function litOf(sun: Sun, effect: Effect, reports: readonly RanReport[], handler?: number): Lit {
+  const rays = new Set<string>();
+  const skipped = new Set<string>();
+  const seams = new Set<string>();
+  let stopped: string | null = null;
+  const hooks = new Set(sun.seams.map(seam => seam.by));
+  const staged = handler !== undefined;
+  const steps = staged ? effect.on?.[handler]?.steps ?? [] : effect.steps ?? [];
+  const part: SunPart = staged ? 'handler' : 'steps';
+  const rayAt = (name: unknown): string | null => {
+    const index = typeof name === 'number' ? name : steps.findIndex(step => step.id === name);
+    if (index < 0) return null;
+    return sun.rays.find(ray => ray.span?.part === part && (!staged || ray.span.handler === handler) && ray.span.from <= index && index <= ray.span.to)?.key ?? null;
+  };
+  const costKey = sun.rays.find(ray => ray.stage === 'cost' && (staged ? ray.group === handler : ray.group === null))?.key;
+  const own = reports.filter(report => report.effect === sun.effect);
+  const bodies = new Set(staged ? own.slice(-1) : own);
+  if (costKey && (staged ? own.length > 1 : own.length > 0)) rays.add(costKey);
+  const walk = (report: RanReport, top: boolean): void => {
+    if (report.effect !== sun.effect) {
+      if (hooks.has(report.effect)) seams.add(report.effect);
+    } else if (top && bodies.has(report)) {
+      for (const entry of report.trace) {
+        if ('within' in entry) continue;
+        const key = rayAt(entry.step);
+        if (!key) continue;
+        if (entry.skipped || entry.unknown) skipped.add(key);
+        else rays.add(key);
+      }
+      if (report.stopped) stopped = rayAt(report.stopped.step) ?? stopped;
+    }
+    for (const inner of report.reactions ?? []) walk(inner, false);
+  };
+  for (const report of reports) walk(report, true);
+  if (staged && (rays.size || reports.length)) {
+    for (const ray of sun.rays) {
+      if (ray.group === handler && (ray.stage === 'when' || ray.stage === 'onlyIf' || ray.stage === 'decides')) rays.add(ray.key);
+    }
+  }
+  for (const key of rays) skipped.delete(key);
+  return { rays: [...rays], skipped: [...skipped], stopped, seams: [...seams] };
+}

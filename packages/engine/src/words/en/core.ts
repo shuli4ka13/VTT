@@ -1,5 +1,6 @@
 export const CORE: Record<string, string> = {
   "в комнате нет листа «{0}»": "there is no sheet “{0}” in the room",
+  "проба": "trial",
   "у «{0}» сейчас не висит «{1}»": "“{1}” is not hanging on “{0}” right now",
   "действие «{0}»": "action “{0}”",
   "действие «{0}» зовёт пассивный эффект «{1}» — его вешают, а не применяют": "action “{0}” calls the passive effect “{1}” — it is hung, not applied",
@@ -186,6 +187,7 @@ export const CORE: Record<string, string> = {
   "подписка «{0}»": "trigger “{0}”",
   "плата за «{0}»": "cost of “{0}”",
   "условие сейчас не выполняется": "the condition does not hold right now",
+  "«{0}» — проба": "“{0}” — trial",
   "«{0}» кнопкой": "“{0}” by button",
   "«{0}» не состоялось: эффекта уже нет": "“{0}” did not happen: the effect is gone",
   "«{0}» не состоялось: условие уже не выполняется": "“{0}” did not happen: the condition no longer holds",
