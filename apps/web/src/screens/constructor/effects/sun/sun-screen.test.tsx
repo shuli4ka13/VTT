@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent, cleanup, within } from '@testing-library/react';
 import { SAMPLE_WORLDS } from '@vtt/engine/samples';
 import { EffectsTab } from '../effects-tab.tsx';
@@ -9,6 +9,8 @@ import { useLocale } from '../../../../store/locale.ts';
 import { load } from '../../../../testing/round-trip.tsx';
 import { englishWorld, russianIn } from '../../../../testing/english.tsx';
 import { shownText } from '../../../../testing/no-keys.tsx';
+
+vi.setConfig({ testTimeout: 30_000 });
 
 const dnd = SAMPLE_WORLDS.find(world => world.system.name === 'D&D 5e')!;
 

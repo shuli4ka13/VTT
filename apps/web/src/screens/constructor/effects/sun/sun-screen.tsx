@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent, ReactElement } from 'react';
 import { sunOf } from '@vtt/engine';
+import type { Lit } from '@vtt/engine';
 import { useWorld } from '../../../../store/world.ts';
 import { useEffectView } from '../../../../store/effect-view.ts';
 import { useLocale } from '../../../../store/locale.ts';
@@ -32,6 +33,7 @@ export function SunScreen({ id }: { id: string }): ReactElement | null {
   const [mode, setMode] = useState<Mode>('inside');
   const [shut, setShut] = useState(() => typeof window !== 'undefined' && window.innerWidth < 900);
   const [notice, setNotice] = useState<unknown>(null);
+  const [lit, setLit] = useState<Lit | null>(null);
   const e = useT('sunEdit');
   const editing = useSunEdit(id);
   const geometry = useRef<Geometry | null>(null);
@@ -119,6 +121,8 @@ export function SunScreen({ id }: { id: string }): ReactElement | null {
             geometry={geometry}
             drop={dropping}
             onGrab={lifted}
+            lit={lit}
+            onClearLit={() => setLit(null)}
           />
           {opened && selected && selected.what !== 'center' ? (
             <BubbleWindow
@@ -148,7 +152,7 @@ export function SunScreen({ id }: { id: string }): ReactElement | null {
           {dropping && !dropping.ok ? <span className="sun-ghost__note">{dropping.note}</span> : null}
         </div>
       ) : null}
-      <SunDock system={system} effectId={id} sun={sun} onOpenEffect={onOpenEffect} onOpenForm={onOpenForm} />
+      <SunDock system={system} effectId={id} sun={sun} onOpenEffect={onOpenEffect} onOpenForm={onOpenForm} onLit={setLit} />
     </div>
   );
 }

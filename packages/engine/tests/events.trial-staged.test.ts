@@ -56,6 +56,7 @@ describe('подсветка пузырей по прогону', () => {
     const label = (key: string): string => sun.rays.find(ray => ray.key === key)!.label;
     expect(lit.rays.map(label)).toEqual(expect.arrayContaining(['бросок', 'урон', 'Урон']));
     expect(lit.rays).toContain('cost:cost');
+    expect(lit.rays.map(label)).toEqual(expect.arrayContaining(['для каждого: Цель', 'попал?']));
     expect(lit.rays.every(key => sun.rays.some(ray => ray.key === key))).toBe(true);
     expect(lit.stopped).toBeNull();
   });
@@ -67,6 +68,7 @@ describe('подсветка пузырей по прогону', () => {
     const hit = sun.rays.find(ray => ray.label === 'попал?')!;
     const under = sun.rays.filter(ray => ray.under === hit.key).map(ray => ray.key);
     expect(under.some(key => lit.rays.includes(key))).toBe(false);
+    expect(lit.rays).toContain(hit.key);
     expect(lit.rays).toContain(sun.rays.find(ray => ray.label === 'бросок')!.key);
   });
 

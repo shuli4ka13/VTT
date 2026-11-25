@@ -33,10 +33,10 @@ describe('нижняя панель', () => {
     expect(screen.getByRole('tabpanel').textContent).toContain('никто не зовёт');
   });
 
-  it('«Щит» висит: на «Пробе» спокойная строка про «позже»', () => {
+  it('«Щит» висит: на «Пробе» есть блок «Что случилось»', () => {
     dock('shield');
     fireEvent.click(screen.getByRole('tab', { name: 'Проба' }));
-    expect(screen.getByRole('tabpanel').textContent).toContain('появится позже');
+    expect(screen.getByRole('tabpanel').textContent).toContain('Что случилось');
   });
 
   it('проблемы этого эффекта: вкладка по умолчанию, строка и «открыть в форме»', () => {

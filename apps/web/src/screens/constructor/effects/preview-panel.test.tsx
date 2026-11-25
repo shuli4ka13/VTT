@@ -63,10 +63,10 @@ describe('проба: А применяет эффект к Б', () => {
     expect(useWorld.getState().system.tables!.лист!.columns![0]!.default).toBe(20);
   });
 
-  it('у висящего эффекта проба отказывается словами, а не молчит', () => {
+  it('у висящего эффекта без подписки проба говорит словами, что прогонять нечего', () => {
     render(<PreviewPanel effectId="щит" />);
     fireEvent.click(screen.getByText('Проба'));
-    expect(screen.getByRole('alert').textContent).toContain('висит на листе');
+    expect(screen.getByRole('alert').textContent).toContain('нет подписки');
   });
 
   it('пока эффект не выбран, проба просит выбрать', () => {
