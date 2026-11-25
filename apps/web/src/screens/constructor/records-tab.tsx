@@ -298,7 +298,7 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
           sub={t('kind.props.sub')}
           actions={
             <Button size="sm" onClick={() => {
-              const made = newProp(kind, system);
+              const made = newProp(id, kind, system);
               edit(draft => { (draft.columns ??= []).push(made); });
               setPicked(made.key);
             }}>{t('kind.props.add')}</Button>

@@ -1,5 +1,5 @@
 import { group, test, eq, deepEq, ok } from './harness.ts';
-import { flattenSystem, hasBases } from '../src/model/inherit.ts';
+import { familyColumnKeys, flattenSystem, hasBases } from '../src/model/inherit.ts';
 import { lintSystem } from '../src/model/lint.ts';
 import type { System } from '../src/model/types.ts';
 
@@ -51,5 +51,32 @@ group('основ нет — система не трогается', () => {
     const плоская = sys({ а: { label: 'А' } });
     eq(hasBases(плоская), false);
     eq(flattenSystem(плоская), плоская);
+  });
+});
+
+group('ключи колонок по цепочке типа', () => {
+  const column = (key: string) => ({ key, label: key, kind: 'number' });
+  const system = {
+    tables: {
+      base: { shape: 'book', label: 'Основа', columns: [column('a')] },
+      child: { shape: 'book', label: 'Наследник', extends: 'base', columns: [column('b')] },
+      grand: { shape: 'book', label: 'Внук', extends: 'child', columns: [column('c')] },
+      aside: { shape: 'book', label: 'Сосед', extends: 'base', columns: [column('d')] },
+      other: { shape: 'book', label: 'Чужой', columns: [column('e')] },
+    },
+  } as unknown as System;
+
+  test('у типа заняты ключи основ и всех наследников, соседние ветки и чужие типы — нет', () => {
+    deepEq(familyColumnKeys(system, 'child').sort(), ['a', 'b', 'c']);
+    deepEq(familyColumnKeys(system, 'base').sort(), ['a', 'b', 'c', 'd']);
+    deepEq(familyColumnKeys(system, 'aside').sort(), ['a', 'd']);
+    deepEq(familyColumnKeys(system, 'other'), ['e']);
+  });
+
+  test('круг в основах не вешает расчёт', () => {
+    const loop = { tables: { x: { shape: 'book', extends: 'y', columns: [column('p')] }, y: { shape: 'book', extends: 'x', columns: [column('q')] } } } as unknown as System;
+    deepEq(familyColumnKeys(loop, 'x').sort(), ['p', 'q']);
+    eq(familyColumnKeys(loop, 'нет такого').length, 0);
+    ok(hasBases(loop));
   });
 });

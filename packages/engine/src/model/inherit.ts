@@ -105,6 +105,18 @@ const made = { strict: new WeakMap<System, System>(), lenient: new WeakMap<Syste
 export const typeColumns = (system: System, id: string | undefined): TableColumn[] =>
   (id ? flattenSystem(system, true).tables?.[id]?.columns ?? [] : []);
 
+export function familyColumnKeys(system: System, id: string): string[] {
+  const tables = (system.tables ?? {}) as Record<string, { columns?: { key: string }[] } | undefined>;
+  const lineOfType = (from: string): string[] => {
+    const out: string[] = [];
+    for (let at: string | undefined = from; at && !out.includes(at); at = basedOn(tables[at])) out.push(at);
+    return out;
+  };
+  const own = lineOfType(id);
+  const family = Object.keys(tables).filter(key => own.includes(key) || lineOfType(key).includes(id));
+  return [...new Set(family.flatMap(key => (tables[key]?.columns ?? []).map(column => column.key)))];
+}
+
 export const typeColumn = (system: System, id: string | undefined, column: string): TableColumn | undefined =>
   typeColumns(system, id).find(one => one.key === column);
 

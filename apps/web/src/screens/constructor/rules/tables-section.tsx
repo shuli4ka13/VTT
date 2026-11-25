@@ -1,7 +1,7 @@
 import { ColumnSheetFields } from '../table-field.tsx';
 import type { CellValue } from '@vtt/schema';
 import { rowNames } from '../row-names.ts';
-import { blockLabel, renameLayoutColumn, renameLayoutTable, retagFields, kindsFor, kindWord, isFormulaCell, onSheet, isSingle, holderOf, fieldsOf, withColumn, forgetFields, rowPieces, listUsers, isRange, tableKeyOf as keyOf, choiceTables, rowTables, numberTables, rowUsers, renameRow, renameRowInBook, asDice, toDice } from '@vtt/engine';
+import { blockLabel, familyColumnKeys, renameLayoutColumn, renameLayoutTable, retagFields, kindsFor, kindWord, isFormulaCell, onSheet, isSingle, holderOf, fieldsOf, withColumn, forgetFields, rowPieces, listUsers, isRange, tableKeyOf as keyOf, choiceTables, rowTables, numberTables, rowUsers, renameRow, renameRowInBook, asDice, toDice } from '@vtt/engine';
 import type { RowPiece, TableColumn, Holder } from '@vtt/engine';
 export { rowNames } from '../row-names.ts';
 import { Card, CardHead, Input, NumInput, Button, DangerButton, Fold, Select, Verdict, Empty, Field, Chip, TextArea } from '../../../ui/primitives.tsx';
@@ -412,7 +412,7 @@ export function TableColumnCard({ id, table, column, system, edit, onClose, onRe
     const virgin = !book && auto && !named && (single ? world.split(`"${key}"`).length - 1 <= 1 : !filled);
     const taken = single
       ? [...fieldsOf(state.system).map(f => f.tag).filter(tag => tag !== key), ...Object.keys(state.system.tables ?? {})]
-      : (table.columns ?? []).map(c => c.key).filter(other => other !== key);
+      : familyColumnKeys(state.system, id).filter(other => other !== key);
     const fresh = virgin && slugOf(label) ? freeId(taken, label) : key;
     editSystem(draft => renameColumn(draft, id, key, label, fresh));
     if (fresh === key) return;

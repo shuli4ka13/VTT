@@ -13,7 +13,7 @@ export { activationFor, DURATIONS, LAUNCHES, launchOf, REAPPLY } from '../model/
 export type { LaunchKind } from '../model/effect-kinds.ts';
 export { armsOf, balance, endOf, flowOf, inBlock, lazyPlan, sees } from '../model/flow.ts';
 export { appliedOf, implicitOf } from '../model/implicit.ts';
-export { flattenSystem, paramsOf, typeColumn, typeColumns } from '../model/inherit.ts';
+export { familyColumnKeys, flattenSystem, paramsOf, typeColumn, typeColumns } from '../model/inherit.ts';
 export { renameRow, renameRowInBook, rowUsers } from '../model/integrity.ts';
 export { renameLayoutColumn, renameLayoutTable, retagFields, tidyLayout, tidySample } from '../model/layout.ts';
 export { healthOf, healthSpec, healthSteps, shareOf } from '../model/health.ts';

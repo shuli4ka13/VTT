@@ -60,9 +60,36 @@ for (const [name, base] of BASES) {
     it('новый тип записи со свойством проходит схему', () => {
       const system = base();
       const made = newRecordKind(system);
-      made.value.columns = [newProp(made.value, system)];
+      made.value.columns = [newProp(made.key, made.value, system)];
       (system.tables ??= {})[made.key] = made.value;
       expect(issuesOf(system)).toEqual([]);
+    });
+
+    it('ключ нового свойства не совпадает ни со свойством основы, ни со свойством наследника', () => {
+      const system = base();
+      const parent = newRecordKind(system);
+      (system.tables ??= {})[parent.key] = parent.value;
+      const child = newRecordKind(system);
+      system.tables[child.key] = { ...child.value, extends: parent.key };
+      const grand = newRecordKind(system);
+      system.tables[grand.key] = { ...grand.value, extends: child.key };
+      const aside = newRecordKind(system);
+      system.tables[aside.key] = { ...aside.value, extends: parent.key };
+
+      const first = newProp(parent.key, system.tables[parent.key]!, system);
+      system.tables[parent.key]!.columns = [first];
+      const inChild = newProp(child.key, system.tables[child.key]!, system);
+      system.tables[child.key]!.columns = [inChild];
+      const inGrand = newProp(grand.key, system.tables[grand.key]!, system);
+      system.tables[grand.key]!.columns = [inGrand];
+      expect(new Set([first.key, inChild.key, inGrand.key]).size).toBe(3);
+
+      const again = newProp(parent.key, system.tables[parent.key]!, system);
+      expect([first.key, inChild.key, inGrand.key]).not.toContain(again.key);
+
+      const inAside = newProp(aside.key, system.tables[aside.key]!, system);
+      expect(inAside.key).not.toBe(first.key);
+      expect(inAside.key).toBe(inChild.key);
     });
 
     it('новая привязка проходит схему', () => {
@@ -125,7 +152,7 @@ describe('подписи новых вещей идут за основным я
     const kind = newRecordKind(system);
     return {
       effects: KINDS.map(launch => newEffect(system, launch)),
-      column: newColumn(system), kind, prop: newProp(kind.value, system),
+      column: newColumn(system), kind, prop: newProp(kind.key, kind.value, system),
       dice: (['one', 'sum', 'hits', 'best', 'percent', 'parts'] as const).map(shape => newDie(system, shape)),
       edit: newRollEdit(system), table: newTable(system), cost: newCost(system), block: newGroup(system),
       steps, named: (['roll', 'check', 'table', 'ask', 'number'] as const).map(step => namedStep(system, [], step)),

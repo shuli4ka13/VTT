@@ -1,4 +1,4 @@
-import { STEP_WORDS, COST_BLOCK, GEAR_BLOCK, fieldsOf, rowTables, stepSaid } from '@vtt/engine';
+import { STEP_WORDS, COST_BLOCK, GEAR_BLOCK, familyColumnKeys, fieldsOf, rowTables, stepSaid } from '@vtt/engine';
 import type { LaunchKind, RecordKind } from '@vtt/engine';
 import { freeId } from '../../store/world.ts';
 import { dice } from '../../words.ts';
@@ -90,8 +90,8 @@ export const newRecordKind = (system: System): Made<RecordKind> => ({
 
 export const newBinding = (): Binding => ({ effect: '' });
 
-export const newProp = (kind: RecordKind, system: System | null | undefined): Column => ({
-  key: freeId((kind.columns ?? []).map(p => p.key), 'prop'),
+export const newProp = (id: string, kind: RecordKind, system: System | null | undefined): Column => ({
+  key: freeId([...(kind.columns ?? []).map(p => p.key), ...(system ? familyColumnKeys(system, id) : [])], 'prop'),
   label: dataT(system)('data:prop.new'),
   kind: 'number',
 });
