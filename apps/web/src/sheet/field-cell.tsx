@@ -141,7 +141,7 @@ function towardTotal(
   write: ((tag: string, value: StoredValue) => void) | undefined,
   move: ((tag: string, by: number) => void) | undefined,
 ): ((tag: string, value: StoredValue) => void) | undefined {
-  if (!write || typeof shift.total !== 'number' || typeof shift.base !== 'number') return undefined;
+  if (!write || !shift.additive || typeof shift.total !== 'number' || typeof shift.base !== 'number') return undefined;
   const total = shift.total;
   return (tag, next) => {
     if (typeof next !== 'number') return;

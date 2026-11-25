@@ -10,6 +10,10 @@ const system = {
       columns: [{ key: 'x', kind: 'number' }],
       modifiers: [{ kind: 'value', target: 'humanity', op: 'add', value: { expr: '-@row.x' } }],
     },
+    double: {
+      label: 'Удвоение', shape: 'book', use: 'item',
+      modifiers: [{ kind: 'value', target: 'humanity', op: 'mul', value: { expr: '2' } }],
+    },
     calm: {
       label: 'Спокойствие', shape: 'book', use: 'item',
       modifiers: [{ kind: 'value', target: 'humanity', op: 'add', value: { expr: '5' }, if: { expr: '@calm_on' } }],
@@ -22,6 +26,7 @@ const book = {
     { id: 'a', table: 'implants', label: 'ААА', cells: { x: 10 } },
     { id: 'b', table: 'implants', label: 'БББ', cells: { x: 5 } },
     { id: 'c', table: 'calm', label: 'Тишина' },
+    { id: 'd', table: 'double', label: 'Дубль' },
   ],
 } as never;
 
@@ -34,7 +39,7 @@ group('сдвиг хранимого поля правками', () => {
   });
 
   test('надетый имплант: основа 60, итог 50, источник назван', () => {
-    deepEq(shiftOf(system, 'humanity', passOf([{ of: 'a' }])), { base: 60, total: 50, from: [{ label: 'Импланты', count: 1 }] });
+    deepEq(shiftOf(system, 'humanity', passOf([{ of: 'a' }])), { base: 60, total: 50, from: [{ label: 'Импланты', count: 1 }], additive: true });
   });
 
   test('итог сдвига тот же, что считает расчёт, и формулы читают итог', () => {
@@ -45,6 +50,12 @@ group('сдвиг хранимого поля правками', () => {
 
   test('два импланта одного типа — один источник «×2»', () => {
     deepEq(shiftOf(system, 'humanity', passOf([{ of: 'a' }, { of: 'b' }]))!.from, [{ label: 'Импланты', count: 2 }]);
+  });
+
+  test('правка-множитель: итог считается, но сдвиг не обратим простым переносом — признак «только прибавки» снят', () => {
+    const shift = shiftOf(system, 'humanity', passOf([{ of: 'a' }, { of: 'd' }]))!;
+    eq(shift.additive, false);
+    eq(shift.total, calc(system, sheet([{ of: 'a' }, { of: 'd' }]), 'humanity', passOf([{ of: 'a' }, { of: 'd' }])));
   });
 
   test('снятая вещь не сдвигает', () => {

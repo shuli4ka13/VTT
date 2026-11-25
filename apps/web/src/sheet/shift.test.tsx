@@ -14,6 +14,7 @@ const system = {
       { key: 'humanity', label: 'Человечность', kind: 'number', default: 60 },
       { key: 'armor', label: 'Броня', kind: 'number', default: 2, min: 0, max: 20 },
       { key: 'luck', label: 'Удача', kind: 'number', default: 5 },
+      { key: 'speed', label: 'Скорость', kind: 'number', default: 10 },
     ] },
     implants: {
       label: 'Импланты', shape: 'book', use: 'item',
@@ -21,13 +22,14 @@ const system = {
       modifiers: [
         { kind: 'value', target: 'humanity', op: 'add', value: { expr: '-@row.x' } },
         { kind: 'value', target: 'armor', op: 'add', value: { expr: '3' } },
+        { kind: 'value', target: 'speed', op: 'mul', value: { expr: '2' } },
       ],
     },
   },
 } as unknown as System;
 
 const book = { records: [{ id: 'a', table: 'implants', label: 'ААА', cells: { x: 10 } }] } as unknown as Compendium;
-const sheet = { id: 's', values: { humanity: 60, armor: 2, luck: 5 }, has: [{ of: 'a' }], effects: [] } as unknown as Sheet;
+const sheet = { id: 's', values: { humanity: 60, armor: 2, luck: 5, speed: 10 }, has: [{ of: 'a' }], effects: [] } as unknown as Sheet;
 
 const readerOf = (one: Sheet): Reader => {
   const pass = newPass(system as never, one as never, { compendium: book as never });
@@ -78,6 +80,23 @@ describe('итог под правками на листе', () => {
     fireEvent.click(plus);
     expect(set).toEqual([]);
     expect(shifted).toEqual([['armor', 1]]);
+  });
+
+  it('обычный вид: под правкой-множителем итог только виден — вписывать его можно в режиме правки', () => {
+    draw(false);
+    const speed = cellOf('Скорость');
+    expect(speed.querySelector('input')).toBeNull();
+    expect(speed.textContent).toContain('20');
+    expect(speed.querySelector('.shift-plaque')!.textContent).toBe('↑ +10');
+  });
+
+  it('режим правки: под правкой-множителем вписанное правится', () => {
+    const { set } = draw(true);
+    const input = cellOf('Скорость').querySelector('input') as HTMLInputElement;
+    expect(input.value).toBe('10');
+    fireEvent.change(input, { target: { value: '12' } });
+    fireEvent.blur(input);
+    expect(set).toEqual([['speed', 12]]);
   });
 
   it('режим правки: вписанное значение и подсказка с итогом, ввод пишет основу', () => {

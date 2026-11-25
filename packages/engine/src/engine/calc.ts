@@ -4,6 +4,7 @@ import { toolsOf } from './refs.ts';
 import { referencedTable, resolveAddress, splitPath, walk } from './navigate.ts';
 import { deskField, DESK_ID, COMBAT_NAME } from './owners.ts';
 import { collectModifiers, applyValueModifiers, activeValueModifiers } from './modifiers.ts';
+import { targetStages } from './stages.ts';
 import { wornEffects } from './effects.ts';
 import type { CollectedModifiers } from './modifiers.ts';
 import type { System, Sheet, Field, Compendium, Resolve } from '../model/types.ts';
@@ -141,6 +142,7 @@ export interface Shift {
   base: unknown;
   total: unknown;
   from: { label: string; count: number }[];
+  additive: boolean;
 }
 
 export function shiftOf(system: System, tag: string, pass: Pass): Shift | null {
@@ -156,7 +158,8 @@ export function shiftOf(system: System, tag: string, pass: Pass): Shift | null {
     if (known) known.count++;
     else from.push({ label, count: 1 });
   }
-  return { base: baseOf(holder, field), total: calc(system, holder.sheet, tag, holder), from };
+  const additive = targetStages(system, tag).length === 0 && active.every(mod => ((mod as { op?: string }).op ?? 'add') === 'add');
+  return { base: baseOf(holder, field), total: calc(system, holder.sheet, tag, holder), from, additive };
 }
 
 export function calcAll(system: System, sheet: Sheet, pass: Pass = newPass(system, sheet)): Record<string, unknown> {
