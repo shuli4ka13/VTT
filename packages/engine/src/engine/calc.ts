@@ -3,7 +3,7 @@ import { UnknownTagError, CycleError, EngineError } from './errors.ts';
 import { toolsOf } from './refs.ts';
 import { referencedTable, resolveAddress, splitPath, walk } from './navigate.ts';
 import { deskField, DESK_ID, COMBAT_NAME } from './owners.ts';
-import { collectModifiers, applyValueModifiers } from './modifiers.ts';
+import { collectModifiers, applyValueModifiers, activeValueModifiers } from './modifiers.ts';
 import { wornEffects } from './effects.ts';
 import type { CollectedModifiers } from './modifiers.ts';
 import type { System, Sheet, Field, Compendium, Resolve } from '../model/types.ts';
@@ -135,6 +135,28 @@ export function calc(system: System, sheet: Sheet, tag: string, pass: Pass = new
     pass.visiting.delete(tag);
     pass.path.pop();
   }
+}
+
+export interface Shift {
+  base: unknown;
+  total: unknown;
+  from: { label: string; count: number }[];
+}
+
+export function shiftOf(system: System, tag: string, pass: Pass): Shift | null {
+  const field = findField(system, tag);
+  if (!field || field.value.kind !== 'stored' || livesOn(field) === 'desk') return null;
+  const holder = livesOn(field) === 'group' && pass.group ? pass.group : pass;
+  const active = activeValueModifiers(tag, holder, [], field.cell);
+  if (!active.length) return null;
+  const from: Shift['from'] = [];
+  for (const mod of active) {
+    const label = mod.source.label || mod.source.id;
+    const known = from.find(one => one.label === label);
+    if (known) known.count++;
+    else from.push({ label, count: 1 });
+  }
+  return { base: baseOf(holder, field), total: calc(system, holder.sheet, tag, holder), from };
 }
 
 export function calcAll(system: System, sheet: Sheet, pass: Pass = newPass(system, sheet)): Record<string, unknown> {

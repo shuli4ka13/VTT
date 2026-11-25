@@ -137,16 +137,23 @@ function sourcesOf(system: System, sheet: Sheet, compendium: Compendium): Modifi
 }
 
 
+export function activeValueModifiers(
+  tag: string, pass: Pass, also: readonly string[] = [], cell?: CellMark,
+): SourcedModifier[] {
+  if (!pass.modifiers) return [];
+  const row = cell ? (pass.system.tables?.[cell.table]?.rows ?? []).find(one => rowKeyOf(one) === cell.row) : undefined;
+  const near = cell && row ? [cellTagOf(cell.table, String(row.value), cell.column), columnTagOf(cell.table, cell.column)] : [];
+  const mods = [tag, ...also, ...near].flatMap(one => pass.modifiers!.value.get(one) ?? [])
+    .map(mod => (cell && row ? onRow(mod, cell.table, row, pass.system) : mod));
+  return mods.filter(m => conditionHolds(m, pass));
+}
+
 export function applyValueModifiers(
   base: unknown, tag: string, pass: Pass, also: readonly string[] = [], cell?: CellMark,
 ): unknown {
   const staged = targetStages(pass.system, tag).length > 0;
   if (!pass.modifiers) return staged ? stackNumber([], base, tag, pass) : base;
-  const row = cell ? (pass.system.tables?.[cell.table]?.rows ?? []).find(one => rowKeyOf(one) === cell.row) : undefined;
-  const near = cell && row ? [cellTagOf(cell.table, String(row.value), cell.column), columnTagOf(cell.table, cell.column)] : [];
-  const mods = [tag, ...also, ...near].flatMap(one => pass.modifiers!.value.get(one) ?? [])
-    .map(mod => (cell && row ? onRow(mod, cell.table, row, pass.system) : mod));
-  const active = mods.filter(m => conditionHolds(m, pass));
+  const active = activeValueModifiers(tag, pass, also, cell);
   if (active.length === 0 && !staged) return base;
 
   return stackNumber(active, base, tag, pass);

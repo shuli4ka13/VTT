@@ -1,6 +1,6 @@
 export { baseValue, Views } from '../core/view.ts';
-export { baseOf, calc, calcAll, dependenciesOf, fieldsFor, findField, livesOn, newPass } from '../engine/calc.ts';
-export type { Pass, Scope } from '../engine/calc.ts';
+export { baseOf, calc, calcAll, dependenciesOf, fieldsFor, findField, livesOn, newPass, shiftOf } from '../engine/calc.ts';
+export type { Pass, Scope, Shift } from '../engine/calc.ts';
 export { resolveRoll } from '../engine/modifiers.ts';
 export type { RollResolution } from '../engine/modifiers.ts';
 export { splitPath } from '../engine/navigate.ts';

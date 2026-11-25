@@ -1,4 +1,4 @@
-import { aimOf, expectAction, costRefusal, availableActions, isDesk, isGroup, fieldsFor, sheetKinds, distanceOf, distanceWords, fieldsOf, claimWords, baseValue, isService, isSecret, circleOf, isNoteField } from '@vtt/engine';
+import { aimOf, expectAction, costRefusal, availableActions, isDesk, isGroup, fieldsFor, sheetKinds, distanceOf, distanceWords, fieldsOf, claimWords, baseValue, shiftOf, Views, isService, isSecret, circleOf, isNoteField } from '@vtt/engine';
 import { mayAnswer, mayAllowItems, mayField, seesField } from '../../engine/rights.ts';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRoom } from '../../store/room.ts';
@@ -186,7 +186,12 @@ function Piece({ sheet, room, pick, pinned, field, fixed }: {
   const name = sheet.name ?? sheet.id;
   const shown = useMemo(() => {
     if (field || !pinned) return undefined;
-    try { return baseValue(room.system, room.compendium, room.sheets, sheet.id, pinned); } catch { return undefined; }
+    try {
+      const views = new Views(room.system, room.compendium);
+      const shift = shiftOf(room.system, pinned, views.of(room.sheets, views.holderOf(room.sheets, sheet.id, pinned)));
+      if (shift && typeof shift.total === 'number' && typeof shift.base === 'number') return { value: shift.total, by: shift.total - shift.base };
+      return { value: baseValue(room.system, room.compendium, room.sheets, sheet.id, pinned), by: 0 };
+    } catch { return undefined; }
   }, [field, pinned, room.system, room.compendium, room.sheets, sheet.id]);
   return (
     <button
@@ -205,7 +210,8 @@ function Piece({ sheet, room, pick, pinned, field, fixed }: {
       </span>
       {field ? null : <span className="token__name">{name}</span>}
       {field ? null : sheet.id === turn ? <span className="token__turn">{t('table.piece.turn')}</span> : null}
-      {field || !pinned ? null : <span className="token__hp num">{String(shown ?? '—')}</span>}
+      {field || !pinned ? null : <span className="token__hp num">{String(shown?.value ?? '—')}</span>}
+      {field || !pinned || !shown?.by ? null : <span className="token__shift">{shown.by > 0 ? '↑ +' : '↓ −'}{Math.abs(shown.by)}</span>}
       {field ? null : <Hanging room={room} sheet={sheet} compact />}
     </button>
   );

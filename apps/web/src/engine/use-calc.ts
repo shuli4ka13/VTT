@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import type { System, Sheet, Compendium, FieldOption } from '@vtt/schema';
-import { compile, newPass, calc, baseOf, findField, livesOn, hasDesk, blankDesk, resolveRoll, toolsOf, HOLDER } from '@vtt/engine';
-import type { Pass, Scope, RollResolution } from '@vtt/engine';
+import { compile, newPass, calc, baseOf, findField, livesOn, hasDesk, blankDesk, resolveRoll, toolsOf, HOLDER, shiftOf } from '@vtt/engine';
+import type { Pass, Scope, RollResolution, Shift } from '@vtt/engine';
 import { shownDice } from '../ui/formula-lang.ts';
 import { t } from '../i18n/index.ts';
 
@@ -16,6 +16,8 @@ export interface Reader {
   rollOf: (tags: string[]) => RollResolution | null;
 
   storedOf?: (tag: string) => unknown;
+
+  shiftOf?: (tag: string) => Shift | null;
 
   measure?: (expr: string) => Computed;
 }
@@ -63,6 +65,10 @@ export function useReader(system: System, sheet: Sheet | null, compendium: Compe
         const own = holder.sheet.values[tag];
         if (own !== undefined || !field) return own;
         try { return baseOf(holder, field); } catch { return undefined; }
+      },
+      shiftOf: tag => {
+        try { return shiftOf(system, tag, pass); }
+        catch { return null; }
       },
       measure: expr => {
         const resolve = (name: string) => pass.resolve(name.startsWith(`${HOLDER}.`) ? name.slice(HOLDER.length + 1) : name);

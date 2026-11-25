@@ -7,10 +7,11 @@ import { VIEWS } from './views/index.tsx';
 import type { Reader } from '../engine/use-calc.ts';
 import type { Sheet, System, StoredValue, FieldOption } from '@vtt/schema';
 import { MOST_STEPS, NOTE_LIMIT, isNoteField, optionsOf, toDice, asDice } from '@vtt/engine';
-import type { Field as FieldModel } from '@vtt/engine';
+import type { Field as FieldModel, Shift } from '@vtt/engine';
 
-export function FieldCell({ field, system, sheet, reader, onChange, onShift, onRoll, bare, mark }: {
+export function FieldCell({ field, system, sheet, reader, onChange: write0, onShift, onRoll, bare, mark, editing }: {
   field: FieldModel;
+  editing?: boolean;
   bare?: boolean;
   mark?: string;
   system: System;
@@ -30,13 +31,18 @@ export function FieldCell({ field, system, sheet, reader, onChange, onShift, onR
       </Button>
     )
     : null;
-  const stored = field.value.kind === 'stored';
   const options = optionsOf(system, field);
-  const computed = stored ? null : reader.valueOf(field.tag);
+  const shift = field.value.kind === 'stored' && reader.shiftOf ? reader.shiftOf(field.tag) : null;
+  const totalShown = Boolean(shift) && !editing;
+  const stored = field.value.kind === 'stored' && !totalShown;
+  const computed = stored ? null : totalShown ? { ok: true as const, value: shift!.total } : reader.valueOf(field.tag);
   const value = stored
     ? (reader.storedOf ? reader.storedOf(field.tag) : sheet.values[field.tag] ?? (field.value.kind === 'stored' ? field.value.default : undefined))
     : computed!.ok ? computed!.value : undefined;
-  const editable = stored && onChange ? onChange : null;
+  const onChange = totalShown ? towardTotal(shift!, write0, onShift) : write0;
+  const editable = (stored || totalShown) && onChange ? onChange : null;
+  const plaque = shift && !sameValue(shift.base, shift.total) ? <ShiftPlaque shift={shift} editing={Boolean(editing)} /> : null;
+  const tail = plaque ? <>{plaque}{roll}</> : roll;
 
   if (isNoteField(field)) {
     return <Note label={label} value={typeof value === 'string' ? value : ''} {...(editable ? { onCommit: (next: string) => editable(field.tag, next) } : {})} />;
@@ -44,7 +50,7 @@ export function FieldCell({ field, system, sheet, reader, onChange, onShift, onR
 
   const kind = field.control?.kind;
   const spec = kind ? VIEWS[kind] : null;
-  const fits = spec && (stored ? Boolean(editable) || spec.shows : spec.shows) && spec.fits(value);
+  const fits = spec && (stored || totalShown ? Boolean(editable) || spec.shows : spec.shows) && spec.fits(value);
   if (spec && fits && (stored || computed!.ok)) {
     const { kind: _kind, ...settings } = field.control!;
     const write = editable ? (next: StoredValue) => editable(field.tag, next) : undefined;
@@ -65,7 +71,7 @@ export function FieldCell({ field, system, sheet, reader, onChange, onShift, onR
             {...(write ? { onChange: write } : {})}
             {...(write && onShift ? { onShift: (by: number) => onShift(field.tag, by) } : {})}
           />
-          {roll}
+          {tail}
         </div>
       </Group>
     );
@@ -73,7 +79,7 @@ export function FieldCell({ field, system, sheet, reader, onChange, onShift, onR
 
   if (!editable) {
     const shown = stored ? show({ ok: true, value }, options, field.dice) : show(computed!, options, true);
-    return <Shown label={label} text={shown.text} title={shown.title} bad={shown.bad} roll={roll} />;
+    return <Shown label={label} text={shown.text} title={shown.title} bad={shown.bad} roll={tail} />;
   }
 
   const type = field.value.kind === 'stored' ? field.value.type : 'text';
@@ -90,7 +96,7 @@ export function FieldCell({ field, system, sheet, reader, onChange, onShift, onR
               editable(field.tag, picked ? picked.value : '');
             }}
           />
-          {roll}
+          {tail}
         </div>
       </Field>
     );
@@ -101,7 +107,7 @@ export function FieldCell({ field, system, sheet, reader, onChange, onShift, onR
       <Group label={label}>
         <div className="v-cell v-cell--chips">
           <VIEWS.chips.draw value={value} label={field.label} options={options} onChange={next => editable(field.tag, next)} />
-          {roll}
+          {tail}
         </div>
       </Group>
     );
@@ -112,7 +118,7 @@ export function FieldCell({ field, system, sheet, reader, onChange, onShift, onR
       <Group label={label}>
         <div className="v-cell v-cell--toggle">
           <VIEWS.toggle.draw value={value} label={field.label} onChange={next => editable(field.tag, next)} />
-          {roll}
+          {tail}
         </div>
       </Group>
     );
@@ -124,10 +130,42 @@ export function FieldCell({ field, system, sheet, reader, onChange, onShift, onR
         {type === 'number'
           ? <NumInput value={Number(value ?? 0)} onCommit={n => editable(field.tag, n)} />
           : <Input value={field.dice ? asDice(String(value ?? '')) : String(value ?? '')} onChange={next => editable(field.tag, field.dice ? toDice(next) : next)} />}
-        {roll}
+        {tail}
       </div>
     </Field>
   );
+}
+
+function towardTotal(
+  shift: Shift,
+  write: ((tag: string, value: StoredValue) => void) | undefined,
+  move: ((tag: string, by: number) => void) | undefined,
+): ((tag: string, value: StoredValue) => void) | undefined {
+  if (!write || typeof shift.total !== 'number' || typeof shift.base !== 'number') return undefined;
+  const total = shift.total;
+  return (tag, next) => {
+    if (typeof next !== 'number') return;
+    const by = next - total;
+    if (!by) return;
+    if (move) move(tag, by);
+    else write(tag, (shift.base as number) + by);
+  };
+}
+
+const sameValue = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
+
+function ShiftPlaque({ shift, editing }: { shift: Shift; editing: boolean }) {
+  const t = useT('sheet');
+  const from = shift.from.map(one => (one.count > 1 ? `${one.label} ×${one.count}` : one.label)).join(', ');
+  const numeric = typeof shift.total === 'number' && typeof shift.base === 'number';
+  const by = numeric ? (shift.total as number) - (shift.base as number) : 0;
+  const text = !numeric ? t('shift.changed')
+    : editing ? t('shift.total', { total: shift.total })
+      : `${by > 0 ? '↑' : '↓'} ${by > 0 ? '+' : '−'}${Math.abs(by)}`;
+  const title = numeric
+    ? t('shift.title', { base: shift.base, total: shift.total, from })
+    : t('shift.titleText', { from });
+  return <span className="shift-plaque" title={title}>{text}</span>;
 }
 
 function Note({ label, value, onCommit }: { label: ReactNode; value: string; onCommit?: (next: string) => void }) {

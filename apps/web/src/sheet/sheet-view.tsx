@@ -11,7 +11,8 @@ import { SheetGrid } from './sheet-grid.tsx';
 import { t as say, useT } from '../i18n/index.ts';
 import type { GridEdit } from './sheet-grid.tsx';
 
-export function SheetView({ system, sheet, reader, onChange, onShift, mayEdit, marks, onRoll, badge, only, fields, onPick, picked, onPickBlock, onPickRow, pages, lists, edit }: {
+export function SheetView({ system, sheet, reader, onChange, onShift, mayEdit, marks, onRoll, badge, only, fields, onPick, picked, onPickBlock, onPickRow, pages, lists, edit, editing }: {
+  editing?: boolean;
   edit?: GridEdit;
   pages?: { at: string | null; onAt: (name: string) => void; all?: boolean };
   lists?: Partial<Record<SheetList, ReactNode>>;
@@ -55,6 +56,7 @@ export function SheetView({ system, sheet, reader, onChange, onShift, mayEdit, m
         onShift={open ? onShift : undefined}
         onRoll={onRoll}
         bare={bare}
+        editing={editing ?? true}
         {...(marks && field.sees ? { mark: t(`sees.${field.sees}`) } : {})}
       />
     );

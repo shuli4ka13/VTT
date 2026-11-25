@@ -65,5 +65,14 @@
   },
   "things": {
     "rowShows": "what shows in the row"
+  },
+  "shift": {
+    "changed": "modified",
+    "total": "total {{total}}",
+    "title": "Entered {{base}}, with modifiers {{total}} — {{from}}",
+    "titleText": "Changed by modifiers: {{from}}",
+    "edit": "Edit",
+    "done": "Done",
+    "editHint": "Editing entered values: change what is entered; items and effects still apply on top"
   }
 }

@@ -91,6 +91,8 @@ export function SheetScreen() {
 
 function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
   const t = useT('play');
+  const ts = useT('sheet');
+  const [editing, setEditing] = useState(false);
   const me = useSession(s => s.userId);
   const isDesk = atDesk(sheet);
   const asGroup = !isDesk && isGroup(sheet, room.sheets);
@@ -124,12 +126,13 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
       {isDesk ? <span className="faint">{t('sheet.deskNote')}</span> : (
         <div className="inline">
           <ClaimRow room={room} sheet={sheet} />
-          {mayDrop ? (
-            <>
-              <span className="spacer" />
-              <DangerButton size="sm" onConfirm={() => tableSocket.dropSheet(room.id, sheet.id)}>{t('sheet.drop')}</DangerButton>
-            </>
+          <span className="spacer" />
+          {editable ? (
+            <Button size="sm" variant={editing ? 'primary' : undefined} title={ts('shift.editHint')} onClick={() => setEditing(!editing)}>
+              {editing ? ts('shift.done') : ts('shift.edit')}
+            </Button>
           ) : null}
+          {mayDrop ? <DangerButton size="sm" onConfirm={() => tableSocket.dropSheet(room.id, sheet.id)}>{t('sheet.drop')}</DangerButton> : null}
         </div>
       )}
       {!isDesk && editable && (claimable.length || pairs.length || openRolls) ? (
@@ -185,6 +188,7 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
         onChange={editable ? (tag, value) => tableSocket.setValue(room.id, sheet.id, tag, value) : undefined}
         onShift={editable ? (tag, by) => tableSocket.shiftValue(room.id, sheet.id, tag, by) : undefined}
         mayEdit={tag => mayField(room, me, sheet.id, tag)}
+        editing={editing}
         onRoll={tag => {
           const rolled = fieldsOf(system).find(field => field.tag === tag);
           const pair = rolled?.roll?.pair === true && second !== '' ? second : undefined;
@@ -359,6 +363,7 @@ function useSheetPieces(room: RoomState, sheet: Sheet): { hangingNow: ReactNode;
                             <FieldCell
                               key={cell.tag} field={cell.field} system={system} sheet={sheet}
                               reader={{ ...reader, storedOf: () => cell.value }}
+                              editing
                               onChange={(tag, value) => tableSocket.setValue(room.id, sheet.id, tag, value)}
                             />
                           ))}
