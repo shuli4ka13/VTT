@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import type { ReactElement } from 'react';
 import { bindingsOf, recordsOf } from '@vtt/engine';
-import type { Sun, System } from '@vtt/engine';
+import type { Lit, Sun, System } from '@vtt/engine';
 import { useEffectView } from '../../../../../store/effect-view.ts';
 import { useWorld } from '../../../../../store/world.ts';
 import { useT } from '../../../../../i18n/author.ts';
-import { PreviewPanel } from '../../preview-panel.tsx';
+import { Trial } from './trial.tsx';
 import { useProblems, whereLabel } from '../../../problems.ts';
 import { bookButtonsOf, callMap } from '../../call-map.ts';
 import './dock.css';
@@ -16,11 +16,12 @@ export interface SunDockProps {
   sun: Sun;
   onOpenEffect: (id: string) => void;
   onOpenForm: (step: number | null) => void;
+  onLit?: (lit: Lit | null) => void;
 }
 
 type Tab = 'trial' | 'problems' | 'used';
 
-export function SunDock({ system, effectId, sun, onOpenEffect, onOpenForm }: SunDockProps): ReactElement {
+export function SunDock({ system, effectId, sun, onOpenEffect, onOpenForm, onLit }: SunDockProps): ReactElement {
   const t = useT('sunWindow');
   const found = useProblems().filter(problem => problem.where.effect === effectId);
   const [chosen, setChosen] = useState<Tab | null>(null);
@@ -44,7 +45,7 @@ export function SunDock({ system, effectId, sun, onOpenEffect, onOpenForm }: Sun
         <button type="button" className="sundock__tab" aria-expanded={!folded} onClick={() => setFolded(!folded)}>{folded ? t('dock.unfold') : t('dock.fold')}</button>
       </div>
       <div className="sundock__body" role="tabpanel" hidden={folded}>
-        {tab === 'trial' ? (sun.launch === 'manual' ? <PreviewPanel effectId={effectId} only="trial" /> : <p className="faint">{t('dock.later')}</p>) : null}
+        {tab === 'trial' ? <Trial key={effectId} system={system} effectId={effectId} sun={sun} {...(onLit ? { onLit } : {})} /> : null}
         {tab === 'problems' ? (
           found.length ? found.map((problem, index) => (
             <div key={index} className="sundock__row">

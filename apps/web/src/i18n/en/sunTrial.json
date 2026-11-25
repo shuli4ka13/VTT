@@ -1,0 +1,18 @@
+{
+  "happened": "What happened",
+  "reset": "defaults",
+  "whichLabel": "Which subscription",
+  "which": "Subscription {{n}}",
+  "holder": "holder",
+  "other": "second sheet",
+  "unset": "not set",
+  "nothing": "The effect only changes numbers while it hangs, so there is nothing to run.",
+  "legend": {
+    "title": "Trial highlight",
+    "ran": "ran",
+    "skipped": "skipped",
+    "stopped": "stopped here",
+    "seam": "hook fired",
+    "clear": "clear highlight"
+  }
+}

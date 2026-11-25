@@ -768,7 +768,7 @@ export class Run {
   private waive(frame: Frame, path: Path, note: string | null): boolean {
     const why = note ?? softWords();
     if (this.gathering) {
-      this.gathering.push(why);
+      if (!this.gathering.includes(why)) this.gathering.push(why);
       return true;
     }
     if (frame.waived) return true;

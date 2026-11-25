@@ -1,10 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useWorld, useBook } from '../../../store/world.ts';
 import { Card, CardHead, Select, Verdict, Empty, Segmented } from '../../../ui/primitives.tsx';
 import { SheetView } from '../../../sheet/sheet-view.tsx';
 import { useReader } from '../../../engine/use-calc.ts';
 import { useDryRun, mannequinsOf, DICE_MODES } from '../../../engine/dry-run.ts';
-import type { DiceMode } from '../../../engine/dry-run.ts';
+import type { DiceMode, DryRun, Staged } from '../../../engine/dry-run.ts';
 import type { Sheet, StoredValue } from '@vtt/schema';
 import { DonorPalette } from '../donors.tsx';
 import { fieldOf } from '@vtt/engine';
@@ -12,7 +12,12 @@ import { useT } from '../../../i18n/author.ts';
 
 const diceOptions = () => (Object.keys(DICE_MODES) as DiceMode[]).map(key => [key, DICE_MODES[key].label] as const);
 
-export function PreviewPanel({ effectId, only }: { effectId: string | null; only?: 'trial' }) {
+export function PreviewPanel({ effectId, only, staged, onRun }: {
+  effectId: string | null;
+  only?: 'trial';
+  staged?: Staged;
+  onRun?: (run: DryRun | null, pair: Sheet[]) => void;
+}) {
   const t = useT('effects');
   const system = useWorld(s => s.system);
   const compendium = useBook();
@@ -25,7 +30,8 @@ export function PreviewPanel({ effectId, only }: { effectId: string | null; only
     [system, own],
   );
   const [before, after] = pair as [Sheet, Sheet];
-  const run = useDryRun(system, compendium, tab === 'trial' ? effectId : null, dice, pair);
+  const run = useDryRun(system, compendium, tab === 'trial' ? effectId : null, dice, pair, staged);
+  useEffect(() => { onRun?.(run, pair); }, [run, pair]);
   const target = run?.sheets.find(sheet => sheet.id === after.id) ?? after;
   const actorReader = useReader(system, before, compendium);
   const targetReader = useReader(system, after, compendium);

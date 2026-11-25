@@ -1,5 +1,5 @@
 import type { KeyboardEvent, PointerEvent as ReactPointerEvent, ReactElement, RefObject } from 'react';
-import type { Sun } from '@vtt/engine';
+import type { Lit, Sun } from '@vtt/engine';
 import { useT } from '../../../../i18n/author.ts';
 import { Bubble } from './bubble.tsx';
 import type { Placed, SunLayout } from './layout.ts';
@@ -16,6 +16,8 @@ export interface CanvasProps {
   geometry?: RefObject<Geometry | null>;
   drop?: { id: string; ok: boolean; note: string } | null;
   onGrab?: (placed: Placed, event: ReactPointerEvent<HTMLButtonElement>) => void;
+  lit?: Lit | null;
+  onClearLit?: () => void;
 }
 
 export function neighbour(layout: SunLayout, fromId: string, key: string): string | null {
@@ -40,11 +42,12 @@ export function neighbour(layout: SunLayout, fromId: string, key: string): strin
   return null;
 }
 
-export function Canvas({ sun, layout, selectedId, description, onPick, onEscape, geometry, drop, onGrab }: CanvasProps): ReactElement {
+export function Canvas({ sun, layout, selectedId, description, onPick, onEscape, geometry, drop, onGrab, lit, onClearLit }: CanvasProps): ReactElement {
   const t = useT('sun');
   const port = useViewport(layout, sun.effect);
   const { view } = port;
   if (geometry) geometry.current = { node: port.ref, view };
+  const l = useT('sunTrial');
   const repeats = sun.rays.some(ray => ray.repeat);
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -74,7 +77,7 @@ export function Canvas({ sun, layout, selectedId, description, onPick, onEscape,
         <div className="sun-layer" style={{ transform: `translate(${view.x}px, ${view.y}px) scale(${view.k})` }}>
           {layout.placed.map(one => (
             <Bubble key={one.id} placed={one} sun={sun} selected={one.id === selectedId} onPick={onPick}
-              drop={drop && drop.id === one.id ? drop : null} onGrab={onGrab}
+              drop={drop && drop.id === one.id ? drop : null} onGrab={onGrab} lit={lit ?? null}
             />
           ))}
         </div>
@@ -94,6 +97,16 @@ export function Canvas({ sun, layout, selectedId, description, onPick, onEscape,
           <summary className="sun-says__head">{t('canvas.says')}</summary>
           <p>{description}</p>
         </details>
+      ) : null}
+
+      {lit ? (
+        <div className="sun-lit-legend" role="group" aria-label={l('legend.title')}>
+          <span className="sun-lit-legend__item sun-lit-legend__item--on">{l('legend.ran')}</span>
+          <span className="sun-lit-legend__item sun-lit-legend__item--skipped">{l('legend.skipped')}</span>
+          {lit.stopped ? <span className="sun-lit-legend__item sun-lit-legend__item--stopped">{l('legend.stopped')}</span> : null}
+          {lit.seams.length ? <span className="sun-lit-legend__item sun-lit-legend__item--seam">{l('legend.seam')}</span> : null}
+          {onClearLit ? <button type="button" className="btn btn--sm" onClick={onClearLit}>{l('legend.clear')}</button> : null}
+        </div>
       ) : null}
 
       {repeats ? <span className="sun-legend-note"><span className="sun-legend-note__ring" aria-hidden />{t('canvas.repeat')}</span> : null}

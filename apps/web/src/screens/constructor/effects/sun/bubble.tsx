@@ -1,6 +1,6 @@
 import type { TFunction } from 'i18next';
 import type { CSSProperties, PointerEvent as ReactPointerEvent, ReactElement } from 'react';
-import { LAUNCHES, SUN_KINDS, SUN_STAGES, type Sun } from '@vtt/engine';
+import { LAUNCHES, SUN_KINDS, SUN_STAGES, type Lit, type Sun } from '@vtt/engine';
 import { useT } from '../../../../i18n/author.ts';
 import { lookOf } from './kinds.ts';
 import type { Placed, SunGroup } from './layout.ts';
@@ -12,6 +12,7 @@ export interface BubbleProps {
   onPick: (placed: Placed) => void;
   drop?: { ok: boolean; note: string } | null;
   onGrab?: (placed: Placed, event: ReactPointerEvent<HTMLButtonElement>) => void;
+  lit?: Lit | null;
 }
 
 export type Said = TFunction;
@@ -32,9 +33,11 @@ export function groupText(group: SunGroup, t: Said, full: boolean): string {
   return shown;
 }
 
-export function Bubble({ placed, sun, selected, onPick, drop, onGrab }: BubbleProps): ReactElement {
+export function Bubble({ placed, sun, selected, onPick, drop, onGrab, lit }: BubbleProps): ReactElement {
   const t = useT('sun');
   const e = useT('sunEdit');
+  const l = useT('sunTrial');
+  let broke = false;
   const style: CSSProperties = { left: placed.x - placed.r, top: placed.y - placed.r, width: placed.r * 2, height: placed.r * 2 };
   const classes = ['sun-bubble'];
   if (selected) classes.push('sun-bubble--on');
@@ -52,6 +55,12 @@ export function Bubble({ placed, sun, selected, onPick, drop, onGrab }: BubblePr
     const look = lookOf(ray.kind);
     classes.push('sun-bubble--ray', look.cls, `sun-bubble--${look.frame}`);
     if (ray.repeat) classes.push('sun-bubble--repeat');
+    if (lit) {
+      if (lit.stopped === ray.key) { classes.push('sun-bubble--stopped'); broke = true; }
+      else if (lit.rays.includes(ray.key)) classes.push('sun-bubble--lit');
+      else if (lit.skipped.includes(ray.key)) classes.push('sun-bubble--skipped');
+      else classes.push('sun-bubble--dim');
+    }
     const notes: string[] = [SUN_STAGES[ray.stage]];
     if (ray.repeat) notes.push(t('bubble.repeat'));
     if (ray.under) notes.push(t('bubble.under'));
@@ -68,6 +77,7 @@ export function Bubble({ placed, sun, selected, onPick, drop, onGrab }: BubblePr
     const look = lookOf(group.kind);
     classes.push('sun-bubble--group', look.cls, `sun-bubble--${look.frame}`);
     const long = groupText(group, t, true);
+    if (lit && group.role === 'seam' && group.items.some(item => item.seam && lit.seams.includes(item.seam.by))) classes.push('sun-bubble--seamlit');
     const told = group.role === 'meddle' || group.role === 'seam' || group.role === 'stand';
     full = told ? long : t('bubble.named', { kind: SUN_KINDS[group.kind], names: long });
     body = <><span className="sun-bubble__icon" aria-hidden>{look.icon}</span><span className="sun-bubble__text">{groupText(group, t, false)}</span></>;
@@ -86,6 +96,7 @@ export function Bubble({ placed, sun, selected, onPick, drop, onGrab }: BubblePr
       onPointerDown={onGrab ? event => onGrab(placed, event) : undefined}
     >
       {body}
+      {broke ? <span className="sun-bubble__broke" role="img" aria-label={l('legend.stopped')} title={l('legend.stopped')}>✕</span> : null}
       {drop?.ok ? <span className="sun-bubble__here" aria-hidden>{e('drag.here')}</span> : null}
     </button>
   );

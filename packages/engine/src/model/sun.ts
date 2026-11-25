@@ -829,6 +829,12 @@ export function litOf(sun: Sun, effect: Effect, reports: readonly RanReport[], h
       if (ray.group === handler && (ray.stage === 'when' || ray.stage === 'onlyIf' || ray.stage === 'decides')) rays.add(ray.key);
     }
   }
+  const byKey = new Map(sun.rays.map(ray => [ray.key, ray] as const));
+  for (const key of [...rays, ...skipped]) {
+    for (let up = byKey.get(key)?.under ?? null; up; up = byKey.get(up)?.under ?? null) rays.add(up);
+  }
+  const repeated = sun.rays.findIndex(ray => ray.repeat);
+  if (repeated > 0 && sun.rays.some(ray => ray.repeat && (rays.has(ray.key) || skipped.has(ray.key)))) rays.add(sun.rays[repeated - 1]!.key);
   for (const key of rays) skipped.delete(key);
   return { rays: [...rays], skipped: [...skipped], stopped, seams: [...seams] };
 }
