@@ -8,7 +8,9 @@ export function lazyStorage(base: () => Storage): StateStorage & { flush(): void
 
   const flush = (): void => {
     if (timer) { clearTimeout(timer); timer = null; }
-    for (const [key, value] of waiting) base().setItem(key, value);
+    let store: Storage;
+    try { store = base(); } catch { waiting.clear(); return; }
+    for (const [key, value] of waiting) store.setItem(key, value);
     waiting.clear();
   };
 
