@@ -47,4 +47,20 @@ describe('стор комнаты: слияние дельт', () => {
     deliver({ type: 'room:rules', roomId: 'другой', rules: { reactionUseful: true } });
     expect(useRoom.getState().room?.rules).toEqual({ reactionRolls: true });
   });
+
+  it('свой только что заведённый лист открывается и включает правку; чужой новый лист — нет', () => {
+    listenToRoom();
+    const room = { id: 'к', title: 'Стол', members: [], system: { id: 'x', name: 'x', tables: {}, effects: {} }, compendium: { records: [] }, sheets: [{ id: 'а', name: 'Арен' }], log: [] } as unknown as RoomState;
+    deliver({ type: 'room:state', state: room });
+    useRoom.getState().pickSheet('а');
+    deliver({ type: 'room:delta', delta: { sheets: [{ id: 'ч', name: 'Чужой' }], log: [] } });
+    expect(useRoom.getState().mySheetId).toBe('а');
+    expect(useRoom.getState().filling).toBeNull();
+    useRoom.getState().expectSheet('Торин', 'pc');
+    deliver({ type: 'room:delta', delta: { sheets: [{ id: 'т', name: 'Торин', of: 'pc' }], log: [] } });
+    expect(useRoom.getState().mySheetId).toBe('т');
+    expect(useRoom.getState().filling).toBe('т');
+    useRoom.getState().doneFilling();
+    expect(useRoom.getState().filling).toBeNull();
+  });
 });

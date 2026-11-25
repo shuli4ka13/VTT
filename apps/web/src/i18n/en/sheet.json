@@ -73,6 +73,10 @@
     "titleText": "Changed by modifiers: {{from}}",
     "edit": "Edit",
     "done": "Done",
-    "editHint": "Editing entered values: change what is entered; items and effects still apply on top"
+    "editHint": "Editing entered values: change what is entered; items and effects still apply on top",
+    "editLeft": "Edit · not chosen: {{count}}"
+  },
+  "missing": {
+    "pick": "choose"
   }
 }

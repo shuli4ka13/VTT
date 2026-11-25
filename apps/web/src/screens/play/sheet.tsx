@@ -16,6 +16,7 @@ import { Hanging } from './hanging.tsx';
 import type { Sheet, System, RoomState, Owned, CompendiumRecord, SheetList } from '@vtt/schema';
 import { ThingsList, ThingLine } from '../../sheet/things-list.tsx';
 import { FieldCell } from '../../sheet/field-cell.tsx';
+import { missingOf } from '../../sheet/missing.ts';
 import { useT } from '../../i18n/play.ts';
 
 export function SheetScreen() {
@@ -33,6 +34,7 @@ export function SheetScreen() {
   const create = () => {
     const name = newName.trim();
     if (!name) return;
+    useRoom.getState().expectSheet(name, newOf || undefined);
     tableSocket.createSheet(room.id, name, newOf || undefined);
     setNewName('');
   };
@@ -92,7 +94,10 @@ export function SheetScreen() {
 function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
   const t = useT('play');
   const ts = useT('sheet');
-  const [editing, setEditing] = useState(false);
+  const [editOn, setEditOn] = useState(false);
+  const filling = useRoom(s => s.filling);
+  const editing = editOn || filling === sheet.id;
+  const setEditing = (next: boolean) => { setEditOn(next); if (!next) useRoom.getState().doneFilling(); };
   const me = useSession(s => s.userId);
   const isDesk = atDesk(sheet);
   const asGroup = !isDesk && isGroup(sheet, room.sheets);
@@ -120,6 +125,8 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
   const own = !isDesk && !asGroup;
   const inBlock = (list: SheetList) => own && blockOfList(system, list) !== undefined;
   const pieces = useSheetPieces(room, sheet);
+  const left = useMemo(() => (only ? fields.filter(field => only.includes(field.tag)) : fields)
+    .filter(field => mayField(room, me, sheet.id, field.tag) && missingOf(system, sheet, field)).length, [fields, only, room, me, sheet, system]);
 
   return (
     <>
@@ -129,7 +136,7 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
           <span className="spacer" />
           {editable ? (
             <Button size="sm" variant={editing ? 'primary' : undefined} title={ts('shift.editHint')} onClick={() => setEditing(!editing)}>
-              {editing ? ts('shift.done') : ts('shift.edit')}
+              {editing ? ts('shift.done') : left ? ts('shift.editLeft', { count: left }) : ts('shift.edit')}
             </Button>
           ) : null}
           {mayDrop ? <DangerButton size="sm" onConfirm={() => tableSocket.dropSheet(room.id, sheet.id)}>{t('sheet.drop')}</DangerButton> : null}

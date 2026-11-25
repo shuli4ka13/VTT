@@ -11,6 +11,11 @@ export interface RoomStore {
 
   mySheetId: string | null;
 
+  expected: { name: string; of?: string } | null;
+  filling: string | null;
+  expectSheet: (name: string, of?: string) => void;
+  doneFilling: () => void;
+
   secret: boolean;
   setSecret: (secret: boolean) => void;
 
@@ -27,6 +32,10 @@ export const useRoom = create<RoomStore>(set => ({
   log: [],
   error: null,
   mySheetId: null,
+  expected: null,
+  filling: null,
+  expectSheet: (name, of) => set({ expected: { name, ...(of ? { of } : {}) } }),
+  doneFilling: () => set({ filling: null }),
   secret: false,
   setSecret: secret => set({ secret }),
 
@@ -39,7 +48,7 @@ export const useRoom = create<RoomStore>(set => ({
   leave: () => {
     localStorage.removeItem(LAST_ROOM);
     tableSocket.close();
-    set({ room: null, log: [], mySheetId: null, secret: false });
+    set({ room: null, log: [], mySheetId: null, secret: false, expected: null, filling: null });
   },
 
   pickSheet: sheetId => set({ mySheetId: sheetId }),
@@ -92,8 +101,23 @@ export function listenToRoom(): void {
         const sheets = current.room.sheets
           .filter(sheet => !gone.has(sheet.id))
           .map(sheet => message.delta.sheets.find((next: Sheet) => next.id === sheet.id) ?? sheet);
+        let mine: string | null = null;
         for (const fresh of message.delta.sheets) {
-          if (!known.has(fresh.id)) sheets.push(fresh);
+          if (known.has(fresh.id)) continue;
+          sheets.push(fresh);
+          const wanted = current.expected;
+          if (!mine && wanted && fresh.name === wanted.name && (fresh.of ?? undefined) === wanted.of) mine = fresh.id;
+        }
+        if (mine) {
+          return {
+            mySheetId: mine, filling: mine, expected: null,
+            room: {
+              ...current.room, sheets,
+              ...(message.delta.clock ? { clock: message.delta.clock } : {}),
+              ...(message.delta.pending !== undefined ? { pending: message.delta.pending } : {}),
+            },
+            log: mergeLog(current.log, message.delta.log),
+          };
         }
         return {
           mySheetId: current.mySheetId && gone.has(current.mySheetId) ? null : current.mySheetId,

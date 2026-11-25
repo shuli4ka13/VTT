@@ -8,8 +8,14 @@ import type { Reader } from '../engine/use-calc.ts';
 import type { Sheet, System, StoredValue, FieldOption } from '@vtt/schema';
 import { MOST_STEPS, NOTE_LIMIT, isNoteField, optionsOf, toDice, asDice } from '@vtt/engine';
 import type { Field as FieldModel, Shift } from '@vtt/engine';
+import { missingOf } from './missing.ts';
 
-export function FieldCell({ field, system, sheet, reader, onChange: write0, onShift, onRoll, bare, mark, editing }: {
+export function FieldCell(props: Parameters<typeof Cell>[0]) {
+  const missing = props.editing && props.onChange ? missingOf(props.system, props.sheet, props.field) : null;
+  return missing ? <div className="field-missing"><Cell {...props} /></div> : <Cell {...props} />;
+}
+
+function Cell({ field, system, sheet, reader, onChange: write0, onShift, onRoll, bare, mark, editing }: {
   field: FieldModel;
   editing?: boolean;
   bare?: boolean;
@@ -23,7 +29,9 @@ export function FieldCell({ field, system, sheet, reader, onChange: write0, onSh
 }) {
   const t = useT('sheet');
   const named: ReactNode = bare ? <span className="sr-only">{field.label}</span> : field.hint ? <span title={field.hint}>{field.label}</span> : field.label;
-  const label: ReactNode = mark ? <>{named}<span className="field__mark">{mark}</span></> : named;
+  const missing = editing && write0 ? missingOf(system, sheet, field) : null;
+  const marked: ReactNode = mark ? <>{named}<span className="field__mark">{mark}</span></> : named;
+  const label: ReactNode = missing ? <>{marked}<span className="field__missing">{t(`missing.${missing}`)}</span></> : marked;
   const roll = field.roll && onRoll
     ? (
       <Button size="sm" title={field.roll.label ?? t('field.check', { label: field.label })} onClick={() => onRoll(field.tag)}>

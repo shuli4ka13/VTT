@@ -297,6 +297,7 @@ function NewSheet({ room }: { room: RoomState }) {
   const create = () => {
     const trimmed = name.trim();
     if (!trimmed) return;
+    useRoom.getState().expectSheet(trimmed, of || undefined);
     tableSocket.createSheet(room.id, trimmed, of || undefined);
     setName('');
   };
