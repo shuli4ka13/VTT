@@ -1551,7 +1551,7 @@ function grantArgProblems(system: System, compendium?: Compendium): Problem[] {
       if (!effect) continue;
       const name = effect.label ?? grant.effect;
       if (isPipeline(effect)) {
-        out.push({ where, level: 'error', text: tr`«${name}» — эффект с кнопкой: со входами его выдаёт кнопка типа, а не «Висит на владельце»` });
+        out.push({ where, level: 'error', text: tr`«${name}» — эффект с кнопкой: со входами его вызывает кнопка типа, а вещь его не выдаёт` });
         continue;
       }
       if (plain.has(grant.effect)) out.push({ where, level: 'error', text: tr`«${name}» выдан дважды: просто и со входами — оставьте один` });

@@ -197,7 +197,7 @@ export const LINT: Record<string, string> = {
   "наложение": "apply",
   "кнопка «{0}» не заполняет вход «{1}» эффекта «{2}»{3}": "the button “{0}” does not fill the input “{1}” of the effect “{2}”{3}",
   " — у входа-листа в эффекте выберите «Приходит сам: цель»": " — in the effect, for the sheet input choose “Comes by itself: target”",
-  "«{0}» — эффект с кнопкой: со входами его выдаёт кнопка типа, а не «Висит на владельце»": "“{0}” is an effect with a button: with inputs it is given by the type's button, not by “Hangs on the owner”",
+  "«{0}» — эффект с кнопкой: со входами его вызывает кнопка типа, а вещь его не выдаёт": "“{0}” is an effect with a button: with inputs the type's button calls it, an item does not give it",
   "«{0}» выдан дважды: просто и со входами — оставьте один": "“{0}” is given twice: plain and with inputs — keep one",
   "«{0}»: входа «{1}» у эффекта нет": "“{0}”: the effect has no input “{1}”",
   "«{0}»: вход «{1}» спрашивает игрока — у выданного вещью спросить некого": "“{0}”: input “{1}” asks the player — an effect given by an item has no one to ask",
