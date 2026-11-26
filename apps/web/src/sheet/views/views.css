@@ -543,6 +543,8 @@ span.v-chip { cursor: default; }
   .v-signed { height: 40px; }
 }
 
-.shift-plaque { flex: none; align-self: center; padding: 1px 6px; border-radius: var(--r-1, 4px); font-size: var(--fs-2); line-height: 1.4; white-space: nowrap; color: var(--kind-change); background: var(--ok-soft); border: 1px solid color-mix(in srgb, var(--kind-change) 35%, transparent); cursor: help; }
+.shift-plaque { flex: none; align-self: center; padding: 1px 6px; border-radius: var(--r-1, 4px); font-size: var(--fs-2); line-height: 1.4; white-space: nowrap; color: var(--kind-number); background: color-mix(in srgb, var(--kind-number) 12%, transparent); border: 1px solid color-mix(in srgb, var(--kind-number) 35%, transparent); cursor: help; }
+.sheet .row .input.input--shown.input--kept.input--shifted,
+.v-cell--shifted .input { color: var(--kind-number); }
 .field-missing > .field { border: 1px dashed var(--text-faint); border-radius: var(--r-2, 6px); }
 .field__missing { margin-left: var(--s-2); font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--text-faint); }

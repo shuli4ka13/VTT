@@ -190,4 +190,4 @@
 .aim-count { align-self: center; }
 .aim-count--over { color: var(--bad, #b3261e); }
 .aim-chips .chip__x { min-width: 44px; min-height: 44px; }
-.token__shift { font-size: var(--fs-1); line-height: 1.2; padding: 0 4px; border-radius: var(--r-1, 4px); color: var(--kind-change); background: var(--ok-soft); white-space: nowrap; }
+.token__shift { font-size: var(--fs-1); line-height: 1.2; padding: 0 4px; border-radius: var(--r-1, 4px); color: var(--kind-number); background: color-mix(in srgb, var(--kind-number) 12%, transparent); white-space: nowrap; }

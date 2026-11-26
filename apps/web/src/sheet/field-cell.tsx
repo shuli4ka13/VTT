@@ -55,6 +55,7 @@ function Cell({ field, system, sheet, reader, onChange: write0, onShift, onRoll,
   const editable = (stored || totalShown) && onChange ? onChange : null;
   const plaque = shift && !sameValue(shift.base, shift.total) ? <ShiftPlaque shift={shift} editing={Boolean(editing)} /> : null;
   const tail = plaque ? <>{plaque}{roll}</> : roll;
+  const shifted = Boolean(plaque) && totalShown;
 
   if (isNoteField(field)) {
     return <Note label={label} value={typeof value === 'string' ? value : ''} {...(editable ? { onCommit: (next: string) => editable(field.tag, next) } : {})} />;
@@ -69,7 +70,7 @@ function Cell({ field, system, sheet, reader, onChange: write0, onShift, onRoll,
     const steps = (kind === 'ring' || kind === 'choice') && !options.length ? stepsOf(boolean, min, max, settings) : options;
     return (
       <Group label={label}>
-        <div className={`v-cell v-cell--${kind}`}>
+        <div className={`v-cell v-cell--${kind}${shifted ? ' v-cell--shifted' : ''}`}>
           <spec.draw
             value={value}
             label={field.label}
@@ -88,7 +89,7 @@ function Cell({ field, system, sheet, reader, onChange: write0, onShift, onRoll,
 
   if (!editable) {
     const shown = stored ? show({ ok: true, value }, options, field.dice) : show(computed!, options, true);
-    return <Shown label={label} text={shown.text} title={shown.title} bad={shown.bad} roll={tail} kept={field.value.kind === 'stored'} />;
+    return <Shown label={label} text={shown.text} title={shown.title} bad={shown.bad} roll={tail} kept={field.value.kind === 'stored'} shifted={shifted} />;
   }
 
   const type = field.value.kind === 'stored' ? field.value.type : 'text';
@@ -213,13 +214,13 @@ function Group({ label, children }: { label: ReactNode; children: ReactNode }) {
   );
 }
 
-function Shown({ label, text, title, bad, roll, kept }: {
-  label: ReactNode; text: string; title?: string; bad?: boolean; roll?: ReactNode; kept?: boolean;
+function Shown({ label, text, title, bad, roll, kept, shifted }: {
+  label: ReactNode; text: string; title?: string; bad?: boolean; roll?: ReactNode; kept?: boolean; shifted?: boolean;
 }) {
   return (
     <Field label={label}>
       <div className="inline inline--tight">
-        <div className={`input num input--shown ${kept ? 'input--kept' : ''} ${bad ? 'input--bad' : ''}`} title={title}>{text}</div>
+        <div className={`input num input--shown ${kept ? 'input--kept' : ''} ${shifted ? 'input--shifted' : ''} ${bad ? 'input--bad' : ''}`} title={title}>{text}</div>
         {roll}
       </div>
     </Field>
