@@ -15,6 +15,8 @@ export interface RoomStore {
   filling: string | null;
   expectSheet: (name: string, of?: string) => void;
   doneFilling: () => void;
+  editingId: string | null;
+  editSheet: (sheetId: string | null) => void;
 
   secret: boolean;
   setSecret: (secret: boolean) => void;
@@ -36,6 +38,8 @@ export const useRoom = create<RoomStore>(set => ({
   filling: null,
   expectSheet: (name, of) => set({ expected: { name, ...(of ? { of } : {}) } }),
   doneFilling: () => set({ filling: null }),
+  editingId: null,
+  editSheet: sheetId => set(sheetId ? { editingId: sheetId } : { editingId: null, filling: null }),
   secret: false,
   setSecret: secret => set({ secret }),
 
@@ -48,7 +52,7 @@ export const useRoom = create<RoomStore>(set => ({
   leave: () => {
     localStorage.removeItem(LAST_ROOM);
     tableSocket.close();
-    set({ room: null, log: [], mySheetId: null, secret: false, expected: null, filling: null });
+    set({ room: null, log: [], mySheetId: null, secret: false, expected: null, filling: null, editingId: null });
   },
 
   pickSheet: sheetId => set({ mySheetId: sheetId }),

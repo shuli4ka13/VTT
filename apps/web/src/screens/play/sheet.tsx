@@ -91,13 +91,15 @@ export function SheetScreen() {
   );
 }
 
+function useEditing(sheetId: string): boolean {
+  return useRoom(s => s.editingId === sheetId || s.filling === sheetId);
+}
+
 function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
   const t = useT('play');
   const ts = useT('sheet');
-  const [editOn, setEditOn] = useState(false);
-  const filling = useRoom(s => s.filling);
-  const editing = editOn || filling === sheet.id;
-  const setEditing = (next: boolean) => { setEditOn(next); if (!next) useRoom.getState().doneFilling(); };
+  const editing = useEditing(sheet.id);
+  const setEditing = (next: boolean) => useRoom.getState().editSheet(next ? sheet.id : null);
   const me = useSession(s => s.userId);
   const isDesk = atDesk(sheet);
   const asGroup = !isDesk && isGroup(sheet, room.sheets);
@@ -273,6 +275,7 @@ function SidePanel({ room, sheet, lists }: { room: RoomState; sheet: Sheet; list
 }
 
 function useSheetPieces(room: RoomState, sheet: Sheet): { hangingNow: ReactNode; hangable: ReactNode; hanging: ReactNode; things: ReactNode; actions: ReactNode; bare: Record<SheetList, ReactNode> } {
+  const editing = useEditing(sheet.id);
   const t = useT('play');
   const me = useSession(s => s.userId);
   const [query, setQuery] = useState('');
@@ -370,7 +373,7 @@ function useSheetPieces(room: RoomState, sheet: Sheet): { hangingNow: ReactNode;
                             <FieldCell
                               key={cell.tag} field={cell.field} system={system} sheet={sheet}
                               reader={{ ...reader, storedOf: () => cell.value }}
-                              editing
+                              editing={editing}
                               onChange={(tag, value) => tableSocket.setValue(room.id, sheet.id, tag, value)}
                             />
                           ))}

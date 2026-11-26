@@ -266,6 +266,17 @@ describe('сумка: значения вещи', () => {
     expect(sets.at(-1)).toEqual(['к', 'а', 'item:фонарь.провода', true]);
   });
 
+  it('число вещи вписывается только в режиме правки листа', () => {
+    as('g', [{ userId: 'g', name: 'Ведущий', role: 'gm' }]);
+    renderOpen(<SheetScreen />);
+    fireEvent.click(screen.getByText('Значения'));
+    const charges = () => screen.getAllByText('Заряды').map(node => node.closest('.field')!).find(node => node.closest('.stack'))!;
+    expect(charges().querySelector('input')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /^Править/ }));
+    expect(charges().querySelector('input')).not.toBeNull();
+    useRoom.getState().editSheet(null);
+  });
+
   it('игрок без разрешения «Значений» не видит, с разрешением — видит', () => {
     as('p', [{ userId: 'g', name: 'Ведущий', role: 'gm' }, { userId: 'p', name: 'Аня', role: 'player' }]);
     renderOpen(<SheetScreen />);
