@@ -35,6 +35,11 @@
     "metaDesk": "table type",
     "metaSheet": "sheet type",
     "meta": "properties: {{props}} · buttons: {{buttons}}",
+    "propsBased": "properties: {{own}} + {{base}} from the base",
+    "props": "properties: {{own}}",
+    "buttonsBased": "buttons: {{own}} + {{base}} from the base",
+    "buttons": "buttons: {{own}}",
+    "metaParts": "{{props}} · {{buttons}}",
     "pickTitle": "Pick a type on the left",
     "pickHint": "A record asks only for its own numbers, and the button appears on the holder by itself. That is what is set up here."
   },

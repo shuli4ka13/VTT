@@ -8,7 +8,7 @@ import {
   Card, CardHead, Field, Input, Select, Button, Empty, Verdict, Chip, DangerButton, LabelInput, Fold,
 } from '../../ui/primitives.tsx';
 import type { System, SheetKind, Table } from '@vtt/schema';
-import { argsWithProps, propKeysOf, recordKinds, sheetKinds, recordsOf, DESK_ID, kindWord, blockOf, labelBlock, GEAR_BLOCK, gearBlockLabel, blockLabel } from '@vtt/engine';
+import { argsWithProps, propKeysOf, recordKinds, sheetKinds, recordsOf, DESK_ID, kindWord, blockOf, labelBlock, GEAR_BLOCK, gearBlockLabel, blockLabel, flattenSystem } from '@vtt/engine';
 import type { RecordKind, AnyKind } from '@vtt/engine';
 import { TableColumnCard } from './rules/tables-section.tsx';
 import { useState } from 'react';
@@ -129,6 +129,18 @@ export function RecordsTab() {
   };
 
   const tree = blockTree<[string, AnyKind]>(system, kinds, ([, kind]) => blockOf(system, kind));
+  const flat = flattenSystem(system, true);
+  const metaOf = (key: string, kind: AnyKind): string => {
+    const ownProps = kind.columns?.length ?? 0;
+    const ownButtons = (kind as RecordKind).bindings?.length ?? 0;
+    const whole = flat.tables?.[key] as RecordKind | undefined;
+    const baseProps = Math.max(0, (whole?.columns?.length ?? ownProps) - ownProps);
+    const baseButtons = Math.max(0, (whole?.bindings?.length ?? ownButtons) - ownButtons);
+    if (!kind.extends || (!baseProps && !baseButtons)) return t('list.meta', { props: ownProps, buttons: ownButtons });
+    const props = baseProps ? t('list.propsBased', { own: ownProps, base: baseProps }) : t('list.props', { own: ownProps });
+    const buttons = baseButtons ? t('list.buttonsBased', { own: ownButtons, base: baseButtons }) : t('list.buttons', { own: ownButtons });
+    return t('list.metaParts', { props, buttons });
+  };
 
   const lookup = useLookupPane();
 
@@ -159,7 +171,7 @@ export function RecordsTab() {
                   <ListItem
                     key={key}
                     name={kind.label ?? key}
-                    meta={key === DESK_ID ? t('list.metaDesk') : system.sheets?.[key] ? t('list.metaSheet') : t('list.meta', { props: kind.columns?.length ?? 0, buttons: kind.bindings?.length ?? 0 })}
+                    meta={key === DESK_ID ? t('list.metaDesk') : system.sheets?.[key] ? t('list.metaSheet') : metaOf(key, kind)}
                     active={key === activeKind}
                     onClick={() => pick({ activeRecordKind: key })}
                   />

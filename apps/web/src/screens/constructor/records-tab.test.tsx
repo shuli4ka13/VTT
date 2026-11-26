@@ -165,6 +165,29 @@ describe('RecordsTab: тип видит входы эффекта', () => {
   });
 });
 
+describe('список типов: свойства основы видны', () => {
+  it('у наследника — свои и от основы, у основы — только свои', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...state.system,
+        effects: {},
+        tables: {
+          imp: { shape: 'book', use: 'item', label: 'Импланты', block: 'Снаряжение', columns: [{ key: 'kind', label: 'Тип', kind: 'text' }] },
+          imp_x: { shape: 'book', use: 'item', label: 'Импланты X', block: 'Снаряжение', extends: 'imp', columns: [] },
+        },
+      },
+      activeRecordKind: 'imp',
+    }));
+    render(<RecordsTab />);
+    const fold = [...document.querySelectorAll('button')].find(b => b.textContent === '»');
+    if (fold) fireEvent.click(fold);
+    const text = document.body.textContent ?? '';
+    expect(text).toContain('свойств: 0 + 1 от основы · кнопок: 0');
+    expect(text).toContain('свойств: 1 · кнопок: 0');
+  });
+});
+
 describe('модификаторы типа', () => {
   beforeEach(() => {
     useWorld.setState(state => ({
