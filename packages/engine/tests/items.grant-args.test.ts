@@ -9,7 +9,7 @@ import type { System, Sheet, Compendium } from '../src/model/types.ts';
 const lose = (extra: Record<string, unknown> = {}) => ({
   label: 'Потеря человечности', activation: 'passive',
   params: [
-    { key: 'die', label: 'Кость', kind: 'text', optional: true },
+    { key: 'die', label: 'Кость', kind: 'dice', optional: true },
     { key: 'x', label: 'Куда записать', kind: 'field', optional: true },
   ],
   attach: [
@@ -27,7 +27,7 @@ const raw = (effect = lose()) => ({
   tables: {
     list: { shape: 'single', owner: 'sheet', columns: [{ key: 'hum', label: 'Человечность', kind: 'number', default: 60 }] },
     imp: { shape: 'book', use: 'item', label: 'Импланты', columns: [
-      { key: 'loss', label: 'Потеря', kind: 'text' },
+      { key: 'loss', label: 'Потеря', kind: 'dice' },
       { key: 'x', label: 'X', kind: 'number' },
     ], grants: [{ effect: 'lose', args: { die: { expr: '@item.loss' }, x: { expr: '@item.x' } } }] },
   },
