@@ -1,4 +1,4 @@
-import { findRecord, recordKindOf, propsOf, entryKeyOf as keyOf, isFormulaCell, itemExpr, ITEM_NAME, compile, listOf, fieldOf } from '@vtt/engine';
+import { findRecord, recordKindOf, propsOf, entryKeyOf as keyOf, isFormulaCell, itemExpr, ITEM_NAME, compile, listOf, fieldOf, grantIds } from '@vtt/engine';
 import { Card, Chip } from '../ui/primitives.tsx';
 import { t, useT } from '../i18n/index.ts';
 import { asDice } from '../words.ts';
@@ -118,7 +118,7 @@ export function RecordView({ record, system, compendium }: {
         {record.grants?.length ? (
           <div className="inline inline--tight">
             <span className="faint">{t('record.grants')}</span>
-            {record.grants.map(id => <Chip key={id}>{system.effects[id]?.label ?? id}</Chip>)}
+            {grantIds(record.grants).map(id => <Chip key={id}>{system.effects[id]?.label ?? id}</Chip>)}
           </div>
         ) : null}
       </div>

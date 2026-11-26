@@ -1,5 +1,8 @@
 import { chosenEffect, choicesOfInput } from '../model/payments.ts';
 import { heldBy, sheetKindOf, kindOfRecord } from '../model/owned.ts';
+import { argGrants, mergeGrants, plainGrants } from '../model/grants.ts';
+import type { GrantArgs } from '../model/grants.ts';
+import type { ItemRef } from '../model/item-ref.ts';
 import { DURATIONS, REAPPLY } from '../model/effect-kinds.ts';
 import { EngineError } from './errors.ts';
 import { isDesk } from './owners.ts';
@@ -82,7 +85,18 @@ export function usesMax(effect: Effect, counted?: number): number | null {
 }
 
 export interface EffectEntry { id: string; effect: Effect }
-export interface WornEntry extends EffectEntry { entry: WornEffect }
+export interface WornEntry extends EffectEntry { entry: WornEffect; item?: ItemRef; args?: GrantArgs }
+
+export const ITEM_INST = '#';
+export const itemInst = (effectId: string, itemKey: string): string => `${effectId}${ITEM_INST}${itemKey}`;
+
+export function itemGrantsOf(system: System, sheet: Sheet, compendium: Compendium | null | undefined): { effect: string; args: GrantArgs; item: ItemRef }[] {
+  if (!compendium) return [];
+  return heldBy(sheet, compendium).flatMap(({ record, key }) =>
+    argGrants(mergeGrants(kindOfRecord(system, record)?.grants, record.grants)).map(grant => ({
+      effect: grant.effect, args: grant.args ?? {}, item: { sheet: sheet.id, key, record: record.id },
+    })));
+}
 
 export const allModifiers = (system: System, compendium: Compendium = {}): Modifier[] => [
   ...effectsOf(system).flatMap(([, effect]) => effect.modifiers || []),
@@ -95,7 +109,7 @@ export const allSteps = (system: System): Step[] =>
 export function grantedTo(system: System, sheet: Sheet, compendium: Compendium | null | undefined): string[] {
   const granted = new Set<string>([
     ...(compendium ? heldBy(sheet, compendium).flatMap(({ record }) => [
-      ...kindOfRecord(system, record)?.grants ?? [], ...record.grants ?? [],
+      ...plainGrants(kindOfRecord(system, record)?.grants), ...plainGrants(record.grants),
     ]) : []),
     ...sheetKindOf(system, sheet)?.grants ?? [],
     ...(isDesk(sheet) ? [] : system.grants ?? []),
@@ -130,6 +144,11 @@ export function wornEffects(
     const effect = findEffect(system, id);
     if (!effect || isPipeline(effect)) continue;
     out.push({ id, effect, entry: { effectId: id } });
+  }
+  for (const grant of itemGrantsOf(system, sheet, compendium)) {
+    const effect = findEffect(system, grant.effect);
+    if (!effect || isPipeline(effect)) continue;
+    out.push({ id: grant.effect, effect, entry: { effectId: grant.effect, inst: itemInst(grant.effect, grant.item.key) }, item: grant.item, args: grant.args });
   }
   return out;
 }

@@ -1,11 +1,12 @@
 import { effectLabelOf } from './actions.ts';
+import { itemCellWords } from '../model/item-ref.ts';
 import { isShared, isDesk } from './desk.ts';
 import { MOMENT_PREFIX } from './bus.ts';
 import { fieldOf as columnField, valueWord } from '../model/sheet-columns.ts';
 import { isSecret } from '../model/roles.ts';
 import type { Report } from '../core/log.ts';
 import type { Clock } from '../engine/clock.ts';
-import type { System, Sheet, WornEffect } from '../model/types.ts';
+import type { System, Sheet, WornEffect, Compendium } from '../model/types.ts';
 import { FIELD_PREFIX } from './bus.ts';
 import { live } from '../words/tongue.ts';
 
@@ -84,7 +85,7 @@ export const fieldOf = (on: string | undefined): string | null =>
   (on && on.startsWith(FIELD_PREFIX) ? on.slice(FIELD_PREFIX.length) : null);
 
 export const describeMoment = (
-  world: { system: System }, entry: { sheetId: string; report: Report }, sheets: Sheet[],
+  world: { system: System; compendium?: Compendium | null }, entry: { sheetId: string; report: Report }, sheets: Sheet[],
 ): string => {
   const who = sheets.find(s => s.id === entry.sheetId)?.name ?? entry.sheetId;
   const what = entry.report.label || effectLabelOf(world.system, entry.report.effect);
@@ -92,7 +93,8 @@ export const describeMoment = (
     .filter(change => !isSecret(columnField(world.system, change.tag)))
     .map(change => {
       const field = columnField(world.system, change.tag);
-      return `${field?.label ?? change.tag}: ${valueWord(change.from)} → ${valueWord(change.to)}`;
+      const said = itemCellWords(world.system, world.compendium, sheets, change.tag) ?? field?.label ?? change.tag;
+      return `${said}: ${valueWord(change.from)} → ${valueWord(change.to)}`;
     });
   return changes.length ? `${who}: «${what}» — ${changes.join(', ')}` : `${who}: «${what}»`;
 };

@@ -158,6 +158,7 @@
     "buttons": "buttons",
     "rules": "rules",
     "create": "+ new rule",
+    "argsOf": "“{{name}}”: how each item fills the inputs",
     "nothing": "Nothing to grant yet.",
     "nothingHint": "Nothing to grant yet — create an effect on the \"Effects\" tab: \"+ hanging\" or \"+ button\"."
   },

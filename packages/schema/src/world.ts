@@ -396,6 +396,11 @@ export const effect = z.object({
 
 export const bindingArg = formula;
 
+export const itemGrant = z.union([
+  z.string().min(1),
+  z.object({ effect: z.string().min(1), args: z.record(z.string(), bindingArg) }).strict(),
+]);
+
 export const binding = z.object({
   i18n,
   label: z.string().optional(),
@@ -427,7 +432,7 @@ export const table = z.object({
   hint: z.string().optional(),
   group: z.string().optional(),
   note: z.string().optional(),
-  grants: z.array(z.string().min(1)).optional(),
+  grants: z.array(itemGrant).optional(),
   bindings: z.array(binding).optional(),
   modifiers: z.array(modifier).optional(),
 }).strict();
@@ -534,7 +539,7 @@ export const compendiumRecord = z.object({
 
   bindings: z.array(binding).optional(),
 
-  grants: z.array(z.string().min(1)).optional(),
+  grants: z.array(itemGrant).optional(),
 }).strict();
 
 export const compendium = z.object({
@@ -597,6 +602,7 @@ export type SheetKind = z.infer<typeof sheetKind>;
 export type TableUse = z.infer<typeof tableUse>;
 export type System = z.infer<typeof system>;
 export type WornEffect = z.infer<typeof wornEffect>;
+export type ItemGrant = z.infer<typeof itemGrant>;
 export type Owned = z.infer<typeof owned>;
 export type Sheet = z.infer<typeof sheet>;
 export type CompendiumRecord = z.infer<typeof compendiumRecord>;

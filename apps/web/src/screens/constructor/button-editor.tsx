@@ -32,15 +32,9 @@ export function ButtonEditor({ binding, system, recordKind: ownKind, kindId, onE
   const props = useMemo(() => propsOf(system, kindId), [system, kindId]);
   const propNames = useMemo(() => new Map([[ITEM_NAME, t('button.thisItem')], ...[...props].map(([key, one]) => [key, one.label] as const)]), [props, t]);
   const effect = system.effects[binding.effect];
-  const params = effect ? paramsOf(system, effect) : [];
   const buttons = Object.entries(system.effects).filter(([, e]) => (e.activation ?? 'manual') !== 'passive');
   const where = binding.label || effect?.label || binding.effect;
   const [more, setMore] = useState(false);
-  const given = (param: Param): boolean => binding.args?.[param.key] !== undefined && binding.args?.[param.key] !== null;
-  const [opened, setOpened] = useState<ReadonlySet<string>>(() => new Set(params.filter(given).map(param => param.key)));
-  const inputs = params.filter(param => param.kind !== 'sheet');
-  const shown = inputs.filter(param => !freeParam(param) || given(param) || opened.has(param.key));
-  const spare = inputs.filter(param => !shown.includes(param));
 
   const onArg = (key: string, next: SlotRef | null) => onEdit(draft => {
     draft.args ??= {};
@@ -93,38 +87,17 @@ export function ButtonEditor({ binding, system, recordKind: ownKind, kindId, onE
           <DangerButton size="sm" onConfirm={onDelete}>{t('common:delete')}</DangerButton>
         </div>
       </div>
-      {effect ? (shown.length ? (
-        <div className="args-table">
-          <div className="args-table__head" aria-hidden><span>{t('button.head.input')}</span><span>{t('button.head.what')}</span><span>{t('button.head.fill')}</span></div>
-          {shown.map(param => (
-            <ArgRow
-              key={param.key}
-              param={param}
-              binding={binding}
-              params={params}
-              system={system}
-              recordKind={recordKind}
-              props={props}
-              propNames={propNames}
-              effectId={binding.effect}
-              {...(kindId ? { kindId } : {})}
-              effect={effect}
-              where={where}
-              onArg={next => onArg(param.key, next)}
-              {...(onFillWithProps ? { onNew: () => onFillWithProps([param]) } : {})}
-            />
-          ))}
-        </div>
-      ) : <span className="faint">{t(spare.length ? 'button.noRequired' : params.length ? 'button.onlyHolder' : 'button.takesNothing', { name: effect.label || binding.effect })}</span>) : null}
-      {effect && spare.length ? (
-        <div className="row">
-          <Select<string>
-            label={t('button.passMore')}
-            value=""
-            options={[['', t('button.pass', { n: spare.length })], ...spare.map(param => [param.key, t('button.passRow', { name: param.label ?? param.key, now: emptyWords(param, system) })] as const)]}
-            onChange={key => { if (key) setOpened(prev => new Set([...prev, key])); }}
-          />
-        </div>
+      {effect ? (
+        <ArgsTable
+          effectId={binding.effect}
+          args={binding.args as Record<string, unknown> | undefined}
+          system={system}
+          recordKind={ownKind}
+          {...(kindId ? { kindId } : {})}
+          where={where}
+          onArg={onArg}
+          {...(onFillWithProps ? { onFillWithProps } : {})}
+        />
       ) : null}
       {more || binding.if?.expr ? (
         <div className="row">
@@ -142,6 +115,67 @@ export function ButtonEditor({ binding, system, recordKind: ownKind, kindId, onE
         <Button size="sm" variant="ghost" title={t('button.ifTitle')} onClick={() => setMore(true)}>{t('common:more')}</Button>
       )}
     </Card>
+  );
+}
+
+export function ArgsTable({ effectId, args, system, recordKind: ownKind, kindId, where, onArg, onFillWithProps }: {
+  effectId: string;
+  args: Record<string, unknown> | undefined;
+  system: System;
+  recordKind: RecordKind;
+  kindId?: string;
+  where: string;
+  onArg: (key: string, next: SlotRef | null) => void;
+  onFillWithProps?: (params: Param[]) => void;
+}) {
+  const t = useT('records');
+  const recordKind = useMemo(() => (kindId ? { ...ownKind, columns: typeColumns(system, kindId) } : ownKind), [system, ownKind, kindId]);
+  const props = useMemo(() => propsOf(system, kindId), [system, kindId]);
+  const propNames = useMemo(() => new Map([[ITEM_NAME, t('button.thisItem')], ...[...props].map(([key, one]) => [key, one.label] as const)]), [props, t]);
+  const effect = system.effects[effectId];
+  const params = effect ? paramsOf(system, effect) : [];
+  const given = (param: Param): boolean => args?.[param.key] !== undefined && args?.[param.key] !== null;
+  const [opened, setOpened] = useState<ReadonlySet<string>>(() => new Set(params.filter(given).map(param => param.key)));
+  const inputs = params.filter(param => param.kind !== 'sheet');
+  const shown = inputs.filter(param => !freeParam(param) || given(param) || opened.has(param.key));
+  const spare = inputs.filter(param => !shown.includes(param));
+  if (!effect) return null;
+  return (
+    <>
+      {shown.length ? (
+        <div className="args-table">
+          <div className="args-table__head" aria-hidden><span>{t('button.head.input')}</span><span>{t('button.head.what')}</span><span>{t('button.head.fill')}</span></div>
+          {shown.map(param => (
+            <ArgRow
+              key={param.key}
+              param={param}
+              args={args}
+              params={params}
+              system={system}
+              recordKind={recordKind}
+              props={props}
+              propNames={propNames}
+              effectId={effectId}
+              {...(kindId ? { kindId } : {})}
+              effect={effect}
+              where={where}
+              onArg={next => onArg(param.key, next)}
+              {...(onFillWithProps ? { onNew: () => onFillWithProps([param]) } : {})}
+            />
+          ))}
+        </div>
+      ) : <span className="faint">{t(spare.length ? 'button.noRequired' : params.length ? 'button.onlyHolder' : 'button.takesNothing', { name: effect.label || effectId })}</span>}
+      {spare.length ? (
+        <div className="row">
+          <Select<string>
+            label={t('button.passMore')}
+            value=""
+            options={[['', t('button.pass', { n: spare.length })], ...spare.map(param => [param.key, t('button.passRow', { name: param.label ?? param.key, now: emptyWords(param, system) })] as const)]}
+            onChange={key => { if (key) setOpened(prev => new Set([...prev, key])); }}
+          />
+        </div>
+      ) : null}
+    </>
   );
 }
 
@@ -183,10 +217,10 @@ const freeParam = (param: Param): boolean => Boolean(loose(param).optional) || p
 
 const LONE = /^@([\p{L}\p{N}_]+)(?:\.[\p{L}\p{N}_]+)?$/u;
 
-function ArgRow({ param, binding, params, system, recordKind, props, propNames, kindId, effectId, effect, where, onArg, onNew }: {
+function ArgRow({ param, args, params, system, recordKind, props, propNames, kindId, effectId, effect, where, onArg, onNew }: {
   param: Param;
   kindId?: string;
-  binding: Binding;
+  args: Record<string, unknown> | undefined;
   params: Param[];
   system: System;
   recordKind: RecordKind;
@@ -205,7 +239,7 @@ function ArgRow({ param, binding, params, system, recordKind, props, propNames, 
   const free = freeParam(param);
 
   const byName = (recordKind.columns ?? []).some(prop => prop.key === param.key);
-  const arg = binding.args?.[param.key] as unknown;
+  const arg = args?.[param.key];
   const empty = arg === undefined || arg === null;
   const text = empty ? '' : asText(arg)?.trim() ?? '';
   const need = !text && !free;
@@ -241,7 +275,7 @@ function ArgRow({ param, binding, params, system, recordKind, props, propNames, 
   }
 
   const lone = LONE.exec(text)?.[1];
-  const problem = text ? shapeProblem(text, kind, tag => shapeIn(tag, props, system, effect, binding.args as Record<string, unknown> | undefined)) : null;
+  const problem = text ? shapeProblem(text, kind, tag => shapeIn(tag, props, system, effect, args)) : null;
   return (
     <div className={`args-row${need ? ' args-row--need' : ''}${problem ? ' args-row--bad' : ''}`}>
       <span className="args-row__name">{name}</span>
@@ -253,7 +287,7 @@ function ArgRow({ param, binding, params, system, recordKind, props, propNames, 
           value={(text ? { expr: text } : undefined) as never}
           context={{ system, effect: { ...effect, params: [] }, earlier: [], recordKind, names: propNames, sheets: new Map([[NAMES.holder, NAME_LABELS.holder] as const, ...params.filter(one => one.kind === 'sheet' && !one.many).map(one => [one.key, one.label ?? one.key] as const)]) }}
           allow={['prop', 'table', 'tag']}
-          extraOptions={hintsOf(param, system, effect, binding.args as Record<string, unknown> | undefined, onNew && !byName ? onNew : undefined)}
+          extraOptions={hintsOf(param, system, effect, args, onNew && !byName ? onNew : undefined)}
           placeholder={emptyWords(param, system)}
           dice={kind === 'dice'}
           onChange={next => {

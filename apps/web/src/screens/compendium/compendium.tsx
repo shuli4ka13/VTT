@@ -235,7 +235,7 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
             title={t('record.grants.title')}
             sub={t('record.grants.sub')}
           />
-          <GrantsEditor system={system} value={record.grants}
+          <GrantsEditor system={system} value={record.grants} withArgs kindId={record.table}
             onChange={next => edit(draft => { if (next) draft.grants = next; else delete draft.grants; })} />
         </Card>
       ) : null}

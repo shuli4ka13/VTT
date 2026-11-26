@@ -1,4 +1,5 @@
 import { NAMES as SERVICE, NAME_LABELS, saidName, everyLabel } from '../words/names.ts';
+import { argGrants, grantIds, plainGrants } from './grants.ts';
 import { hasDegrees } from '../engine/check.ts';
 import { translateFormula, NEUTRAL_WORDS, RU_WORDS } from '../formula/words.ts';
 import { paramStages, targetStages } from '../engine/stages.ts';
@@ -7,7 +8,7 @@ import { loopOf, loopParam } from '../engine/steps/each.ts';
 import { chosenEffect, choicesOfInput, emittedChoices } from './payments.ts';
 import { seenLabel, ROLLED, rolledLabel, ANY_ACTION, PHASES } from '../events/bus.ts';
 import { HEARD_WORDS } from '../events/lifecycle.ts';
-import type { System, Compendium, Effect, Step, Stage, Guard, Param, Table, Modifier, Sheet } from './types.ts';
+import type { System, Compendium, Effect, Step, Stage, Guard, Param, Table, Modifier, Sheet, ItemGrant } from './types.ts';
 import { registry, loopsAt, splitsTargets } from '../engine/steps/index.ts';
 import { stepSaid } from './names-at.ts';
 import { tagSaid } from '../engine/roll-tags.ts';
@@ -1414,13 +1415,13 @@ function orphanProblems(system: System, compendium?: Compendium): Problem[] {
   const bound = new Set<string>();
   for (const [, kind] of kindsOf(system)) {
     for (const b of kind.bindings ?? []) bound.add(b.effect);
-    for (const id of kind.grants ?? []) bound.add(id);
+    for (const id of grantIds(kind.grants)) bound.add(id);
   }
   for (const id of system.grants ?? []) bound.add(id);
   for (const effect of Object.values(system.effects)) for (const id of effect.grants ?? []) bound.add(id);
   for (const record of recordsOf(compendium)) {
     for (const binding of record.bindings ?? []) bound.add(binding.effect);
-    for (const id of record.grants ?? []) bound.add(id);
+    for (const id of grantIds(record.grants)) bound.add(id);
   }
   if (compendium) {
     const called = new Set(calledOf(system).map(([key]) => key));
@@ -1536,6 +1537,52 @@ function paramProblems(system: System, compendium?: Compendium): Problem[] {
         });
       }
     });
+  }
+  return out;
+}
+
+function grantArgProblems(system: System, compendium?: Compendium): Problem[] {
+  const out: Problem[] = [];
+  const check = (list: readonly ItemGrant[] | undefined, where: Where, also: readonly ItemGrant[] = []): void => {
+    const plain = new Set(plainGrants([...also, ...(list ?? [])]));
+    for (const grant of list ?? []) {
+      if (typeof grant === 'string') continue;
+      const effect = system.effects[grant.effect];
+      if (!effect) continue;
+      const name = effect.label ?? grant.effect;
+      if (isPipeline(effect)) {
+        out.push({ where, level: 'error', text: tr`«${name}» — эффект с кнопкой: со входами его выдаёт кнопка типа, а не «Висит на владельце»` });
+        continue;
+      }
+      if (plain.has(grant.effect)) out.push({ where, level: 'error', text: tr`«${name}» выдан дважды: просто и со входами — оставьте один` });
+      const params = effect.params ?? [];
+      for (const key of Object.keys(grant.args ?? {})) {
+        if (!params.some(param => param.key === key)) out.push({ where, level: 'error', text: tr`«${name}»: входа «${key}» у эффекта нет` });
+      }
+      for (const param of params) {
+        const passed = !isBlank((grant.args ?? {})[param.key]);
+        if (param.ask) out.push({ where, level: 'error', text: tr`«${name}»: вход «${param.label ?? param.key}» спрашивает игрока — у выданного вещью спросить некого` });
+        else if (!passed && !param.optional && param.default === undefined && param.kind !== 'sheet') {
+          out.push({ where, level: 'error', text: tr`«${name}»: вход «${param.label ?? param.key}» не заполнен` });
+        }
+      }
+      const keys = new Set(params.map(param => param.key));
+      const read = [...namesUsedIn(...(effect.on ?? []).map(handler => handler.if), effect.modifiers)].filter(key => keys.has(key));
+      for (const key of read) {
+        const param = params.find(one => one.key === key)!;
+        out.push({ where, level: 'error', text: tr`«${name}»: вход «${param.label ?? key}» читается в условии или правке — у выданного вещью входы видят только шаги` });
+      }
+      if ((effect.on ?? []).some(handler => handler.manual)) out.push({ where, level: 'error', text: tr`«${name}»: кнопка у выданного вещью со входами — одна на все вещи; сделайте кнопкой типа` });
+      if ((effect.modifiers ?? []).some(mod => mod.kind === 'value')) out.push({ where, level: 'warn', text: tr`у «${name}» свои правки полей — со входами он висит на каждой вещи, и правки сложатся столько раз, сколько вещей` });
+    }
+  };
+  for (const [kind, spec] of recordKinds(system)) check(spec.grants, { tab: 'records', kind, part: 'grants' });
+  for (const record of recordsOf(compendium)) check(record.grants, { tab: 'book', record: record.id }, kindOfRecord(system, record)?.grants ?? []);
+  for (const record of recordsOf(compendium)) {
+    const own = new Set(plainGrants(record.grants));
+    for (const grant of argGrants(kindOfRecord(system, record)?.grants)) {
+      if (own.has(grant.effect)) out.push({ where: { tab: 'book', record: record.id }, level: 'error', text: tr`«${system.effects[grant.effect]?.label ?? grant.effect}» выдан дважды: просто и со входами — оставьте один` });
+    }
   }
   return out;
 }
@@ -1793,7 +1840,7 @@ export function lintSystem(system: System, compendium?: Compendium, lang?: strin
 
 function lintSystemIn(system: System, compendium?: Compendium): Problem[] {
   const declared = declaredOf(system);
-  const out: Problem[] = [...perTargetProblems(system), ...aimProblems(system), ...measureProblems(system), ...langProblems(system)];
+  const out: Problem[] = [...perTargetProblems(system), ...aimProblems(system), ...measureProblems(system), ...langProblems(system), ...grantArgProblems(system, compendium)];
 
   for (const [id, effect] of Object.entries(system.effects)) {
     for (const chain of chainsOf(id, effect)) {

@@ -1,4 +1,5 @@
 import { NAMES } from '../words/names.ts';
+import { argGrants, grantIds } from './grants.ts';
 import { flattenSystem } from './inherit.ts';
 import { armsOf, sees } from './flow.ts';
 import { paymentsOf } from './payments.ts';
@@ -697,6 +698,20 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
   for (const [kind, spec] of kindsOf(system)) {
     const own = new Set([...(spec.columns ?? []), ...columnsOf(kind)].map(p => p.key));
     for (const prop of spec.columns ?? []) typedRefs(prop, { tab: 'records', kind, part: 'props', key: prop.key }, out);
+    const argsRefs = (effectId: string, args: Record<string, unknown>, from: Where): void => {
+      const bound = system.effects?.[effectId]?.params ?? [];
+      const argScope = sheetScope(new Set([...bound.filter(p => p.kind !== 'sheet').map(p => p.key), ...own]), [...bound.filter(p => p.kind === 'sheet').map(p => p.key), HOLDER]);
+      const paramNames = new Set(bound.map(p => p.key));
+      for (const arg of Object.values(args)) {
+        const expr = arg && typeof arg === 'object' && 'expr' in arg ? String((arg as { expr: unknown }).expr) : '';
+        let deps: readonly string[] = [];
+        try { deps = expr ? compile(expr).deps : []; } catch { deps = []; }
+        const foreign = deps.map(dep => dep.split('.')[0]!).filter(head => !own.has(head) && !paramNames.has(head) && head !== HOLDER && allProps.has(head));
+        for (const key of new Set(foreign)) out.push({ kind: 'prop', key, from, scope: 'foreign' });
+        if (!foreign.length) slotRefs(arg, undefined, from, argScope, out);
+      }
+    };
+    for (const grant of argGrants(spec.grants)) argsRefs(grant.effect, grant.args ?? {}, { tab: 'records', kind, part: 'grants' });
     (spec.bindings ?? []).forEach((binding, index) => {
       const from: Where = { tab: 'records', kind, part: 'bindings', binding: index };
       if (binding.effect) out.push({ kind: 'effect', key: binding.effect, from });
@@ -717,7 +732,7 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
       }
     });
     modifierRefs(system, spec.modifiers, { tab: 'records', kind, part: 'modifiers' }, out, spec.shape === 'book' ? own : undefined);
-    for (const id of spec.grants ?? []) out.push({ kind: 'effect', key: id, from: { tab: 'records', kind, part: 'grants' } });
+    for (const id of grantIds(spec.grants)) out.push({ kind: 'effect', key: id, from: { tab: 'records', kind, part: 'grants' } });
   }
 
 
@@ -747,7 +762,7 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
     for (const record of list) {
       const from: Where = { tab: 'book', record: record.id };
       if (record.table) out.push({ kind: 'recordKind', key: String(record.table), from });
-      for (const id of record.grants ?? []) out.push({ kind: 'effect', key: id, from });
+      for (const id of grantIds(record.grants)) out.push({ kind: 'effect', key: id, from });
       for (const binding of record.bindings ?? []) if (binding.effect) out.push({ kind: 'effect', key: binding.effect, from });
       const columns = columnsOf(record.table) as NonNullable<Table['columns']>;
       const props = new Set(columns.map(c => c.key));

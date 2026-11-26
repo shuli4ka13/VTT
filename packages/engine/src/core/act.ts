@@ -84,16 +84,16 @@ function actIn(world: ActWorld, intent: ActIntent | null, staged?: Staged): ActO
     else if (intent) runAct(run, intent, root);
     run.settle(world.sheets, root);
     const log = [...state.log];
-    return { kind: 'done', sheets: [...state.sheets], log: render(log, system, state.sheets), lines: renderLines(log, system, state.sheets), entries: log, journal: ext.settled(), fresh: ext.fresh };
+    return { kind: 'done', sheets: [...state.sheets], log: render(log, system, state.sheets, compendium), lines: renderLines(log, system, state.sheets, compendium), entries: log, journal: ext.settled(), fresh: ext.fresh };
   } catch (err) {
     if (err instanceof Declined) {
       const log = [...state.log];
-      return { kind: 'done', sheets: [...world.sheets], log: render(log, system, world.sheets), lines: renderLines(log, system, world.sheets), entries: log, journal: ext.settled(), fresh: ext.fresh };
+      return { kind: 'done', sheets: [...world.sheets], log: render(log, system, world.sheets, compendium), lines: renderLines(log, system, world.sheets, compendium), entries: log, journal: ext.settled(), fresh: ext.fresh };
     }
     if (!(err instanceof Pause)) throw err;
     const log = [...state.log];
     return {
-      kind: 'paused', sheets: [...state.sheets], log: render(log, system, state.sheets), lines: renderLines(log, system, state.sheets), entries: log,
+      kind: 'paused', sheets: [...state.sheets], log: render(log, system, state.sheets, compendium), lines: renderLines(log, system, state.sheets, compendium), entries: log,
       journal: ext.snapshot(), fresh: ext.fresh, question: err.question,
     };
   }

@@ -23,6 +23,8 @@ export { choiceTablesAt, labelsAt, labelsOf, namesAt, resultsOf, sheetNamesAt, s
 export type { NameAt, Place as NamePlace } from '../model/names-at.ts';
 export { argsWithProps, blockLine, blockShown, findRecord, isBook, isItem, isUnder, keyOf as entryKeyOf, kindOf, kindsOf, propKeysOf, propsNeeded, propsOf, recordKindOf, recordKinds, recordsOf, sheetKindOf, sheetKinds, shownOn, withLibrary } from '../model/owned.ts';
 export type { AnyKind, RecordKind } from '../model/owned.ts';
+export { argGrants, grantIds, grantOf, mergeGrants, plainGrants } from '../model/grants.ts';
+export type { Grant, GrantArgs } from '../model/grants.ts';
 export { blockOfList, cellHead, cellsOf, GRID, HEIGHT_STEP, pageOfBlock, pagesOf, placeBlock, labelPage, pageLabel, removePage, setHeight, setWidth, SHEET_LIST_KEYS, tabPages, topPage } from '../model/pages.ts';
 export type { Place as BlockPlace } from '../model/pages.ts';
 export { columnChoices, sheetChoices, walkColumns, walkSheet } from '../model/paths.ts';

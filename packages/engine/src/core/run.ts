@@ -55,7 +55,8 @@ import type { Thrown } from './roll.ts';
 import type { Sub } from './subs.ts';
 import type { Ctx, StepData, FieldRef } from './steps.ts';
 import { tagWords } from '../engine/roll-tags.ts';
-import { ITEM_NAME, asItem, itemColumn, itemStored, itemTag, parseItemTag, withItemValue } from '../model/item-ref.ts';
+import { ITEM_NAME, asItem, entryByKey, itemColumn, itemStored, itemTag, parseItemTag, withItemValue } from '../model/item-ref.ts';
+import { findRecord, propsOf } from '../model/owned.ts';
 import type { ItemRef } from '../model/item-ref.ts';
 import { tr } from '../words/tongue.ts';
 
@@ -1347,11 +1348,21 @@ export class Run {
     }
   }
 
+  private itemFrame(sub: Sub): { args: Frame['args']; props: Frame['props']; item?: ItemRef } {
+    const item = sub.item;
+    if (!item) return { args: {}, props: null };
+    const sheet = this.sheet(item.sheet);
+    const entry = sheet ? entryByKey(sheet, item.record, item.key) : undefined;
+    const record = findRecord(this.world.compendium, item.record);
+    if (!entry || !record) return { args: {}, props: null };
+    return { args: (sub.given ?? {}) as Record<string, unknown>, props: propsOf(record, this.system, entry), item };
+  }
+
   private subFrame(sub: Sub, path: Path, hop: number, owner: string, names: Record<string, Bound>, roll?: { value: Roll; bonus?: number }): Frame {
     const hanging = this.hanging(sub);
     return {
       path, effectId: sub.effectId, label: labelOf(sub), owner, home: sub.sheetId,
-      bound: this.boundFor(sub, names), args: {}, paramDefs: sub.effect.params ?? [], props: null,
+      bound: this.boundFor(sub, names), paramDefs: sub.effect.params ?? [], ...this.itemFrame(sub),
       ...(Object.keys(hanging.inputs).length ? { inputs: hanging.inputs } : {}),
       claims: {}, hop, inSub: true, ...(roll ? { seenRoll: roll } : {}),
     };
@@ -1606,9 +1617,12 @@ export class Run {
         const own = effect[change.turn];
         const inst = this.instIn(change.turn === 'attach' ? this.state.sheets : previous, change.sheetId, change.entry);
         const at = path.nth(wave).phase(change.turn).at(change.sheetId).phase(change.entry.effectId).phase(inst);
-        if (own?.length) {
+        const item = change.worn?.item;
+        const gone = Boolean(item && !entryByKey(live, item.record, item.key));
+        if (own?.length && !gone) {
           const hook: Sub = {
             sheetId: change.sheetId, effectId: change.entry.effectId, effect, entry: change.entry, inst,
+            ...(change.worn?.item ? { item: change.worn.item, given: change.worn.args ?? {} } : {}),
             handler: { on: change.turn, steps: own } as Sub['handler'], key: `${change.entry.effectId}:${change.turn}`,
           };
           this.momentReact(hook, at.phase('hook'), {}, {}, `«${name}» ${HOOK_WORDS[change.turn]}`, `${name} · ${HOOK_WORDS[change.turn]}`, true);

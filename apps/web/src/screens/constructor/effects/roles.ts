@@ -1,6 +1,6 @@
 import type { System, Effect, Compendium } from '@vtt/schema';
 import { t } from '../../../i18n/author.ts';
-import { launchOf, calledOf, chainsOfEffect, emittedChoices, recordKinds, withLibrary, COST_BLOCK } from '@vtt/engine';
+import { launchOf, calledOf, chainsOfEffect, emittedChoices, recordKinds, withLibrary, COST_BLOCK, grantIds } from '@vtt/engine';
 
 export type Role = 'button' | 'auto' | 'passive' | 'pay' | 'step' | 'unbound';
 
@@ -132,11 +132,11 @@ function buttonIds(system: System, compendium: Compendium | null): Set<string> {
   for (const sheet of Object.values(system.sheets ?? {})) grants.push(...(sheet.grants ?? []));
   for (const [, table] of recordKinds(system)) {
     for (const binding of table.bindings ?? []) out.add(binding.effect);
-    grants.push(...(table.grants ?? []));
+    grants.push(...grantIds(table.grants));
   }
   for (const record of withLibrary(system, compendium).records ?? []) {
     for (const binding of record.bindings ?? []) out.add(binding.effect);
-    grants.push(...(record.grants ?? []));
+    grants.push(...grantIds(record.grants));
   }
   for (const effect of Object.values(system.effects ?? {})) grants.push(...(effect.grants ?? []));
   for (const id of grants) out.add(id);

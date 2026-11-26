@@ -1,6 +1,8 @@
 import { wornEffects } from '../engine/effects.ts';
 import { handlerKey, handlersOf } from '../events/bus.ts';
 import type { System, Sheet, Compendium, Effect, Handler, WornEffect } from '../model/types.ts';
+import type { ItemRef } from '../model/item-ref.ts';
+import type { GrantArgs } from '../model/grants.ts';
 
 export interface Sub {
   sheetId: string;
@@ -10,6 +12,8 @@ export interface Sub {
   key: string;
   inst: string;
   entry: WornEffect;
+  item?: ItemRef;
+  given?: GrantArgs;
 }
 
 export function instOf(entry: WornEffect, granted: boolean, nth: number): string {
@@ -23,12 +27,13 @@ export type InstOf = (entry: WornEffect, granted: boolean, nth: number) => strin
 export function subsOf(system: System, sheet: Sheet, compendium: Compendium | null, inst: InstOf = instOf): Sub[] {
   const seen = new Map<string, number>();
   const attached = new Set(sheet.effects ?? []);
-  return wornEffects(system, sheet, { strict: false, compendium }).flatMap(({ id, effect, entry }) => {
+  return wornEffects(system, sheet, { strict: false, compendium }).flatMap(({ id, effect, entry, item, args }) => {
     const nth = seen.get(id) ?? 0;
     seen.set(id, nth + 1);
     const own = inst(entry, !attached.has(entry), nth);
     return handlersOf(effect).map((handler, index): Sub => ({
       sheetId: sheet.id, effectId: id, effect, handler, key: handlerKey(id, index), inst: own, entry,
+      ...(item ? { item, given: args ?? {} } : {}),
     }));
   });
 }

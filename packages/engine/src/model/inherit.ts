@@ -1,4 +1,5 @@
 import { EngineError } from '../engine/errors.ts';
+import { mergeGrants } from './grants.ts';
 import type { System, Effect, Table, SheetKind, Param, Binding, Modifier, TableColumn } from './types.ts';
 import { recordKinds, kindsOf } from './owned.ts';
 import { tr } from '../words/tongue.ts';
@@ -78,7 +79,7 @@ function mergeKind<K extends Table | SheetKind>(base: K, own: K): K {
   merged.columns = byKey(b.columns ?? [], o.columns ?? []);
   merged.bindings = byEffect(b.bindings ?? [], o.bindings ?? []);
   merged.modifiers = [...(b.modifiers ?? []), ...(o.modifiers ?? [])] as Modifier[];
-  merged.grants = union(b.grants, o.grants);
+  merged.grants = mergeGrants(b.grants, o.grants);
   merged.blocks = union(b.blocks, o.blocks);
 
   dropEmpty(merged, ['columns', 'bindings', 'modifiers', 'grants', 'blocks']);

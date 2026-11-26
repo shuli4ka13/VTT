@@ -1,4 +1,5 @@
 import type { Compendium, Effect, Step, System, TagContract } from './types.ts';
+import { grantIds, mergeGrants } from './grants.ts';
 import type { StepData } from '../engine/steps/index.ts';
 import { flattenSystem } from './inherit.ts';
 import { listenerOf } from './references.ts';
@@ -116,7 +117,7 @@ export function chainOf(raw: System, book: Compendium | null | undefined, record
     const sun = sunOf(system, id, own);
     if (sun) buttons.push({ effect: id, label: effect.label ?? id, via: 'button', ...(binding.label ? { said: binding.label } : {}), sun, fills, shared: sharedBy(id), node });
   }
-  for (const id of [...(kindOfRecord(system, record)?.grants ?? []), ...(record.grants ?? [])]) {
+  for (const id of grantIds(mergeGrants(kindOfRecord(system, record)?.grants, record.grants))) {
     const effect = system.effects?.[id];
     if (!effect) continue;
     const node = nodeOf(system, own, id, 'grant', null, new Set(), 0);

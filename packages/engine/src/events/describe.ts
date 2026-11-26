@@ -1,12 +1,11 @@
 import { NAMES } from '../words/names.ts';
-import { parseItemTag } from '../model/item-ref.ts';
+import { itemCellWords } from '../model/item-ref.ts';
 import { translateFormula, NEUTRAL_WORDS, RU_WORDS } from '../formula/words.ts';
-import { recordKinds } from '../model/owned.ts';
 import { loopOf } from '../engine/steps/each.ts';
 import { effectLabelOf } from './actions.ts';
 import { breakReasonWord, registry as stepRegistry, splitsTargets } from '../engine/steps/index.ts';
 import { cellSaid, outcomeWords, partSaid, rollTitle as titleOf, tagSaid } from '../engine/roll-tags.ts';
-import type { System, Sheet } from '../model/types.ts';
+import type { System, Sheet, Compendium } from '../model/types.ts';
 import { hasField, valueWord, fieldOf } from '../model/sheet-columns.ts';
 import { isSecret } from '../model/roles.ts';
 import { walkSheet } from '../model/paths.ts';
@@ -79,17 +78,17 @@ function previewLinesIn(system: System, effectId: string, trace: Record<string, 
 
 export function describeEntry(
   entry: { fromId: string; toId: string; report: any },
-  system: System, sheets: Sheet[],
+  system: System, sheets: Sheet[], compendium?: Compendium | null,
 ): string {
   return inSystemTongue(system, () => {
-    const { head, lines } = describeParts(entry, system, sheets);
+    const { head, lines } = describeParts(entry, system, sheets, compendium);
     return lines.length ? `${head} · ${lines.join(' · ')}` : head;
   });
 }
 
 export function describeParts(
   entry: { fromId: string; toId: string; report: any },
-  system: System, sheets: Sheet[],
+  system: System, sheets: Sheet[], compendium?: Compendium | null,
 ): { head: string; lines: string[] } {
   const nameOf = (id: string) => sheets.find(s => s.id === id)?.name ?? id;
   const label = String(entry.report.label ?? '') || effectLabelOf(system, entry.report.effect);
@@ -104,11 +103,8 @@ export function describeParts(
   const changes = ((entry.report.changes ?? []) as { tag: string; from: unknown; to: unknown }[]).filter(c => !isSecret(fieldOf(system, c.tag)));
   const shown = changes.map(c => `${labelOf(c.tag)}: ${valueWord(c.from)} → ${valueWord(c.to)}`);
   function labelOf(tag: string): string {
-    const item = parseItemTag(tag);
-    if (item) {
-      const column = recordKinds(system).flatMap(([, kind]) => kind.columns ?? []).find(one => one.key === item.column);
-      return tr`${column?.label ?? item.column} (вещь ${item.key})`;
-    }
+    const item = itemCellWords(system, compendium, sheets, tag);
+    if (item) return item;
     return tagLabel(system, tag, system.effects?.[String(entry.report.effect)]?.params) ?? tag;
   }
   const effect = system.effects[String(entry.report.effect)] as any;

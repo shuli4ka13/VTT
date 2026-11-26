@@ -22,6 +22,16 @@ export function asItem(name: string, params: readonly { key: string; kind?: stri
 
 export const itemTag = (key: string, column: string): string => `${ITEM_TAG}${key}.${column}`;
 
+export function itemCellWords(system: System, compendium: Compendium | null | undefined, sheets: readonly Sheet[], tag: string): string | null {
+  const parsed = parseItemTag(tag);
+  if (!parsed) return null;
+  const entry = sheets.flatMap(sheet => sheet.has ?? []).find(one => keyOf(one) === parsed.key);
+  const record = entry ? findRecord(compendium, entry.of) : null;
+  const column = record?.table ? typeColumn(system, record.table, parsed.column) : undefined;
+  const said = column?.label ?? (system.tables ? Object.values(system.tables).flatMap(table => table.columns ?? []).find(one => one.key === parsed.column)?.label : undefined) ?? parsed.column;
+  return record?.label ? `${record.label} · ${said}` : said;
+}
+
 export function parseItemTag(tag: string): { key: string; column: string } | null {
   if (!tag.startsWith(ITEM_TAG)) return null;
   const rest = tag.slice(ITEM_TAG.length);

@@ -3,7 +3,7 @@ export type {
   SystemConstant, Table, TableRow, TableKey, RollEditOp, RollEdit, Modifier, Param, Stage,
   Step, Guard, Ask, Handler, Effect,
   Activation, DurationKind, Reapply, Binding, TagContract, SheetKind, TableUse, System,
-  StoredValue, WornEffect, Owned, Sheet, CompendiumRecord, Compendium, World,
+  StoredValue, WornEffect, ItemGrant, Owned, Sheet, CompendiumRecord, Compendium, World,
 } from '@vtt/schema';
 
 export type Resolve = (tag: string) => unknown;

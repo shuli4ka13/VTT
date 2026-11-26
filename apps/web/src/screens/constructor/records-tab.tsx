@@ -388,7 +388,7 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
 
       <Card>
         <CardHead title={t('kind.hanging.title')} sub={t('kind.hanging.sub')} />
-        <GrantsEditor system={system} value={kind.grants} hanging
+        <GrantsEditor system={system} value={kind.grants} hanging withArgs kindId={id}
           onChange={next => edit(draft => { if (next) draft.grants = next; else delete draft.grants; })} />
       </Card>
 

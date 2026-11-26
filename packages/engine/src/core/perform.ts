@@ -75,21 +75,21 @@ function performIn(world: PerformWorld, op: Op): Performed {
     if (settles) run.settle(before, root);
     const log = [...run.state.log];
     return {
-      kind: 'done', sheets: [...run.state.sheets], clock: run.clock, log: render(log, world.system, run.state.sheets), lines: renderLines(log, world.system, run.state.sheets),
+      kind: 'done', sheets: [...run.state.sheets], clock: run.clock, log: render(log, world.system, run.state.sheets, world.compendium), lines: renderLines(log, world.system, run.state.sheets, world.compendium),
       entries: log, journal: ext.settled(), fresh: ext.fresh,
     };
   } catch (err) {
     if (err instanceof Declined) {
       const log = [...run.state.log];
       return {
-        kind: 'done', sheets: [...world.sheets], clock: world.clock, log: render(log, world.system, world.sheets), lines: renderLines(log, world.system, world.sheets),
+        kind: 'done', sheets: [...world.sheets], clock: world.clock, log: render(log, world.system, world.sheets, world.compendium), lines: renderLines(log, world.system, world.sheets, world.compendium),
         entries: log, journal: ext.settled(), fresh: ext.fresh,
       };
     }
     if (!(err instanceof Pause)) throw err;
     const log = [...run.state.log];
     return {
-      kind: 'paused', sheets: [...run.state.sheets], clock: world.clock, log: render(log, world.system, run.state.sheets), lines: renderLines(log, world.system, run.state.sheets),
+      kind: 'paused', sheets: [...run.state.sheets], clock: world.clock, log: render(log, world.system, run.state.sheets, world.compendium), lines: renderLines(log, world.system, run.state.sheets, world.compendium),
       entries: log, journal: ext.snapshot(), fresh: ext.fresh, question: err.question,
     };
   }
