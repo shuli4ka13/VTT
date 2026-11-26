@@ -47,7 +47,11 @@ function Cell({ field, system, sheet, reader, onChange: write0, onShift, onRoll,
   const value = stored
     ? (reader.storedOf ? reader.storedOf(field.tag) : sheet.values[field.tag] ?? (field.value.kind === 'stored' ? field.value.default : undefined))
     : computed!.ok ? computed!.value : undefined;
-  const onChange = totalShown ? towardTotal(shift!, write0, onShift) : write0;
+  const kind = field.control?.kind;
+  const spec = kind ? VIEWS[kind] : null;
+  const boolean = field.value.kind === 'stored' ? field.value.type === 'boolean' : typeof value === 'boolean';
+  const plays = spec ? spec.plays : boolean && !options.length;
+  const onChange = editing === false && !plays ? undefined : totalShown ? towardTotal(shift!, write0, onShift) : write0;
   const editable = (stored || totalShown) && onChange ? onChange : null;
   const plaque = shift && !sameValue(shift.base, shift.total) ? <ShiftPlaque shift={shift} editing={Boolean(editing)} /> : null;
   const tail = plaque ? <>{plaque}{roll}</> : roll;
@@ -56,15 +60,12 @@ function Cell({ field, system, sheet, reader, onChange: write0, onShift, onRoll,
     return <Note label={label} value={typeof value === 'string' ? value : ''} {...(editable ? { onCommit: (next: string) => editable(field.tag, next) } : {})} />;
   }
 
-  const kind = field.control?.kind;
-  const spec = kind ? VIEWS[kind] : null;
   const fits = spec && (stored || totalShown ? Boolean(editable) || spec.shows : spec.shows) && spec.fits(value);
   if (spec && fits && (stored || computed!.ok)) {
     const { kind: _kind, ...settings } = field.control!;
     const write = editable ? (next: StoredValue) => editable(field.tag, next) : undefined;
     const min = boundOf(field.value.min, reader);
     const max = boundOf(field.value.max, reader);
-    const boolean = field.value.kind === 'stored' ? field.value.type === 'boolean' : typeof value === 'boolean';
     const steps = (kind === 'ring' || kind === 'choice') && !options.length ? stepsOf(boolean, min, max, settings) : options;
     return (
       <Group label={label}>
@@ -87,7 +88,7 @@ function Cell({ field, system, sheet, reader, onChange: write0, onShift, onRoll,
 
   if (!editable) {
     const shown = stored ? show({ ok: true, value }, options, field.dice) : show(computed!, options, true);
-    return <Shown label={label} text={shown.text} title={shown.title} bad={shown.bad} roll={tail} />;
+    return <Shown label={label} text={shown.text} title={shown.title} bad={shown.bad} roll={tail} kept={field.value.kind === 'stored'} />;
   }
 
   const type = field.value.kind === 'stored' ? field.value.type : 'text';
@@ -212,13 +213,13 @@ function Group({ label, children }: { label: ReactNode; children: ReactNode }) {
   );
 }
 
-function Shown({ label, text, title, bad, roll }: {
-  label: ReactNode; text: string; title?: string; bad?: boolean; roll?: ReactNode;
+function Shown({ label, text, title, bad, roll, kept }: {
+  label: ReactNode; text: string; title?: string; bad?: boolean; roll?: ReactNode; kept?: boolean;
 }) {
   return (
     <Field label={label}>
       <div className="inline inline--tight">
-        <div className={`input num input--shown ${bad ? 'input--bad' : ''}`} title={title}>{text}</div>
+        <div className={`input num input--shown ${kept ? 'input--kept' : ''} ${bad ? 'input--bad' : ''}`} title={title}>{text}</div>
         {roll}
       </div>
     </Field>

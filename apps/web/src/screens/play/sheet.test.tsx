@@ -324,6 +324,8 @@ describe('роли полей на листе за столом', () => {
   it('тот, кто играет листом, видит своё поле владельца, но не поле ведущего; «правит ведущий» показано без ввода', () => {
     as('p', [GM, { userId: 'p', name: 'Аня', role: 'player', sheetId: 'а' }], { заметки: 'долг', ранг: 2 });
     expect(labels()).toEqual(['Хиты', 'Заметки', 'Ранг']);
+    expect(screen.getByText('Хиты').closest('.field')!.querySelector('input')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /^Править/ }));
     expect((screen.getByLabelText('Заметки') as HTMLTextAreaElement).tagName).toBe('TEXTAREA');
     const rank = screen.getByText('Ранг').closest('.field')!;
     expect(rank.querySelector('input')).toBeNull();

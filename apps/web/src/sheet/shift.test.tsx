@@ -57,7 +57,7 @@ describe('итог под правками на листе', () => {
   it('обычный вид: итог и разница со стрелкой, откуда — в подсказке', () => {
     draw(false);
     const humanity = cellOf('Человечность');
-    expect((humanity.querySelector('input') as HTMLInputElement).value).toBe('50');
+    expect(humanity.querySelector('.input--shown')!.textContent).toBe('50');
     const plaque = humanity.querySelector('.shift-plaque')!;
     expect(plaque.textContent).toBe('↓ −10');
     expect(plaque.getAttribute('title')).toContain('60');
@@ -65,13 +65,11 @@ describe('итог под правками на листе', () => {
     expect(cellOf('Удача').querySelector('.shift-plaque')).toBeNull();
   });
 
-  it('обычный вид: вписанное число — итог, основа сдвигается на разницу, итог в основу не пишется', () => {
-    const { set, shifted } = draw(false);
-    const input = cellOf('Человечность').querySelector('input')!;
-    fireEvent.change(input, { target: { value: '45' } });
-    fireEvent.blur(input);
-    expect(shifted).toEqual([['humanity', -5]]);
-    expect(set).toEqual([]);
+  it('обычный вид: ничего не вписывается — ни поле под правками, ни обычное', () => {
+    draw(false);
+    expect(cellOf('Человечность').querySelector('input')).toBeNull();
+    expect(cellOf('Удача').querySelector('input')).toBeNull();
+    expect(cellOf('Удача').textContent).toContain('5');
   });
 
   it('обычный вид: «плюс» у поля с видом шага сдвигает основу, а не пишет итог', () => {
@@ -82,7 +80,7 @@ describe('итог под правками на листе', () => {
     expect(shifted).toEqual([['armor', 1]]);
   });
 
-  it('обычный вид: под правкой-множителем итог только виден — вписывать его можно в режиме правки', () => {
+  it('обычный вид: под правкой-множителем итог виден, плашка с разницей', () => {
     draw(false);
     const speed = cellOf('Скорость');
     expect(speed.querySelector('input')).toBeNull();

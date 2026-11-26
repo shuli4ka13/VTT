@@ -463,6 +463,12 @@ span.v-chip { cursor: default; }
   font-weight: 700;
   color: var(--kind-number);
 }
+.sheet .row .input.input--shown.input--kept {
+  font-family: inherit;
+  font-size: var(--fs-4);
+  font-weight: 600;
+  color: var(--text);
+}
 .sheet .sheet-table .input--shown {
   font-family: var(--font-mono);
   font-weight: 700;

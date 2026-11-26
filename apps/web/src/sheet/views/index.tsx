@@ -14,6 +14,7 @@ export interface ViewSpec {
   label: string;
   hint: string;
   shows: boolean;
+  plays: boolean;
   fits: (value: unknown) => boolean;
   draw: (props: ViewProps) => ReactNode;
   sample: Omit<ViewProps, 'label'>;
@@ -64,11 +65,14 @@ const samples = (): Record<ControlKind, ViewSpec['sample']> => ({
   die: { value: t('sheet:view.sample.die') },
 });
 
+const PLAYS: readonly ControlKind[] = ['stepper', 'slider', 'pips', 'charges', 'bar', 'toggle', 'ring'];
+
 const specOf = (kind: ControlKind): ViewSpec => ({
   get label() { return VIEW_LABELS[kind]; },
   get hint() { return t(`sheet:view.hint.${kind}`); },
   get sample() { return samples()[kind]; },
   shows: SHOWS_ONLY.includes(kind),
+  plays: PLAYS.includes(kind),
   fits: SPECS[kind].fits,
   draw: SPECS[kind].draw,
 });
