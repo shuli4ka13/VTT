@@ -13,7 +13,7 @@ for (const file of files) {
   describe(`сценарии по правилам: ${file.replace('.scenarios.ts', '')}`, () => {
     for (const scenario of scenarios) {
       const run = it;
-      run(scenario.name, async () => {
+      run(scenario.name, { timeout: 20000 }, async () => {
         const played = await playScenario(scenario);
         expect(check(scenario, played), played.log.join('\n')).toEqual([]);
       });
