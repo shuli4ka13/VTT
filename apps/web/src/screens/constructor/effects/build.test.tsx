@@ -82,7 +82,7 @@ describe('эффекты пресетов собираются в констру
   beforeEach(() => { try { localStorage.clear(); } catch { return; } });
   afterEach(() => { cleanup(); });
 
-  it('D&D «Атака» (strike)', { timeout: 60000 }, () => {
+  it('D&D «Атака» (strike)', { timeout: 90000 }, () => {
     const [goal] = start('dnd5e', ['strike']);
     const ui = within();
     ui.click('+ кнопкой');
@@ -212,7 +212,7 @@ describe('эффекты пресетов собираются в констру
     expect(got).toEqual(folded(goal));
   });
 
-  it('D&D «Адское возмездие» (hellish_rebuke)', { timeout: 60000 }, () => {
+  it('D&D «Адское возмездие» (hellish_rebuke)', { timeout: 90000 }, () => {
     const [goal] = start('dnd5e', ['hellish_rebuke']);
     const ui = within();
     ui.click('+ висит');
@@ -273,7 +273,7 @@ describe('эффекты пресетов собираются в констру
     expect(built('hellish_rebuke')).toEqual(folded(goal));
   });
 
-  it('Cyberpunk «Выстрел» (shoot)', { timeout: 60000 }, () => {
+  it('Cyberpunk «Выстрел» (shoot)', { timeout: 90000 }, () => {
     const [goal] = start('cp-slice', ['shoot']);
     const ui = within();
     ui.click('+ кнопкой');

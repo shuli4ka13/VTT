@@ -244,7 +244,7 @@ export function DangerButton({ children, onConfirm, size, title, keep }: {
 
 export function Segmented<T extends string>({ value, options, onChange }: {
   value: T;
-  options: readonly { key: T; label: string; icon?: string; title?: string }[];
+  options: readonly { key: T; label: string; icon?: string; title?: string; dim?: boolean }[];
   onChange: (value: T) => void;
 }) {
   return (
@@ -253,7 +253,7 @@ export function Segmented<T extends string>({ value, options, onChange }: {
         <button
           key={option.key}
           type="button"
-          className="segmented__item"
+          className={option.dim ? 'segmented__item segmented__item--dim' : 'segmented__item'}
           aria-pressed={option.key === value}
           title={option.title}
           onClick={() => onChange(option.key)}

@@ -183,6 +183,8 @@
   color: var(--accent);
   font-weight: 600;
 }
+.segmented__item--dim { opacity: 0.4; filter: blur(0.4px); }
+.segmented__item--dim:hover, .segmented__item--dim[aria-pressed='true'] { opacity: 0.75; filter: none; }
 
 .chip {
   display: inline-flex;

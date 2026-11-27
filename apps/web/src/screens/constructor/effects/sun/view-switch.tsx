@@ -13,8 +13,8 @@ export function ViewSwitch(): ReactElement {
         value={view}
         options={[
           { key: 'form', label: t('switch.form'), title: t('switch.formTitle') },
-          { key: 'sun', label: t('switch.bubbles'), title: t('switch.bubblesTitle') },
-          { key: 'map', label: t('switch.map'), title: t('switch.mapTitle') },
+          { key: 'sun', label: t('switch.bubbles'), title: t('switch.bubblesTitle'), dim: true },
+          { key: 'map', label: t('switch.map'), title: t('switch.mapTitle'), dim: true },
         ]}
         onChange={setView}
       />
