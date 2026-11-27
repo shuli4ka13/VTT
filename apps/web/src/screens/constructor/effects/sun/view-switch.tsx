@@ -12,8 +12,8 @@ export function ViewSwitch(): ReactElement {
       <Segmented<EffectView>
         value={view}
         options={[
-          { key: 'sun', label: t('switch.bubbles'), title: t('switch.bubblesTitle') },
           { key: 'form', label: t('switch.form'), title: t('switch.formTitle') },
+          { key: 'sun', label: t('switch.bubbles'), title: t('switch.bubblesTitle') },
           { key: 'map', label: t('switch.map'), title: t('switch.mapTitle') },
         ]}
         onChange={setView}
