@@ -2,13 +2,30 @@ import { create } from 'zustand';
 
 export type EffectView = 'form' | 'sun' | 'map';
 
+export const BUBBLES_SETTLED = !import.meta.env.PROD;
+
+const KEY = 'vtt.effectView';
+
+const saved = (): EffectView => {
+  if (!BUBBLES_SETTLED) return 'form';
+  try {
+    const value = localStorage.getItem(KEY);
+    return value === 'sun' || value === 'map' ? value : 'form';
+  } catch { return 'form'; }
+};
+
 export const useEffectView = create<{
   view: EffectView; setView: (view: EffectView) => void;
   trail: string[]; push: (id: string) => void; back: () => string | null;
   chain: string | null; openChain: (record: string) => void; closeChain: () => void;
 }>((set, get) => ({
-  view: 'form',
-  setView: view => set({ view }),
+  view: saved(),
+  setView: view => {
+    if (BUBBLES_SETTLED) {
+      try { localStorage.setItem(KEY, view); } catch { set({ view }); return; }
+    }
+    set({ view });
+  },
   chain: null,
   openChain: record => set({ chain: record }),
   closeChain: () => set({ chain: null }),

@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import { Segmented } from '../../../../ui/primitives.tsx';
-import { useEffectView, type EffectView } from '../../../../store/effect-view.ts';
+import { useEffectView, BUBBLES_SETTLED, type EffectView } from '../../../../store/effect-view.ts';
 import { useT } from '../../../../i18n/author.ts';
 
 export function ViewSwitch(): ReactElement {
@@ -13,8 +13,8 @@ export function ViewSwitch(): ReactElement {
         value={view}
         options={[
           { key: 'form', label: t('switch.form'), title: t('switch.formTitle') },
-          { key: 'sun', label: t('switch.bubbles'), title: t('switch.bubblesTitle'), dim: true },
-          { key: 'map', label: t('switch.map'), title: t('switch.mapTitle'), dim: true },
+          { key: 'sun', label: t('switch.bubbles'), title: BUBBLES_SETTLED ? t('switch.bubblesTitle') : t('switch.bubblesRough'), dim: !BUBBLES_SETTLED },
+          { key: 'map', label: t('switch.map'), title: BUBBLES_SETTLED ? t('switch.mapTitle') : t('switch.mapRough'), dim: !BUBBLES_SETTLED },
         ]}
         onChange={setView}
       />
